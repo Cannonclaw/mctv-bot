@@ -91,6 +91,7 @@ def main():
         st.page_link("app.py", label="Home", icon="\U0001F3E0")
         st.page_link("pages/1_Proposals.py", label="Proposal Generator", icon="\U0001F4DD")
         st.page_link("pages/2_Reports.py", label="Traction Reports", icon="\U0001F4CA")
+        st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
         st.divider()

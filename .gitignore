@@ -7,4 +7,8 @@ output/emails/*
 !output/proposals/.gitkeep
 !output/reports/.gitkeep
 !output/emails/.gitkeep
+data/leads/*
+data/logos/*
+!data/leads/.gitkeep
+!data/logos/.gitkeep
 .claude/
