@@ -151,6 +151,10 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
         st.exception(e)
 
     finally:
+        # Clear scraped photo session state so stale paths don't persist
+        st.session_state.pop("scraped_photo_paths", None)
+        st.session_state.pop("scraped_images", None)
+
         # Clean up all temp files
         all_temps = [client_logo_path] + (venue_photo_paths or []) + (ad_example_paths or []) + (extra_photo_paths or [])
         for tmp in all_temps:
