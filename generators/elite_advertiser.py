@@ -119,9 +119,10 @@ class EliteAdvertiserProposal(BaseProposal):
         )
         self.docx.add_callout_box(doc, venue_text, bg_color="F0EDE4")
 
-    # ── PRICING (1 page: table + contract terms) ──
+    # ── PRICING (own page: table + contract terms) ──
 
     def _build_pricing(self, doc, data):
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Partnership Pricing")
 
         if data.custom_pricing:
@@ -146,33 +147,42 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
 
-    # ── WHY MCTV (half page: bold sub-headers with descriptions) ──
+    # ── WHY MCTV (bold sub-headers with descriptions, like Good Earth) ──
 
     def _build_why_choose_mctv(self, doc, content):
         self.docx.add_section_header(doc, "Why MCTV")
 
-        # Claude returns 4-5 items — with or without leading dashes
-        # Formats: "- Title: Desc", "- Title -- Desc", or just "Title: Desc"
+        # Parse Claude's output into (title, description) pairs.
+        # Claude may return various formats:
+        #   "Title: Description sentence."
+        #   "- Title: Description sentence."
+        #   "Title -- Description sentence."
+        # Lines without a colon/dash-dash are continuation of the previous item.
         import re
-        items = re.findall(
-            r'(?:^|\n)\s*-?\s*(.+?)(?::|--)\s+(.+?)(?=\n\s*-?\s*\w+(?::|--)|$)',
-            content, re.DOTALL
-        )
-        if not items:
-            # Simpler fallback: split on newlines and parse "Title: Desc"
-            for line in content.strip().split('\n'):
-                line = line.strip().lstrip('- ')
-                if not line:
-                    continue
-                match = re.match(r'^(.+?):\s+(.+)$', line)
-                if match:
-                    items.append((match.group(1), match.group(2)))
+        items = []
+
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            # Strip leading dash
+            clean = line.lstrip('- ').strip()
+            if not clean:
+                continue
+
+            # Try to match "Title: Description" or "Title -- Description"
+            match = re.match(r'^(.+?)(?::|--)\s+(.+)$', clean)
+            if match:
+                items.append((match.group(1).strip(), match.group(2).strip()))
+            elif items:
+                # Continuation line — append to last item's description
+                title, desc = items[-1]
+                items[-1] = (title, desc + " " + clean)
 
         if items:
             for title, desc in items:
-                # Bold navy sub-header + body text (like Good Earth "Partnership Benefits")
-                self.docx.add_sub_header(doc, title.strip().upper())
-                self.docx.add_body_text(doc, desc.strip())
+                self.docx.add_sub_header(doc, title.upper())
+                self.docx.add_body_text(doc, desc)
         else:
             # Final fallback if all parsing fails
             self.docx.add_bullet_list(doc, content)

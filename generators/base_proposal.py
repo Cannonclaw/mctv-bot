@@ -141,9 +141,9 @@ class BaseProposal(ABC):
         client_logo = getattr(self.docx, "client_logo_path", None)
         self.docx.add_cover_page(
             doc,
-            title="Advertising\nPartnership",
-            subtitle="PROPOSAL",
-            prepared_for=f"{input_data.contact_name} \u2014 {input_data.business_name}",
+            title="ADVERTISING PARTNERSHIP\nPROPOSAL",
+            subtitle=input_data.business_name,
+            prepared_for=input_data.contact_name,
             prepared_by=rep,
             client_logo_path=client_logo,
         )
