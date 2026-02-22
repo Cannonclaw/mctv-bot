@@ -101,15 +101,19 @@ class EliteAdvertiserProposal(BaseProposal):
         # Claude returns 5 dash-bullet items — render with bold navy titles
         self.docx.add_bullet_list(doc, content)
 
-    # ── MARKET COVERAGE (half page: short text + venue grid) ──
+    # ── MARKET COVERAGE (compact: short text + inline venue list) ──
 
     def _build_market_coverage(self, doc, data, content):
         self.docx.add_section_header(doc, "Your Market Coverage")
         self.docx.add_body_text(doc, content)
 
-        # Venue categories grid
-        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
-        self.docx.add_venue_categories(doc)
+        # Compact venue list as a callout box instead of a grid
+        venue_text = (
+            "Your ads play in: Restaurants & Bars  |  Barbershops & Salons  |  "
+            "Medical & Dental  |  Gyms & Fitness  |  Auto & Service Shops  |  "
+            "Retail & Boutiques  |  Professional Offices  |  Community Venues"
+        )
+        self.docx.add_callout_box(doc, venue_text, bg_color="F0EDE4")
 
     # ── PRICING (1 page: table + contract terms) ──
 
@@ -158,33 +162,16 @@ class EliteAdvertiserProposal(BaseProposal):
             # Fallback if parsing fails
             self.docx.add_bullet_list(doc, content)
 
-    # ── LET'S GET STARTED (half page: short close + contact card) ──
+    # ── LET'S GET STARTED (half page: short close + steps + contact inline) ──
 
     def _build_getting_started(self, doc, data, content):
         self.docx.add_section_header(doc, "Let's Get Started")
         self.docx.add_body_text(doc, content)
 
-        # Compact contact card (single paragraph with line breaks)
+        # Contact info as a callout box (compact, stays on same page)
         rep = get_team_member(self.config, data.sales_rep)
-
-        from docx.shared import Pt
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
-        from services.docx_service import NAVY, GOLD, GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_before = Pt(16)
-        p.space_after = Pt(4)
-
-        run = p.add_run(rep["name"])
-        run.font.size = Pt(13)
-        run.font.bold = True
-        run.font.color.rgb = NAVY
-
-        run = p.add_run(f"\n{rep['email']}  |  {rep['phone']}")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GRAY
-
-        run = p.add_run("\nMCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(9)
-        run.font.color.rgb = GOLD
+        contact_text = (
+            f"Ready to get started? Reach out to {rep['name']} at "
+            f"{rep['email']} or {rep['phone']}."
+        )
+        self.docx.add_callout_box(doc, contact_text)
