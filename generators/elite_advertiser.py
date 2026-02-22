@@ -76,12 +76,16 @@ class EliteAdvertiserProposal(BaseProposal):
 
         # Claude returns: 1 paragraph then 3 dash-bullet reasons
         # Split on the first dash to separate paragraph from bullets
-        parts = content.split("\n-", 1)
+        import re
+        # Split paragraph from bullet reasons (Claude uses \n- or \n -  prefixes)
+        parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
         if len(parts) == 2:
             # Opening paragraph
             self.docx.add_body_text(doc, parts[0].strip())
-            # Bullet reasons in a callout box
-            self.docx.add_callout_box(doc, "-" + parts[1].strip())
+            # Reconstruct bullets with clean "- " prefix and put in callout box
+            bullets = re.split(r'\n\s*-\s*', parts[1])
+            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
+            self.docx.add_callout_box(doc, clean_bullets)
         else:
             self.docx.add_body_text(doc, content)
 
@@ -147,9 +151,23 @@ class EliteAdvertiserProposal(BaseProposal):
     def _build_why_choose_mctv(self, doc, content):
         self.docx.add_section_header(doc, "Why MCTV")
 
-        # Claude returns 4 dash-bullet items — render each as a callout box
+        # Claude returns 4 items — with or without leading dashes
+        # Formats: "- Title: Desc", "- Title -- Desc", or just "Title: Desc"
         import re
-        items = re.findall(r'-\s+(.+?)(?::|--)\s+(.+)', content)
+        items = re.findall(
+            r'(?:^|\n)\s*-?\s*(.+?)(?::|--)\s+(.+?)(?=\n\s*-?\s*\w+(?::|--)|$)',
+            content, re.DOTALL
+        )
+        if not items:
+            # Simpler fallback: split on newlines and parse "Title: Desc"
+            for line in content.strip().split('\n'):
+                line = line.strip().lstrip('- ')
+                if not line:
+                    continue
+                match = re.match(r'^(.+?):\s+(.+)$', line)
+                if match:
+                    items.append((match.group(1), match.group(2)))
+
         if items:
             for title, desc in items:
                 self.docx.add_callout_box(
@@ -158,7 +176,7 @@ class EliteAdvertiserProposal(BaseProposal):
                     bg_color="F0EDE4",
                 )
         else:
-            # Fallback if parsing fails
+            # Final fallback if all parsing fails
             self.docx.add_bullet_list(doc, content)
 
     # ── LET'S GET STARTED (half page: short close + steps + contact inline) ──
