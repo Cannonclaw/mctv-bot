@@ -60,6 +60,7 @@ class EliteAdvertiserProposal(BaseProposal):
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
+            doc.add_page_break()
             self.docx.add_team_section(doc)
 
     def _build_opportunity(self, doc, data, content):
