@@ -275,6 +275,73 @@ class DocxService:
         run.font.size = Pt(11)
         run.font.color.rgb = DARK_TEXT
 
+    def add_bullet_list(self, doc: Document, text: str):
+        """Parse dash-prefixed bullet items from Claude and render with bold navy titles.
+
+        Expected format: '- Bold Title: Description sentence.'
+        Falls back to add_body_text for non-matching lines.
+        """
+        import re
+        lines = text.strip().split("\n")
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Match "- Title: Description" or "- Title -- Description"
+            bullet_match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if bullet_match:
+                title = bullet_match.group(1).strip()
+                desc = bullet_match.group(2).strip()
+                self.add_bullet_point(doc, title, desc)
+            else:
+                # Fallback: treat as regular body text
+                self.add_body_text(doc, line)
+
+    def add_inline_photos(self, doc: Document, photo_paths: list,
+                          max_width: float = 2.5, cols: int = 2):
+        """Add 1-2 photos inline within a section (no title, tight spacing).
+
+        Single photo: centered at 4.0 inches.
+        Multiple photos: side-by-side in a borderless table.
+        """
+        photo_paths = [p for p in (photo_paths or []) if Path(p).exists()]
+        if not photo_paths:
+            return
+
+        # Single photo: center it larger
+        if len(photo_paths) == 1:
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(8)
+            p.space_after = Pt(8)
+            try:
+                run = p.add_run()
+                run.add_picture(photo_paths[0], width=Inches(4.0))
+            except Exception:
+                pass
+            return
+
+        # Multiple photos: grid layout
+        table = doc.add_table(rows=1, cols=min(len(photo_paths), cols))
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        for i, photo_path in enumerate(photo_paths[:cols]):
+            cell = table.rows[0].cells[i]
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(6)
+            p.space_after = Pt(6)
+            try:
+                run = p.add_run()
+                run.add_picture(photo_path, width=Inches(max_width))
+            except Exception:
+                run = p.add_run("[Image]")
+                run.font.size = Pt(9)
+                run.font.color.rgb = GRAY
+
+        self._remove_table_borders(table)
+
     def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
                         max_width: float = 3.0, cols: int = 2):
         """Add a grid of photos to the document.

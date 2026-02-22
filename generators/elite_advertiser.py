@@ -1,11 +1,18 @@
-"""Elite Advertiser proposal generator (McGlawn / MS Urgent Care style)."""
+"""Elite Advertiser proposal generator — scannable, visual, 5-6 pages."""
 
 from generators.base_proposal import BaseProposal
 from services.config_service import get_team_member, get_pricing_tier, get_all_tiers
 
 
 class EliteAdvertiserProposal(BaseProposal):
-    """Generates the flagship 7-8 page advertiser proposal."""
+    """Generates the flagship 5-6 page advertiser proposal."""
+
+    # Scatter scraped/extra photos across these sections (consumed in order)
+    PHOTO_DISTRIBUTION = {
+        "opportunity_hook": {"source": "extra", "max": 2},
+        "whats_included":   {"source": "extra", "max": 1},
+        "why_choose_mctv":  {"source": "extra", "max": 1},
+    }
 
     @property
     def proposal_type_key(self) -> str:
@@ -13,11 +20,11 @@ class EliteAdvertiserProposal(BaseProposal):
 
     def get_sections(self) -> list:
         return [
-            ("opportunity", "The Opportunity"),
+            ("opportunity_hook", "The Opportunity"),
             ("whats_included", "What's Included"),
             ("market_coverage", "Your Market Coverage"),
             ("_pricing", "Partnership Pricing"),
-            ("why_mctv", "Why MCTV Elite Advertising"),
+            ("why_choose_mctv", "Why MCTV"),
             ("getting_started", "Let's Get Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -47,24 +54,36 @@ class EliteAdvertiserProposal(BaseProposal):
         }
 
     def build_section(self, doc, section_key, data, content):
-        if section_key == "opportunity":
-            self._build_opportunity(doc, data, content)
+        if section_key == "opportunity_hook":
+            self._build_opportunity_hook(doc, data, content)
         elif section_key == "whats_included":
             self._build_whats_included(doc, content)
         elif section_key == "market_coverage":
             self._build_market_coverage(doc, data, content)
         elif section_key == "_pricing":
             self._build_pricing(doc, data)
-        elif section_key == "why_mctv":
-            self._build_why_mctv(doc, content)
+        elif section_key == "why_choose_mctv":
+            self._build_why_choose_mctv(doc, content)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
             self.docx.add_team_section(doc)
 
-    def _build_opportunity(self, doc, data, content):
+    # ── THE OPPORTUNITY (1 page: paragraph + callout bullets + stats banner) ──
+
+    def _build_opportunity_hook(self, doc, data, content):
         self.docx.add_section_header(doc, "The Opportunity")
-        self.docx.add_body_text(doc, content)
+
+        # Claude returns: 1 paragraph then 3 dash-bullet reasons
+        # Split on the first dash to separate paragraph from bullets
+        parts = content.split("\n-", 1)
+        if len(parts) == 2:
+            # Opening paragraph
+            self.docx.add_body_text(doc, parts[0].strip())
+            # Bullet reasons in a callout box
+            self.docx.add_callout_box(doc, "-" + parts[1].strip())
+        else:
+            self.docx.add_body_text(doc, content)
 
         # Network stats banner
         network = self.config["network"]
@@ -74,11 +93,15 @@ class EliteAdvertiserProposal(BaseProposal):
             f"{network['avg_dwell_time_minutes']}+ Min": "Avg. Dwell Time\nPer Visit",
             f"{network['plays_per_hour']}x/Hour": "Your Ad Plays\nEvery Day",
         })
-        doc.add_page_break()
+
+    # ── WHAT'S INCLUDED (half page: 5 bullet points, no intro) ──
 
     def _build_whats_included(self, doc, content):
         self.docx.add_section_header(doc, "What's Included")
-        self.docx.add_body_text(doc, content)
+        # Claude returns 5 dash-bullet items — render with bold navy titles
+        self.docx.add_bullet_list(doc, content)
+
+    # ── MARKET COVERAGE (half page: short text + venue grid) ──
 
     def _build_market_coverage(self, doc, data, content):
         self.docx.add_section_header(doc, "Your Market Coverage")
@@ -88,28 +111,10 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
         self.docx.add_venue_categories(doc)
 
-        # Expand your reach callout
-        expanding = [k for k, v in self.config["markets"].items() if v["status"] == "expanding"]
-        if expanding:
-            self.docx.add_sub_header(doc, "EXPAND YOUR REACH")
-            self.docx.add_body_text(
-                doc,
-                f"As {data.business_name} grows, MCTV grows with you. "
-                f"MCTV is currently expanding into {' and '.join(expanding)}, "
-                f"adding to the 30 screens in Starkville and 25 in Tupelo. "
-                f"Multi-market packages available."
-            )
-        doc.add_page_break()
+    # ── PRICING (1 page: table + contract terms) ──
 
     def _build_pricing(self, doc, data):
         self.docx.add_section_header(doc, "Partnership Pricing")
-
-        self.docx.add_body_text(
-            doc,
-            "Choose the coverage level that fits your goals. As you scale up, "
-            "your cost per screen drops and your monthly ad plays multiply \u2014 "
-            f"giving {data.business_name} more visibility at a better value."
-        )
 
         if data.custom_pricing:
             # Custom pricing display
@@ -134,9 +139,26 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_contract_terms(doc, self.config)
         doc.add_page_break()
 
-    def _build_why_mctv(self, doc, content):
-        self.docx.add_section_header(doc, "Why MCTV Elite Advertising")
-        self.docx.add_body_text(doc, content)
+    # ── WHY MCTV (half page: 4 callout boxes) ──
+
+    def _build_why_choose_mctv(self, doc, content):
+        self.docx.add_section_header(doc, "Why MCTV")
+
+        # Claude returns 4 dash-bullet items — render each as a callout box
+        import re
+        items = re.findall(r'-\s+(.+?)(?::|--)\s+(.+)', content)
+        if items:
+            for title, desc in items:
+                self.docx.add_callout_box(
+                    doc,
+                    f"{title.strip()}: {desc.strip()}",
+                    bg_color="F0EDE4",
+                )
+        else:
+            # Fallback if parsing fails
+            self.docx.add_bullet_list(doc, content)
+
+    # ── LET'S GET STARTED (half page: short close + contact card) ──
 
     def _build_getting_started(self, doc, data, content):
         self.docx.add_section_header(doc, "Let's Get Started")

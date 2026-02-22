@@ -271,11 +271,11 @@ if ad_examples:
         cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
 
 extra_photos = st.file_uploader(
-    "Other Photos — appears at the end before the team section",
+    "Other Photos — scattered throughout the proposal",
     type=["png", "jpg", "jpeg", "webp"],
     accept_multiple_files=True,
     key="extra_photos",
-    help="Any other images you want in the proposal (events, data graphics, etc.)",
+    help="Photos will be distributed across sections (Opportunity, What's Included, Why MCTV) instead of a single gallery page.",
 )
 if extra_photos:
     cols = st.columns(min(len(extra_photos), 4))
@@ -288,7 +288,7 @@ st.divider()
 # ── ELITE ADVERTISER FORM ────────────────────────────────────────────────────
 if proposal_type == "Elite Advertiser":
     st.markdown("### Elite Advertiser Proposal")
-    st.caption("The flagship 7-8 page proposal (McGlawn Homes / MS Urgent Care style)")
+    st.caption("The flagship 5-6 page proposal — scannable, visual, punchy")
 
     col1, col2 = st.columns(2)
     with col1:

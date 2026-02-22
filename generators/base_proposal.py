@@ -8,10 +8,10 @@ from services.docx_service import DocxService
 from services.config_service import get_team_member
 
 
-# Sections after which to insert uploaded photos
+# Sections after which to insert uploaded photos (legacy defaults)
 VENUE_PHOTO_SECTIONS = {"market_coverage", "_market_coverage"}
 AD_EXAMPLE_SECTIONS = {"whats_included", "_whats_included"}
-EXTRA_PHOTO_SECTIONS = {"getting_started"}  # extra photos go right after Getting Started
+EXTRA_PHOTO_SECTIONS = {"getting_started"}  # fallback for generators without PHOTO_DISTRIBUTION
 
 
 class BaseProposal(ABC):
@@ -58,6 +58,12 @@ class BaseProposal(ABC):
         ad_examples = getattr(self.docx, "ad_example_paths", [])
         extra_photos = getattr(self.docx, "extra_photo_paths", [])
 
+        # Mutable copy for per-generator photo distribution
+        extra_remaining = list(extra_photos)
+
+        # Check if this generator defines per-section photo distribution
+        photo_dist = getattr(self, 'PHOTO_DISTRIBUTION', None)
+
         # Build cover page first
         self._build_cover(doc, input_data)
 
@@ -90,9 +96,21 @@ class BaseProposal(ABC):
             if section_key in AD_EXAMPLE_SECTIONS and ad_examples:
                 self.docx.add_photos_grid(doc, ad_examples, title="Ad Creative Examples")
 
-            # Insert extra photos (scraped/uploaded) AFTER Getting Started section
-            if section_key in EXTRA_PHOTO_SECTIONS and extra_photos:
-                self.docx.add_photos_grid(doc, extra_photos, title="Gallery")
+            # Per-generator photo distribution (scatter photos across sections)
+            if photo_dist and section_key in photo_dist:
+                slot = photo_dist[section_key]
+                if slot.get("source", "extra") == "extra" and extra_remaining:
+                    count = min(slot.get("max", 2), len(extra_remaining))
+                    batch = extra_remaining[:count]
+                    del extra_remaining[:count]
+                    title = slot.get("title")
+                    if title:
+                        self.docx.add_photos_grid(doc, batch, title=title)
+                    else:
+                        self.docx.add_inline_photos(doc, batch)
+            elif not photo_dist and section_key in EXTRA_PHOTO_SECTIONS and extra_remaining:
+                # Legacy fallback: dump all extras as Gallery (for generators without PHOTO_DISTRIBUTION)
+                self.docx.add_photos_grid(doc, extra_remaining, title="Gallery")
 
         # Add footer
         self.docx.add_footer(doc)
