@@ -118,13 +118,13 @@ if st.button("🔄 Load Templates") or st.session_state["creatomate_templates"] 
         )
         background_url = st.text_input(
             "Background Image URL (optional)",
-            placeholder="https://example.com/photo.jpg",
-            help="URL of an image to use as the video background.",
+            placeholder="https://oxfordfloral.com/images/storefront.jpg",
+            help="Direct link to an image file (.jpg, .png). Must be a full URL, not just a domain name.",
         )
         logo_url = st.text_input(
             "Client Logo URL (optional)",
-            placeholder="https://example.com/logo.png",
-            help="URL of the client's logo.",
+            placeholder="https://oxfordfloral.com/images/logo.png",
+            help="Direct link to the client's logo image file.",
         )
 
     # Advanced: custom modifications

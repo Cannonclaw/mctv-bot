@@ -216,8 +216,18 @@ def build_mctv_modifications(
 
     # Image elements
     if client_logo_url:
-        mods["Client-Logo.source"] = client_logo_url
+        mods["Client-Logo.source"] = _ensure_url(client_logo_url)
     if background_image_url:
-        mods["Background-Image.source"] = background_image_url
+        mods["Background-Image.source"] = _ensure_url(background_image_url)
 
     return mods
+
+
+def _ensure_url(url: str) -> str:
+    """Make sure a URL starts with https://."""
+    url = url.strip()
+    if not url:
+        return url
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    return url
