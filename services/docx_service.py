@@ -57,9 +57,22 @@ class DocxService:
 
         Uses a full-page table cell with navy fill. The cell height is forced
         to fill the entire printable area so there is no white gap.
+        The cover page uses its own section with minimal margins so the navy
+        fills edge-to-edge; a section break restores normal margins for
+        subsequent pages.
         """
         if date is None:
             date = datetime.now().strftime("%B %Y")
+
+        # Shrink cover-page margins so navy fills nearly edge-to-edge
+        cover_section = doc.sections[0]
+        cover_section.top_margin = Cm(0.8)
+        cover_section.bottom_margin = Cm(0.5)
+        cover_section.left_margin = Cm(1.3)
+        cover_section.right_margin = Cm(1.3)
+        # Hide footer on cover page
+        cover_section.footer.is_linked_to_previous = False
+        cover_section.different_first_page_header_footer = False
 
         # Full-page background table (single cell with navy fill)
         bg_table = doc.add_table(rows=1, cols=1)
@@ -75,9 +88,8 @@ class DocxService:
         tc_pr.append(shd)
 
         # Force cell to fill full page height (Letter: 11in = 15840 twips)
-        # Minus top+bottom margins (1.5cm each = ~850 twips each) = ~14140 twips available
-        # Subtract a bit for table/cell overhead. Target: fill the visible page.
-        cell_height_twips = 13800  # ~9.6 inches
+        # With tiny cover margins (0.8+0.5 cm = ~740 twips), almost all page is usable
+        cell_height_twips = 14800  # ~10.3 inches
         tr_pr = cell._element.getparent().get_or_add_trPr()
         tr_height = tr_pr.makeelement(qn("w:trHeight"), {
             qn("w:val"): str(cell_height_twips),
@@ -228,9 +240,15 @@ class DocxService:
         run.font.color.rgb = GOLD
         run.font.name = "Calibri"
 
-        # No explicit page break needed — the full-page table pushes
-        # subsequent content to page 2 automatically.  A page_break()
-        # here would insert an empty paragraph that creates a blank page.
+        # Add a section break (new page) to restore normal margins for
+        # subsequent content pages.  This avoids the blank-page problem
+        # that doc.add_page_break() caused, while also letting us use
+        # different margins on the cover vs. content pages.
+        new_section = doc.add_section()      # defaults to NEW_PAGE
+        new_section.top_margin = Cm(1.5)
+        new_section.bottom_margin = Cm(1.5)
+        new_section.left_margin = Cm(2.0)
+        new_section.right_margin = Cm(2.0)
 
     def add_section_header(self, doc: Document, text: str):
         """Add a styled section header with gold accent bar underneath."""
@@ -733,8 +751,15 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_footer(self, doc: Document):
-        """Add branded footer with 'PAGE | TOTAL' page numbers to all pages."""
-        for section in doc.sections:
+        """Add branded footer with 'PAGE | TOTAL' page numbers.
+
+        Skips the first section (cover page) so the navy background isn't
+        interrupted by a page-number footer.
+        """
+        for idx, section in enumerate(doc.sections):
+            if idx == 0:
+                # Cover page — no footer
+                continue
             footer = section.footer
             footer.is_linked_to_previous = False
             p = footer.paragraphs[0]

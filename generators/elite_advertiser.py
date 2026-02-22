@@ -7,11 +7,10 @@ from services.config_service import get_team_member, get_pricing_tier, get_all_t
 class EliteAdvertiserProposal(BaseProposal):
     """Generates the flagship 5-6 page advertiser proposal."""
 
-    # Scatter scraped/extra photos across these sections (consumed in order)
+    # Place all extra photos after the opportunity section (page 2) to avoid
+    # orphan photos creating whitespace gaps on later pages.
     PHOTO_DISTRIBUTION = {
         "opportunity_hook": {"source": "extra", "max": 2},
-        "whats_included":   {"source": "extra", "max": 1},
-        "why_choose_mctv":  {"source": "extra", "max": 1},
     }
 
     @property
