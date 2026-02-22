@@ -41,19 +41,23 @@ class DocxService:
         font.size = Pt(11)
         font.color.rgb = DARK_TEXT
 
-        # Set narrow margins
+        # Set narrow margins for maximum content density
         for section in doc.sections:
-            section.top_margin = Cm(1.8)
-            section.bottom_margin = Cm(1.8)
-            section.left_margin = Cm(2.3)
-            section.right_margin = Cm(2.3)
+            section.top_margin = Cm(1.5)
+            section.bottom_margin = Cm(1.5)
+            section.left_margin = Cm(2.0)
+            section.right_margin = Cm(2.0)
 
         return doc
 
     def add_cover_page(self, doc: Document, title: str, subtitle: str,
                        prepared_for: str, prepared_by: dict, date: str = None,
                        client_logo_path: str = None):
-        """Add a branded cover page with navy background, gold/white text."""
+        """Add a branded cover page with navy background, gold/white text.
+
+        Uses a full-page table cell with navy fill. The cell height is forced
+        to fill the entire printable area so there is no white gap.
+        """
         if date is None:
             date = datetime.now().strftime("%B %Y")
 
@@ -70,6 +74,17 @@ class DocxService:
         })
         tc_pr.append(shd)
 
+        # Force cell to fill full page height (Letter: 11in = 15840 twips)
+        # Minus top+bottom margins (1.5cm each = ~850 twips each) = ~14140 twips available
+        # Subtract a bit for table/cell overhead. Target: fill the visible page.
+        cell_height_twips = 13800  # ~9.6 inches
+        tr_pr = cell._element.getparent().get_or_add_trPr()
+        tr_height = tr_pr.makeelement(qn("w:trHeight"), {
+            qn("w:val"): str(cell_height_twips),
+            qn("w:hRule"): "atLeast",
+        })
+        tr_pr.append(tr_height)
+
         # Remove default cell margins for edge-to-edge feel
         cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
         for side in ("top", "left", "bottom", "right"):
@@ -80,19 +95,37 @@ class DocxService:
             cell_margin.append(margin)
         tc_pr.append(cell_margin)
 
+        # Vertically center content in cell
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
         self._remove_table_borders(bg_table)
 
         # ── All cover content goes inside this cell ──
 
-        # Top spacer
-        p = cell.paragraphs[0]
-        p.space_before = Pt(40)
-        p.space_after = Pt(0)
+        # MCTV white logo (visible on navy background)
+        mctv_logo_white = PROJECT_ROOT / "assets" / "branding" / "mctv_logo_white.png"
+        if mctv_logo_white.exists():
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(0)
+            p.space_after = Pt(16)
+            run = p.add_run()
+            run.add_picture(str(mctv_logo_white), width=Inches(3.0))
+        else:
+            # Fallback text logo
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_after = Pt(16)
+            run = p.add_run("MCTV ELITE ADVERTISING")
+            run.font.size = Pt(16)
+            run.font.color.rgb = GOLD
+            run.font.bold = True
+            run.font.name = "Calibri"
 
         # "Prepared for" label
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(4)
+        p.space_after = Pt(2)
         run = p.add_run("Prepared for")
         run.font.size = Pt(11)
         run.font.color.rgb = WHITE
@@ -102,19 +135,19 @@ class DocxService:
         # Client name (big, white, bold)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(4)
+        p.space_after = Pt(2)
         run = p.add_run(prepared_for.upper())
-        run.font.size = Pt(22)
+        run.font.size = Pt(24)
         run.font.color.rgb = WHITE
         run.font.bold = True
         run.font.name = "Calibri"
 
-        # Subtitle (business name / industry)
+        # Subtitle (business name)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(4)
         run = p.add_run(subtitle)
-        run.font.size = Pt(13)
+        run.font.size = Pt(14)
         run.font.color.rgb = GOLD
         run.font.name = "Calibri"
 
@@ -124,16 +157,16 @@ class DocxService:
             if logo_path.exists():
                 p = cell.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p.space_before = Pt(12)
-                p.space_after = Pt(12)
+                p.space_before = Pt(8)
+                p.space_after = Pt(8)
                 run = p.add_run()
-                run.add_picture(str(logo_path), width=Inches(2.0))
+                run.add_picture(str(logo_path), width=Inches(1.8))
 
         # Gold accent line
         accent = cell.add_paragraph()
         accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        accent.space_before = Pt(20)
-        accent.space_after = Pt(20)
+        accent.space_before = Pt(16)
+        accent.space_after = Pt(16)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
         run.font.color.rgb = GOLD
@@ -152,8 +185,8 @@ class DocxService:
         # Gold accent line
         accent = cell.add_paragraph()
         accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        accent.space_before = Pt(20)
-        accent.space_after = Pt(24)
+        accent.space_before = Pt(16)
+        accent.space_after = Pt(16)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
         run.font.color.rgb = GOLD
@@ -161,7 +194,7 @@ class DocxService:
         # Date
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(20)
+        p.space_after = Pt(16)
         run = p.add_run(date)
         run.font.size = Pt(12)
         run.font.color.rgb = WHITE
@@ -188,7 +221,7 @@ class DocxService:
         # Website
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(30)
+        p.space_after = Pt(0)
         run = p.add_run("www.mctvofms.com")
         run.font.size = Pt(9)
         run.font.color.rgb = GOLD
@@ -199,10 +232,10 @@ class DocxService:
     def add_section_header(self, doc: Document, text: str):
         """Add a styled section header with gold accent bar underneath."""
         p = doc.add_paragraph()
-        p.space_before = Pt(2)
-        p.space_after = Pt(1)
+        p.space_before = Pt(0)
+        p.space_after = Pt(0)
         run = p.add_run(text.upper())
-        run.font.size = Pt(20)
+        run.font.size = Pt(18)
         run.font.color.rgb = NAVY
         run.font.bold = True
         run.font.name = "Calibri"
@@ -211,7 +244,7 @@ class DocxService:
         bar = doc.add_table(rows=1, cols=1)
         bar.alignment = WD_TABLE_ALIGNMENT.LEFT
         cell = bar.rows[0].cells[0]
-        cell.height = Cm(0.15)
+        cell.height = Cm(0.12)
         # Set gold background
         tc_pr = cell._element.get_or_add_tcPr()
         shd = tc_pr.makeelement(qn("w:shd"), {
@@ -220,27 +253,22 @@ class DocxService:
         })
         tc_pr.append(shd)
         # Set cell width to about 1/3 of page
-        cell.width = Cm(6)
+        cell.width = Cm(5)
         p = cell.paragraphs[0]
         pf = p.paragraph_format
         pf.space_before = Pt(0)
         pf.space_after = Pt(0)
         run = p.add_run()
-        run.font.size = Pt(2)
+        run.font.size = Pt(1)
         self._remove_table_borders(bar)
-
-        # Spacer after the bar
-        spacer = doc.add_paragraph()
-        spacer.space_before = Pt(0)
-        spacer.space_after = Pt(4)
 
     def add_sub_header(self, doc: Document, text: str):
         """Add a bold sub-header with gold left accent."""
         p = doc.add_paragraph()
-        p.space_before = Pt(8)
-        p.space_after = Pt(2)
+        p.space_before = Pt(6)
+        p.space_after = Pt(1)
         run = p.add_run(f"\u275A  {text}")
-        run.font.size = Pt(13)
+        run.font.size = Pt(12)
         run.font.color.rgb = NAVY
         run.font.bold = True
 
@@ -260,10 +288,10 @@ class DocxService:
 
         # Add padding via paragraph formatting
         p = cell.paragraphs[0]
-        p.space_before = Pt(6)
-        p.space_after = Pt(6)
+        p.space_before = Pt(4)
+        p.space_after = Pt(4)
         run = p.add_run(text)
-        run.font.size = Pt(11)
+        run.font.size = Pt(10)
         run.font.color.rgb = DARK_TEXT
         run.font.name = "Calibri"
 
@@ -291,12 +319,12 @@ class DocxService:
 
                 # Check if the first line has a title and inline body (split by newline)
                 p = doc.add_paragraph()
-                p.space_before = Pt(8)
-                p.space_after = Pt(6)
+                p.space_before = Pt(4)
+                p.space_after = Pt(2)
 
                 # Bold numbered title
                 run = p.add_run(f"{num}. {first_line}")
-                run.font.size = Pt(11)
+                run.font.size = Pt(10.5)
                 run.font.bold = True
                 run.font.color.rgb = NAVY
                 run.font.name = "Calibri"
@@ -304,31 +332,31 @@ class DocxService:
                 # Body text below the title
                 if rest:
                     p = doc.add_paragraph()
-                    p.space_after = Pt(8)
+                    p.space_after = Pt(4)
                     run = p.add_run(rest)
-                    run.font.size = Pt(11)
+                    run.font.size = Pt(10.5)
                     run.font.color.rgb = DARK_TEXT
                     run.font.name = "Calibri"
             else:
                 p = doc.add_paragraph()
-                p.space_after = Pt(8)
+                p.space_after = Pt(4)
                 run = p.add_run(para_text)
-                run.font.size = Pt(11)
+                run.font.size = Pt(10.5)
                 run.font.color.rgb = DARK_TEXT
                 run.font.name = "Calibri"
 
     def add_bullet_point(self, doc: Document, title: str, description: str):
         """Add a bullet point with bold title and description."""
         p = doc.add_paragraph()
-        p.space_after = Pt(3)
+        p.space_after = Pt(2)
 
         run = p.add_run(f"{title}: ")
-        run.font.size = Pt(11)
+        run.font.size = Pt(10.5)
         run.font.bold = True
         run.font.color.rgb = NAVY
 
         run = p.add_run(description)
-        run.font.size = Pt(11)
+        run.font.size = Pt(10.5)
         run.font.color.rgb = DARK_TEXT
 
     def add_bullet_list(self, doc: Document, text: str):
@@ -355,30 +383,31 @@ class DocxService:
                 self.add_body_text(doc, line)
 
     def add_inline_photos(self, doc: Document, photo_paths: list,
-                          max_width: float = 2.5, cols: int = 2):
-        """Add 1-2 photos inline within a section (no title, tight spacing).
+                          max_width: float = 2.0, cols: int = 2):
+        """Add 1-2 photos inline within a section (no title, compact).
 
-        Single photo: centered at 4.0 inches.
-        Multiple photos: side-by-side in a borderless table.
+        Single photo: centered at 2.5 inches (compact, not dominant).
+        Multiple photos: side-by-side at max_width each.
+        Photos should complement the text, not dominate the page.
         """
         photo_paths = [p for p in (photo_paths or []) if Path(p).exists()]
         if not photo_paths:
             return
 
-        # Single photo: center it larger
+        # Single photo: centered, moderate size
         if len(photo_paths) == 1:
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(8)
-            p.space_after = Pt(8)
+            p.space_before = Pt(4)
+            p.space_after = Pt(4)
             try:
                 run = p.add_run()
-                run.add_picture(photo_paths[0], width=Inches(4.0))
+                run.add_picture(photo_paths[0], width=Inches(2.0))
             except Exception:
                 pass
             return
 
-        # Multiple photos: grid layout
+        # Multiple photos: side-by-side grid
         table = doc.add_table(rows=1, cols=min(len(photo_paths), cols))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         for i, photo_path in enumerate(photo_paths[:cols]):
@@ -386,8 +415,8 @@ class DocxService:
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(6)
-            p.space_after = Pt(6)
+            p.space_before = Pt(2)
+            p.space_after = Pt(2)
             try:
                 run = p.add_run()
                 run.add_picture(photo_path, width=Inches(max_width))
@@ -399,7 +428,7 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
-                        max_width: float = 3.0, cols: int = 2):
+                        max_width: float = 2.5, cols: int = 2):
         """Add a grid of photos to the document.
 
         Args:
@@ -456,10 +485,10 @@ class DocxService:
             tc_pr.append(shd)
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(8)
-            p.space_after = Pt(4)
+            p.space_before = Pt(6)
+            p.space_after = Pt(2)
             run = p.add_run(str(value))
-            run.font.size = Pt(24)
+            run.font.size = Pt(20)
             run.font.bold = True
             run.font.color.rgb = GOLD
 
@@ -475,9 +504,9 @@ class DocxService:
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_before = Pt(0)
-            p.space_after = Pt(8)
+            p.space_after = Pt(6)
             run = p.add_run(label)
-            run.font.size = Pt(9)
+            run.font.size = Pt(8)
             run.font.color.rgb = WHITE
 
         # Remove borders
