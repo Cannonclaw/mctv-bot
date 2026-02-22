@@ -81,16 +81,23 @@ def main():
         # API Key status
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if api_key and api_key != "your-api-key-here":
-            st.success("API Key: Connected")
+            st.success("Claude API: Connected")
         else:
-            st.warning("API Key: Not configured")
+            st.warning("Claude API: Not configured")
             st.caption("Set your key in Settings or .env file")
+
+        creatomate_key = os.environ.get("CREATOMATE_API_KEY", "")
+        if creatomate_key:
+            st.success("Video API: Connected")
+        else:
+            st.caption("Video API: Not configured")
 
         st.divider()
         st.markdown("**Navigation**")
         st.page_link("app.py", label="Home", icon="\U0001F3E0")
         st.page_link("pages/1_Proposals.py", label="Proposal Generator", icon="\U0001F4DD")
         st.page_link("pages/2_Reports.py", label="Traction Reports", icon="\U0001F4CA")
+        st.page_link("pages/5_Video_Ads.py", label="Video Ads", icon="\U0001F3AC")
         st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
@@ -150,7 +157,7 @@ def main():
     st.markdown("### Recent Output")
     output_dir = Path(__file__).parent / "output"
     recent_files = []
-    for subdir in ["proposals", "reports", "emails"]:
+    for subdir in ["proposals", "reports", "emails", "videos"]:
         folder = output_dir / subdir
         if folder.exists():
             for f in sorted(folder.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:

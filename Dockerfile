@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create output directories
-RUN mkdir -p output/proposals output/reports output/emails data/leads data/logos
+RUN mkdir -p output/proposals output/reports output/emails output/videos data/leads data/logos
 
 EXPOSE 8501
 

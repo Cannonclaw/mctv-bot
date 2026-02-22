@@ -4,9 +4,11 @@ __pycache__/
 output/proposals/*
 output/reports/*
 output/emails/*
+output/videos/*
 !output/proposals/.gitkeep
 !output/reports/.gitkeep
 !output/emails/.gitkeep
+!output/videos/.gitkeep
 data/leads/*
 data/logos/*
 !data/leads/.gitkeep
