@@ -53,21 +53,52 @@ class DocxService:
     def add_cover_page(self, doc: Document, title: str, subtitle: str,
                        prepared_for: str, prepared_by: dict, date: str = None,
                        client_logo_path: str = None):
-        """Add a branded cover page with optional MCTV logo and client logo."""
+        """Add a branded cover page with soft cream background."""
         if date is None:
             date = datetime.now().strftime("%B %Y")
 
-        # MCTV Logo (if it exists)
+        # Full-page background table (single cell with cream fill)
+        bg_table = doc.add_table(rows=1, cols=1)
+        bg_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        cell = bg_table.rows[0].cells[0]
+
+        # Set cream background
+        tc_pr = cell._element.get_or_add_tcPr()
+        shd = tc_pr.makeelement(qn("w:shd"), {
+            qn("w:fill"): "F0EDE4",
+            qn("w:val"): "clear",
+        })
+        tc_pr.append(shd)
+
+        # Remove default cell margins for edge-to-edge feel
+        cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
+        for side in ("top", "left", "bottom", "right"):
+            margin = cell_margin.makeelement(qn(f"w:{side}"), {
+                qn("w:w"): "0",
+                qn("w:type"): "dxa",
+            })
+            cell_margin.append(margin)
+        tc_pr.append(cell_margin)
+
+        self._remove_table_borders(bg_table)
+
+        # ── All cover content goes inside this cell ──
+
+        # Top spacer
+        p = cell.paragraphs[0]
+        p.space_before = Pt(30)
+        p.space_after = Pt(0)
+
+        # MCTV Logo
         mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
         if mctv_logo.exists():
-            p = doc.add_paragraph()
+            p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_after = Pt(6)
             run = p.add_run()
             run.add_picture(str(mctv_logo), width=Inches(2.5))
         else:
-            # Fallback: text header
-            p = doc.add_paragraph()
+            p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_after = Pt(6)
             run = p.add_run("MCTV ELITE ADVERTISING")
@@ -80,62 +111,86 @@ class DocxService:
         if client_logo_path:
             logo_path = Path(client_logo_path)
             if logo_path.exists():
-                p = doc.add_paragraph()
+                p = cell.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p.space_before = Pt(12)
                 p.space_after = Pt(12)
                 run = p.add_run()
                 run.add_picture(str(logo_path), width=Inches(2.0))
 
+        # Gold accent line
+        accent = cell.add_paragraph()
+        accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        accent.space_before = Pt(16)
+        accent.space_after = Pt(16)
+        run = accent.add_run("\u2500" * 30)
+        run.font.size = Pt(10)
+        run.font.color.rgb = GOLD
+
         # Title
-        p = doc.add_paragraph()
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_before = Pt(24)
+        p.space_before = Pt(8)
         p.space_after = Pt(4)
         run = p.add_run(title)
         run.font.size = Pt(36)
         run.font.color.rgb = NAVY
         run.font.bold = True
+        run.font.name = "Calibri"
 
         # Subtitle
-        p = doc.add_paragraph()
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(16)
         run = p.add_run(subtitle)
         run.font.size = Pt(16)
         run.font.color.rgb = GOLD
+        run.font.name = "Calibri"
+
+        # Gold accent line
+        accent = cell.add_paragraph()
+        accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        accent.space_after = Pt(20)
+        run = accent.add_run("\u2500" * 30)
+        run.font.size = Pt(10)
+        run.font.color.rgb = GOLD
 
         # Date
-        p = doc.add_paragraph()
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(24)
         run = p.add_run(date)
         run.font.size = Pt(12)
         run.font.color.rgb = GRAY
+        run.font.name = "Calibri"
 
         # Prepared for (the client)
-        p = doc.add_paragraph()
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(16)
         run = p.add_run(f"Prepared for {prepared_for}")
         run.font.size = Pt(13)
         run.font.color.rgb = NAVY
         run.font.italic = True
+        run.font.name = "Calibri"
 
-        # Prepared by box
-        p = doc.add_paragraph()
+        # Prepared by
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(2)
         run = p.add_run(f"{prepared_by['name']}  |  MCTV Elite Advertising")
         run.font.size = Pt(10)
         run.font.bold = True
         run.font.color.rgb = DARK_TEXT
+        run.font.name = "Calibri"
 
-        p = doc.add_paragraph()
+        p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(30)
         run = p.add_run(f"{prepared_by['email']}  |  {prepared_by['phone']}")
         run.font.size = Pt(9)
         run.font.color.rgb = GRAY
+        run.font.name = "Calibri"
 
         doc.add_page_break()
 
