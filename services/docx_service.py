@@ -102,15 +102,16 @@ class DocxService:
 
         # ── All cover content goes inside this cell ──
 
-        # MCTV white logo (visible on navy background)
-        mctv_logo_white = PROJECT_ROOT / "assets" / "branding" / "mctv_logo_white.png"
-        if mctv_logo_white.exists():
+        # MCTV logo on navy background (RGB, no transparency needed)
+        # Use the pre-composited navy version for guaranteed rendering
+        mctv_logo_navy = PROJECT_ROOT / "assets" / "branding" / "mctv_logo_on_navy.png"
+        if mctv_logo_navy.exists():
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_before = Pt(0)
             p.space_after = Pt(16)
             run = p.add_run()
-            run.add_picture(str(mctv_logo_white), width=Inches(3.0))
+            run.add_picture(str(mctv_logo_navy), width=Inches(3.0))
         else:
             # Fallback text logo
             p = cell.paragraphs[0]
