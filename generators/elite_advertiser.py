@@ -79,7 +79,6 @@ class EliteAdvertiserProposal(BaseProposal):
     def _build_whats_included(self, doc, content):
         self.docx.add_section_header(doc, "What's Included")
         self.docx.add_body_text(doc, content)
-        doc.add_page_break()
 
     def _build_market_coverage(self, doc, data, content):
         self.docx.add_section_header(doc, "Your Market Coverage")
@@ -96,7 +95,9 @@ class EliteAdvertiserProposal(BaseProposal):
             self.docx.add_body_text(
                 doc,
                 f"As {data.business_name} grows, MCTV grows with you. "
-                f"Add {' or '.join(expanding)} at any time. Multi-market packages available."
+                f"MCTV is currently expanding into {' and '.join(expanding)}, "
+                f"adding to the 30 screens in Starkville and 25 in Tupelo. "
+                f"Multi-market packages available."
             )
         doc.add_page_break()
 
@@ -136,7 +137,6 @@ class EliteAdvertiserProposal(BaseProposal):
     def _build_why_mctv(self, doc, content):
         self.docx.add_section_header(doc, "Why MCTV Elite Advertising")
         self.docx.add_body_text(doc, content)
-        doc.add_page_break()
 
     def _build_getting_started(self, doc, data, content):
         self.docx.add_section_header(doc, "Let's Get Started")

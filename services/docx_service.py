@@ -75,7 +75,7 @@ class DocxService:
             run.font.name = "Calibri"
 
         # Spacer
-        for _ in range(3):
+        for _ in range(2):
             doc.add_paragraph()
 
         # Client logo (if provided)
@@ -89,8 +89,7 @@ class DocxService:
                 doc.add_paragraph()  # spacer after logo
 
         # Spacer
-        for _ in range(2):
-            doc.add_paragraph()
+        doc.add_paragraph()
 
         # Title
         p = doc.add_paragraph()
@@ -116,29 +115,32 @@ class DocxService:
         run.font.color.rgb = GRAY
 
         # Spacer
-        for _ in range(4):
+        for _ in range(2):
             doc.add_paragraph()
+
+        # Prepared for (the client)
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(f"Prepared for {prepared_for}")
+        run.font.size = Pt(13)
+        run.font.color.rgb = NAVY
+        run.font.italic = True
+
+        doc.add_paragraph()
 
         # Prepared by box
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run(f"{prepared_by['name']}  |  MCTV Elite Advertising")
-        run.font.size = Pt(11)
+        run.font.size = Pt(10)
         run.font.bold = True
         run.font.color.rgb = DARK_TEXT
 
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run(f"{prepared_by['email']}  |  {prepared_by['phone']}")
-        run.font.size = Pt(10)
+        run.font.size = Pt(9)
         run.font.color.rgb = GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"Prepared for {prepared_for}")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
-        run.font.italic = True
 
         doc.add_page_break()
 
@@ -172,18 +174,52 @@ class DocxService:
         run.font.bold = True
 
     def add_body_text(self, doc: Document, text: str):
-        """Add body paragraphs with proper spacing."""
+        """Add body paragraphs with proper spacing.
+
+        Automatically detects numbered items (e.g., '1. Bold Title\\nBody text')
+        and formats them with a bold navy title and normal body text.
+        """
+        import re
         paragraphs = text.strip().split("\n\n")
         for para_text in paragraphs:
             para_text = para_text.strip()
             if not para_text:
                 continue
-            p = doc.add_paragraph()
-            p.space_after = Pt(8)
-            run = p.add_run(para_text)
-            run.font.size = Pt(11)
-            run.font.color.rgb = DARK_TEXT
-            run.font.name = "Calibri"
+
+            # Detect numbered item: "1. Title\nBody..." or "1. Title: Body..."
+            numbered = re.match(r"^(\d+)\.\s+(.+?)(?:\n(.+))?$", para_text, re.DOTALL)
+            if numbered:
+                num = numbered.group(1)
+                first_line = numbered.group(2).strip()
+                rest = (numbered.group(3) or "").strip()
+
+                # Check if the first line has a title and inline body (split by newline)
+                p = doc.add_paragraph()
+                p.space_before = Pt(8)
+                p.space_after = Pt(6)
+
+                # Bold numbered title
+                run = p.add_run(f"{num}. {first_line}")
+                run.font.size = Pt(11)
+                run.font.bold = True
+                run.font.color.rgb = NAVY
+                run.font.name = "Calibri"
+
+                # Body text below the title
+                if rest:
+                    p = doc.add_paragraph()
+                    p.space_after = Pt(8)
+                    run = p.add_run(rest)
+                    run.font.size = Pt(11)
+                    run.font.color.rgb = DARK_TEXT
+                    run.font.name = "Calibri"
+            else:
+                p = doc.add_paragraph()
+                p.space_after = Pt(8)
+                run = p.add_run(para_text)
+                run.font.size = Pt(11)
+                run.font.color.rgb = DARK_TEXT
+                run.font.name = "Calibri"
 
     def add_bullet_point(self, doc: Document, title: str, description: str):
         """Add a bullet point with bold title and description."""
@@ -294,11 +330,15 @@ class DocxService:
         # Data rows
         for row_idx, tier in enumerate(tiers):
             row = table.rows[row_idx + 1]
+            rate = tier['monthly_rate']
+            rate_str = f"${rate:,.0f}" if rate == int(rate) else f"${rate:,.2f}"
+            cps = tier.get('cost_per_screen', 0)
+            cps_str = f"${cps:,.0f}" if cps == int(cps) else f"${cps:,.2f}"
             values = [
-                f"${tier['monthly_rate']:,}/mo",
+                f"{rate_str}/mo",
                 f"{tier['screens']} Screens",
                 tier.get("plays_per_month", ""),
-                f"${tier.get('cost_per_screen', 0):.2f}",
+                cps_str,
             ]
             for col_idx, value in enumerate(values):
                 cell = row.cells[col_idx]
@@ -496,18 +536,37 @@ class DocxService:
         doc.add_paragraph()
 
     def add_footer(self, doc: Document):
-        """Add branded footer to all pages."""
+        """Add branded footer with page numbers to all pages."""
         for section in doc.sections:
             footer = section.footer
             footer.is_linked_to_previous = False
             p = footer.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            # Footer text
             run = p.add_run(
                 f"MCTV Elite Advertising  |  {self.company['website']}  |  "
                 f"Oxford \u2022 Starkville \u2022 Tupelo \u2022 North Mississippi"
+                f"          "
             )
             run.font.size = Pt(8)
             run.font.color.rgb = GRAY
+
+            # Page number field
+            run = p.add_run()
+            fld_char_begin = run._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
+            run._element.append(fld_char_begin)
+
+            run2 = p.add_run()
+            instr = run2._element.makeelement(qn("w:instrText"), {})
+            instr.text = " PAGE "
+            run2._element.append(instr)
+            run2.font.size = Pt(8)
+            run2.font.color.rgb = GRAY
+
+            run3 = p.add_run()
+            fld_char_end = run3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
+            run3._element.append(fld_char_end)
 
     def save_proposal(self, doc: Document, filename: str, also_pdf: bool = True) -> Path:
         """Save a proposal document and optionally convert to PDF. Returns docx path."""
