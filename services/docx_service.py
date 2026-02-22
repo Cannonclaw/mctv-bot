@@ -623,38 +623,30 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_venue_categories(self, doc: Document):
-        """Add the 'Where Your Ads Play' venue category grid — compact single-line format."""
+        """Add the 'Where Your Ads Play' venue category grid — ultra-compact 2-row format."""
         categories = [
-            ("Restaurants & Bars", "55+ min captive audience"),
-            ("Barbershops & Salons", "15-45 min, homeowners"),
-            ("Medical & Dental", "20-60 min wait time"),
-            ("Gyms & Fitness", "Active professionals"),
-            ("Auto & Service Shops", "Extended wait times"),
-            ("Retail & Boutiques", "Local shoppers"),
-            ("Professional Offices", "High-income decision-makers"),
-            ("Community Venues", "High foot traffic"),
+            "Restaurants & Bars", "Barbershops & Salons",
+            "Medical & Dental", "Gyms & Fitness",
+            "Auto & Service Shops", "Retail & Boutiques",
+            "Professional Offices", "Community Venues",
         ]
 
-        table = doc.add_table(rows=len(categories) // 2, cols=2)
+        # 2 rows x 4 columns for maximum compactness
+        table = doc.add_table(rows=2, cols=4)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        for i in range(0, len(categories), 2):
-            row = table.rows[i // 2]
-            for j in range(2):
-                if i + j < len(categories):
-                    name, desc = categories[i + j]
-                    cell = row.cells[j]
-                    p = cell.paragraphs[0]
-                    p.space_after = Pt(2)
-                    # Bold venue name
-                    run = p.add_run(f"{name}  ")
-                    run.font.size = Pt(10)
-                    run.font.bold = True
-                    run.font.color.rgb = NAVY
-                    # Short description inline
-                    run = p.add_run(desc)
-                    run.font.size = Pt(9)
-                    run.font.color.rgb = GRAY
+        for i, name in enumerate(categories):
+            row_idx = i // 4
+            col_idx = i % 4
+            cell = table.rows[row_idx].cells[col_idx]
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(4)
+            p.space_after = Pt(4)
+            run = p.add_run(name)
+            run.font.size = Pt(9)
+            run.font.bold = True
+            run.font.color.rgb = NAVY
 
         self._remove_table_borders(table)
 
