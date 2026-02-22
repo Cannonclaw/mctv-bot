@@ -285,6 +285,8 @@ class DocxService:
             max_width: Max width per image in inches.
             cols: Number of columns in the grid.
         """
+        # Filter to only paths that actually exist on disk
+        photo_paths = [p for p in (photo_paths or []) if Path(p).exists()]
         if not photo_paths:
             return
 
