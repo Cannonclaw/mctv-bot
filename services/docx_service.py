@@ -53,19 +53,19 @@ class DocxService:
     def add_cover_page(self, doc: Document, title: str, subtitle: str,
                        prepared_for: str, prepared_by: dict, date: str = None,
                        client_logo_path: str = None):
-        """Add a branded cover page with soft cream background."""
+        """Add a branded cover page with navy background, gold/white text."""
         if date is None:
             date = datetime.now().strftime("%B %Y")
 
-        # Full-page background table (single cell with cream fill)
+        # Full-page background table (single cell with navy fill)
         bg_table = doc.add_table(rows=1, cols=1)
         bg_table.alignment = WD_TABLE_ALIGNMENT.CENTER
         cell = bg_table.rows[0].cells[0]
 
-        # Set cream background
+        # Set navy background
         tc_pr = cell._element.get_or_add_tcPr()
         shd = tc_pr.makeelement(qn("w:shd"), {
-            qn("w:fill"): "F0EDE4",
+            qn("w:fill"): "1B1F3B",
             qn("w:val"): "clear",
         })
         tc_pr.append(shd)
@@ -86,26 +86,37 @@ class DocxService:
 
         # Top spacer
         p = cell.paragraphs[0]
-        p.space_before = Pt(30)
+        p.space_before = Pt(40)
         p.space_after = Pt(0)
 
-        # MCTV Logo
-        mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
-        if mctv_logo.exists():
-            p = cell.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_after = Pt(6)
-            run = p.add_run()
-            run.add_picture(str(mctv_logo), width=Inches(2.5))
-        else:
-            p = cell.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_after = Pt(6)
-            run = p.add_run("MCTV ELITE ADVERTISING")
-            run.font.size = Pt(14)
-            run.font.color.rgb = GOLD
-            run.font.bold = True
-            run.font.name = "Calibri"
+        # "Prepared for" label
+        p = cell.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(4)
+        run = p.add_run("Prepared for")
+        run.font.size = Pt(11)
+        run.font.color.rgb = WHITE
+        run.font.italic = True
+        run.font.name = "Calibri"
+
+        # Client name (big, white, bold)
+        p = cell.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(4)
+        run = p.add_run(prepared_for.upper())
+        run.font.size = Pt(22)
+        run.font.color.rgb = WHITE
+        run.font.bold = True
+        run.font.name = "Calibri"
+
+        # Subtitle (business name / industry)
+        p = cell.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(4)
+        run = p.add_run(subtitle)
+        run.font.size = Pt(13)
+        run.font.color.rgb = GOLD
+        run.font.name = "Calibri"
 
         # Client logo (if provided)
         if client_logo_path:
@@ -121,36 +132,28 @@ class DocxService:
         # Gold accent line
         accent = cell.add_paragraph()
         accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        accent.space_before = Pt(16)
-        accent.space_after = Pt(16)
+        accent.space_before = Pt(20)
+        accent.space_after = Pt(20)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
         run.font.color.rgb = GOLD
 
-        # Title
+        # Title (ADVERTISING PARTNERSHIP PROPOSAL)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_before = Pt(8)
+        p.space_before = Pt(0)
         p.space_after = Pt(4)
         run = p.add_run(title)
-        run.font.size = Pt(36)
-        run.font.color.rgb = NAVY
-        run.font.bold = True
-        run.font.name = "Calibri"
-
-        # Subtitle
-        p = cell.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(16)
-        run = p.add_run(subtitle)
-        run.font.size = Pt(16)
+        run.font.size = Pt(28)
         run.font.color.rgb = GOLD
+        run.font.bold = True
         run.font.name = "Calibri"
 
         # Gold accent line
         accent = cell.add_paragraph()
         accent.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        accent.space_after = Pt(20)
+        accent.space_before = Pt(20)
+        accent.space_after = Pt(24)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
         run.font.color.rgb = GOLD
@@ -158,38 +161,37 @@ class DocxService:
         # Date
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(24)
+        p.space_after = Pt(20)
         run = p.add_run(date)
         run.font.size = Pt(12)
-        run.font.color.rgb = GRAY
+        run.font.color.rgb = WHITE
         run.font.name = "Calibri"
 
-        # Prepared for (the client)
-        p = cell.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(16)
-        run = p.add_run(f"Prepared for {prepared_for}")
-        run.font.size = Pt(13)
-        run.font.color.rgb = NAVY
-        run.font.italic = True
-        run.font.name = "Calibri"
-
-        # Prepared by
+        # Prepared by (rep info)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.space_after = Pt(2)
         run = p.add_run(f"{prepared_by['name']}  |  MCTV Elite Advertising")
         run.font.size = Pt(10)
         run.font.bold = True
-        run.font.color.rgb = DARK_TEXT
+        run.font.color.rgb = GOLD
         run.font.name = "Calibri"
 
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(30)
+        p.space_after = Pt(2)
         run = p.add_run(f"{prepared_by['email']}  |  {prepared_by['phone']}")
         run.font.size = Pt(9)
-        run.font.color.rgb = GRAY
+        run.font.color.rgb = WHITE
+        run.font.name = "Calibri"
+
+        # Website
+        p = cell.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(30)
+        run = p.add_run("www.mctvofms.com")
+        run.font.size = Pt(9)
+        run.font.color.rgb = GOLD
         run.font.name = "Calibri"
 
         doc.add_page_break()
@@ -699,37 +701,46 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_footer(self, doc: Document):
-        """Add branded footer with page numbers to all pages."""
+        """Add branded footer with 'PAGE | TOTAL' page numbers to all pages."""
         for section in doc.sections:
             footer = section.footer
             footer.is_linked_to_previous = False
             p = footer.paragraphs[0]
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
-            # Footer text
-            run = p.add_run(
-                f"MCTV Elite Advertising  |  {self.company['website']}  |  "
-                f"Oxford \u2022 Starkville \u2022 Tupelo \u2022 North Mississippi"
-                f"          "
-            )
-            run.font.size = Pt(8)
-            run.font.color.rgb = GRAY
-
-            # Page number field
+            # Page number: "X  |  Y" format
+            # PAGE field
             run = p.add_run()
-            fld_char_begin = run._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
-            run._element.append(fld_char_begin)
-
+            fld_begin = run._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
+            run._element.append(fld_begin)
             run2 = p.add_run()
             instr = run2._element.makeelement(qn("w:instrText"), {})
             instr.text = " PAGE "
             run2._element.append(instr)
-            run2.font.size = Pt(8)
+            run2.font.size = Pt(9)
             run2.font.color.rgb = GRAY
-
             run3 = p.add_run()
-            fld_char_end = run3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
-            run3._element.append(fld_char_end)
+            fld_end = run3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
+            run3._element.append(fld_end)
+
+            # Separator
+            sep = p.add_run("  |  ")
+            sep.font.size = Pt(9)
+            sep.font.color.rgb = GRAY
+
+            # NUMPAGES field
+            run4 = p.add_run()
+            fld_begin2 = run4._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
+            run4._element.append(fld_begin2)
+            run5 = p.add_run()
+            instr2 = run5._element.makeelement(qn("w:instrText"), {})
+            instr2.text = " NUMPAGES "
+            run5._element.append(instr2)
+            run5.font.size = Pt(9)
+            run5.font.color.rgb = GRAY
+            run6 = p.add_run()
+            fld_end2 = run6._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
+            run6._element.append(fld_end2)
 
     def save_proposal(self, doc: Document, filename: str, also_pdf: bool = True) -> Path:
         """Save a proposal document and optionally convert to PDF. Returns docx path."""

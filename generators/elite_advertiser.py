@@ -25,7 +25,7 @@ class EliteAdvertiserProposal(BaseProposal):
             ("market_coverage", "Your Market Coverage"),
             ("_pricing", "Partnership Pricing"),
             ("why_choose_mctv", "Why MCTV"),
-            ("getting_started", "Let's Get Started"),
+            ("getting_started", "Getting Started"),
             ("_team", "Meet Your Team"),
         ]
 
@@ -146,12 +146,12 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
 
-    # ── WHY MCTV (half page: 4 callout boxes) ──
+    # ── WHY MCTV (half page: bold sub-headers with descriptions) ──
 
     def _build_why_choose_mctv(self, doc, content):
         self.docx.add_section_header(doc, "Why MCTV")
 
-        # Claude returns 4 items — with or without leading dashes
+        # Claude returns 4-5 items — with or without leading dashes
         # Formats: "- Title: Desc", "- Title -- Desc", or just "Title: Desc"
         import re
         items = re.findall(
@@ -170,25 +170,15 @@ class EliteAdvertiserProposal(BaseProposal):
 
         if items:
             for title, desc in items:
-                self.docx.add_callout_box(
-                    doc,
-                    f"{title.strip()}: {desc.strip()}",
-                    bg_color="F0EDE4",
-                )
+                # Bold navy sub-header + body text (like Good Earth "Partnership Benefits")
+                self.docx.add_sub_header(doc, title.strip().upper())
+                self.docx.add_body_text(doc, desc.strip())
         else:
             # Final fallback if all parsing fails
             self.docx.add_bullet_list(doc, content)
 
-    # ── LET'S GET STARTED (half page: short close + steps + contact inline) ──
+    # ── GETTING STARTED (numbered steps like Good Earth) ──
 
     def _build_getting_started(self, doc, data, content):
-        self.docx.add_section_header(doc, "Let's Get Started")
+        self.docx.add_section_header(doc, "Getting Started")
         self.docx.add_body_text(doc, content)
-
-        # Contact info as a callout box (compact, stays on same page)
-        rep = get_team_member(self.config, data.sales_rep)
-        contact_text = (
-            f"Ready to get started? Reach out to {rep['name']} at "
-            f"{rep['email']} or {rep['phone']}."
-        )
-        self.docx.add_callout_box(doc, contact_text)
