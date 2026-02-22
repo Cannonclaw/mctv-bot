@@ -164,9 +164,8 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_section_header(doc, "Let's Get Started")
         self.docx.add_body_text(doc, content)
 
-        # Contact card
+        # Compact contact card (single paragraph with line breaks)
         rep = get_team_member(self.config, data.sales_rep)
-        self.docx.add_sub_header(doc, "YOUR PARTNERSHIP CONTACT")
 
         from docx.shared import Pt
         from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -174,19 +173,18 @@ class EliteAdvertiserProposal(BaseProposal):
 
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_before = Pt(16)
+        p.space_after = Pt(4)
+
         run = p.add_run(rep["name"])
-        run.font.size = Pt(14)
+        run.font.size = Pt(13)
         run.font.bold = True
         run.font.color.rgb = NAVY
 
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"{rep['email']}\n{rep['phone']}")
-        run.font.size = Pt(11)
+        run = p.add_run(f"\n{rep['email']}  |  {rep['phone']}")
+        run.font.size = Pt(10)
         run.font.color.rgb = GRAY
 
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(10)
+        run = p.add_run("\nMCTV Elite Advertising  |  MCTVofMS.com")
+        run.font.size = Pt(9)
         run.font.color.rgb = GOLD

@@ -623,41 +623,40 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_venue_categories(self, doc: Document):
-        """Add the 'Where Your Ads Play' venue category grid."""
-        categories = {
-            "Restaurants & Bars": "55+ min meals \u2014 your brand plays repeatedly to a captive audience.",
-            "Barbershops & Salons": "15-45 min dwell. Personal care clients are homeowners and decision-makers.",
-            "Medical & Dental": "20-60 min wait. Patients actively watching screens.",
-            "Gyms & Fitness": "Active professionals with disposable income.",
-            "Auto & Service Shops": "Extended waits. Vehicle owners = homeowners.",
-            "Retail & Boutiques": "Local shoppers investing in homes and lifestyles.",
-            "Professional Offices": "Attorneys, real estate, insurance \u2014 high income decision-makers.",
-            "Community Venues": "High foot traffic reaching diverse demographics.",
-        }
+        """Add the 'Where Your Ads Play' venue category grid — compact single-line format."""
+        categories = [
+            ("Restaurants & Bars", "55+ min captive audience"),
+            ("Barbershops & Salons", "15-45 min, homeowners"),
+            ("Medical & Dental", "20-60 min wait time"),
+            ("Gyms & Fitness", "Active professionals"),
+            ("Auto & Service Shops", "Extended wait times"),
+            ("Retail & Boutiques", "Local shoppers"),
+            ("Professional Offices", "High-income decision-makers"),
+            ("Community Venues", "High foot traffic"),
+        ]
 
         table = doc.add_table(rows=len(categories) // 2, cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        items = list(categories.items())
-        for i in range(0, len(items), 2):
+        for i in range(0, len(categories), 2):
             row = table.rows[i // 2]
             for j in range(2):
-                if i + j < len(items):
-                    name, desc = items[i + j]
+                if i + j < len(categories):
+                    name, desc = categories[i + j]
                     cell = row.cells[j]
                     p = cell.paragraphs[0]
-                    run = p.add_run(name)
-                    run.font.size = Pt(11)
+                    p.space_after = Pt(2)
+                    # Bold venue name
+                    run = p.add_run(f"{name}  ")
+                    run.font.size = Pt(10)
                     run.font.bold = True
                     run.font.color.rgb = NAVY
-
-                    p = cell.add_paragraph()
+                    # Short description inline
                     run = p.add_run(desc)
                     run.font.size = Pt(9)
                     run.font.color.rgb = GRAY
 
         self._remove_table_borders(table)
-        doc.add_paragraph()
 
     def add_footer(self, doc: Document):
         """Add branded footer with page numbers to all pages."""
