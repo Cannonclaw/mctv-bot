@@ -62,21 +62,19 @@ class DocxService:
         if mctv_logo.exists():
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_after = Pt(6)
             run = p.add_run()
             run.add_picture(str(mctv_logo), width=Inches(2.5))
         else:
             # Fallback: text header
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_after = Pt(6)
             run = p.add_run("MCTV ELITE ADVERTISING")
             run.font.size = Pt(14)
             run.font.color.rgb = GOLD
             run.font.bold = True
             run.font.name = "Calibri"
-
-        # Spacer
-        for _ in range(2):
-            doc.add_paragraph()
 
         # Client logo (if provided)
         if client_logo_path:
@@ -84,16 +82,16 @@ class DocxService:
             if logo_path.exists():
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(12)
+                p.space_after = Pt(12)
                 run = p.add_run()
                 run.add_picture(str(logo_path), width=Inches(2.0))
-                doc.add_paragraph()  # spacer after logo
-
-        # Spacer
-        doc.add_paragraph()
 
         # Title
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_before = Pt(24)
+        p.space_after = Pt(4)
         run = p.add_run(title)
         run.font.size = Pt(36)
         run.font.color.rgb = NAVY
@@ -102,35 +100,32 @@ class DocxService:
         # Subtitle
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(16)
         run = p.add_run(subtitle)
         run.font.size = Pt(16)
         run.font.color.rgb = GOLD
 
         # Date
-        doc.add_paragraph()
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(24)
         run = p.add_run(date)
         run.font.size = Pt(12)
         run.font.color.rgb = GRAY
 
-        # Spacer
-        for _ in range(2):
-            doc.add_paragraph()
-
         # Prepared for (the client)
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(16)
         run = p.add_run(f"Prepared for {prepared_for}")
         run.font.size = Pt(13)
         run.font.color.rgb = NAVY
         run.font.italic = True
 
-        doc.add_paragraph()
-
         # Prepared by box
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_after = Pt(2)
         run = p.add_run(f"{prepared_by['name']}  |  MCTV Elite Advertising")
         run.font.size = Pt(10)
         run.font.bold = True
