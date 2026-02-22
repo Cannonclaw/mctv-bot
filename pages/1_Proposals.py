@@ -83,6 +83,19 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
     docx_svc.ad_example_paths = ad_example_paths or []
     docx_svc.extra_photo_paths = extra_photo_paths or []
 
+    # Auto-include default community screen photos when no venue or extra
+    # photos were uploaded. These live in assets/screens/ and show MCTV
+    # screens in real venues across the community.
+    if not docx_svc.venue_photo_paths and not docx_svc.extra_photo_paths:
+        screens_dir = Path(__file__).parent.parent / "assets" / "screens"
+        if screens_dir.exists():
+            default_screens = sorted(
+                str(p) for p in screens_dir.glob("*")
+                if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+            )
+            if default_screens:
+                docx_svc.extra_photo_paths = default_screens
+
     generator = generator_class(config, claude, docx_svc)
 
     progress_bar = st.progress(0, text="Starting generation...")
