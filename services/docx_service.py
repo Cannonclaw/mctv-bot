@@ -43,10 +43,10 @@ class DocxService:
 
         # Set narrow margins
         for section in doc.sections:
-            section.top_margin = Cm(2.0)
-            section.bottom_margin = Cm(2.0)
-            section.left_margin = Cm(2.5)
-            section.right_margin = Cm(2.5)
+            section.top_margin = Cm(1.8)
+            section.bottom_margin = Cm(1.8)
+            section.left_margin = Cm(2.3)
+            section.right_margin = Cm(2.3)
 
         return doc
 
@@ -142,8 +142,8 @@ class DocxService:
     def add_section_header(self, doc: Document, text: str):
         """Add a styled section header with gold accent bar underneath."""
         p = doc.add_paragraph()
-        p.space_before = Pt(6)
-        p.space_after = Pt(2)
+        p.space_before = Pt(2)
+        p.space_after = Pt(1)
         run = p.add_run(text.upper())
         run.font.size = Pt(20)
         run.font.color.rgb = NAVY
@@ -174,14 +174,14 @@ class DocxService:
 
         # Spacer after the bar
         spacer = doc.add_paragraph()
-        spacer.space_before = Pt(4)
-        spacer.space_after = Pt(8)
+        spacer.space_before = Pt(0)
+        spacer.space_after = Pt(4)
 
     def add_sub_header(self, doc: Document, text: str):
         """Add a bold sub-header with gold left accent."""
         p = doc.add_paragraph()
-        p.space_before = Pt(12)
-        p.space_after = Pt(4)
+        p.space_before = Pt(8)
+        p.space_after = Pt(2)
         run = p.add_run(f"\u275A  {text}")
         run.font.size = Pt(13)
         run.font.color.rgb = NAVY
@@ -203,15 +203,14 @@ class DocxService:
 
         # Add padding via paragraph formatting
         p = cell.paragraphs[0]
-        p.space_before = Pt(8)
-        p.space_after = Pt(8)
+        p.space_before = Pt(6)
+        p.space_after = Pt(6)
         run = p.add_run(text)
         run.font.size = Pt(11)
         run.font.color.rgb = DARK_TEXT
         run.font.name = "Calibri"
 
         self._remove_table_borders(table)
-        doc.add_paragraph()  # spacer after box
 
     def add_body_text(self, doc: Document, text: str):
         """Add body paragraphs with proper spacing.
@@ -264,7 +263,7 @@ class DocxService:
     def add_bullet_point(self, doc: Document, title: str, description: str):
         """Add a bullet point with bold title and description."""
         p = doc.add_paragraph()
-        p.space_after = Pt(6)
+        p.space_after = Pt(3)
 
         run = p.add_run(f"{title}: ")
         run.font.size = Pt(11)
@@ -382,7 +381,6 @@ class DocxService:
                 run.font.color.rgb = GRAY
 
         self._remove_table_borders(table)
-        doc.add_paragraph()  # spacer
 
     def add_metrics_banner(self, doc: Document, metrics: dict):
         """Add a row of big metrics with navy background (e.g., 125+ Screens)."""
@@ -484,8 +482,6 @@ class DocxService:
                     })
                     shading.append(shading_elm)
 
-        doc.add_paragraph()
-
     def add_contract_terms(self, doc: Document, config: dict):
         """Add partnership terms section with 6-month and 12-month boxes."""
         terms = config["pricing"]["contract_terms"]
@@ -524,7 +520,6 @@ class DocxService:
             run.font.color.rgb = GRAY
 
         self._remove_table_borders(table)
-        doc.add_paragraph()
 
     def add_data_table(self, doc: Document, headers: list, rows: list):
         """Add a data table for traction reports."""
@@ -565,8 +560,6 @@ class DocxService:
                         qn("w:val"): "clear",
                     })
                     shading.append(shading_elm)
-
-        doc.add_paragraph()
 
     def add_team_section(self, doc: Document):
         """Add the Meet Your Team section with photos."""

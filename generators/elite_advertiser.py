@@ -141,7 +141,6 @@ class EliteAdvertiserProposal(BaseProposal):
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
-        doc.add_page_break()
 
     # ── WHY MCTV (half page: 4 callout boxes) ──
 
