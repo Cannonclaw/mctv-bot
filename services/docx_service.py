@@ -199,6 +199,46 @@ class DocxService:
         run.font.size = Pt(11)
         run.font.color.rgb = DARK_TEXT
 
+    def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
+                        max_width: float = 3.0, cols: int = 2):
+        """Add a grid of photos to the document.
+
+        Args:
+            photo_paths: List of file paths to images.
+            title: Optional sub-header above the photos.
+            max_width: Max width per image in inches.
+            cols: Number of columns in the grid.
+        """
+        if not photo_paths:
+            return
+
+        if title:
+            self.add_sub_header(doc, title)
+
+        # Build table grid for photos
+        rows_needed = (len(photo_paths) + cols - 1) // cols
+        table = doc.add_table(rows=rows_needed, cols=cols)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        for i, photo_path in enumerate(photo_paths):
+            row_idx = i // cols
+            col_idx = i % cols
+            cell = table.rows[row_idx].cells[col_idx]
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            try:
+                run = p.add_run()
+                run.add_picture(photo_path, width=Inches(max_width))
+            except Exception:
+                run = p.add_run("[Image could not be loaded]")
+                run.font.size = Pt(9)
+                run.font.color.rgb = GRAY
+
+        self._remove_table_borders(table)
+        doc.add_paragraph()  # spacer
+
     def add_metrics_banner(self, doc: Document, metrics: dict):
         """Add a row of big metrics (e.g., 125+ Screens, 1.9M+ Impressions)."""
         table = doc.add_table(rows=2, cols=len(metrics))

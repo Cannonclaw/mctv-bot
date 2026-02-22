@@ -37,8 +37,8 @@ st.caption("Select a proposal type and fill in the details to generate a polishe
 
 # ── HELPER: save uploaded logo to temp file ────────────────────────────────
 
-def _save_uploaded_logo(uploaded_file) -> str | None:
-    """Save an uploaded logo to a temp file and return the path."""
+def _save_uploaded_file(uploaded_file) -> str | None:
+    """Save a single uploaded file to a temp file and return the path."""
     if uploaded_file is None:
         return None
     suffix = Path(uploaded_file.name).suffix
@@ -48,9 +48,20 @@ def _save_uploaded_logo(uploaded_file) -> str | None:
     return tmp.name
 
 
+def _save_uploaded_files(uploaded_files) -> list[str]:
+    """Save multiple uploaded files and return list of paths."""
+    paths = []
+    for f in (uploaded_files or []):
+        path = _save_uploaded_file(f)
+        if path:
+            paths.append(path)
+    return paths
+
+
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
 
-def _generate_proposal(generator_class, data, client_logo_path=None):
+def _generate_proposal(generator_class, data, client_logo_path=None,
+                       venue_photo_paths=None, ad_example_paths=None, extra_photo_paths=None):
     """Run the proposal generation pipeline with progress UI."""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key or api_key == "your-api-key-here":
@@ -66,8 +77,11 @@ def _generate_proposal(generator_class, data, client_logo_path=None):
     claude = ClaudeService(api_key=api_key, model=model)
     docx_svc = DocxService(config)
 
-    # Store the client logo path on the docx service so generators can access it
+    # Store photo paths on the docx service so generators can access them
     docx_svc.client_logo_path = client_logo_path
+    docx_svc.venue_photo_paths = venue_photo_paths or []
+    docx_svc.ad_example_paths = ad_example_paths or []
+    docx_svc.extra_photo_paths = extra_photo_paths or []
 
     generator = generator_class(config, claude, docx_svc)
 
@@ -137,12 +151,14 @@ def _generate_proposal(generator_class, data, client_logo_path=None):
         st.exception(e)
 
     finally:
-        # Clean up temp logo file
-        if client_logo_path:
-            try:
-                os.unlink(client_logo_path)
-            except OSError:
-                pass
+        # Clean up all temp files
+        all_temps = [client_logo_path] + (venue_photo_paths or []) + (ad_example_paths or []) + (extra_photo_paths or [])
+        for tmp in all_temps:
+            if tmp:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
 
 
 config = load_config()
@@ -166,15 +182,53 @@ proposal_type = st.selectbox(
 
 st.divider()
 
-# ── CLIENT LOGO UPLOAD (shared across all forms) ─────────────────────────────
-st.markdown("#### Client Logo (optional)")
+# ── PHOTOS & IMAGES (shared across all forms) ────────────────────────────────
+st.markdown("#### Photos & Images (optional)")
+
 client_logo_file = st.file_uploader(
-    "Upload the client's logo to appear on the cover page",
+    "Client Logo — appears on the cover page",
     type=["png", "jpg", "jpeg", "webp"],
-    help="The logo will be placed on the proposal cover page above the title.",
+    key="client_logo",
+    help="The client's logo will be placed on the proposal cover page.",
 )
 if client_logo_file:
-    st.image(client_logo_file, width=200, caption="Logo preview")
+    st.image(client_logo_file, width=150, caption="Logo preview")
+
+venue_photos = st.file_uploader(
+    "Venue / Screen Photos — appears in the Market Coverage section",
+    type=["png", "jpg", "jpeg", "webp"],
+    accept_multiple_files=True,
+    key="venue_photos",
+    help="Photos of MCTV screens in real venues. Upload as many as you want.",
+)
+if venue_photos:
+    cols = st.columns(min(len(venue_photos), 4))
+    for i, photo in enumerate(venue_photos):
+        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+
+ad_examples = st.file_uploader(
+    "Ad Creative Examples — appears in the What's Included section",
+    type=["png", "jpg", "jpeg", "webp"],
+    accept_multiple_files=True,
+    key="ad_examples",
+    help="Screenshots of ads you've designed for other clients to showcase quality.",
+)
+if ad_examples:
+    cols = st.columns(min(len(ad_examples), 4))
+    for i, photo in enumerate(ad_examples):
+        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+
+extra_photos = st.file_uploader(
+    "Other Photos — appears at the end before the team section",
+    type=["png", "jpg", "jpeg", "webp"],
+    accept_multiple_files=True,
+    key="extra_photos",
+    help="Any other images you want in the proposal (events, data graphics, etc.)",
+)
+if extra_photos:
+    cols = st.columns(min(len(extra_photos), 4))
+    for i, photo in enumerate(extra_photos):
+        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
 
 st.divider()
 
@@ -218,7 +272,10 @@ if proposal_type == "Elite Advertiser":
         if not business_name or not contact_name or not industry:
             st.error("Please fill in all required fields (marked with *).")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = ProposalInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -232,7 +289,11 @@ if proposal_type == "Elite Advertiser":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(EliteAdvertiserProposal, data, client_logo_path=logo_path)
+            _generate_proposal(EliteAdvertiserProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
 
 
 # ── HOST MEDIA KIT FORM ──────────────────────────────────────────────────────
@@ -259,7 +320,10 @@ elif proposal_type == "Host Media Kit":
         if not venue_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = HostInput(
                 venue_name=venue_name,
                 contact_name=contact_name,
@@ -272,7 +336,11 @@ elif proposal_type == "Host Media Kit":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(HostMediaKitProposal, data, client_logo_path=logo_path)
+            _generate_proposal(HostMediaKitProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
 
 
 # ── MULTI-BRAND BUNDLE FORM ──────────────────────────────────────────────────
@@ -313,7 +381,10 @@ elif proposal_type == "Multi-Brand Bundle":
         if not owner_name or not businesses[0].name:
             st.error("Please fill in the owner name and at least the first business.")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = BundleInput(
                 owner_name=owner_name,
                 owner_email=owner_email,
@@ -322,7 +393,11 @@ elif proposal_type == "Multi-Brand Bundle":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(MultiBrandBundleProposal, data, client_logo_path=logo_path)
+            _generate_proposal(MultiBrandBundleProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
 
 
 # ── VENUE PARTNER / REVENUE SHARE FORM ───────────────────────────────────────
@@ -355,7 +430,10 @@ elif proposal_type == "Venue Partner / Revenue Share":
         if not venue_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = VenuePartnerInput(
                 venue_name=venue_name,
                 contact_name=contact_name,
@@ -371,7 +449,11 @@ elif proposal_type == "Venue Partner / Revenue Share":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(VenuePartnerProposal, data, client_logo_path=logo_path)
+            _generate_proposal(VenuePartnerProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
 
 
 # ── CATEGORY EXCLUSIVITY FORM ────────────────────────────────────────────────
@@ -401,7 +483,10 @@ elif proposal_type == "Category Exclusivity":
         if not business_name or not contact_name or not exclusive_category:
             st.error("Please fill in all required fields.")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = ExclusivityInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -414,7 +499,11 @@ elif proposal_type == "Category Exclusivity":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(CategoryExclusivityProposal, data, client_logo_path=logo_path)
+            _generate_proposal(CategoryExclusivityProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
 
 
 # ── RENEWAL / UPGRADE FORM ───────────────────────────────────────────────────
@@ -442,7 +531,10 @@ elif proposal_type == "Renewal / Upgrade":
         if not business_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:
-            logo_path = _save_uploaded_logo(client_logo_file)
+            logo_path = _save_uploaded_file(client_logo_file)
+            v_paths = _save_uploaded_files(venue_photos)
+            a_paths = _save_uploaded_files(ad_examples)
+            e_paths = _save_uploaded_files(extra_photos)
             data = RenewalInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -456,4 +548,8 @@ elif proposal_type == "Renewal / Upgrade":
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
             )
-            _generate_proposal(RenewalUpgradeProposal, data, client_logo_path=logo_path)
+            _generate_proposal(RenewalUpgradeProposal, data,
+                               client_logo_path=logo_path,
+                               venue_photo_paths=v_paths,
+                               ad_example_paths=a_paths,
+                               extra_photo_paths=e_paths)
