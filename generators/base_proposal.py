@@ -11,7 +11,7 @@ from services.config_service import get_team_member
 # Sections after which to insert uploaded photos
 VENUE_PHOTO_SECTIONS = {"market_coverage", "_market_coverage"}
 AD_EXAMPLE_SECTIONS = {"whats_included", "_whats_included"}
-EXTRA_PHOTO_SECTIONS = {"_team"}  # extra photos go right before team
+EXTRA_PHOTO_SECTIONS = {"getting_started"}  # extra photos go right after Getting Started
 
 
 class BaseProposal(ABC):
@@ -66,10 +66,6 @@ class BaseProposal(ABC):
             if progress_callback:
                 progress_callback(section_title, idx + 1, total)
 
-            # Insert extra photos BEFORE team section
-            if section_key in EXTRA_PHOTO_SECTIONS and extra_photos:
-                self.docx.add_photos_grid(doc, extra_photos, title="Gallery")
-
             # Some sections don't need Claude (pricing, team, etc.)
             if section_key.startswith("_"):
                 self.build_section(doc, section_key, input_data, "")
@@ -93,6 +89,10 @@ class BaseProposal(ABC):
             # Insert ad examples AFTER whats_included section
             if section_key in AD_EXAMPLE_SECTIONS and ad_examples:
                 self.docx.add_photos_grid(doc, ad_examples, title="Ad Creative Examples")
+
+            # Insert extra photos (scraped/uploaded) AFTER Getting Started section
+            if section_key in EXTRA_PHOTO_SECTIONS and extra_photos:
+                self.docx.add_photos_grid(doc, extra_photos, title="Gallery")
 
         # Add footer
         self.docx.add_footer(doc)

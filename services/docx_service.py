@@ -363,7 +363,6 @@ class DocxService:
 
         # Remove borders
         self._remove_table_borders(table)
-        doc.add_paragraph()
 
     def add_pricing_table(self, doc: Document, tiers: list):
         """Add a formatted pricing comparison table."""

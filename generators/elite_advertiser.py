@@ -168,5 +168,3 @@ class EliteAdvertiserProposal(BaseProposal):
         run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
         run.font.size = Pt(10)
         run.font.color.rgb = GOLD
-
-        doc.add_page_break()
