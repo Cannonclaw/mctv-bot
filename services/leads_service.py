@@ -187,10 +187,16 @@ Log in to the MCTV Bot to view all leads and generate a proposal.
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
 
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, notify_emails.split(","), msg.as_string())
+        # Port 465 = SSL, Port 587 = STARTTLS
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, notify_emails.split(","), msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, notify_emails.split(","), msg.as_string())
 
         return True
 
