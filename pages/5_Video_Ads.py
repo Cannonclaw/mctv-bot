@@ -26,11 +26,18 @@ st.caption("Generate professional video ad mockups for clients using Creatomate 
 
 creatomate_key = os.environ.get("CREATOMATE_API_KEY", "")
 if not creatomate_key:
-    st.error(
-        "CREATOMATE_API_KEY not configured. "
-        "Add it to your .env file or set it in Render environment variables."
+    st.warning("Creatomate API key not configured.")
+    creatomate_key = st.text_input(
+        "Paste your Creatomate API key",
+        type="password",
+        placeholder="Paste your API key from creatomate.com",
+        help="Get your key at https://creatomate.com — go to your project settings.",
     )
-    st.stop()
+    if not creatomate_key:
+        st.info("Enter your API key above to get started, or add CREATOMATE_API_KEY to your Render environment variables for permanent setup.")
+        st.stop()
+    else:
+        st.success("API key entered! Using it for this session.")
 
 from services.creatomate_service import CreatomateService
 
