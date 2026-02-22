@@ -2,7 +2,7 @@
 
 ## The Human
 
-**Creed Cannon** — Owner/Managing Partner of MCTV Elite Advertising. Hands-on builder. Runs the business with his wife Mary Michael Cannon. This is his passion project and he's deeply invested in making it great. He thinks fast, iterates fast, and gets excited about new capabilities ("Yes, dream flow!!!").
+**Creed Cannon** — Owner/Managing Partner of MCTV Elite Advertising. Hands-on builder. Runs the business with his wife Mary Michael Cannon. This is his passion project and he's deeply invested in making it great. He thinks fast, iterates fast, and gets excited about new capabilities.
 
 ### Working Style
 - Prefers seeing results quickly — generate, check PDF, iterate
@@ -12,6 +12,7 @@
 - Trusts the process — approves plans quickly and lets me run
 - Says "back to the proposals" when he wants to refocus after tangents
 - When he says a file name (like "MEMORY.md"), he means "update it" or "create it"
+- Calls me "pup" when he's in a good mood and wants me to keep going
 
 ---
 
@@ -23,20 +24,25 @@
 - **GitHub:** https://github.com/Cannonclaw/mctv-bot
 - **Hosting:** Render (Docker, auto-deploys from `main` branch)
 - **Database:** Supabase REST API (leads/intake) — https://dtapevlfnekzepbtlabj.supabase.co
-- **AI:** Anthropic Claude API (claude-opus-4-6 for proposal content)
+- **AI:** Anthropic Claude API (claude-sonnet-4-5-20250929 for proposal content)
 - **Video:** Creatomate API v1 (https://creatomate.com) — template-based video rendering
 - **Auth:** Simple shared password gate (APP_PASSWORD env var)
 
 ### Key Files
-- `services/docx_service.py` — The big one. All Word document formatting and branding.
+- `services/docx_service.py` — The big one. All Word document formatting, branding, borders, photos.
 - `services/creatomate_service.py` — Creatomate video generation API wrapper (stdlib only).
-- `generators/elite_advertiser.py` — The flagship proposal. Most heavily optimized.
+- `generators/elite_advertiser.py` — The flagship proposal. Most heavily optimized. PHOTO_DISTRIBUTION here.
 - `generators/base_proposal.py` — Abstract base class all generators inherit from.
 - `generators/multi_brand_bundle.py` — Multi-business bundle (Good Earth was built with this).
 - `config/prompts.json` — Claude prompt templates per proposal type.
 - `config/config.json` — Company info, pricing tiers, team, markets, venues.
 - `services/auth.py` — Login page with MCTV logo.
+- `pages/1_Proposals.py` — Main proposal generation page. Handles photo uploads + default screen photos.
 - `pages/5_Video_Ads.py` — Video ad generator page.
+- `assets/branding/mctv_logo.png` — Dark MCTV logo (RGB, 1920×1080) — for login page, white backgrounds.
+- `assets/branding/mctv_logo_on_navy.png` — White MCTV logo pre-composited on navy (RGB, 934×283) — for cover page.
+- `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
+- `assets/screens/` — Default community screen photos. Auto-included when no user photos uploaded.
 - `SOUL.md` — Brand voice and identity guide.
 - `HEARTBEAT.md` — Living changelog and project status.
 - `CLAUDE.md` — Technical project documentation.
@@ -78,31 +84,68 @@ All proposal generators inherit from `BaseProposal`:
 1. `get_sections()` — ordered (key, title) tuples
 2. `get_prompt_variables()` — template variables from input data
 3. `build_section()` — dispatches to per-section builders
-4. `generate()` — orchestrates: cover page -> Claude prompts -> sections -> save
+4. `generate()` — orchestrates: cover page → Claude prompts → sections → save
 5. Sections prefixed with `_` (e.g., `_pricing`, `_team`) skip Claude API calls
 
-### Cover Page Layout (current)
-Navy (#1B1F3B) background table cell with gold/white text:
-- "Prepared for" (white italic) → CLIENT NAME (white bold caps) → Business Name (gold)
+### Cover Page Layout (v19+)
+Navy (#1B1F3B) background table cell, own section with tight margins (0.8/0.5/1.3/1.3 cm), section break after restores normal margins (1.5/2.0 cm). No footer on cover page.
+
+Content order (vertically centered):
+- MCTV logo (mctv_logo_on_navy.png, 3.0 inches) — **must be RGB with navy baked in, NOT transparent**
+- "Prepared for" (white italic 11pt)
+- CLIENT NAME (white bold 24pt caps)
+- Business Name (gold 14pt)
+- Client logo (if uploaded, 1.8 inches)
 - Gold accent line (─ × 30)
-- "ADVERTISING PARTNERSHIP PROPOSAL" (gold bold, 28pt)
+- "ADVERTISING PARTNERSHIP PROPOSAL" (gold bold 28pt)
 - Gold accent line
-- Date (white) → Rep name | MCTV (gold) → email | phone (white) → mctvofms.com (gold)
+- Date (white 12pt)
+- Rep name | MCTV Elite Advertising (gold bold 10pt)
+- email | phone (white 9pt)
+- www.mctvofms.com (gold 9pt)
+
+Cell height: 14800 twips (~10.3 inches). Vertical centering via `WD_ALIGN_VERTICAL.CENTER`.
 
 ### Photo Distribution System
-`PHOTO_DISTRIBUTION` class attribute scatters scraped photos across sections instead of one gallery page. Only implemented for Elite Advertiser so far. Others use legacy gallery.
+`PHOTO_DISTRIBUTION` class attribute on each generator scatters photos across sections:
+```python
+PHOTO_DISTRIBUTION = {
+    "opportunity_hook": {"source": "extra", "max": 2},                          # page 2: side-by-side
+    "market_coverage":  {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},  # page 3
+    "getting_started":  {"source": "extra", "max": 1},                          # page 5: inline
+}
+```
 
-### Document Formatting
-All branding lives in `DocxService`. Key methods:
-- `add_cover_page()` — navy background table cell, gold/white text, gold accent lines
-- `add_section_header()` — 20pt navy bold + gold accent bar
-- `add_sub_header()` — 13pt navy bold with ❚ gold left accent
-- `add_callout_box()` — colored background table (default cream #F0EDE4)
-- `add_metrics_banner()` — navy background, gold stats numbers
-- `add_bullet_list()` — parses "- Title: Description" format
-- `add_inline_photos()` — 1-2 photos within sections
-- `add_footer()` — "X | Y" page numbers, right-aligned
-- PDF conversion: LibreOffice headless (Docker) or docx2pdf (Windows)
+Three photo pools:
+- **venue_photo_paths** — uploaded venue/screen photos → after market_coverage with "Our Screens in Action"
+- **ad_example_paths** — uploaded ad screenshots → after whats_included with "Ad Creative Examples"
+- **extra_photo_paths** — scraped/uploaded/default photos → distributed via PHOTO_DISTRIBUTION
+
+**Default screen photos:** When no venue or extra photos uploaded, `assets/screens/*.{png,jpg,jpeg,webp}` auto-populate as extra photos. (Implemented in `pages/1_Proposals.py`.)
+
+### Document Formatting (v20+)
+All branding lives in `DocxService`. Key methods and their current settings:
+- `add_cover_page()` — full-page navy table, own section, tight margins, no footer
+- `add_section_header()` — 18pt navy bold + gold accent bar (5cm wide, 0.12cm tall)
+- `add_sub_header()` — 12pt navy bold with ❚ gold left accent
+- `add_callout_box()` — cream background + **gold left border** + thin gray sides, 0.3cm left indent
+- `add_metrics_banner()` — navy background, gold stats (20pt), **gold top border accent**
+- `add_bullet_point()` — **gold ● bullet** + hanging indent (0.6cm) + bold navy title + description
+- `add_bullet_list()` — parses "- Title: Description" format, calls add_bullet_point
+- `add_pricing_table()` — navy header row, alternating gray rows, **thin gray borders**
+- `add_contract_terms()` — 6/12 month boxes with **gold left border** + gray sides
+- `add_inline_photos()` — single: 2.0in centered, multi: 2.0in side-by-side
+- `add_photos_grid()` — max 2.5in per photo in 2-col grid
+- `add_section_divider()` — thin gold horizontal rule (─ × 50, 6pt)
+- `add_footer()` — "X | Y" page numbers, right-aligned, **skips cover page section**
+- `add_body_text()` — 10.5pt, auto-detects numbered items for bold navy titles
+
+Border helpers:
+- `_set_cell_borders(cell, left_color, left_sz, other_color, other_sz)` — per-cell borders
+- `_set_table_borders(table, color, sz)` — uniform borders on all cells
+- `_remove_table_borders(table)` — removes all borders (for layout tables)
+
+PDF conversion: LibreOffice headless (Docker) or docx2pdf (Windows)
 
 ### Prompt Engineering
 - Strict word limits per section (150/100/75/80/60 for Elite Advertiser)
@@ -129,16 +172,39 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 
 ## What's Been Done (as of 2026-02-22)
 
-### Elite Advertiser Proposal — Fully Redesigned
-- Cut from 8-10 pages down to 7 pages
-- Scannable format: sub-headers, bullet points, stats banner
-- Photos scattered inline (no more gallery page)
-- Navy cover page with gold/white text (matching Good Earth)
-- Why MCTV uses bold sub-headers with descriptions (not callout boxes)
-- Getting Started uses numbered steps
-- Pricing gets its own page (page break before to prevent orphaned header)
-- Footer shows "X | Y" page numbers
-- 14+ PDF iterations to get it right
+### Elite Advertiser Proposal — v15 through v20
+Massive formatting overhaul across 20+ PDF iterations:
+
+**Layout condensing (v16):**
+- Margins tightened: 1.5cm top/bottom, 2.0cm sides
+- Font sizes reduced: body 10.5pt, headers 18pt, sub-headers 12pt
+- All spacing tightened: sections, body, callouts, banners
+- Inline photos capped at 2.0 inches (was 4.0)
+
+**Cover page (v17-v19):**
+- Full-page navy background with forced cell height (14800 twips)
+- Own section with tight margins (0.8/0.5 cm) + section break after
+- MCTV logo: created white version from dark logo, pre-composited on navy (RGB, no transparency) — **transparency doesn't work reliably in LibreOffice PDF conversion**
+- No footer on cover page
+- Blank page 2 eliminated by removing `doc.add_page_break()` after cover
+
+**Logo saga:**
+- `mctv_logo_white.png` was originally Shaw Hardware's logo (wrong file!)
+- Created proper MCTV white logo by inverting `mctv_logo.png` pixel-by-pixel
+- RGBA transparency not rendered by LibreOffice → use `mctv_logo_on_navy.png` (RGB with navy baked in)
+
+**Visual polish (v20):**
+- Gold ● bullet characters with hanging indent on all bullet items
+- Callout boxes: gold left border accent + thin gray sides
+- Pricing table: thin gray borders
+- Contract terms: gold left border + gray sides
+- Metrics banner: gold top border accent
+- Photo distribution restored with titled sections ("Our Screens in Your Community")
+
+**Default screen photos:**
+- `assets/screens/` directory for community screen photos
+- Auto-included in every proposal when no user photos uploaded
+- User has 5 community screen photos to add (shared in chat, needs to save to assets/screens/)
 
 ### Creatomate Video Integration — Live
 - `services/creatomate_service.py` — stdlib-only API wrapper (urllib, no requests)
@@ -147,7 +213,6 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 - Renders complete in ~6 seconds for demo template
 - Paste-key fallback when env var not set
 - `CREATOMATE_API_KEY` added to Render env vars
-- Credit math: Essential plan ($41/mo) = 2000 credits. 15-sec 1080p/30fps = ~9 credits = ~215 videos/month
 
 ### Working Features
 - 6 proposal types + 2 report types
@@ -156,6 +221,7 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 - Leads dashboard
 - Website image scraper (stdlib only — urllib)
 - Photo uploads (venue screens, ad examples, custom images)
+- Default community screen photos from assets/screens/
 - Client logo on cover page (scraped or uploaded)
 - PDF conversion (LibreOffice in Docker)
 - Cover email generation
@@ -165,23 +231,45 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
 - Custom domain not set up (bot.mctvofms.com)
-- Other generators (Host Media Kit, Multi-Brand, etc.) still use older formatting — could benefit from the same scannable redesign as Elite Advertiser
+- Other generators (Host Media Kit, Multi-Brand, etc.) still use older formatting
 - Photo distribution only implemented for Elite Advertiser
 - No test suite — all testing is manual (generate proposal, check PDF)
-- Need to design a custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
-- v15 PDF pending — cover page title order fix, pricing orphan fix, Why MCTV parsing fix all deployed but not yet verified
+- Need custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
+- **User needs to save 5 community screen photos to `assets/screens/`** — they shared images in chat but files need to be placed manually
 
 ---
 
 ## Lessons Learned
 
-1. **Spacing is everything** in python-docx. Removing one page break or spacer paragraph can save a whole page. Always test with a real PDF after formatting changes.
-2. **Claude's output format varies.** Parse line-by-line with fallbacks. Don't assume leading dashes, colons, or any specific format. The Why MCTV parser was rewritten 3 times.
-3. **python-docx has no native page background.** Use a full-width single-cell table with fill color as a workaround.
-4. **Keep dependencies minimal.** Web scraper uses stdlib (urllib), Supabase uses raw REST API, Creatomate uses urllib. Fewer dependencies = fewer deployment headaches.
-5. **The user tests by generating real proposals and checking the PDF.** No automated tests exist. Visual verification is the workflow.
-6. **Creatomate API is v1, not v2.** Despite their docs showing v2 in curl examples, the actual working endpoints are at `https://api.creatomate.com/v1/`.
-7. **Cloudflare blocks urllib without User-Agent.** Always add `User-Agent: MCTV-Bot/1.0` header to API requests.
-8. **Cover page title/subtitle semantics matter.** The `title` param is the big center text ("ADVERTISING PARTNERSHIP PROPOSAL"), `subtitle` is the business name, `prepared_for` is the contact person's name.
-9. **Page breaks before sections** prevent orphaned headers (header on one page, content on next).
-10. **The Good Earth proposal is the gold standard.** Always reference it when designing new layouts or evaluating quality.
+1. **Spacing is everything** in python-docx. Removing one spacer paragraph can save a whole page. Always test with a real PDF.
+2. **Claude's output format varies.** Parse line-by-line with fallbacks. The Why MCTV parser was rewritten 3 times.
+3. **python-docx has no native page background.** Use a full-width single-cell table with fill color.
+4. **Keep dependencies minimal.** Web scraper, Supabase, Creatomate all use stdlib urllib.
+5. **The user tests by generating real proposals and checking the PDF.** Visual verification is the workflow.
+6. **Creatomate API is v1, not v2.** Despite docs showing v2 in curl examples.
+7. **Cloudflare blocks urllib without User-Agent.** Always add `User-Agent: MCTV-Bot/1.0`.
+8. **Cover page title/subtitle semantics:** `title` = big center text, `subtitle` = business name, `prepared_for` = contact person.
+9. **Page breaks before sections** prevent orphaned headers.
+10. **The Good Earth proposal is the gold standard.** Always reference it.
+11. **Be critical when reviewing PDFs.** Don't say "looks great" if there are issues. Creed will notice. Check page utilization, photo sizes, whitespace gaps, and logo visibility.
+12. **PNG transparency doesn't work in LibreOffice.** Use pre-composited RGB images (bake the background color into the image) for guaranteed rendering.
+13. **Section breaks vs page breaks:** `doc.add_page_break()` after a full-page table creates a blank page. Use `doc.add_section()` instead — it changes sections without extra blank space.
+14. **Full-bleed in Word is impossible** but you can get close with tight margins (0.5-0.8cm).
+15. **Photo distribution needs context.** Orphan photos floating between sections with no title feel disconnected. Always give distributed photos a title or attach them to a section.
+
+---
+
+## Recent Commits (this session)
+
+- `ebd7b04` — Add Creatomate video ad generator + project docs
+- `f0714d4` — Allow pasting Creatomate API key in Video Ads page
+- `6720f1c` — Fix URL validation for video ad image fields
+- `5bdeeb9` — Redesign cover page: navy background with gold/white text
+- `943f425` — Add MCTV logo to login page
+- `e239ee4` — Fix cover page layout, pricing orphan, and Why MCTV parsing
+- `fbcfa87` — Condense proposal layout: full cover page, tighter spacing, smaller photos
+- `e727c64` — Fix blank page 2 and white logo rendering
+- `915edce` — Fix MCTV logo on cover page — use navy-background RGB version
+- `2228095` — Polish: full-bleed cover, eliminate orphan photos, skip cover footer
+- `fc014b8` — Add borders, bullet points, and restore photo distribution
+- `86a373c` — Auto-include default community screen photos in proposals
