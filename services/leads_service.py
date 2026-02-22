@@ -1,11 +1,14 @@
 """Lead/intake storage and email notification service.
 
-Uses Supabase (cloud database) when configured, falls back to local JSON files.
+Uses Supabase REST API (cloud database) when configured, falls back to local
+JSON files for local development.
 """
 
 import json
 import smtplib
 import os
+import urllib.request
+import urllib.error
 from pathlib import Path
 from datetime import datetime
 from email.mime.text import MIMEText
@@ -15,29 +18,46 @@ from email.mime.multipart import MIMEMultipart
 LEADS_DIR = Path(__file__).parent.parent / "data" / "leads"
 
 
-# ── Supabase client (lazy init) ─────────────────────────────────────────────
+# ── Supabase REST helpers ────────────────────────────────────────────────────
 
-_supabase_client = None
-
-
-def _get_supabase():
-    """Return a Supabase client if configured, else None."""
-    global _supabase_client
-    if _supabase_client is not None:
-        return _supabase_client
-
-    url = os.environ.get("SUPABASE_URL", "")
+def _sb_config():
+    """Return (url, key) if Supabase is configured, else (None, None)."""
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
     key = os.environ.get("SUPABASE_KEY", "")
+    if url and key:
+        return url, key
+    return None, None
 
-    if not url or not key:
+
+def _sb_headers(key: str) -> dict:
+    """Standard headers for Supabase REST API."""
+    return {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+
+
+def _sb_request(method: str, endpoint: str, data: dict | None = None) -> list | None:
+    """Make a request to the Supabase REST API. Returns parsed JSON or None."""
+    url, key = _sb_config()
+    if not url:
         return None
 
+    full_url = f"{url}/rest/v1/{endpoint}"
+    body = json.dumps(data).encode("utf-8") if data else None
+
+    req = urllib.request.Request(full_url, data=body, headers=_sb_headers(key), method=method)
+
     try:
-        from supabase import create_client
-        _supabase_client = create_client(url, key)
-        return _supabase_client
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode("utf-8")
+            if raw:
+                return json.loads(raw)
+            return []
     except Exception as e:
-        print(f"[leads_service] Supabase init failed: {e}")
+        print(f"[leads_service] Supabase {method} {endpoint} failed: {e}")
         return None
 
 
@@ -50,14 +70,9 @@ def save_lead(lead_data: dict) -> str:
     lead_data["submitted_at"] = datetime.now().isoformat()
     lead_data["status"] = "new"
 
-    sb = _get_supabase()
-    if sb:
-        try:
-            sb.table("leads").insert(lead_data).execute()
-            return lead_id
-        except Exception as e:
-            print(f"[leads_service] Supabase insert failed: {e}")
-            # Fall through to JSON backup
+    result = _sb_request("POST", "leads", lead_data)
+    if result is not None:
+        return lead_id
 
     # Fallback: local JSON
     LEADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -72,15 +87,9 @@ def save_lead(lead_data: dict) -> str:
 
 def get_all_leads() -> list[dict]:
     """Get all leads sorted by newest first."""
-    sb = _get_supabase()
-    if sb:
-        try:
-            resp = sb.table("leads").select("*").order(
-                "submitted_at", desc=True
-            ).execute()
-            return resp.data or []
-        except Exception as e:
-            print(f"[leads_service] Supabase read failed: {e}")
+    result = _sb_request("GET", "leads?select=*&order=submitted_at.desc")
+    if result is not None:
+        return result
 
     # Fallback: local JSON
     LEADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -98,15 +107,9 @@ def get_all_leads() -> list[dict]:
 
 def update_lead_status(lead_id: str, status: str):
     """Update a lead's status (new, contacted, proposal_sent, closed)."""
-    sb = _get_supabase()
-    if sb:
-        try:
-            sb.table("leads").update({"status": status}).eq(
-                "id", lead_id
-            ).execute()
-            return
-        except Exception as e:
-            print(f"[leads_service] Supabase update failed: {e}")
+    result = _sb_request("PATCH", f"leads?id=eq.{lead_id}", {"status": status})
+    if result is not None:
+        return
 
     # Fallback: local JSON
     filepath = LEADS_DIR / f"{lead_id}.json"
@@ -122,13 +125,9 @@ def update_lead_status(lead_id: str, status: str):
 
 def delete_lead(lead_id: str):
     """Delete a lead by ID."""
-    sb = _get_supabase()
-    if sb:
-        try:
-            sb.table("leads").delete().eq("id", lead_id).execute()
-            return
-        except Exception as e:
-            print(f"[leads_service] Supabase delete failed: {e}")
+    result = _sb_request("DELETE", f"leads?id=eq.{lead_id}")
+    if result is not None:
+        return
 
     # Fallback: local JSON
     filepath = LEADS_DIR / f"{lead_id}.json"
