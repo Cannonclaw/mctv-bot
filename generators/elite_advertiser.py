@@ -7,10 +7,14 @@ from services.config_service import get_team_member, get_pricing_tier, get_all_t
 class EliteAdvertiserProposal(BaseProposal):
     """Generates the flagship 5-6 page advertiser proposal."""
 
-    # Place all extra photos after the opportunity section (page 2) to avoid
-    # orphan photos creating whitespace gaps on later pages.
+    # Distribute photos across sections to fill whitespace:
+    # - opportunity_hook (page 2): up to 2 side-by-side client photos
+    # - market_coverage (page 3): up to 2 community screen photos to fill gap
+    # - getting_started (page 5): up to 1 photo above Meet Your Team
     PHOTO_DISTRIBUTION = {
         "opportunity_hook": {"source": "extra", "max": 2},
+        "market_coverage":  {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "getting_started":  {"source": "extra", "max": 1},
     }
 
     @property

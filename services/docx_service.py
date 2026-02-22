@@ -293,8 +293,18 @@ class DocxService:
         run.font.color.rgb = NAVY
         run.font.bold = True
 
+    def add_section_divider(self, doc: Document):
+        """Add a thin gold horizontal rule to visually separate sections."""
+        p = doc.add_paragraph()
+        p.space_before = Pt(6)
+        p.space_after = Pt(6)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run("\u2500" * 50)
+        run.font.size = Pt(6)
+        run.font.color.rgb = GOLD
+
     def add_callout_box(self, doc: Document, text: str, bg_color: str = "F0EDE4"):
-        """Add a colored callout/highlight box for key information."""
+        """Add a colored callout/highlight box with gold left border."""
         table = doc.add_table(rows=1, cols=1)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         cell = table.rows[0].cells[0]
@@ -307,16 +317,20 @@ class DocxService:
         })
         tc_pr.append(shd)
 
+        # Gold left border accent + thin gray on other sides
+        self._set_cell_borders(cell, left_color="C5A55A", left_sz=18,
+                               other_color="D0D0D0", other_sz=4)
+
         # Add padding via paragraph formatting
         p = cell.paragraphs[0]
         p.space_before = Pt(4)
         p.space_after = Pt(4)
+        pf = p.paragraph_format
+        pf.left_indent = Cm(0.3)
         run = p.add_run(text)
         run.font.size = Pt(10)
         run.font.color.rgb = DARK_TEXT
         run.font.name = "Calibri"
-
-        self._remove_table_borders(table)
 
     def add_body_text(self, doc: Document, text: str):
         """Add body paragraphs with proper spacing.
@@ -370,6 +384,15 @@ class DocxService:
         """Add a bullet point with bold title and description."""
         p = doc.add_paragraph()
         p.space_after = Pt(2)
+        # Left indent with hanging indent for bullet alignment
+        pf = p.paragraph_format
+        pf.left_indent = Cm(0.6)
+        pf.first_line_indent = Cm(-0.6)
+
+        # Gold bullet character
+        run = p.add_run("\u25CF  ")
+        run.font.size = Pt(7)
+        run.font.color.rgb = GOLD
 
         run = p.add_run(f"{title}: ")
         run.font.size = Pt(10.5)
@@ -530,8 +553,18 @@ class DocxService:
             run.font.size = Pt(8)
             run.font.color.rgb = WHITE
 
-        # Remove borders
+        # Gold top border on the banner, remove other borders
         self._remove_table_borders(table)
+        # Add gold top border to the first row of cells
+        for cell in table.rows[0].cells:
+            tc_pr = cell._element.get_or_add_tcPr()
+            borders = tc_pr.makeelement(qn("w:tcBorders"), {})
+            border = borders.makeelement(qn("w:top"), {
+                qn("w:val"): "single", qn("w:sz"): "12",
+                qn("w:space"): "0", qn("w:color"): "C5A55A",
+            })
+            borders.append(border)
+            tc_pr.append(borders)
 
     def add_pricing_table(self, doc: Document, tiers: list):
         """Add a formatted pricing comparison table."""
@@ -589,6 +622,9 @@ class DocxService:
                     })
                     shading.append(shading_elm)
 
+        # Add thin gray borders for structure
+        self._set_table_borders(table, color="D0D0D0", sz=4)
+
     def add_contract_terms(self, doc: Document, config: dict):
         """Add partnership terms section with 6-month and 12-month boxes."""
         terms = config["pricing"]["contract_terms"]
@@ -626,7 +662,10 @@ class DocxService:
             run.font.size = Pt(9)
             run.font.color.rgb = GRAY
 
-        self._remove_table_borders(table)
+        # Gold top border, thin gray sides for a polished box look
+        for cell in table.rows[0].cells:
+            self._set_cell_borders(cell, left_color="C5A55A", left_sz=12,
+                                   other_color="D0D0D0", other_sz=4)
 
     def add_data_table(self, doc: Document, headers: list, rows: list):
         """Add a data table for traction reports."""
@@ -836,6 +875,57 @@ class DocxService:
                         qn("w:sz"): "0",
                         qn("w:space"): "0",
                         qn("w:color"): "auto",
+                    })
+                    borders.append(border)
+                tc_pr.append(borders)
+
+    def _set_cell_borders(self, cell, left_color=None, left_sz=12,
+                          other_color=None, other_sz=4):
+        """Set borders on a single cell. Colors are hex strings (no #)."""
+        tc_pr = cell._element.get_or_add_tcPr()
+        borders = tc_pr.makeelement(qn("w:tcBorders"), {})
+        for edge in ("top", "bottom", "right"):
+            if other_color:
+                border = borders.makeelement(qn(f"w:{edge}"), {
+                    qn("w:val"): "single",
+                    qn("w:sz"): str(other_sz),
+                    qn("w:space"): "0",
+                    qn("w:color"): other_color,
+                })
+            else:
+                border = borders.makeelement(qn(f"w:{edge}"), {
+                    qn("w:val"): "none", qn("w:sz"): "0",
+                    qn("w:space"): "0", qn("w:color"): "auto",
+                })
+            borders.append(border)
+        # Left border — accent
+        if left_color:
+            border = borders.makeelement(qn("w:left"), {
+                qn("w:val"): "single",
+                qn("w:sz"): str(left_sz),
+                qn("w:space"): "0",
+                qn("w:color"): left_color,
+            })
+        else:
+            border = borders.makeelement(qn("w:left"), {
+                qn("w:val"): "none", qn("w:sz"): "0",
+                qn("w:space"): "0", qn("w:color"): "auto",
+            })
+        borders.append(border)
+        tc_pr.append(borders)
+
+    def _set_table_borders(self, table, color="D0D0D0", sz=4):
+        """Set uniform thin borders on all cells in a table."""
+        for row in table.rows:
+            for cell in row.cells:
+                tc_pr = cell._element.get_or_add_tcPr()
+                borders = tc_pr.makeelement(qn("w:tcBorders"), {})
+                for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+                    border = borders.makeelement(qn(f"w:{edge}"), {
+                        qn("w:val"): "single",
+                        qn("w:sz"): str(sz),
+                        qn("w:space"): "0",
+                        qn("w:color"): color,
                     })
                     borders.append(border)
                 tc_pr.append(borders)
