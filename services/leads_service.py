@@ -200,5 +200,6 @@ Log in to the MCTV Bot to view all leads and generate a proposal.
 
         return True
 
-    except Exception:
+    except Exception as e:
+        print(f"[leads_service] EMAIL ERROR: {e}")
         return False

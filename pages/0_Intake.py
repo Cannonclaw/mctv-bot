@@ -212,7 +212,17 @@ if st.button("Submit", type="primary", use_container_width=True):
 
         # Save and notify
         lead_id = save_lead(lead)
-        send_notification_email(lead)
+        email_ok = send_notification_email(lead)
+
+        # Debug: show email status (remove after confirming it works)
+        if not email_ok:
+            import os
+            host = os.environ.get("SMTP_HOST", "(not set)")
+            port = os.environ.get("SMTP_PORT", "(not set)")
+            user = os.environ.get("SMTP_USER", "(not set)")
+            has_pass = "Yes" if os.environ.get("SMTP_PASS") else "No"
+            st.warning(f"Lead saved but email failed. SMTP_HOST={host}, PORT={port}, USER={user}, PASS set={has_pass}")
+            import time; time.sleep(5)
 
         st.session_state["intake_submitted"] = True
         st.rerun()
