@@ -1,0 +1,144 @@
+{
+  "company": {
+    "name": "MCTV Elite Advertising",
+    "legal_name": "MCTV Digital",
+    "tagline": "North Mississippi's Indoor Digital Billboard Network",
+    "website": "www.mctvofms.com",
+    "brand_colors": {
+      "navy": "#1B1F3B",
+      "gold": "#C5A55A",
+      "white": "#FFFFFF",
+      "dark_bg": "#0D1117"
+    }
+  },
+  "team": [
+    {
+      "name": "T. Creed Cannon",
+      "title": "Owner / Managing Partner",
+      "phone": "(601) 201-8202",
+      "email": "creed@mctvofms.com",
+      "photo": "assets/team/creed_headshot.png"
+    },
+    {
+      "name": "Mary Michael Cannon",
+      "title": "Owner / Managing Partner",
+      "phone": "(662) 801-5677",
+      "email": "mmc@mctvofms.com",
+      "photo": "assets/team/mary_michael_headshot.png"
+    },
+    {
+      "name": "Swayze Hollingsworth",
+      "title": "Director of Sales",
+      "phone": "(662) 907-0404",
+      "email": "swayze@mctvofms.com",
+      "photo": "assets/team/swayze_headshot.png"
+    }
+  ],
+  "network": {
+    "total_screens": "125+",
+    "monthly_impressions": "1.9M+",
+    "avg_dwell_time_minutes": 55,
+    "plays_per_hour": 4,
+    "content_loop_minutes": 15,
+    "monthly_visitors": "409,652+",
+    "dashboard_partner": "NTV360",
+    "description": "MCTV Elite Advertising operates the largest indoor digital billboard network in North Mississippi, placing your brand directly in front of captive audiences in restaurants, gyms, offices, barbershops, salons, medical offices, and retail locations."
+  },
+  "markets": {
+    "Oxford": {
+      "screens": 75,
+      "status": "active",
+      "description": "Oxford is the heart of the MCTV network. 75 screens blanket the city from the Square to University Avenue to Highway 6."
+    },
+    "Starkville": {
+      "screens": 30,
+      "status": "active",
+      "description": "30 screens across Starkville reach Mississippi State students, staff, and families throughout the Golden Triangle region."
+    },
+    "Tupelo": {
+      "screens": 25,
+      "status": "active",
+      "description": "25 screens in Tupelo bring your brand to the largest city in Northeast Mississippi."
+    },
+    "Columbus": {
+      "screens": 0,
+      "status": "expanding",
+      "description": "MCTV is actively expanding into Columbus."
+    },
+    "West Point": {
+      "screens": 2,
+      "status": "expanding",
+      "description": "MCTV is growing into West Point with initial screen placements."
+    }
+  },
+  "pricing": {
+    "elite_tiers": [
+      {
+        "name": "10 Screens",
+        "screens": 10,
+        "monthly_rate": 350.0,
+        "cost_per_screen": 35.0,
+        "plays_per_month": "15K"
+      },
+      {
+        "name": "20 Screens",
+        "screens": 20,
+        "monthly_rate": 500.0,
+        "cost_per_screen": 25.0,
+        "plays_per_month": "30K"
+      },
+      {
+        "name": "40 Screens",
+        "screens": 40,
+        "monthly_rate": 800.0,
+        "cost_per_screen": 20.0,
+        "plays_per_month": "60K"
+      },
+      {
+        "name": "75+ Screens",
+        "screens": 75,
+        "monthly_rate": 1300.0,
+        "cost_per_screen": 17.33,
+        "plays_per_month": "120K+"
+      }
+    ],
+    "host_free_inside_plays_per_hour": 8,
+    "host_outside_plays_per_hour": 4,
+    "host_free_outside_screens": 10,
+    "bundle_deal": "Buy 2, Get 1 Free",
+    "bundle_discount_description": "3 businesses for the price of 2",
+    "exclusivity_premium_description": "Premium pricing for category exclusivity",
+    "contract_terms": {
+      "minimum_months": 6,
+      "standard_months": [
+        6,
+        12
+      ],
+      "prepay_6mo_bonus": "Get 7 months (1 free)",
+      "prepay_12mo_bonus": "Get 13 months (1 free)"
+    }
+  },
+  "venue_categories": [
+    "Bar/Restaurant",
+    "Medical & Dental",
+    "Barbershop/Salon",
+    "Retail & Boutique",
+    "Gas/Grocery",
+    "Health & Fitness",
+    "Professional Services",
+    "Liquor/Wine/Beer",
+    "Non-Profit/Community",
+    "Travel & Tourism",
+    "Family Rec & Entertainment",
+    "Auto Shop",
+    "Education",
+    "Other"
+  ],
+  "proposal_settings": {
+    "default_format": "docx",
+    "include_cover_email": true,
+    "model": "claude-opus-4-6",
+    "model_premium": "claude-opus-4-6",
+    "tone": "Professional but warm. Mississippi local business feel. Confident without being pushy. Emphasize partnership over salesmanship."
+  }
+}

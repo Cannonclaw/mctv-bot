@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+output/proposals/*
+output/reports/*
+output/emails/*
+!output/proposals/.gitkeep
+!output/reports/.gitkeep
+!output/emails/.gitkeep
+.claude/

@@ -1,0 +1,8 @@
+__pycache__
+*.pyc
+.env
+output/proposals/*
+output/reports/*
+output/emails/*
+.git
+.claude
