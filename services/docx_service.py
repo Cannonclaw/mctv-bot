@@ -145,33 +145,78 @@ class DocxService:
         doc.add_page_break()
 
     def add_section_header(self, doc: Document, text: str):
-        """Add a styled section header with navy background appearance."""
+        """Add a styled section header with gold accent bar underneath."""
         p = doc.add_paragraph()
         p.space_before = Pt(6)
-        p.space_after = Pt(12)
+        p.space_after = Pt(2)
         run = p.add_run(text.upper())
         run.font.size = Pt(20)
         run.font.color.rgb = NAVY
         run.font.bold = True
         run.font.name = "Calibri"
 
-        # Add a thin gold line under the header
-        p = doc.add_paragraph()
-        p.space_before = Pt(0)
-        p.space_after = Pt(12)
-        run = p.add_run("_" * 60)
-        run.font.color.rgb = GOLD
-        run.font.size = Pt(6)
+        # Gold accent bar using a 1-row, 1-col table with gold background
+        bar = doc.add_table(rows=1, cols=1)
+        bar.alignment = WD_TABLE_ALIGNMENT.LEFT
+        cell = bar.rows[0].cells[0]
+        cell.height = Cm(0.15)
+        # Set gold background
+        tc_pr = cell._element.get_or_add_tcPr()
+        shd = tc_pr.makeelement(qn("w:shd"), {
+            qn("w:fill"): "C5A55A",
+            qn("w:val"): "clear",
+        })
+        tc_pr.append(shd)
+        # Set cell width to about 1/3 of page
+        cell.width = Cm(6)
+        p = cell.paragraphs[0]
+        pf = p.paragraph_format
+        pf.space_before = Pt(0)
+        pf.space_after = Pt(0)
+        run = p.add_run()
+        run.font.size = Pt(2)
+        self._remove_table_borders(bar)
+
+        # Spacer after the bar
+        spacer = doc.add_paragraph()
+        spacer.space_before = Pt(4)
+        spacer.space_after = Pt(8)
 
     def add_sub_header(self, doc: Document, text: str):
-        """Add a bold sub-header."""
+        """Add a bold sub-header with gold left accent."""
         p = doc.add_paragraph()
         p.space_before = Pt(12)
         p.space_after = Pt(4)
-        run = p.add_run(text)
+        run = p.add_run(f"\u275A  {text}")
         run.font.size = Pt(13)
         run.font.color.rgb = NAVY
         run.font.bold = True
+
+    def add_callout_box(self, doc: Document, text: str, bg_color: str = "F0EDE4"):
+        """Add a colored callout/highlight box for key information."""
+        table = doc.add_table(rows=1, cols=1)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        cell = table.rows[0].cells[0]
+
+        # Set background color
+        tc_pr = cell._element.get_or_add_tcPr()
+        shd = tc_pr.makeelement(qn("w:shd"), {
+            qn("w:fill"): bg_color,
+            qn("w:val"): "clear",
+        })
+        tc_pr.append(shd)
+
+        # Add padding via paragraph formatting
+        p = cell.paragraphs[0]
+        p.space_before = Pt(8)
+        p.space_after = Pt(8)
+        run = p.add_run(text)
+        run.font.size = Pt(11)
+        run.font.color.rgb = DARK_TEXT
+        run.font.name = "Calibri"
+
+        self._remove_table_borders(table)
+        doc.add_paragraph()  # spacer after box
 
     def add_body_text(self, doc: Document, text: str):
         """Add body paragraphs with proper spacing.
@@ -276,29 +321,45 @@ class DocxService:
         doc.add_paragraph()  # spacer
 
     def add_metrics_banner(self, doc: Document, metrics: dict):
-        """Add a row of big metrics (e.g., 125+ Screens, 1.9M+ Impressions)."""
+        """Add a row of big metrics with navy background (e.g., 125+ Screens)."""
         table = doc.add_table(rows=2, cols=len(metrics))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         for i, (value, label) in enumerate(metrics.items()):
-            # Value row
+            # Value row — navy background, gold text
             cell = table.rows[0].cells[i]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            tc_pr = cell._element.get_or_add_tcPr()
+            shd = tc_pr.makeelement(qn("w:shd"), {
+                qn("w:fill"): "1B1F3B",
+                qn("w:val"): "clear",
+            })
+            tc_pr.append(shd)
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(8)
+            p.space_after = Pt(4)
             run = p.add_run(str(value))
             run.font.size = Pt(24)
             run.font.bold = True
             run.font.color.rgb = GOLD
 
-            # Label row
+            # Label row — navy background, white text
             cell = table.rows[1].cells[i]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            tc_pr = cell._element.get_or_add_tcPr()
+            shd = tc_pr.makeelement(qn("w:shd"), {
+                qn("w:fill"): "1B1F3B",
+                qn("w:val"): "clear",
+            })
+            tc_pr.append(shd)
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(0)
+            p.space_after = Pt(8)
             run = p.add_run(label)
             run.font.size = Pt(9)
-            run.font.color.rgb = GRAY
+            run.font.color.rgb = WHITE
 
         # Remove borders
         self._remove_table_borders(table)

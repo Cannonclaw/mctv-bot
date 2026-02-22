@@ -185,6 +185,54 @@ st.divider()
 # ── PHOTOS & IMAGES (shared across all forms) ────────────────────────────────
 st.markdown("#### Photos & Images (optional)")
 
+# Website image scraper
+client_website = st.text_input(
+    "Client Website URL — auto-pull images from their site",
+    placeholder="https://www.oxfordfloral.com",
+    help="Enter the client's website and we'll find their logo and photos automatically.",
+)
+
+scraped_photo_paths = []
+if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
+    with st.spinner("Scanning website for images..."):
+        from services.web_scraper import scrape_website_images, download_image
+        images = scrape_website_images(client_website)
+        if images:
+            st.success(f"Found {len(images)} images!")
+            st.session_state["scraped_images"] = images
+        else:
+            st.warning("No images found on that website. Try uploading manually below.")
+
+# Show scraped images for selection
+if st.session_state.get("scraped_images"):
+    st.markdown("**Select images to include in the proposal:**")
+    selected_urls = []
+    img_cols = st.columns(4)
+    for i, img_info in enumerate(st.session_state["scraped_images"]):
+        with img_cols[i % 4]:
+            st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], use_container_width=True)
+            if st.checkbox("Use", key=f"scrape_{i}", value=(i == 0)):
+                selected_urls.append(img_info["url"])
+
+    if selected_urls:
+        if st.button("📥 Download Selected Images"):
+            from services.web_scraper import download_image
+            with st.spinner(f"Downloading {len(selected_urls)} images..."):
+                paths = []
+                for url in selected_urls:
+                    path = download_image(url)
+                    if path:
+                        paths.append(path)
+                if paths:
+                    st.session_state["scraped_photo_paths"] = paths
+                    st.success(f"Downloaded {len(paths)} images! They'll be included in the proposal.")
+                else:
+                    st.warning("Could not download any images. Try uploading manually.")
+
+scraped_photo_paths = st.session_state.get("scraped_photo_paths", [])
+
+st.divider()
+
 client_logo_file = st.file_uploader(
     "Client Logo — appears on the cover page",
     type=["png", "jpg", "jpeg", "webp"],
@@ -275,7 +323,7 @@ if proposal_type == "Elite Advertiser":
             logo_path = _save_uploaded_file(client_logo_file)
             v_paths = _save_uploaded_files(venue_photos)
             a_paths = _save_uploaded_files(ad_examples)
-            e_paths = _save_uploaded_files(extra_photos)
+            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
             data = ProposalInput(
                 business_name=business_name,
                 contact_name=contact_name,
