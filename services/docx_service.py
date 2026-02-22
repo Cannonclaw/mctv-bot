@@ -227,7 +227,9 @@ class DocxService:
         run.font.color.rgb = GOLD
         run.font.name = "Calibri"
 
-        doc.add_page_break()
+        # No explicit page break needed — the full-page table pushes
+        # subsequent content to page 2 automatically.  A page_break()
+        # here would insert an empty paragraph that creates a blank page.
 
     def add_section_header(self, doc: Document, text: str):
         """Add a styled section header with gold accent bar underneath."""
