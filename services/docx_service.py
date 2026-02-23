@@ -993,8 +993,14 @@ class DocxService:
                 shading.append(shading_elm)
 
     def add_team_section(self, doc: Document,
-                         closing_text: str = "We look forward to partnering with you."):
-        """Add the Meet Your Team section with photos, closing statement, and logo."""
+                         closing_text: str = "We look forward to partnering with you.",
+                         dark_mode: bool = False):
+        """Add the Meet Your Team section with photos, closing statement, and logo.
+
+        Args:
+            dark_mode: If True, use dark navy background with white/gold text
+                       (used for traction reports for a premium closing page).
+        """
         self.add_section_header(doc, "Meet Your Team")
 
         team = list(self.config["team"])
@@ -1007,8 +1013,22 @@ class DocxService:
         table = doc.add_table(rows=1, cols=len(team))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
+        # Color selections based on mode
+        name_color = self.c["white"] if dark_mode else self.c["primary"]
+        title_color = self.c["accent"] if True else self.c["accent"]  # Gold in both modes
+        contact_color = RGBColor(0xCC, 0xCC, 0xCC) if dark_mode else self.c["gray"]
+
         for i, member in enumerate(team):
             cell = table.rows[0].cells[i]
+
+            # Dark navy cell background
+            if dark_mode:
+                tc_pr = cell._element.get_or_add_tcPr()
+                shd = tc_pr.makeelement(qn("w:shd"), {
+                    qn("w:fill"): self.c["bg_hex"],
+                    qn("w:val"): "clear",
+                })
+                tc_pr.append(shd)
 
             # Team photo
             photo_path = member.get("photo", "")
@@ -1030,26 +1050,26 @@ class DocxService:
             run = p.add_run(member["name"])
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = self.c["primary"]
+            run.font.color.rgb = name_color
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["title"])
             run.font.size = Pt(10)
-            run.font.color.rgb = self.c["accent"]
+            run.font.color.rgb = title_color
             run.font.italic = True
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["phone"])
             run.font.size = Pt(10)
-            run.font.color.rgb = self.c["gray"]
+            run.font.color.rgb = contact_color
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["email"])
             run.font.size = Pt(10)
-            run.font.color.rgb = self.c["gray"]
+            run.font.color.rgb = contact_color
 
         self._remove_table_borders(table)
 
@@ -1066,7 +1086,15 @@ class DocxService:
             run.font.name = "Calibri"
 
         # ── MCTV logo + website (compact, same page as team) ──
-        mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
+        # Use the on-navy version for dark mode, standard logo otherwise
+        if dark_mode:
+            logo_name = self.c.get("cover_logo", "mctv_logo_on_navy.png")
+        else:
+            logo_name = "mctv_logo.png"
+        mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
+        if not mctv_logo.exists():
+            # Fallback to whatever exists
+            mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
         if mctv_logo.exists():
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -1082,7 +1110,8 @@ class DocxService:
         p.space_after = Pt(0)
         run = p.add_run("www.mctvofms.com")
         run.font.size = Pt(10)
-        run.font.color.rgb = self.c["primary"]
+        url_color = self.c["accent"] if dark_mode else self.c["primary"]
+        run.font.color.rgb = url_color
         run.font.name = "Calibri"
 
     def add_venue_categories(self, doc: Document):

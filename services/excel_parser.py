@@ -9,25 +9,27 @@ from models.report_data import PlayRecord, VenueRecord, TractionReportInput, Cat
 # ── Venue categorization rules ──────────────────────────────────────────────
 # Each rule is (regex_pattern, category_name). First match wins.
 VENUE_RULES = [
-    (r"restaurant|grill|bbq|cantina|seafood|bar\b|kitchen|caf[eé]|coffee|"
-     r"nutrition|chicken|pizza|taco|wing|burger|diner|bistro|bakery|brewing|"
-     r"steakhouse|sushi|pho|ramen|thai|sub[s ]|sandwich|waffle|donut|deli\b|"
-     r"ice\s*cream|smoothie|juice|pub\b|tavern|eatery|catfish|crawfish|"
-     r"stick\b",
+    (r"restaurant|grill|bbq|barbeque|barbecue|cantina|seafood|bar\b|kitchen|"
+     r"caf[eé]|coffee|nutrition|chicken|pizza|taco|wing|burger|diner|bistro|"
+     r"bakery|brewing|steakhouse|sushi|pho|ramen|thai|sub[s ]|sandwich|waffle|"
+     r"donut|deli\b|ice\s*cream|smoothie|juice|pub\b|tavern|eatery|catfish|"
+     r"crawfish|stick\b|\bcoop\b|mexicana|mexican|casa\b|trattoria|hibachi|"
+     r"buffet|wok\b|noodle|dumpling|poke\b|bowl\b.*kitchen",
      "Restaurant & Bar"),
-    (r"salon|beauty|aesthetics|waxing|hair|styling|tan\b|barber|nails|lash|"
-     r"spa\b|brow|fade|cutz|cuts\b|cosmetic",
+    (r"salon|beauty|aesthetics|waxing|hair|styling|tan\b|barber|nails?\b|lash|"
+     r"spa\b|brow|fade|cutz|cuts\b|cosmetic|beard|style\s+society",
      "Salon & Beauty"),
     (r"medical|dental|clinic|hospital|cardiology|urgent|doctor|optom|chiro|"
      r"physical.?therap|derma|ortho|pharmacy|health\b|pediatr|family\s+med|"
-     r"wellness|vision|eye\b|allergy|asthma",
+     r"wellness|vision|eye\b|allergy|asthma|medicine|internal\s+med|"
+     r"testosterone|hormone|iv\s+therap|infusion",
      "Medical & Dental"),
     (r"chevrolet|collision|auto\b|tire|lube|car\s*wash|motor\b|toyota|\bford\b|"
      r"\bhonda\b|\bnissan\b|hyundai|\bkia\b|\bjeep\b|dodge|chrysler|chevy|bmw|mercedes|"
      r"mechanic|body\s+shop|muffler|transmission",
      "Auto & Service"),
     (r"gym|fitness|crossfit|yoga|martial|boxing|athletic|weight|muscle|"
-     r"training|workout|body\b.*fit|pilates|spin\b",
+     r"training|workout|body\b.*fit|pilates|spin\b|performance\b.*(?:fitness|gym)",
      "Health & Fitness"),
     (r"liquor|wine|spirit|beer|package\s+store|beverage",
      "Liquor & Spirits"),
@@ -35,7 +37,8 @@ VENUE_RULES = [
      r"child\s*care|montessori",
      "Education"),
     (r"insurance|law\b|legal|accounting|real\s+estate|office|bank|financ|"
-     r"consult|mortgage|tax\b|cpa\b|title\b|escrow|invest",
+     r"consult|mortgage|tax\b|cpa\b|title\b|escrow|invest|technologies|"
+     r"tech\b|solutions\b|systems\b|exceed",
      "Professional Services"),
     (r"hotel|boutique|shop\b|retail|florist|flower|jewel|gift|thrift|cloth|"
      r"fashion|dress|bridal|pet\b|feed\b|hardware|supply",
@@ -57,6 +60,39 @@ def classify_venue(name: str) -> str:
         if re.search(pattern, lower):
             return category
     return "General"
+
+
+def format_date_range(start: str, end: str) -> str:
+    """Format a date range as 'January 31 – February 23, 2026'.
+
+    Handles common date formats from NTV360 exports:
+      - 2026-01-31, 01/31/2026, 2026/01/31
+
+    Returns the raw 'start - end' string if parsing fails.
+    """
+    from datetime import datetime as dt
+
+    def _parse_date(s: str):
+        s = str(s).strip()[:10]
+        for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y"):
+            try:
+                return dt.strptime(s, fmt)
+            except ValueError:
+                continue
+        return None
+
+    d1 = _parse_date(start)
+    d2 = _parse_date(end)
+
+    if not d1 or not d2:
+        # Fallback: return raw string
+        return f"{start} - {end}" if start and end else start or end or ""
+
+    # Same year: "January 31 – February 23, 2026"
+    if d1.year == d2.year:
+        return f"{d1.strftime('%B %d').lstrip('0')} \u2013 {d2.strftime('%B %d, %Y').lstrip('0')}"
+    else:
+        return f"{d1.strftime('%B %d, %Y')} \u2013 {d2.strftime('%B %d, %Y')}"
 
 
 def parse_duration(text: str) -> int:

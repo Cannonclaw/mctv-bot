@@ -12,7 +12,8 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 from services.config_service import load_config, get_team_names
 from services.claude_service import ClaudeService
 from services.docx_service import DocxService
-from services.excel_parser import parse_excel, aggregate_by_host, build_report_data, format_duration
+from services.excel_parser import parse_excel, aggregate_by_host, build_report_data, format_duration, format_date_range
+from services.pdf_service import convert_docx_to_pdf, is_pdf_available
 from models.report_data import TractionReportInput, VenueRecord
 from generators.advertiser_report import AdvertiserReportGenerator
 from generators.venue_report import VenueReportGenerator
@@ -31,8 +32,13 @@ config = load_config()
 
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
 
-def _generate_report(data: TractionReportInput):
-    """Run the report generation pipeline."""
+def _generate_report(data: TractionReportInput, output_format: str = "DOCX"):
+    """Run the report generation pipeline.
+
+    Args:
+        data: Traction report input data.
+        output_format: 'DOCX', 'PDF', or 'Both'.
+    """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
     config = load_config()
@@ -66,15 +72,69 @@ def _generate_report(data: TractionReportInput):
         if claude:
             st.caption(f"API Usage: {claude.usage_summary}")
 
-        with open(report_path, "rb") as f:
-            st.download_button(
-                "Download Report (.docx)",
-                data=f.read(),
-                file_name=report_path.name,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                type="primary",
-                use_container_width=True,
-            )
+        # DOCX download
+        if output_format in ("DOCX", "Both"):
+            with open(report_path, "rb") as f:
+                st.download_button(
+                    "\U0001F4C4 Download Report (.docx)",
+                    data=f.read(),
+                    file_name=report_path.name,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    type="primary" if output_format == "DOCX" else "secondary",
+                    use_container_width=True,
+                    key="dl_docx",
+                )
+
+        # PDF conversion + download
+        if output_format in ("PDF", "Both"):
+            with st.spinner("Converting to PDF..."):
+                pdf_path = convert_docx_to_pdf(report_path)
+            if pdf_path and pdf_path.exists():
+                with open(pdf_path, "rb") as f:
+                    st.download_button(
+                        "\U0001F4D5 Download Report (.pdf)",
+                        data=f.read(),
+                        file_name=pdf_path.name,
+                        mime="application/pdf",
+                        type="primary",
+                        use_container_width=True,
+                        key="dl_pdf",
+                    )
+            else:
+                st.warning(
+                    "PDF conversion not available. Install LibreOffice "
+                    "(https://www.libreoffice.org/download/) or the docx2pdf "
+                    "package (`pip install docx2pdf`) to enable PDF output."
+                )
+                # Still show DOCX download as fallback
+                if output_format == "PDF":
+                    with open(report_path, "rb") as f:
+                        st.download_button(
+                            "\U0001F4C4 Download Report (.docx instead)",
+                            data=f.read(),
+                            file_name=report_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            type="secondary",
+                            use_container_width=True,
+                            key="dl_docx_fallback",
+                        )
+
+        # ── Auto-generate email ──
+        if claude and isinstance(generator, AdvertiserReportGenerator):
+            st.divider()
+            st.markdown("#### Send-Along Email")
+            with st.spinner("Generating email..."):
+                email_text = generator.generate_email(data)
+            if email_text:
+                st.text_area(
+                    "Copy this email to send with the report:",
+                    value=email_text,
+                    height=250,
+                    key="report_email_text",
+                )
+                st.caption("Tip: Copy the text above and paste into your email client.")
+            else:
+                st.info("Email generation not available. Set your API key to enable.")
 
     except Exception as e:
         progress_bar.empty()
@@ -144,10 +204,10 @@ with tab_upload:
 
             st.divider()
 
-            # Auto-detect campaign period from data dates or sheet name
+            # Auto-detect campaign period from data dates — formatted nicely
             auto_period = ""
             if preview_data.campaign_start and preview_data.campaign_end:
-                auto_period = f"{preview_data.campaign_start} - {preview_data.campaign_end}"
+                auto_period = format_date_range(preview_data.campaign_start, preview_data.campaign_end)
 
             # Report configuration
             col1, col2 = st.columns(2)
@@ -165,6 +225,14 @@ with tab_upload:
                 include_insights = st.toggle("Include AI-Generated Insights", value=True,
                                               help="Claude will analyze the data and write performance insights")
                 sales_rep = st.selectbox("Sales Rep (for footer)", get_team_names(config))
+                pdf_available = is_pdf_available()
+                output_format = st.selectbox(
+                    "Output Format",
+                    ["PDF", "DOCX", "Both"] if pdf_available else ["DOCX", "PDF", "Both"],
+                    help="PDF requires LibreOffice or docx2pdf. "
+                         + ("PDF conversion is available." if pdf_available
+                            else "Install LibreOffice to enable PDF."),
+                )
 
             if st.button("Generate Report", type="primary", use_container_width=True):
                 if not advertiser_name:
@@ -174,7 +242,7 @@ with tab_upload:
                     report_data.include_insights = include_insights
                     report_data.sales_rep = sales_rep
                     report_data.report_type = "advertiser" if report_type == "Advertiser Traction Report" else "venue"
-                    _generate_report(report_data)
+                    _generate_report(report_data, output_format=output_format)
 
 
 # ── MANUAL ENTRY TAB ──────────────────────────────────────────────────────────

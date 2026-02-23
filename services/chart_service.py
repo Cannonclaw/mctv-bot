@@ -84,7 +84,7 @@ def build_venue_bar_chart(data: TractionReportInput, max_venues: int = 15) -> st
     plays = [v.total_plays for v in venues]
     colors = [_get_market_color(v.city or "") for v in venues]
 
-    fig, ax = plt.subplots(figsize=(6, 4.5))
+    fig, ax = plt.subplots(figsize=(7, 5))
     _setup_chart(fig, ax)
 
     bars = ax.barh(names, plays, color=colors, edgecolor="none", height=0.7)
@@ -130,7 +130,7 @@ def build_category_donut(categories: list) -> str:
     sizes = [c.total_plays for c in sorted_cats]
     colors = CATEGORY_COLORS[:len(sorted_cats)]
 
-    fig, ax = plt.subplots(figsize=(4.5, 4.5))
+    fig, ax = plt.subplots(figsize=(5.5, 5))
     fig.patch.set_facecolor(WHITE)
 
     wedges, texts, autotexts = ax.pie(
@@ -188,11 +188,24 @@ def build_scatter_plot(data: TractionReportInput) -> str:
 
     colors = [_get_market_color(v.city or "") for v in venues]
 
-    fig, ax = plt.subplots(figsize=(4.5, 4.0))
+    fig, ax = plt.subplots(figsize=(5.5, 4.5))
     _setup_chart(fig, ax)
 
     ax.scatter(plays, hours, c=colors, s=50, alpha=0.75, edgecolors=NAVY,
                linewidths=0.5)
+
+    # Label top 5 outlier venues by play count
+    sorted_by_plays = sorted(enumerate(venues), key=lambda x: x[1].total_plays, reverse=True)
+    for rank, (idx, v) in enumerate(sorted_by_plays[:5]):
+        label = v.host_name[:20] + ("..." if len(v.host_name) > 20 else "")
+        ax.annotate(
+            label,
+            (plays[idx], hours[idx]),
+            textcoords="offset points",
+            xytext=(5, 5 if rank % 2 == 0 else -10),
+            fontsize=6, color=NAVY, fontweight="bold",
+            alpha=0.85,
+        )
 
     ax.set_xlabel("Total Ad Plays", fontsize=9, color=NAVY)
     ax.set_ylabel("Screen Time (hours)", fontsize=9, color=NAVY)
@@ -239,7 +252,7 @@ def build_market_comparison(data: TractionReportInput) -> str:
     avg_plays = [p // v if v > 0 else 0 for p, v in zip(play_counts, venue_counts)]
     market_colors = [_get_market_color(m) for m in markets]
 
-    fig, axes = plt.subplots(1, 3, figsize=(7, 3.5))
+    fig, axes = plt.subplots(1, 3, figsize=(8, 4))
     fig.patch.set_facecolor(WHITE)
 
     titles = ["Total Plays", "Venues", "Avg Plays/Venue"]
