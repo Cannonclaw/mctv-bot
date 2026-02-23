@@ -42,11 +42,23 @@
 
 ## What Needs Attention
 
-- [ ] **WordPress integration NOT live yet** — iframe tested, Creed holding off on publishing pages. Need to: add Samples page, nav menu links, Calendly booking, generate sample PDFs, configure subdomain
+- [x] ~~Other generators need v20 treatment~~ — ALL 6 generators now use v20 formatting
+- [x] ~~Photo distribution only for Elite Advertiser~~ — All generators have PHOTO_DISTRIBUTION
+- [x] SEO meta tags + JSON-LD schema on bot pages (Intake + Samples)
+- [x] WordPress SEO content generated (9 pages in seo/wordpress_content.md)
+- [x] Keyword map, schema templates, GA4 guide, 5 blog drafts generated
+- [x] **Google Search Console** — verified, sitemap submitted, top 7 pages force-indexed (2026-02-23)
+- [~] **Google Business Profile** — name, phone, category, description, areas updated (2026-02-23). Still need: services list, reviews
+- [x] **Paste WordPress content** — ALL 9 pages updated/created with SEO content (2026-02-23)
+- [x] **RankMath meta tags** — set on all 9 pages (2026-02-23)
+- [x] **City landing pages** — /oxford-advertising/, /starkville-advertising/, /tupelo-advertising/ created (2026-02-23)
+- [x] **FAQ page** — 12 Q&As created (2026-02-23)
+- [x] **Team headshots + team photo** — added to About Us (2026-02-23)
+- [ ] **GA4 setup** — guide ready in seo/ga4_setup_guide.md
+- [x] **v21 proposal upgrade** — ALL 14 items complete: Phase 1 bugs (1A-1C), Phase 2 design (2A-2H), Phase 3 polish (3A-3E) (2026-02-23)
+- [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
 - [ ] Email notifications (SMTP configured but not confirmed working end-to-end)
 - [ ] Custom domain (bot.mctvofms.com CNAME to Render — not yet set up)
-- [ ] Other generators (Host Media Kit, Multi-Brand, etc.) still use old formatting — need v20 treatment
-- [ ] Photo distribution only implemented for Elite Advertiser
 - [ ] No test suite — all testing is manual (generate proposal, check PDF)
 - [ ] Custom Creatomate template (currently using demo "Search Field Simple")
 - [ ] Save 5 community screen photos to assets/screens/
@@ -56,6 +68,94 @@
 ---
 
 ## Changelog
+
+### 2026-02-23 — Proposal Generator v21 (MUC Gold Standard Upgrade)
+
+14-item spec comparing auto-generated proposals against the manually-built Mississippi Urgent Care (MUC) gold standard. All 14 items implemented across 3 phases.
+
+#### Phase 1: Ship-Blocking Bug Fixes
+- **1A: Getting Started formatting fix** — `add_body_text()` pre-splits single-newline numbered items (`1.\n2.\n3.`) into separate `\n\n` blocks so ALL steps get bold navy formatting, not just step 1
+- **1B: Image scraper classification** — new `classify_image()` in `web_scraper.py` auto-categorizes images as `logo`/`ad_example`/`product`/`skip`. Scraper UI upgraded from checkboxes to slot-assignment dropdowns. Auto-routes to correct photo slots (cover logo, venue photos, ad examples, extra photos). All 6 generator forms merge scraped routes with manual uploads.
+- **1C: Blank page fix** — `add_photos_grid()` sets `space_before/after=Pt(0)` on image cells, `keep_with_next` on title paragraphs. `add_inline_photos()` spacing tightened.
+
+#### Phase 2: Design Upgrades (Match MUC Standard)
+- **2A: Full-width section header bars** — Replaced navy text + thin gold bar with full-width navy background table + white bold 16pt centered text + gold accent underline bar. Affects ALL 6 generators.
+- **2B: New `add_accent_card()` method** — Light bg + thick gold left border (sz=24) + thin gray other borders + bold primary title 11pt + body text 10pt. Premium card look for feature lists.
+- **2C: What's Included → accent cards** — Elite Advertiser's `_build_whats_included()` changed from `add_bullet_list()` to parsing "- Title: Description" into `add_accent_card()` calls.
+- **2D: Why MCTV → accent cards** — Elite Advertiser's `_build_why_choose_mctv()` changed from `add_sub_header()` + `add_body_text()` to `add_accent_card()` calls.
+- **2E: Footer branding** — "MCTV Elite Advertising | Confidential Partnership Proposal | Page X" center-aligned, 8pt, accent/gray colors. Optional `footer_text` param for reports.
+- **2F: Page pacing** — Elite Advertiser only: page breaks before What's Included, Market Coverage, Why MCTV, Getting Started. Target 7-8 page layout.
+- **2G: Team section closing** — After team cards: italic accent closing statement + MCTV logo (2.0in centered) + "www.mctvofms.com". Optional `closing_text` param.
+- **2H: Team order** — `base_proposal.py` stores `preparer_name` on DocxService during cover build. `add_team_section()` reorders team array so sales rep appears first. Benefits all 6 generators automatically.
+
+#### Phase 3: Polish & Features
+- **3A: Scraper preview UI** — Already built in 1B (slot-assignment dropdowns with auto-suggested categories)
+- **3B: Photo grid captions** — `add_photos_grid()` accepts optional `captions` list. Italic gray 8pt text beneath each photo in the same cell.
+- **3C: Client logo on cover** — Verified: full path chain from upload/scrape → session state → docx_svc.client_logo_path → cover page render at 1.8in. Working.
+- **3D: Dynamic presenter** — Verified: sales rep dropdown flows to cover page "Prepared by", Claude prompt variables, and team section ordering. Working.
+- **3E: Venue photo library** — Created `assets/screens/{Oxford,Starkville,Tupelo,Columbus,West Point}/` subdirectories. Auto-include logic updated to pull from selected market subdirectories first, fallback to root `screens/` directory. Creed populates with venue photos.
+
+#### Files Modified
+- `services/docx_service.py` — section headers, accent cards, footer, team section, body text, photos, captions
+- `generators/elite_advertiser.py` — accent cards, page breaks
+- `generators/base_proposal.py` — preparer_name storage
+- `services/web_scraper.py` — classify_image(), scraper filtering
+- `pages/1_Proposals.py` — slot-assignment UI, photo routing for all 6 forms, market-aware screen photo auto-include
+- `assets/screens/` — market subdirectories created (Oxford, Starkville, Tupelo, Columbus, West Point)
+
+### 2026-02-23 — Google Search Console & Business Profile
+
+#### Search Console Setup (manual — Creed in browser)
+- Verified ownership via URL prefix method (`https://mctvofms.com/`)
+- Discovered WordPress "Discourage search engines from indexing this site" was **checked** — unchecked it in Settings → Reading (root cause of zero indexing)
+- Submitted sitemap: `sitemap_index.xml`
+- Force-indexed 7 priority pages via URL Inspection → Request Indexing
+- Pages should appear in `site:mctvofms.com` within 48-72 hours
+
+#### Google Business Profile Updates (manual — Creed in browser)
+- Name: "MCTV DIGITAL, INC" → "MCTV Elite Advertising"
+- Phone: 601-405-5054 → (601) 201-8202
+- Primary category: Advertising Agency
+- Description: updated with indoor billboard network copy
+- Service areas: Oxford, Starkville, Tupelo, Columbus, West Point
+- Services list: NOT updated — couldn't find the edit tab (still shows Auto Repair, Business Cards)
+
+#### SOUL.md Updated
+- Added "Website & SEO Voice" section — guidelines for public web content
+- Added "Competitors to Know" section — OnTargetTV, Social Pixel Network, Desoto Local, outdoor billboard companies
+
+### 2026-02-22 — SEO & Visibility Strategy
+
+#### SEO Infrastructure (`57ac721`)
+- MCTVofMS.com discovered to be **completely unindexed by Google** (site: search returns 0 results)
+- Added HTML meta tags, Open Graph, Twitter cards, and JSON-LD structured data to both public Streamlit pages
+- `pages/0_Intake.py` — LocalBusiness schema with areaServed cities, phone, email, serviceType
+- `pages/6_Samples.py` — WebPage + Service schema with publisher Organization
+- Generated 9 pages of WordPress content ready to paste into Divi (`seo/wordpress_content.md`)
+- Created keyword map for 25 pages with focus keywords, SEO titles, meta descriptions (`seo/keyword_map.md`)
+- Built JSON-LD schema templates: LocalBusiness, FAQPage, Service, Organization (`seo/schema_templates.json`)
+- Wrote GA4 + Search Console + GBP setup guide with 27-item priority checklist (`seo/ga4_setup_guide.md`)
+- Drafted 5 SEO blog posts (800-1000 words each) targeting long-tail keywords (`seo/blog_drafts/`)
+- Identified Google Business Profile issues: wrong name ("MCTV DIGITAL, INC"), wrong phone, wrong services, zero reviews
+- Provided copy-paste GBP fixes and review request template
+
+#### Competitor Landscape (Research)
+- OnTargetTV.com (Jackson area), Social Pixel Network (SE Louisiana), Desoto Local (DeSoto County) rank for indoor billboard keywords
+- MCTV has two Chamber of Commerce listings (Oxford, Starkville) — only external links
+- WordPress pages average 50-100 words — far below Google's minimum for ranking
+
+### 2026-02-22 — All Generators Upgraded to v20
+
+#### Category Exclusivity + Renewal/Upgrade (`7fbfaa7`)
+- Added `PHOTO_DISTRIBUTION` to both generators for photo scattering across sections
+- Category Exclusivity: paragraph+callout bullet parsing in `_build_opportunity()`, `add_bullet_list()` for exclusivity_value, compact callout contact card
+- Renewal/Upgrade: paragraph+callout bullet parsing for results_summary, `add_bullet_list()` for upgrade_pitch, loyalty benefit in callout box, `import re` at module level
+- Tighter prompts in `prompts.json`: opportunity 150w, exclusivity_value 80w, results_summary 150w, upgrade_pitch 80w, getting_started 60w
+- All trailing `doc.add_page_break()` removed; page break only before pricing section
+
+#### Host Media Kit + Multi-Brand + Venue Partner (`d01c6e8`)
+- Same v20 pattern applied: PHOTO_DISTRIBUTION, bullet parsing, callout boxes, compact contact cards
+- All 6 generators now share consistent formatting approach
 
 ### 2026-02-22 — Sidebar Nav CSS Fix
 

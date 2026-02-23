@@ -101,16 +101,34 @@ class EliteAdvertiserProposal(BaseProposal):
             f"{network['plays_per_hour']}x/Hour": "Your Ad Plays\nEvery Day",
         })
 
-    # ── WHAT'S INCLUDED (half page: 5 bullet points, no intro) ──
+    # ── WHAT'S INCLUDED (accent cards — each benefit is its own card) ──
 
     def _build_whats_included(self, doc, content):
+        doc.add_page_break()
         self.docx.add_section_header(doc, "What's Included")
-        # Claude returns 5 dash-bullet items — render with bold navy titles
-        self.docx.add_bullet_list(doc, content)
+
+        # Parse Claude's "- Title: Description" lines into accent cards
+        import re
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            # Match "- Title: Description" or "- Title -- Description"
+            bullet_match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if bullet_match:
+                title = bullet_match.group(1).strip()
+                desc = bullet_match.group(2).strip()
+                self.docx.add_accent_card(doc, title, desc)
+            else:
+                # Fallback for lines that don't match the pattern
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
 
     # ── MARKET COVERAGE (compact: short text + inline venue list) ──
 
     def _build_market_coverage(self, doc, data, content):
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Your Market Coverage")
         self.docx.add_body_text(doc, content)
 
@@ -150,9 +168,10 @@ class EliteAdvertiserProposal(BaseProposal):
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
 
-    # ── WHY MCTV (bold sub-headers with descriptions, like Good Earth) ──
+    # ── WHY MCTV (accent cards — each selling point is its own card) ──
 
     def _build_why_choose_mctv(self, doc, content):
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Why MCTV")
 
         # Parse Claude's output into (title, description) pairs.
@@ -184,8 +203,7 @@ class EliteAdvertiserProposal(BaseProposal):
 
         if items:
             for title, desc in items:
-                self.docx.add_sub_header(doc, title.upper())
-                self.docx.add_body_text(doc, desc)
+                self.docx.add_accent_card(doc, title, desc)
         else:
             # Final fallback if all parsing fails
             self.docx.add_bullet_list(doc, content)
@@ -193,5 +211,6 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── GETTING STARTED (numbered steps like Good Earth) ──
 
     def _build_getting_started(self, doc, data, content):
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Getting Started")
         self.docx.add_body_text(doc, content)

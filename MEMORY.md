@@ -128,22 +128,24 @@ Three photo pools:
 
 **Default screen photos:** When no venue or extra photos uploaded, `assets/screens/*.{png,jpg,jpeg,webp}` auto-populate as extra photos. (Implemented in `pages/1_Proposals.py`.)
 
-### Document Formatting (v20+)
+### Document Formatting (v21 — MUC Standard)
 All branding lives in `DocxService`. Key methods and their current settings:
 - `add_cover_page()` — full-page navy table, own section, tight margins, no footer
-- `add_section_header()` — 18pt navy bold + gold accent bar (5cm wide, 0.12cm tall)
+- `add_section_header()` — **full-width navy background bar** with white bold 16pt centered text + gold accent underline bar (matches MUC gold standard)
 - `add_sub_header()` — 12pt navy bold with ❚ gold left accent
 - `add_callout_box()` — cream background + **gold left border** + thin gray sides, 0.3cm left indent
+- `add_accent_card(title, body)` — **NEW** — light bg + thick gold left border (sz=24) + thin gray other borders + bold primary title + body text. Used for What's Included and Why MCTV sections.
 - `add_metrics_banner()` — navy background, gold stats (20pt), **gold top border accent**
 - `add_bullet_point()` — **gold ● bullet** + hanging indent (0.6cm) + bold navy title + description
 - `add_bullet_list()` — parses "- Title: Description" format, calls add_bullet_point
 - `add_pricing_table()` — navy header row, alternating gray rows, **thin gray borders**
 - `add_contract_terms()` — 6/12 month boxes with **gold left border** + gray sides
 - `add_inline_photos()` — single: 2.0in centered, multi: 2.0in side-by-side
-- `add_photos_grid()` — max 2.5in per photo in 2-col grid
+- `add_photos_grid()` — max 2.5in per photo in 2-col grid, **compact spacing (Pt(0))**, keep_with_next on title, **optional `captions` list** (italic gray 8pt under each photo)
 - `add_section_divider()` — thin gold horizontal rule (─ × 50, 6pt)
-- `add_footer()` — "X | Y" page numbers, right-aligned, **skips cover page section**
-- `add_body_text()` — 10.5pt, auto-detects numbered items for bold navy titles
+- `add_footer()` — **"MCTV Elite Advertising | Confidential Partnership Proposal | Page X"** center-aligned, 8pt, accent/gray colors. Optional `footer_text` param for reports.
+- `add_body_text()` — 10.5pt, auto-detects numbered items for bold navy titles, **pre-splits single-newline numbered items** so all steps get bold formatting
+- `add_team_section()` — team cards + **closing statement** (italic accent) + **MCTV logo** (2.0in) + website URL. Team reordered so **preparer (sales rep) appears first**. Optional `closing_text` param.
 
 Border helpers:
 - `_set_cell_borders(cell, left_color, left_sz, other_color, other_sz)` — per-cell borders
@@ -253,16 +255,80 @@ Architecture:
 - Pre-composited logo variants for each scheme: `mctv_logo_on_navy.png`, `mctv_logo_on_light.png`, `mctv_logo_on_dark.png`, `mctv_logo_on_pastel.png`
 - `pages/1_Proposals.py` — horizontal radio selector, passed through all 6 generator calls
 
+### All 6 Generators Now v20
+All proposal generators upgraded to v20 formatting pattern:
+- ✅ Elite Advertiser (the flagship — done first)
+- ✅ Host Media Kit (`d01c6e8`)
+- ✅ Multi-Brand Bundle (`d01c6e8`)
+- ✅ Venue Partner (`d01c6e8`)
+- ✅ Category Exclusivity (`7fbfaa7`)
+- ✅ Renewal/Upgrade (`7fbfaa7`)
+
+Each has: `PHOTO_DISTRIBUTION`, paragraph+callout bullet parsing, `add_bullet_list()`, `add_callout_box()`, compact contact cards, page breaks only before pricing sections.
+
+### SEO & Visibility Strategy — In Progress
+MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 results. Root cause: WordPress "Discourage search engines" was checked + never submitted to Search Console.
+
+**Completed (2026-02-23):**
+- ✅ SEO meta tags + OG tags + JSON-LD schema on bot pages (`57ac721`)
+- ✅ 9 pages of WordPress content generated (`seo/wordpress_content.md`)
+- ✅ Keyword map for 25 pages (`seo/keyword_map.md`)
+- ✅ JSON-LD schema templates (`seo/schema_templates.json`)
+- ✅ GA4 + Search Console setup guide (`seo/ga4_setup_guide.md`)
+- ✅ 5 blog post drafts (`seo/blog_drafts/`)
+- ✅ Google Search Console — verified (URL prefix), sitemap submitted, top 7 pages force-indexed
+- ✅ WordPress "Discourage search engines" unchecked (Settings → Reading)
+- ✅ Google Business Profile — name→"MCTV Elite Advertising", phone→(601)201-8202, category→Advertising Agency, description updated, service areas added (Oxford, Starkville, Tupelo, Columbus, West Point)
+- ✅ Review request template drafted for venue partners/advertisers
+- ✅ Homepage confirmed live with good title, meta description, and JSON-LD schema
+
+**Pending (Creed does in WordPress/Google):**
+- [ ] GBP services list — couldn't find where to edit. Look for Edit Profile → Services tab or "Products & Services" in GBP sidebar
+- [x] Paste WordPress content into Divi pages — ALL 9 PAGES DONE (2026-02-23)
+- [x] Set RankMath meta tags — done on all 9 pages (2026-02-23)
+- [x] Create city landing pages — /oxford-advertising/, /starkville-advertising/, /tupelo-advertising/ CREATED (2026-02-23)
+- [x] FAQ page created with 12 Q&As (2026-02-23)
+- [x] Intake form iframe embedded on /get-started/ (2026-02-23)
+- [x] Team headshots cropped from business cards + team photo added to About Us (2026-02-23)
+- [ ] Fix Starkville/Tupelo SEO titles in RankMath (missing "| Indoor Digital Billboards | MCTV Elite Advertising")
+- [ ] Add JSON-LD schemas via RankMath
+- [ ] Set up GA4
+- [ ] Publish 5 blog posts
+- [ ] Get Google reviews from venue partners
+- [ ] Directory listings (Tupelo Chamber, Yelp, Facebook, BBB)
+
+### SEO Files
+- `seo/wordpress_content.md` — 9 pages of paste-ready Divi content (screen-advertising, locations, venue-partner, get-started, about-us, 3 city pages, FAQ)
+- `seo/keyword_map.md` — Focus keyword, SEO title, meta description, H1 for 25 pages
+- `seo/schema_templates.json` — LocalBusiness, FAQPage, Service, Organization JSON-LD
+- `seo/ga4_setup_guide.md` — Search Console + GA4 + GBP setup + 27-item priority checklist
+- `seo/blog_drafts/` — 5 articles (800-1000 words each) targeting long-tail keywords
+
+### Google Business Profile (Updated 2026-02-23)
+- ✅ Name: "MCTV Elite Advertising" (was "MCTV DIGITAL, INC")
+- ✅ Phone: (601) 201-8202 (was 601-405-5054)
+- ✅ Category: Advertising Agency
+- ✅ Description: Updated with indoor billboard network copy
+- ✅ Service areas: Oxford, Starkville, Tupelo, Columbus, West Point
+- 🔲 Services list: Still shows wrong services (Auto Repair, Business Cards). Creed couldn't find the Services tab.
+- 🔲 Reviews: Zero — review request template was drafted
+
+### Image Scraper Improvements (v21)
+- `classify_image(url, alt_text, file_size)` in `web_scraper.py` — heuristic classification into `logo`, `ad_example`, `product`, or `skip`
+- `scrape_website_images()` now auto-filters `skip` images (icons, buttons, UI elements, tiny files) and includes `category` key in results
+- `1_Proposals.py` scraper UI upgraded: **slot-assignment dropdowns** ("Skip", "Client Logo", "Venue Photo", "Ad Example", "Extra Photo") with auto-suggested slots based on classification
+- Routed images stored in session state: `scraped_logo_path`, `scraped_venue_paths`, `scraped_ad_paths`, `scraped_photo_paths`
+- All 6 generator forms merge scraped routes with manual uploads
+
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
 - Custom domain not set up (bot.mctvofms.com)
-- Other generators (Host Media Kit, Multi-Brand, etc.) still use older formatting
-- Photo distribution only implemented for Elite Advertiser
 - No test suite — all testing is manual (generate proposal, check PDF)
 - Need custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
 - **User needs to save 5 community screen photos to `assets/screens/`** — they shared images in chat but files need to be placed manually
 - Test all 4 color schemes with a real PDF generation
 - **WordPress integration tested but NOT live yet** — Intake form iframe works on mctvofms.com (Divi Fullwidth Code module). Creed wants to wait before making pages public. Still need to: add Samples page, add pages to nav menu, set up Calendly booking, generate sample PDFs (no pricing), configure bot.mctvofms.com subdomain
+- **Phase 3 Polish (complete):** Scraper preview UI (3A — done in 1B), photo captions (3B), cover logo verified (3C), dynamic presenter verified (3D), venue photo library by market (3E — `assets/screens/{Oxford,Starkville,Tupelo,Columbus,West Point}/` created, auto-include filters by selected markets)
 
 ---
 
@@ -380,7 +446,7 @@ This allows multiple Claude Code instances to work in parallel on different part
 
 ---
 
-## Recent Commits (this session)
+## Recent Commits
 
 - `ebd7b04` — Add Creatomate video ad generator + project docs
 - `f0714d4` — Allow pasting Creatomate API key in Video Ads page
@@ -398,3 +464,6 @@ This allows multiple Claude Code instances to work in parallel on different part
 - `ebd42f6` — Add WordPress integration: Samples page, iframe config, no public pricing
 - `4eefad6` — Add Prospect Research tool — competitive intel briefs for sales calls
 - `665602e` — Fix sidebar nav link text invisible on navy background
+- `d01c6e8` — Upgrade 3 generators to v20 formatting (Host Media Kit, Multi-Brand, Venue Partner)
+- `7fbfaa7` — Upgrade category_exclusivity + renewal_upgrade to v20 formatting
+- `57ac721` — Add SEO infrastructure — meta tags, schema, content strategy, blog drafts (11 files)

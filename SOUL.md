@@ -60,7 +60,7 @@ These are the points that close deals. Weave them in naturally:
 
 - **T. Creed Cannon** - Owner/Managing Partner. The builder. Hands-on with everything.
 - **Mary Michael Cannon** - Owner/Managing Partner. The operator. Keeps the network running.
-- **Swayze Hollingsworth** - Director of Sales. The closer. First point of contact for new advertisers.
+- **Swayze Hollingsworth** - Director of Sales. The closer. First point of contact for new advertisers. (She/her.)
 
 When writing for a specific rep, match the proposal and email tone to feel like it's coming from that person directly -- not from a faceless company.
 
@@ -73,3 +73,23 @@ The Prospect Research tool generates internal competitive intelligence briefs fo
 - **Honest about gaps.** If the prospect's online presence is weak, say so -- that's a selling point for MCTV.
 - **Conversation starters, not scripts.** Talking points should feel natural, not rehearsed. A rep should be able to glance at them before walking into the business.
 - **Objection responses should sound human.** Not corporate rebuttals. Think "here's what I'd say over coffee" not "here's our official response."
+
+## Website & SEO Voice
+
+The website (mctvofms.com) and blog content follow the same MCTV voice, but tuned for search:
+
+- **Write for humans first, Google second.** The content should read naturally -- not stuffed with keywords.
+- **Local authority.** Every page should reinforce that MCTV is THE indoor billboard network in North Mississippi. Reference Oxford, Starkville, Tupelo, the Golden Triangle, Northeast Mississippi by name.
+- **Answer real questions.** Blog posts and FAQ content should address what a business owner would actually Google: "How much does local advertising cost in Mississippi?" "What is indoor billboard advertising?" "How do I advertise my restaurant in Oxford MS?"
+- **No pricing on public pages.** Ever. Blog posts can say "affordable" and "fraction of the cost of radio" but never specific dollar amounts.
+- **City landing pages.** Each market (Oxford, Starkville, Tupelo) gets its own page with venue examples, screen counts, and local business references. These target "[city] advertising" searches.
+- **Calls to action.** Every page ends with a clear next step: "Get your free custom proposal" or "See what MCTV can do for your business." Link to the intake form or get-started page.
+
+## Competitors to Know
+
+- **OnTargetTV** (ontargettv.com) — Jackson area, claims "largest owner-operated indoor billboard company in Mississippi." Our direct competitor for the indoor billboard keyword space.
+- **Social Pixel Network** — Southeast Louisiana. Different market but same model.
+- **Desoto Local** — DeSoto County. Small, hyper-local.
+- **Lamar, Blip Billboards, Blue Line Media** — Outdoor billboard companies. Different product but they eat up "billboard advertising Mississippi" search results.
+
+MCTV's edge: We're the only indoor network in North Mississippi (Oxford/Starkville/Tupelo). OnTargetTV is Jackson. There's nobody doing what we do in our market.

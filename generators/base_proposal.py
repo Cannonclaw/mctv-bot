@@ -137,6 +137,9 @@ class BaseProposal(ABC):
     def _build_cover(self, doc, input_data):
         """Build the cover page from input data."""
         rep = get_team_member(self.config, input_data.sales_rep)
+        # Store the preparer name on docx service so add_team_section()
+        # can reorder the team array to show the preparer first.
+        self.docx.preparer_name = rep["name"]
         # Get client logo path if set on the docx service
         client_logo = getattr(self.docx, "client_logo_path", None)
         self.docx.add_cover_page(

@@ -162,14 +162,18 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
         og_url = urljoin(url, og_match.group(1))
         found[og_url] = "og:image (social sharing image)"
 
-    # Build results
+    # Build results with classification
     results = []
     for img_url, alt_text in found.items():
         filename = _get_filename(img_url)
+        category = classify_image(img_url, alt_text)
+        if category == "skip":
+            continue  # Filter out junk images entirely
         results.append({
             "url": img_url,
             "alt": alt_text,
             "filename": filename,
+            "category": category,  # 'logo', 'ad_example', or 'product'
         })
         if len(results) >= max_images:
             break
@@ -238,6 +242,54 @@ def _is_valid_image(url: str) -> bool:
         return True
 
     return False
+
+
+def classify_image(img_url: str, alt_text: str = "", file_size: int = 0) -> str:
+    """Classify an image based on URL, alt text, and file size.
+
+    Returns one of: 'logo', 'ad_example', 'product', 'skip'
+    """
+    url_lower = img_url.lower()
+    alt_lower = (alt_text or "").lower()
+    combined = url_lower + " " + alt_lower
+
+    # Skip: tiny images, icons, UI elements
+    skip_signals = [
+        "icon", "button", "menu", "arrow", "chevron", "close",
+        "hamburger", "spinner", "loading", "placeholder", "spacer",
+        "widget", "avatar", "gravatar", "emoji", "payment",
+        "visa", "mastercard", "amex", "paypal", "credit-card",
+    ]
+    for signal in skip_signals:
+        if signal in combined:
+            return "skip"
+
+    # Skip very small files (< 10KB) — likely UI elements
+    if file_size > 0 and file_size < 10000:
+        return "skip"
+
+    # Logo detection
+    logo_signals = ["logo", "brand", "header-image", "site-logo", "navbar-brand"]
+    for signal in logo_signals:
+        if signal in combined:
+            return "logo"
+
+    # OG image is usually a logo or hero — treat as logo
+    if "og:image" in alt_lower:
+        return "logo"
+
+    # Ad/promo detection
+    ad_signals = [
+        "ad", "banner", "promo", "promotion", "campaign",
+        "advertisement", "flyer", "deal", "offer", "coupon",
+        "special", "sale",
+    ]
+    for signal in ad_signals:
+        if signal in combined:
+            return "ad_example"
+
+    # Everything else that passes size check is a product/content photo
+    return "product"
 
 
 def _get_filename(url: str) -> str:

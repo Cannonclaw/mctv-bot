@@ -314,37 +314,58 @@ class DocxService:
         new_section.right_margin = Cm(2.0)
 
     def add_section_header(self, doc: Document, text: str):
-        """Add a styled section header with gold accent bar underneath."""
-        p = doc.add_paragraph()
-        p.space_before = Pt(0)
-        p.space_after = Pt(0)
-        run = p.add_run(text.upper())
-        run.font.size = Pt(18)
-        run.font.color.rgb = self.c["primary"]
-        run.font.bold = True
-        run.font.name = "Calibri"
+        """Add a full-width section header bar with navy background, white text,
+        and a thin gold accent line underneath — matching the MUC gold standard."""
 
-        # Gold accent bar using a 1-row, 1-col table with gold background
-        bar = doc.add_table(rows=1, cols=1)
-        bar.alignment = WD_TABLE_ALIGNMENT.LEFT
-        cell = bar.rows[0].cells[0]
-        cell.height = Cm(0.12)
-        # Set gold background
+        # ── Navy background bar (full-width single-cell table) ──
+        header_table = doc.add_table(rows=1, cols=1)
+        header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        cell = header_table.rows[0].cells[0]
+
+        # Navy background fill
         tc_pr = cell._element.get_or_add_tcPr()
         shd = tc_pr.makeelement(qn("w:shd"), {
-            qn("w:fill"): self.c["accent_hex"],
+            qn("w:fill"): self.c["bg_hex"],
             qn("w:val"): "clear",
         })
         tc_pr.append(shd)
-        # Set cell width to about 1/3 of page
-        cell.width = Cm(5)
+
+        # White bold text, centered
         p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         pf = p.paragraph_format
-        pf.space_before = Pt(0)
-        pf.space_after = Pt(0)
-        run = p.add_run()
-        run.font.size = Pt(1)
-        self._remove_table_borders(bar)
+        pf.space_before = Pt(8)
+        pf.space_after = Pt(8)
+        run = p.add_run(text.upper())
+        run.font.size = Pt(16)
+        run.font.color.rgb = self.c["white"]
+        run.font.bold = True
+        run.font.name = "Calibri"
+
+        self._remove_table_borders(header_table)
+
+        # ── Gold accent underline bar ──
+        accent_bar = doc.add_table(rows=1, cols=1)
+        accent_bar.alignment = WD_TABLE_ALIGNMENT.CENTER
+        accent_cell = accent_bar.rows[0].cells[0]
+        accent_cell.height = Cm(0.08)
+
+        # Gold background fill
+        tc_pr2 = accent_cell._element.get_or_add_tcPr()
+        shd2 = tc_pr2.makeelement(qn("w:shd"), {
+            qn("w:fill"): self.c["accent_hex"],
+            qn("w:val"): "clear",
+        })
+        tc_pr2.append(shd2)
+
+        # Minimal content to hold the bar
+        p2 = accent_cell.paragraphs[0]
+        p2.paragraph_format.space_before = Pt(0)
+        p2.paragraph_format.space_after = Pt(0)
+        run2 = p2.add_run()
+        run2.font.size = Pt(1)
+
+        self._remove_table_borders(accent_bar)
 
     def add_sub_header(self, doc: Document, text: str):
         """Add a bold sub-header with gold left accent."""
@@ -397,6 +418,46 @@ class DocxService:
         run.font.color.rgb = self.c["text"]
         run.font.name = "Calibri"
 
+    def add_accent_card(self, doc: Document, title: str, body: str):
+        """Add a styled card with thick accent left border, light background,
+        bold title, and body text — used for What's Included and Why MCTV sections."""
+        table = doc.add_table(rows=1, cols=1)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        cell = table.rows[0].cells[0]
+
+        # Light background fill
+        tc_pr = cell._element.get_or_add_tcPr()
+        shd = tc_pr.makeelement(qn("w:shd"), {
+            qn("w:fill"): self.c["light_hex"],
+            qn("w:val"): "clear",
+        })
+        tc_pr.append(shd)
+
+        # Thick accent left border + thin gray on other sides
+        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=24,
+                               other_color="D0D0D0", other_sz=2)
+
+        # Bold title in primary color
+        p = cell.paragraphs[0]
+        p.paragraph_format.space_before = Pt(6)
+        p.paragraph_format.space_after = Pt(2)
+        p.paragraph_format.left_indent = Cm(0.3)
+        run = p.add_run(title)
+        run.font.size = Pt(11)
+        run.font.bold = True
+        run.font.color.rgb = self.c["primary"]
+        run.font.name = "Calibri"
+
+        # Body text in text color
+        p2 = cell.add_paragraph()
+        p2.paragraph_format.space_before = Pt(0)
+        p2.paragraph_format.space_after = Pt(6)
+        p2.paragraph_format.left_indent = Cm(0.3)
+        run2 = p2.add_run(body)
+        run2.font.size = Pt(10)
+        run2.font.color.rgb = self.c["text"]
+        run2.font.name = "Calibri"
+
     def add_body_text(self, doc: Document, text: str):
         """Add body paragraphs with proper spacing.
 
@@ -404,7 +465,13 @@ class DocxService:
         and formats them with a bold navy title and normal body text.
         """
         import re
-        paragraphs = text.strip().split("\n\n")
+        # Pre-process: ensure each numbered line (e.g. "2. Step") gets its own
+        # paragraph block.  Claude sometimes returns steps separated by single
+        # newlines, which groups them all into one block and only the first
+        # match succeeds.  This inserts a double-newline before each numbered
+        # line that isn't already preceded by one.
+        text = re.sub(r'(?<!\n)\n(\d+\.\s)', r'\n\n\1', text.strip())
+        paragraphs = text.split("\n\n")
         for para_text in paragraphs:
             para_text = para_text.strip()
             if not para_text:
@@ -507,8 +574,8 @@ class DocxService:
         if len(photo_paths) == 1:
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(4)
-            p.space_after = Pt(4)
+            p.space_before = Pt(2)
+            p.space_after = Pt(2)
             try:
                 run = p.add_run()
                 run.add_picture(photo_paths[0], width=Inches(2.0))
@@ -537,7 +604,8 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
-                        max_width: float = 2.5, cols: int = 2):
+                        max_width: float = 2.5, cols: int = 2,
+                        captions: list = None):
         """Add a grid of photos to the document.
 
         Args:
@@ -545,21 +613,33 @@ class DocxService:
             title: Optional sub-header above the photos.
             max_width: Max width per image in inches.
             cols: Number of columns in the grid.
+            captions: Optional list of caption strings (same length as photo_paths).
         """
         # Filter to only paths that actually exist on disk
-        photo_paths = [p for p in (photo_paths or []) if Path(p).exists()]
-        if not photo_paths:
+        valid = []
+        valid_captions = []
+        for i, p in enumerate(photo_paths or []):
+            if Path(p).exists():
+                valid.append(p)
+                if captions and i < len(captions):
+                    valid_captions.append(captions[i])
+                else:
+                    valid_captions.append(None)
+        if not valid:
             return
 
         if title:
             self.add_sub_header(doc, title)
+            # Keep the title paragraph together with the grid below
+            last_para = doc.paragraphs[-1]
+            last_para.paragraph_format.keep_with_next = True
 
         # Build table grid for photos
-        rows_needed = (len(photo_paths) + cols - 1) // cols
+        rows_needed = (len(valid) + cols - 1) // cols
         table = doc.add_table(rows=rows_needed, cols=cols)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        for i, photo_path in enumerate(photo_paths):
+        for i, photo_path in enumerate(valid):
             row_idx = i // cols
             col_idx = i % cols
             cell = table.rows[row_idx].cells[col_idx]
@@ -567,6 +647,9 @@ class DocxService:
 
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            # Compact spacing to prevent blank page overflow
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(0)
             try:
                 run = p.add_run()
                 run.add_picture(photo_path, width=Inches(max_width))
@@ -574,6 +657,19 @@ class DocxService:
                 run = p.add_run("[Image could not be loaded]")
                 run.font.size = Pt(9)
                 run.font.color.rgb = self.c["gray"]
+
+            # Optional caption below the photo
+            caption_text = valid_captions[i] if i < len(valid_captions) else None
+            if caption_text:
+                cap_p = cell.add_paragraph()
+                cap_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                cap_p.paragraph_format.space_before = Pt(1)
+                cap_p.paragraph_format.space_after = Pt(2)
+                cap_run = cap_p.add_run(caption_text)
+                cap_run.font.size = Pt(8)
+                cap_run.font.italic = True
+                cap_run.font.color.rgb = self.c["gray"]
+                cap_run.font.name = "Calibri"
 
         self._remove_table_borders(table)
 
@@ -772,11 +868,18 @@ class DocxService:
                     })
                     shading.append(shading_elm)
 
-    def add_team_section(self, doc: Document):
-        """Add the Meet Your Team section with photos."""
+    def add_team_section(self, doc: Document,
+                         closing_text: str = "We look forward to partnering with you."):
+        """Add the Meet Your Team section with photos, closing statement, and logo."""
         self.add_section_header(doc, "Meet Your Team")
 
-        team = self.config["team"]
+        team = list(self.config["team"])
+
+        # Reorder so the preparer (sales rep) appears first
+        preparer = getattr(self, 'preparer_name', None)
+        if preparer:
+            team.sort(key=lambda m: (0 if m["name"] == preparer else 1))
+
         table = doc.add_table(rows=1, cols=len(team))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
@@ -826,6 +929,38 @@ class DocxService:
 
         self._remove_table_borders(table)
 
+        # ── Closing statement ──
+        if closing_text:
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(16)
+            p.space_after = Pt(8)
+            run = p.add_run(closing_text)
+            run.font.size = Pt(12)
+            run.font.italic = True
+            run.font.color.rgb = self.c["accent"]
+            run.font.name = "Calibri"
+
+        # ── MCTV logo ──
+        mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
+        if mctv_logo.exists():
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(4)
+            p.space_after = Pt(4)
+            run = p.add_run()
+            run.add_picture(str(mctv_logo), width=Inches(2.0))
+
+        # ── Website ──
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.space_before = Pt(2)
+        p.space_after = Pt(0)
+        run = p.add_run("www.mctvofms.com")
+        run.font.size = Pt(10)
+        run.font.color.rgb = self.c["primary"]
+        run.font.name = "Calibri"
+
     def add_venue_categories(self, doc: Document):
         """Add the 'Where Your Ads Play' venue category grid — ultra-compact 2-row format."""
         categories = [
@@ -854,11 +989,15 @@ class DocxService:
 
         self._remove_table_borders(table)
 
-    def add_footer(self, doc: Document):
-        """Add branded footer with 'PAGE | TOTAL' page numbers.
+    def add_footer(self, doc: Document, footer_text: str = "Confidential Partnership Proposal"):
+        """Add branded footer: 'MCTV Elite Advertising  |  [text]  |  Page X'
 
         Skips the first section (cover page) so the navy background isn't
         interrupted by a page-number footer.
+
+        Args:
+            footer_text: Middle text (default: "Confidential Partnership Proposal").
+                         Reports can pass different text.
         """
         for idx, section in enumerate(doc.sections):
             if idx == 0:
@@ -867,41 +1006,52 @@ class DocxService:
             footer = section.footer
             footer.is_linked_to_previous = False
             p = footer.paragraphs[0]
-            p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-            # Page number: "X  |  Y" format
-            # PAGE field
-            run = p.add_run()
-            fld_begin = run._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
-            run._element.append(fld_begin)
-            run2 = p.add_run()
-            instr = run2._element.makeelement(qn("w:instrText"), {})
-            instr.text = " PAGE "
-            run2._element.append(instr)
-            run2.font.size = Pt(9)
-            run2.font.color.rgb = self.c["gray"]
-            run3 = p.add_run()
-            fld_end = run3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
-            run3._element.append(fld_end)
+            # "MCTV Elite Advertising" in accent color
+            run_brand = p.add_run("MCTV Elite Advertising")
+            run_brand.font.size = Pt(8)
+            run_brand.font.color.rgb = self.c["accent"]
+            run_brand.font.name = "Calibri"
 
             # Separator
-            sep = p.add_run("  |  ")
-            sep.font.size = Pt(9)
-            sep.font.color.rgb = self.c["gray"]
+            sep1 = p.add_run("   |   ")
+            sep1.font.size = Pt(8)
+            sep1.font.color.rgb = self.c["gray"]
+            sep1.font.name = "Calibri"
 
-            # NUMPAGES field
-            run4 = p.add_run()
-            fld_begin2 = run4._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
-            run4._element.append(fld_begin2)
-            run5 = p.add_run()
-            instr2 = run5._element.makeelement(qn("w:instrText"), {})
-            instr2.text = " NUMPAGES "
-            run5._element.append(instr2)
-            run5.font.size = Pt(9)
-            run5.font.color.rgb = self.c["gray"]
-            run6 = p.add_run()
-            fld_end2 = run6._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
-            run6._element.append(fld_end2)
+            # Footer text in gray
+            run_text = p.add_run(footer_text)
+            run_text.font.size = Pt(8)
+            run_text.font.color.rgb = self.c["gray"]
+            run_text.font.name = "Calibri"
+
+            # Separator
+            sep2 = p.add_run("   |   ")
+            sep2.font.size = Pt(8)
+            sep2.font.color.rgb = self.c["gray"]
+            sep2.font.name = "Calibri"
+
+            # "Page " label in gray
+            run_label = p.add_run("Page ")
+            run_label.font.size = Pt(8)
+            run_label.font.color.rgb = self.c["gray"]
+            run_label.font.name = "Calibri"
+
+            # PAGE field code
+            run_fld1 = p.add_run()
+            fld_begin = run_fld1._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "begin"})
+            run_fld1._element.append(fld_begin)
+            run_fld2 = p.add_run()
+            instr = run_fld2._element.makeelement(qn("w:instrText"), {})
+            instr.text = " PAGE "
+            run_fld2._element.append(instr)
+            run_fld2.font.size = Pt(8)
+            run_fld2.font.color.rgb = self.c["gray"]
+            run_fld2.font.name = "Calibri"
+            run_fld3 = p.add_run()
+            fld_end = run_fld3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
+            run_fld3._element.append(fld_end)
 
     def save_proposal(self, doc: Document, filename: str, also_pdf: bool = True) -> Path:
         """Save a proposal document and optionally convert to PDF. Returns docx path."""

@@ -134,27 +134,25 @@ Our screens are installed across 14 different venue types, including:
 
 **Focus Keyword:** host a digital billboard Mississippi
 **Meta Title:** Host a Digital Billboard in Your Venue | MCTV Elite Advertising
-**Meta Description:** Become an MCTV venue partner — get a free indoor digital billboard, earn revenue, and promote your business across 125+ screens in North Mississippi. Zero cost to you.
+**Meta Description:** Become an MCTV venue partner — get a free indoor digital billboard, free ad creative, and free advertising on 5 screens across North Mississippi. Zero cost to you.
 
 ---
 
 ### The MCTV Venue Partner Program
 
-What if you could add a revenue stream to your business, get free advertising across North Mississippi, and enhance your customer experience — all without spending a dime?
+What if you could get free advertising across North Mississippi and enhance your customer experience — all without spending a dime?
 
-That's exactly what the MCTV Venue Partner Program delivers. We install a professional indoor digital billboard screen in your venue at absolutely no cost to you. We manage the screen, sell the advertising, and share the revenue with you. It's that simple.
+That's exactly what the MCTV Venue Partner Program delivers. We install a professional indoor digital billboard screen in your venue at absolutely no cost to you. We manage the screen, handle the content, and take care of everything. All you do is enjoy the benefits.
 
 ### What You Get as a Venue Partner
 
-**Free advertising on your own screen.** Your business gets eight ad slots per hour on the screen in your venue. That's eight times every hour that your customers see your latest promotion, seasonal offer, or brand message — right inside your own four walls.
+**Free advertising on 5 screens of your choice.** As a venue partner, your business gets to advertise on five screens across the MCTV network — you pick the locations. That means your restaurant in Oxford could be promoted in a Starkville gym, a Tupelo barbershop, or anywhere else in our 125+ screen network. That kind of cross-market exposure would normally cost hundreds per month. As a venue partner, it's free.
 
-**Network-wide exposure at no cost.** Beyond your own screen, your business ad plays four times per hour across every other screen in the MCTV network. That means your restaurant in Oxford could be seen by customers in a Starkville gym or a Tupelo barbershop. With 125+ screens across North Mississippi, that's powerful cross-market exposure you simply can't buy for what we're offering: free.
+**Free custom ad creative.** Our team designs your ad content professionally and delivers it ready to run. We handle the creative work — you just approve it. And every piece of content we create for you is yours to keep. Use it on social media, in email marketing, or anywhere you'd like.
 
-**Professional content your customers will enjoy.** The MCTV screen loop includes local weather updates, news headlines, sports scores, and interactive trivia alongside the advertising. Your customers stay entertained and engaged, which enhances their experience in your venue and encourages longer visits.
+**Professional content your customers will enjoy.** The MCTV screen in your venue runs a curated 15-minute loop that includes local weather updates, news headlines, sports scores, and interactive trivia alongside advertising. Your customers stay entertained and engaged, which enhances their experience and encourages longer visits.
 
-**Custom ad creative at no cost.** Our team designs your ad content professionally and delivers it ready to run. Every piece of content created for your campaign is owned by you. Use it on social media, in email marketing, or anywhere you'd like.
-
-**Monthly performance reports.** Through the NTV360 analytics dashboard, you'll see exactly how your screen is performing — impressions, visitor data, and more. No guessing, just real numbers.
+**A better atmosphere at no cost.** A professionally managed screen adds energy and visual interest to your space. Whether it's a waiting room, a dining area, or a lobby, the screen gives your customers something to watch and enjoy while they're with you.
 
 ### How It Works
 
@@ -164,15 +162,15 @@ The process is straightforward and completely hands-off for you.
 
 **Step 2:** Our team installs a commercial-grade indoor digital billboard screen in your venue at no cost. Installation is clean, professional, and designed to complement your space.
 
-**Step 3:** We manage the content loop, sell advertising to local businesses, and handle everything. You earn revenue every month from the ads that run on your screen.
+**Step 3:** We manage the content loop, handle all advertising, and take care of everything. You get free advertising on 5 screens across the network and free custom ad creative — no strings attached.
 
-Your content is refreshed quarterly at no extra charge, keeping the screen looking sharp and your promotions current.
+Your content is refreshed quarterly at no extra charge, keeping your promotions current season after season.
 
 ### Ideal Venue Types
 
 The MCTV Venue Partner Program is a perfect fit for restaurants, barbershops, hair salons, gyms, medical offices, dental offices, retail shops, auto repair shops, spas, coffee shops, and professional waiting rooms. If your customers spend time in your space, we'd love to talk.
 
-**Ready to add a revenue stream and free advertising to your business?**
+**Ready to get free advertising and a professional screen in your venue?**
 
 [CTA BUTTON: "Become a Venue Partner" — link to /get-started/]
 [CTA BUTTON: "Contact Us" — link to /contact-us/]
@@ -247,7 +245,7 @@ Creed is the driving force behind MCTV Elite Advertising's growth across North M
 Mary Michael brings operational excellence and a sharp eye for brand quality to everything MCTV does. From content standards to venue partnerships, she ensures that every screen in the network reflects the professionalism and warmth that define the MCTV brand. Her commitment to community and relationships is at the heart of how MCTV does business. Mary Michael can be reached at (662) 801-5677.
 
 **Swayze Hollingsworth — Director of Sales**
-Swayze leads the MCTV sales team and serves as the first point of contact for businesses looking to advertise on the network. With an in-depth knowledge of every market MCTV serves, Swayze works directly with advertisers to design campaigns that match their goals and budget. His approach is consultative, data-driven, and focused on results. Reach Swayze at (662) 907-0404.
+Swayze leads the MCTV sales team and serves as the first point of contact for businesses looking to advertise on the network. With an in-depth knowledge of every market MCTV serves, Swayze works directly with advertisers to design campaigns that match their goals and budget. Her approach is consultative, data-driven, and focused on results. Reach Swayze at (662) 907-0404.
 
 ### Our Growth
 
