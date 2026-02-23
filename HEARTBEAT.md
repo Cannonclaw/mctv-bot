@@ -56,6 +56,7 @@
 - [x] **Team headshots + team photo** — added to About Us (2026-02-23)
 - [ ] **GA4 setup** — guide ready in seo/ga4_setup_guide.md
 - [x] **v21 proposal upgrade** — ALL 14 items complete: Phase 1 bugs (1A-1C), Phase 2 design (2A-2H), Phase 3 polish (3A-3E) (2026-02-23)
+- [x] **Traction Report v2 upgrade** — 15-item Spec B complete: parser fix (0→32K plays), demo exclusion, venue categorization, cover page, exec summary, KPIs, 4 charts, enhanced data table, team section, multi-market breakdown, campaign auto-detect (2026-02-23)
 - [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
 - [ ] Email notifications (SMTP configured but not confirmed working end-to-end)
 - [ ] Custom domain (bot.mctvofms.com CNAME to Render — not yet set up)
@@ -68,6 +69,39 @@
 ---
 
 ## Changelog
+
+### 2026-02-23 — Traction Report v2 (Gold Standard Upgrade)
+
+15-item spec (Spec B) bringing auto-generated traction reports up to the manually-built RedMed/Stout's/Paysinger gold standard. Previously the report was non-functional (0 plays everywhere).
+
+#### Phase 1: SHOW-STOPPER Fixes
+- **B-1.1/1.2: Play count + duration parser fix** — `parse_per_content_report()` rewrote from hardcoded column indices (assumed 6-col) to header-name-based column mapping. NTV360 10-column format (`Host|City|State|Zip|Region|Playlist|Play Count|Play Duration|Start|End`) now parsed correctly. Magnolia Rental: 0 plays → 32,318 plays.
+- **B-1.3: Demo venue exclusion** — Auto-filters venues where host or playlist contains "demo" (case-insensitive) in all 3 parsers + `build_report_data()`. Removes "D.476 Dealer Demo" test entries from client reports.
+- **B-1.5: AI insights sanity check** — If total_plays == 0 but venues exist, shows data warning instead of letting Claude fabricate explanations for broken data.
+
+#### Phase 2: Core Report Quality
+- **B-1.4: Venue categorization engine** — `classify_venue()` function with 10 regex-based rules (Restaurant, Salon, Medical, Auto, Fitness, Liquor, Education, Professional, Retail, Community). Word-boundary-aware to avoid false positives ("Oxford" no longer matches "ford"). Applied automatically in `build_report_data()`.
+- **B-2.1: Executive Summary + KPI grid** — Replaced text-only title block with `docx.add_metrics_banner()` (Total Plays, Active Venues, Screen Time, Avg Plays/Venue) + narrative summary paragraph + campaign period callout box.
+- **B-2.2: Performance Analytics (4 charts)** — New `services/chart_service.py` using matplotlib. Venue bar chart (horizontal, color-coded by market), category donut chart, engagement scatter plot (plays vs air time), market comparison (3 grouped bars). All in MCTV brand colors. Embedded as 2×2 grid via `add_photos_grid()`.
+- **B-2.3: Data table enhancements** — Added City/Market column, bold top 3 performers (`bold_rows=3`), navy totals row at bottom. `add_data_table()` now accepts `bold_rows` and `totals_row` params.
+- **B-2.5/2.6/2.7: Cover page + footer + section headers** — Reused shared design system from v21 proposals. `add_cover_page()` (navy bg, MCTV logo, advertiser name, campaign period), `add_footer(footer_text="Ad Performance Report")`, `add_section_header()` (navy bar + gold accent).
+- **B-2.4: Team section** — Reused `add_team_section()` with closing text + MCTV logo + preparer-first ordering.
+
+#### Phase 3: Polish
+- **B-3.1: Multi-market breakdown** — `_get_market_breakdown()` groups venues by city, shows "Oxford: 59.5% | Tupelo: 40.5%" in summary. Charts color-coded by market.
+- **B-3.2: Campaign period auto-detection** — Parses start/end dates from data rows, pre-fills UI field. User can override.
+- **B-3.4: Multi-file support** — Already working via `all_records.extend()` in UI.
+
+#### Files Modified/Created
+- `services/excel_parser.py` — parser rewrite, classify_venue(), demo exclusion, city propagation, campaign auto-detect
+- `generators/advertiser_report.py` — complete rewrite: cover page, exec summary, KPIs, charts, enhanced table, team section
+- `models/report_data.py` — added `city` field to PlayRecord
+- `services/chart_service.py` — NEW: 4 chart functions + generate_all_charts()
+- `services/docx_service.py` — add_data_table() extended with bold_rows + totals_row
+- `pages/2_Reports.py` — auto-detect campaign period, show markets/cities in summary
+- `requirements.txt` — added matplotlib>=3.8.0
+
+---
 
 ### 2026-02-23 — Proposal Generator v21 (MUC Gold Standard Upgrade)
 

@@ -154,6 +154,14 @@ Border helpers:
 
 PDF conversion: LibreOffice headless (Docker) or docx2pdf (Windows)
 
+### Traction Report Pipeline (v2 — Gold Standard)
+- `services/excel_parser.py` — NTV360 parser with 3 format auto-detection. `parse_per_content_report()` uses **header-name-based column mapping** (not hardcoded indices). Extracts city, playlist, play count, duration, dates. Demo venues auto-excluded.
+- `classify_venue(name)` — 10-rule regex classifier (Restaurant, Salon, Medical, Auto, Fitness, Liquor, Education, Professional, Retail, Community). Applied automatically in `build_report_data()`.
+- `services/chart_service.py` — 4 matplotlib charts: venue bar chart, category donut, scatter plot, market comparison. All in MCTV brand colors. `generate_all_charts(data, categories)` returns PNG paths.
+- `generators/advertiser_report.py` — Full report pipeline: cover page → executive summary + KPIs → venue table (with city, category, bold top 3, totals row) → category breakdown → analytics charts (2×2 grid) → AI insights → team section → footer
+- `add_data_table()` now accepts `bold_rows=N` (bolds top N data rows) and `totals_row=[...]` (navy-styled summary row)
+- `models/report_data.py` — `PlayRecord` has `city` field, `VenueRecord` has `city` + `business_category`
+
 ### Prompt Engineering
 - Strict word limits per section (150/100/75/80/60 for Elite Advertiser)
 - Claude MAY use bullet dashes when prompt asks for them

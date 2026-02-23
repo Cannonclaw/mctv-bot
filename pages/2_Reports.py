@@ -117,10 +117,10 @@ with tab_upload:
                 st.error(f"Error parsing {uploaded_file.name}: {e}")
 
         if all_records:
-            # Show summary
-            hosts = aggregate_by_host(all_records)
-            total_plays = sum(h["total_plays"] for h in hosts.values())
-            total_hosts = len(hosts)
+            # Show summary — use build_report_data for demo exclusion + categorization
+            preview_data = build_report_data(all_records, "Preview")
+            total_plays = preview_data.total_plays
+            total_hosts = preview_data.total_screen_count
 
             st.markdown("#### Data Summary")
             mc1, mc2, mc3 = st.columns(3)
@@ -137,7 +137,17 @@ with tab_upload:
             if content_names:
                 st.caption(f"Content pieces found: {', '.join(sorted(content_names)[:10])}")
 
+            # Show cities detected
+            cities = set(v.city for v in preview_data.venue_records if v.city)
+            if cities:
+                st.caption(f"Markets detected: {', '.join(sorted(cities))}")
+
             st.divider()
+
+            # Auto-detect campaign period from data dates or sheet name
+            auto_period = ""
+            if preview_data.campaign_start and preview_data.campaign_end:
+                auto_period = f"{preview_data.campaign_start} - {preview_data.campaign_end}"
 
             # Report configuration
             col1, col2 = st.columns(2)
@@ -149,6 +159,7 @@ with tab_upload:
                     advertiser_name = st.text_input("Venue Name *",
                                                      placeholder="Oxford Park Commission")
                 campaign_period = st.text_input("Campaign Period",
+                                                 value=auto_period,
                                                  placeholder="November 2025 - February 2026")
             with col2:
                 include_insights = st.toggle("Include AI-Generated Insights", value=True,

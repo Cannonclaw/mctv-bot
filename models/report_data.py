@@ -12,6 +12,7 @@ class PlayRecord:
     play_duration_str: str = ""
     play_duration_seconds: int = 0
     playlist: str = ""
+    city: str = ""
     start_date: str = ""
     end_date: str = ""
 

@@ -828,9 +828,18 @@ class DocxService:
             self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=12,
                                    other_color="D0D0D0", other_sz=4)
 
-    def add_data_table(self, doc: Document, headers: list, rows: list):
-        """Add a data table for traction reports."""
-        table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    def add_data_table(self, doc: Document, headers: list, rows: list,
+                       bold_rows: int = 0, totals_row: list = None):
+        """Add a data table for traction reports.
+
+        Args:
+            headers: Column header strings.
+            rows: List of row data (each row is a list of strings).
+            bold_rows: Bold the first N data rows (top performers).
+            totals_row: Optional summary row appended at the bottom.
+        """
+        total_rows = 1 + len(rows) + (1 if totals_row else 0)
+        table = doc.add_table(rows=total_rows, cols=len(headers))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         # Header row
@@ -859,6 +868,9 @@ class DocxService:
                 run = p.add_run(str(value))
                 run.font.size = Pt(9)
                 run.font.color.rgb = self.c["text"]
+                # Bold top N performers
+                if row_idx < bold_rows:
+                    run.font.bold = True
 
                 if row_idx % 2 == 0:
                     shading = cell._element.get_or_add_tcPr()
@@ -867,6 +879,25 @@ class DocxService:
                         qn("w:val"): "clear",
                     })
                     shading.append(shading_elm)
+
+        # Totals row (styled like header but slightly lighter)
+        if totals_row:
+            totals_idx = 1 + len(rows)
+            row = table.rows[totals_idx]
+            for col_idx, value in enumerate(totals_row):
+                cell = row.cells[col_idx]
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if col_idx > 0 else WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(str(value))
+                run.font.size = Pt(9)
+                run.font.bold = True
+                run.font.color.rgb = self.c["white"]
+                shading = cell._element.get_or_add_tcPr()
+                shading_elm = shading.makeelement(qn("w:shd"), {
+                    qn("w:fill"): self.c["bg_hex"],
+                    qn("w:val"): "clear",
+                })
+                shading.append(shading_elm)
 
     def add_team_section(self, doc: Document,
                          closing_text: str = "We look forward to partnering with you."):
