@@ -52,6 +52,18 @@ st.markdown("""
     [data-testid="stSidebar"] .stMarkdown h3 {
         color: white;
     }
+    /* Page link labels in sidebar */
+    [data-testid="stSidebar"] a,
+    [data-testid="stSidebar"] a span,
+    [data-testid="stSidebar"] a p,
+    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] span,
+    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] p {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] a:hover span,
+    [data-testid="stSidebar"] a:hover p {
+        color: #C5A55A !important;
+    }
 
     /* Success message styling */
     .stSuccess {
