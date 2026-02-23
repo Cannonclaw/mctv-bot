@@ -19,6 +19,7 @@ st.set_page_config(
 )
 
 # Hide sidebar and Streamlit chrome for a clean client-facing look
+# Also inject SEO meta tags, Open Graph, and JSON-LD structured data
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { display: none; }
@@ -27,6 +28,47 @@ st.markdown("""
     footer { visibility: hidden; }
     header { visibility: hidden; }
 </style>
+
+<!-- SEO Meta Tags -->
+<meta name="description" content="Get your brand in front of thousands. MCTV Elite Advertising places your ads on 125+ indoor digital billboard screens across Oxford, Starkville, and Tupelo, Mississippi. Request your free custom proposal.">
+<meta name="keywords" content="indoor digital billboard advertising, MCTV, North Mississippi, Oxford MS, Starkville MS, Tupelo MS, local advertising, digital signage">
+<meta name="author" content="MCTV Elite Advertising">
+<link rel="canonical" href="https://mctv-bot.onrender.com/Intake">
+
+<!-- Open Graph Tags -->
+<meta property="og:title" content="Advertise With MCTV | Indoor Digital Billboards in North Mississippi">
+<meta property="og:description" content="125+ indoor digital billboard screens across Oxford, Starkville, and Tupelo. 1.9M+ monthly impressions. Request your free custom advertising proposal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mctv-bot.onrender.com/Intake">
+<meta property="og:site_name" content="MCTV Elite Advertising">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Advertise With MCTV | Indoor Digital Billboards in North Mississippi">
+<meta name="twitter:description" content="125+ screens. 1.9M+ impressions. Your ad plays 4x per hour and can't be skipped. Get your free custom proposal.">
+
+<!-- JSON-LD Structured Data: Organization + LocalBusiness -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "MCTV Elite Advertising",
+    "description": "North Mississippi's premier indoor digital billboard network. 125+ screens in Oxford, Starkville, and Tupelo reaching 1.9M+ monthly impressions.",
+    "url": "https://mctvofms.com",
+    "telephone": "+16012018202",
+    "email": "creed@mctvofms.com",
+    "areaServed": [
+        {"@type": "City", "name": "Oxford", "addressRegion": "MS"},
+        {"@type": "City", "name": "Starkville", "addressRegion": "MS"},
+        {"@type": "City", "name": "Tupelo", "addressRegion": "MS"}
+    ],
+    "serviceType": "Indoor Digital Billboard Advertising",
+    "numberOfEmployees": {"@type": "QuantitativeValue", "value": 3},
+    "foundingLocation": {"@type": "Place", "name": "Oxford, Mississippi"},
+    "slogan": "North Mississippi's Indoor Digital Billboard Network",
+    "knowsAbout": ["Indoor advertising", "Digital billboards", "Local business marketing", "Digital signage"]
+}
+</script>
 """, unsafe_allow_html=True)
 
 

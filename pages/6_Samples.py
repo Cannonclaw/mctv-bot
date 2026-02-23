@@ -20,6 +20,7 @@ st.set_page_config(
 )
 
 # Hide sidebar and Streamlit chrome for a clean public look
+# Also inject SEO meta tags, Open Graph, and JSON-LD structured data
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { display: none; }
@@ -28,6 +29,47 @@ st.markdown("""
     footer { visibility: hidden; }
     header { visibility: hidden; }
 </style>
+
+<!-- SEO Meta Tags -->
+<meta name="description" content="See what an MCTV advertising proposal looks like. Download sample proposals for restaurants, salons, gyms, and auto shops. Indoor digital billboard advertising across North Mississippi.">
+<meta name="keywords" content="MCTV sample proposals, indoor billboard advertising examples, digital billboard proposal, North Mississippi advertising, Oxford MS, Starkville MS, Tupelo MS">
+<meta name="author" content="MCTV Elite Advertising">
+<link rel="canonical" href="https://mctv-bot.onrender.com/Samples">
+
+<!-- Open Graph Tags -->
+<meta property="og:title" content="Sample Proposals | MCTV Elite Advertising">
+<meta property="og:description" content="Download sample advertising proposals for restaurants, salons, gyms, and auto shops. See how MCTV's 125+ indoor digital billboard screens can grow your business.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mctv-bot.onrender.com/Samples">
+<meta property="og:site_name" content="MCTV Elite Advertising">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sample Proposals | MCTV Elite Advertising">
+<meta name="twitter:description" content="See what your custom indoor digital billboard advertising proposal looks like. Download free samples for your industry.">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "MCTV Sample Advertising Proposals",
+    "description": "Download sample indoor digital billboard advertising proposals for restaurants, salons, gyms, and auto shops across North Mississippi.",
+    "url": "https://mctv-bot.onrender.com/Samples",
+    "publisher": {
+        "@type": "Organization",
+        "name": "MCTV Elite Advertising",
+        "url": "https://mctvofms.com"
+    },
+    "about": {
+        "@type": "Service",
+        "name": "Indoor Digital Billboard Advertising",
+        "provider": {"@type": "Organization", "name": "MCTV Elite Advertising"},
+        "areaServed": ["Oxford, MS", "Starkville, MS", "Tupelo, MS"],
+        "description": "125+ indoor digital billboard screens across North Mississippi with 1.9M+ monthly impressions."
+    }
+}
+</script>
 """, unsafe_allow_html=True)
 
 

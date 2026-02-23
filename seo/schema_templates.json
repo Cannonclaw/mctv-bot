@@ -1,0 +1,435 @@
+{
+  "_README": "MCTV Elite Advertising - JSON-LD Schema Templates for RankMath. Last updated: February 2026. Paste each schema into the appropriate page using RankMath > Edit Schema > Custom Schema (Code tab). Each template below is labeled with the page it belongs on.",
+
+  "schemas": [
+
+    {
+      "_template": "1. LocalBusiness Schema",
+      "_page": "Homepage (/) - Paste into RankMath custom schema on the homepage",
+      "_instructions": "In WordPress, go to the homepage editor > RankMath > Schema > Add Custom Schema > paste this JSON-LD block into the Code editor.",
+      "schema": {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://mctvofms.com/#localbusiness",
+        "name": "MCTV Elite Advertising",
+        "alternateName": "MCTV of MS",
+        "description": "North Mississippi's premier indoor digital billboard network and full-service digital advertising agency serving Oxford, Starkville, and Tupelo.",
+        "url": "https://mctvofms.com",
+        "telephone": "+16012018202",
+        "email": "creed@mctvofms.com",
+        "image": "https://mctvofms.com/wp-content/uploads/mctv-elite-logo.png",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mctvofms.com/wp-content/uploads/mctv-elite-logo.png",
+          "width": 600,
+          "height": 200
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Oxford",
+          "addressRegion": "MS",
+          "addressCountry": "US"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 34.3668,
+          "longitude": -89.5186
+        },
+        "areaServed": [
+          {
+            "@type": "City",
+            "name": "Oxford",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          },
+          {
+            "@type": "City",
+            "name": "Starkville",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          },
+          {
+            "@type": "City",
+            "name": "Tupelo",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          }
+        ],
+        "serviceType": [
+          "Indoor Digital Billboard Advertising",
+          "Digital Marketing",
+          "Website Design",
+          "Social Media Management",
+          "Pay-Per-Click Advertising",
+          "Connected TV Advertising",
+          "Geofencing Advertising"
+        ],
+        "priceRange": "$$",
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "08:00",
+            "closes": "17:00"
+          }
+        ],
+        "sameAs": [
+          "https://www.oxfordms.com/list/member/mctv-elite-advertising",
+          "https://www.starkville.org/list/member/mctv-elite-advertising"
+        ],
+        "knowsAbout": [
+          "Indoor Digital Billboard Advertising",
+          "Digital Marketing for Small Businesses",
+          "Advertising in College Towns",
+          "North Mississippi Advertising"
+        ]
+      }
+    },
+
+    {
+      "_template": "2. FAQPage Schema",
+      "_page": "/faq/ - Paste into RankMath custom schema on the FAQ page",
+      "_instructions": "This schema generates FAQ rich snippets in Google search results. Each question/answer pair will appear as an expandable dropdown directly in the search results. In WordPress, go to /faq/ editor > RankMath > Schema > Add Custom Schema > paste this block.",
+      "schema": {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is indoor digital billboard advertising?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Indoor digital billboard advertising displays your business's ad on high-definition screens placed inside local venues like restaurants, gyms, salons, barbershops, and medical waiting rooms. Your ad plays on a rotating loop alongside other local advertisers, reaching a captive audience while they eat, wait, or get a service. MCTV Elite operates the largest indoor digital billboard network in North Mississippi."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where are MCTV Elite screens located?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MCTV Elite screens are installed in high-traffic venues across Oxford, Starkville, and Tupelo, Mississippi. Our network includes restaurants, fitness centers, barbershops, salons, medical clinics, and other local businesses. Visit our Locations page at mctvofms.com/locations to see the full list of active screen locations."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does indoor billboard advertising cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MCTV Elite offers flexible advertising packages tailored to your budget and goals. Pricing depends on the number of screens, ad frequency, and campaign duration. Indoor digital billboard advertising is significantly more affordable than traditional outdoor billboards or TV commercials. Contact us at mctvofms.com/get-started for a free custom quote."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How long does each ad play on the screen?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Each ad on an MCTV Elite indoor digital billboard typically plays for 10-15 seconds as part of a rotating loop. The loop repeats continuously during business hours, meaning your ad is seen multiple times by each person in the venue. This repetition builds familiarity and brand recognition with your target audience."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to create my own ad, or does MCTV Elite design it for me?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MCTV Elite provides professional ad design as part of our service. Our design team creates eye-catching, high-resolution billboard ads tailored to your brand. You can also supply your own creative if you prefer. We handle all the formatting and optimization to ensure your ad looks perfect on our screens."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How many people will see my ad each month?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Audience reach varies by venue and location, but MCTV Elite screens collectively reach thousands of viewers each month across North Mississippi. High-traffic venues like popular restaurants and busy gyms generate significant daily impressions. We provide estimated monthly impression counts for each screen location."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What types of businesses benefit most from indoor billboard advertising?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Indoor digital billboard advertising works well for almost any local business, but it's especially effective for restaurants, retail stores, professional services (lawyers, dentists, accountants), real estate agents, auto dealerships, fitness studios, and any business that serves customers in Oxford, Starkville, or Tupelo. If your customers live, work, or eat in North Mississippi, indoor billboards reach them."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is indoor billboard advertising different from outdoor billboards?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Indoor digital billboards reach a captive audience — people sitting in a restaurant, waiting in a clinic, or resting between sets at the gym. They can't drive past at 60 mph. Indoor screens are also more affordable than outdoor billboards, offer digital rotation (so you can update your ad anytime), and are placed in venues where your target customers already spend time."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I choose which venues my ad appears in?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. MCTV Elite lets you select specific venues or choose packages based on city (Oxford, Starkville, or Tupelo) or venue type (restaurants, gyms, salons, etc.). This lets you target the exact audience you want to reach. Your strategist will help you pick the best locations for your goals."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How quickly can my ad go live?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Most campaigns can go live within a few business days after you approve your ad design. If you need a rush turnaround, let us know — we can often accommodate faster timelines. Fill out our intake form at mctvofms.com/get-started to begin the process."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does MCTV Elite offer other digital marketing services besides indoor billboards?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. MCTV Elite is a full-service digital advertising agency. In addition to our indoor digital billboard network, we offer website design, social media management, social media ads, Google PPC ads, connected TV and OTT advertising, geofencing, streaming audio ads, pre-roll video ads, YouTube ads, and Google Business Profile management. Visit mctvofms.com/solutions for the full list."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I become a venue partner and host a screen in my business?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "MCTV Elite installs and maintains indoor digital billboard screens at no cost to venue partners. If you own a restaurant, gym, salon, barbershop, clinic, or other high-traffic business in North Mississippi, you may qualify to host a screen. Visit mctvofms.com/venue-partner to learn more and apply."
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "_template": "3. Service Schema",
+      "_page": "/screen-advertising/ - Paste into RankMath custom schema on the screen advertising page",
+      "_instructions": "This tells Google that this page describes a specific service offered by MCTV Elite. In WordPress, go to /screen-advertising/ editor > RankMath > Schema > Add Custom Schema > paste this block.",
+      "schema": {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "@id": "https://mctvofms.com/screen-advertising/#service",
+        "serviceType": "Indoor Digital Billboard Advertising",
+        "name": "Indoor Digital Billboard Advertising",
+        "description": "High-definition indoor digital billboard advertising across North Mississippi's largest screen network. Ads play on screens in restaurants, gyms, salons, barbershops, and medical clinics in Oxford, Starkville, and Tupelo, reaching thousands of captive viewers monthly.",
+        "provider": {
+          "@type": "LocalBusiness",
+          "@id": "https://mctvofms.com/#localbusiness",
+          "name": "MCTV Elite Advertising",
+          "url": "https://mctvofms.com"
+        },
+        "areaServed": [
+          {
+            "@type": "City",
+            "name": "Oxford",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          },
+          {
+            "@type": "City",
+            "name": "Starkville",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          },
+          {
+            "@type": "City",
+            "name": "Tupelo",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          },
+          {
+            "@type": "State",
+            "name": "North Mississippi",
+            "addressRegion": "MS",
+            "addressCountry": "US"
+          }
+        ],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Indoor Billboard Advertising Packages",
+          "itemListElement": [
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Single-Venue Indoor Billboard Ad",
+                "description": "Your ad displayed on a digital billboard screen in one selected venue."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Multi-Venue Indoor Billboard Campaign",
+                "description": "Your ad displayed across multiple venue screens in one or more cities."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Full Network Indoor Billboard Campaign",
+                "description": "Your ad displayed on every screen in the MCTV Elite network across North Mississippi."
+              }
+            }
+          ]
+        },
+        "url": "https://mctvofms.com/screen-advertising/",
+        "potentialAction": {
+          "@type": "OrderAction",
+          "target": "https://mctvofms.com/get-started/",
+          "name": "Get Started"
+        }
+      }
+    },
+
+    {
+      "_template": "4. Organization Schema (Global)",
+      "_page": "ALL PAGES - Add this as a global schema in RankMath settings",
+      "_instructions": "In WordPress, go to RankMath > Titles & Meta > Global Meta > Organization Schema, or add this via RankMath > Schema Templates to apply it site-wide. This gives Google a complete understanding of the business across every page on the site.",
+      "schema": {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mctvofms.com/#organization",
+        "name": "MCTV Elite Advertising",
+        "alternateName": "MCTV of MS",
+        "url": "https://mctvofms.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mctvofms.com/wp-content/uploads/mctv-elite-logo.png",
+          "width": 600,
+          "height": 200
+        },
+        "description": "MCTV Elite Advertising operates North Mississippi's largest indoor digital billboard network and provides full-service digital marketing solutions for local businesses in Oxford, Starkville, and Tupelo.",
+        "foundingDate": "2024",
+        "founder": {
+          "@type": "Person",
+          "name": "Creed"
+        },
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+16012018202",
+            "email": "creed@mctvofms.com",
+            "contactType": "sales",
+            "areaServed": "US",
+            "availableLanguage": "English"
+          },
+          {
+            "@type": "ContactPoint",
+            "telephone": "+16012018202",
+            "email": "creed@mctvofms.com",
+            "contactType": "customer service",
+            "areaServed": "US",
+            "availableLanguage": "English"
+          }
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Oxford",
+          "addressRegion": "MS",
+          "addressCountry": "US"
+        },
+        "areaServed": [
+          {
+            "@type": "GeoCircle",
+            "geoMidpoint": {
+              "@type": "GeoCoordinates",
+              "latitude": 34.3668,
+              "longitude": -89.5186
+            },
+            "geoRadius": "100 mi",
+            "description": "North Mississippi region including Oxford, Starkville, and Tupelo"
+          }
+        ],
+        "knowsAbout": [
+          "Indoor Digital Billboard Advertising",
+          "Digital Marketing",
+          "Website Design",
+          "Social Media Marketing",
+          "Pay-Per-Click Advertising",
+          "Connected TV Advertising",
+          "OTT Advertising",
+          "Geofencing",
+          "Streaming Audio Advertising",
+          "Pre-Roll Video Advertising",
+          "YouTube Advertising",
+          "Google Business Profile Optimization"
+        ],
+        "slogan": "North Mississippi's Premier Indoor Digital Billboard Network",
+        "sameAs": [
+          "https://www.oxfordms.com/list/member/mctv-elite-advertising",
+          "https://www.starkville.org/list/member/mctv-elite-advertising"
+        ],
+        "makesOffer": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Indoor Digital Billboard Advertising",
+              "url": "https://mctvofms.com/screen-advertising/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Website Design",
+              "url": "https://mctvofms.com/website-design/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Social Media Management",
+              "url": "https://mctvofms.com/social-media-management/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Pay-Per-Click Advertising",
+              "url": "https://mctvofms.com/pay-per-click-ppc/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Connected TV & OTT Advertising",
+              "url": "https://mctvofms.com/connected-tv-ott-ads/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Geofencing Advertising",
+              "url": "https://mctvofms.com/geofencing/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Streaming Audio Advertising",
+              "url": "https://mctvofms.com/streaming-audio/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Pre-Roll Video Advertising",
+              "url": "https://mctvofms.com/pre-roll-advertising/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "YouTube Advertising",
+              "url": "https://mctvofms.com/youtube-ads/"
+            }
+          }
+        ]
+      }
+    }
+
+  ]
+}
