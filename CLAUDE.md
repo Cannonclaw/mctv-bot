@@ -82,16 +82,20 @@ All proposal generators inherit from `BaseProposal` (abstract base class):
 
 Sections prefixed with `_` (e.g., `_pricing`, `_team`) skip Claude and use config data directly.
 
-### Photo Distribution System
-The `PHOTO_DISTRIBUTION` class attribute on generators controls how scraped client photos are scattered throughout the proposal instead of dumped on one gallery page. Example from `elite_advertiser.py`:
+### Photo Placement System
+The `PHOTO_DISTRIBUTION` class attribute on generators controls intentional photo placement. Every photo has a specific page — no "scattered throughout" behavior. Photos are user-assigned to specific pages via the UI:
+- **page2** = The Opportunity (max 2 hero photos, side-by-side)
+- **page4** = Market Coverage (max 6 in a 2x3 grid with captions)
+
+Example from `elite_advertiser.py`:
 ```python
 PHOTO_DISTRIBUTION = {
-    "opportunity_hook": {"source": "extra", "max": 2},
-    "whats_included":   {"source": "extra", "max": 1},
-    "why_choose_mctv":  {"source": "extra", "max": 1},
+    "opportunity_hook": {"source": "page2", "max": 2},
+    "market_coverage":  {"source": "page4", "max": 6, "cols": 2,
+                         "title": "Our Screens in Your Community"},
 }
 ```
-Generators without `PHOTO_DISTRIBUTION` fall back to the legacy `EXTRA_PHOTO_SECTIONS` gallery behavior. Venue photos and ad examples have their own separate insertion points.
+Scraped photos default to UNSELECTED (opt-in, not auto-include). Users assign each photo to a page via dropdown. Recommended: 8 photos total (2 + 6). Max: 10.
 
 ### Document Formatting (docx_service.py)
 All MCTV branding lives in `DocxService`:

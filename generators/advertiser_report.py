@@ -234,8 +234,18 @@ class AdvertiserReportGenerator:
         # ── KPI Row 2 — Contextual metrics ──
         metrics_row2 = {}
         if top_venue_name:
-            # Truncate long venue names for the KPI cell
-            display_name = top_venue_name[:25] + ("..." if len(top_venue_name) > 25 else "")
+            # Truncate long venue names at a word boundary to avoid mid-word
+            # breaks like "Commissi on". Target ~18 chars to fit the KPI cell.
+            display_name = top_venue_name
+            if len(display_name) > 18:
+                words = display_name.split()
+                truncated = ""
+                for word in words:
+                    test = (truncated + " " + word).strip()
+                    if len(test) > 20:
+                        break
+                    truncated = test
+                display_name = truncated or words[0]  # at least first word
             metrics_row2[display_name] = f"Top Venue\n({top_venue_plays:,} plays)"
         metrics_row2[markets_str] = "Markets\nCovered"
         if num_categories > 0:
@@ -357,6 +367,57 @@ class AdvertiserReportGenerator:
 
             self.docx.add_data_table(doc, mkt_headers, mkt_rows)
 
+            # ── Inline market split bar (fills dead space below tables) ──
+            self._add_market_split_bar(doc, market_detail)
+
+    def _add_market_split_bar(self, doc, market_detail: list):
+        """Add a small horizontal stacked bar showing market share visually."""
+        if len(market_detail) < 2:
+            return
+
+        import tempfile
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from services.chart_service import NAVY, GOLD, WHITE, GRAY, MARKET_COLORS, _get_market_color
+
+        markets = [m[0] for m in market_detail]
+        pcts = [m[3] for m in market_detail]
+        colors = [_get_market_color(m) for m in markets]
+
+        fig, ax = plt.subplots(figsize=(7, 0.8))
+        fig.patch.set_facecolor(WHITE)
+        ax.set_facecolor(WHITE)
+
+        # Horizontal stacked bar
+        left = 0
+        for market, pct, color in zip(markets, pcts, colors):
+            ax.barh(0, pct, left=left, color=color, edgecolor="none", height=0.5)
+            # Label in the center of each segment
+            if pct > 8:  # only label if wide enough
+                ax.text(left + pct / 2, 0, f"{market}\n{pct}%",
+                        ha="center", va="center", fontsize=8,
+                        color="white", fontweight="bold")
+            left += pct
+
+        ax.set_xlim(0, 100)
+        ax.set_ylim(-0.5, 0.5)
+        ax.axis("off")
+        plt.tight_layout(pad=0.1)
+
+        path = tempfile.mktemp(suffix=".png", prefix="mctv_market_split_")
+        fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=WHITE)
+        plt.close(fig)
+
+        # Insert as a centered inline image
+        self.docx.add_inline_photos(doc, [path], max_width=5.5, cols=1)
+
+        import os
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
     def _add_insights_section(self, doc, data: TractionReportInput,
                               categories: list):
         """Generate and add AI-powered business insights.
@@ -436,8 +497,22 @@ class AdvertiserReportGenerator:
         doc.add_page_break()
         self.docx.add_section_header(doc, "Performance Analytics")
 
-        # Use photos_grid for 2×2 layout
-        self.docx.add_photos_grid(doc, chart_paths, cols=2, max_width=3.5)
+        # Use photos_grid for 2×2 layout — sized to fill the page
+        self.docx.add_photos_grid(doc, chart_paths, cols=2, max_width=3.8)
+
+        # Brief chart interpretation note below the grid
+        from docx.shared import Pt as DPt
+        note = doc.add_paragraph()
+        note.alignment = 1  # CENTER
+        note.paragraph_format.space_before = DPt(8)
+        note.paragraph_format.space_after = DPt(4)
+        run = note.add_run(
+            "Charts show campaign performance across venues, categories, "
+            "and markets. Contact your MCTV representative for a detailed walkthrough."
+        )
+        run.font.size = DPt(8)
+        run.font.italic = True
+        run.font.color.rgb = self.docx.c["gray"]
 
         # Cleanup temp chart files
         import os

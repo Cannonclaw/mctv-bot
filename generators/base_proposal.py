@@ -8,12 +8,6 @@ from services.docx_service import DocxService
 from services.config_service import get_team_member
 
 
-# Sections after which to insert uploaded photos (legacy defaults)
-VENUE_PHOTO_SECTIONS = {"market_coverage", "_market_coverage"}
-AD_EXAMPLE_SECTIONS = {"whats_included", "_whats_included"}
-EXTRA_PHOTO_SECTIONS = {"getting_started"}  # fallback for generators without PHOTO_DISTRIBUTION
-
-
 class BaseProposal(ABC):
     """Base class that all proposal generators inherit from."""
 
@@ -53,13 +47,19 @@ class BaseProposal(ABC):
         sections = self.get_sections()
         total = len(sections)
 
-        # Get uploaded photos from the docx service
-        venue_photos = getattr(self.docx, "venue_photo_paths", [])
-        ad_examples = getattr(self.docx, "ad_example_paths", [])
-        extra_photos = getattr(self.docx, "extra_photo_paths", [])
+        # Get intentionally-placed photos from the docx service.
+        # page2 = The Opportunity (max 2 hero photos)
+        # page4 = Market Coverage (max 6 grid photos)
+        page2_photos = getattr(self.docx, "page2_photo_paths", [])
+        page4_photos = getattr(self.docx, "page4_photo_paths", [])
 
-        # Mutable copy for per-generator photo distribution
-        extra_remaining = list(extra_photos)
+        # Build photo pools keyed by source name (matches PHOTO_DISTRIBUTION)
+        photo_pools = {
+            "page2": list(page2_photos),
+            "page4": list(page4_photos),
+            # Legacy "extra" source maps to page2 + page4 combined
+            "extra": list(page2_photos) + list(page4_photos),
+        }
 
         # Check if this generator defines per-section photo distribution
         photo_dist = getattr(self, 'PHOTO_DISTRIBUTION', None)
@@ -88,29 +88,24 @@ class BaseProposal(ABC):
 
                 self.build_section(doc, section_key, input_data, content)
 
-            # Insert venue photos AFTER market coverage section
-            if section_key in VENUE_PHOTO_SECTIONS and venue_photos:
-                self.docx.add_photos_grid(doc, venue_photos, title="Our Screens in Action")
-
-            # Insert ad examples AFTER whats_included section
-            if section_key in AD_EXAMPLE_SECTIONS and ad_examples:
-                self.docx.add_photos_grid(doc, ad_examples, title="Ad Creative Examples")
-
-            # Per-generator photo distribution (scatter photos across sections)
+            # Intentional photo placement — each photo has a specific page.
+            # No "scattered throughout" behavior. Every photo is explicitly
+            # assigned to a section via PHOTO_DISTRIBUTION.
             if photo_dist and section_key in photo_dist:
                 slot = photo_dist[section_key]
-                if slot.get("source", "extra") == "extra" and extra_remaining:
-                    count = min(slot.get("max", 2), len(extra_remaining))
-                    batch = extra_remaining[:count]
-                    del extra_remaining[:count]
+                source = slot.get("source", "extra")
+                pool = photo_pools.get(source, [])
+                if pool:
+                    count = min(slot.get("max", 2), len(pool))
+                    batch = pool[:count]
+                    del pool[:count]
                     title = slot.get("title")
+                    grid_cols = slot.get("cols", 2)
                     if title:
-                        self.docx.add_photos_grid(doc, batch, title=title)
+                        self.docx.add_photos_grid(doc, batch, title=title,
+                                                  cols=grid_cols)
                     else:
-                        self.docx.add_inline_photos(doc, batch)
-            elif not photo_dist and section_key in EXTRA_PHOTO_SECTIONS and extra_remaining:
-                # Legacy fallback: dump all extras as Gallery (for generators without PHOTO_DISTRIBUTION)
-                self.docx.add_photos_grid(doc, extra_remaining, title="Gallery")
+                        self.docx.add_inline_photos(doc, batch, cols=grid_cols)
 
         # Add footer
         self.docx.add_footer(doc)

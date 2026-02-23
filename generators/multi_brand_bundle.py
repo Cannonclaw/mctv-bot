@@ -12,14 +12,11 @@ from services.config_service import get_team_member, get_all_tiers
 class MultiBrandBundleProposal(BaseProposal):
     """Generates a Multi-Brand Bundle proposal with per-brand spotlights."""
 
-    # Distribute photos across sections to fill whitespace:
-    # - opportunity (page 2): up to 2 side-by-side client photos
-    # - _market_coverage (page 3): up to 2 community screen photos to fill gap
-    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "opportunity": {"source": "extra", "max": 2},
-        "_market_coverage": {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
-        "getting_started": {"source": "extra", "max": 1},
+        "opportunity":     {"source": "page2", "max": 2},
+        "_market_coverage": {"source": "page4", "max": 6, "cols": 2,
+                             "title": "Our Screens in Your Community"},
     }
 
     @property

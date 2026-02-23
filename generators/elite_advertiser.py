@@ -7,14 +7,14 @@ from services.config_service import get_team_member, get_pricing_tier, get_all_t
 class EliteAdvertiserProposal(BaseProposal):
     """Generates the flagship 5-6 page advertiser proposal."""
 
-    # Distribute photos across sections to fill whitespace:
-    # - opportunity_hook (page 2): up to 2 side-by-side client photos
-    # - market_coverage (page 3): up to 2 community screen photos to fill gap
-    # NOTE: Do NOT place photos on getting_started or _team pages —
-    #       the team section + logo + URL must fit on one page.
+    # Intentional photo placement — every photo has a specific page.
+    # page2 = The Opportunity (max 2 hero photos, side-by-side)
+    # page4 = Market Coverage (max 6 in a 2×3 grid with captions)
+    # No "scattered" behavior — photos only appear where assigned.
     PHOTO_DISTRIBUTION = {
-        "opportunity_hook": {"source": "extra", "max": 2},
-        "market_coverage":  {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "opportunity_hook": {"source": "page2", "max": 2},
+        "market_coverage":  {"source": "page4", "max": 6, "cols": 2,
+                             "title": "Our Screens in Your Community"},
     }
 
     @property

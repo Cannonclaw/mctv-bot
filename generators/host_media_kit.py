@@ -7,14 +7,11 @@ from services.config_service import get_team_member, get_all_tiers
 class HostMediaKitProposal(BaseProposal):
     """Generates a Host Media Kit proposal for prospective venue partners."""
 
-    # Distribute photos across sections to fill whitespace:
-    # - opportunity (page 2): up to 2 side-by-side client photos
-    # - _host_package (page 3/4): up to 2 community screen photos
-    # - getting_started (above team section): up to 1 photo
+    # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "opportunity":    {"source": "extra", "max": 2},
-        "_host_package":  {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
-        "getting_started": {"source": "extra", "max": 1},
+        "opportunity":    {"source": "page2", "max": 2},
+        "_host_package":  {"source": "page4", "max": 6, "cols": 2,
+                           "title": "Our Screens in Your Community"},
     }
 
     @property

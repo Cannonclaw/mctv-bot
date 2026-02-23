@@ -415,8 +415,8 @@ class DocxService:
             cell_margin.append(m)
         tc_pr.append(cell_margin)
 
-        # Gold left border accent + thin gray on other sides
-        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=18,
+        # Gold left border accent (~3pt) + thin gray on other sides
+        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=24,
                                other_color="D0D0D0", other_sz=4)
 
         # Add padding via paragraph formatting
@@ -487,17 +487,18 @@ class DocxService:
         tc_pr.append(shd)
 
         # Cell padding — generous internal margins so content doesn't feel cramped
+        # Left padding is larger to give breathing room from the thick accent border
         cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
         for side, val in (("top", "180"), ("bottom", "180"),
-                          ("left", "200"), ("right", "140")):
+                          ("left", "240"), ("right", "140")):
             m = cell_margin.makeelement(qn(f"w:{side}"), {
                 qn("w:w"): val, qn("w:type"): "dxa",
             })
             cell_margin.append(m)
         tc_pr.append(cell_margin)
 
-        # Thick accent left border + thin gray on other sides
-        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=24,
+        # Thick accent left border (~4.5pt = sz 36) + thin gray on other sides
+        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=36,
                                other_color="D0D0D0", other_sz=2)
 
         # Bold title in primary color
@@ -753,8 +754,16 @@ class DocxService:
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_before = Pt(6)
             p.space_after = Pt(2)
-            run = p.add_run(str(value))
-            run.font.size = Pt(20)
+            # Auto-scale font for long values (e.g., venue names in KPI row 2)
+            value_str = str(value)
+            if len(value_str) > 15:
+                font_size = Pt(14)
+            elif len(value_str) > 10:
+                font_size = Pt(16)
+            else:
+                font_size = Pt(20)
+            run = p.add_run(value_str)
+            run.font.size = font_size
             run.font.bold = True
             run.font.color.rgb = self.c["accent"]
 
@@ -1073,45 +1082,100 @@ class DocxService:
 
         self._remove_table_borders(table)
 
-        # ── Closing statement ──
-        if closing_text:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(12)
-            p.space_after = Pt(4)
-            run = p.add_run(closing_text)
-            run.font.size = Pt(12)
-            run.font.italic = True
-            run.font.color.rgb = self.c["accent"]
-            run.font.name = "Calibri"
-
-        # ── MCTV logo + website (compact, same page as team) ──
-        # Use the on-navy version for dark mode, standard logo otherwise
+        # ── Closing statement + Logo + URL ──
+        # In dark mode: wrap in a navy-filled table to create a seamless dark page
         if dark_mode:
+            # Build closing + logo + URL inside a single-cell navy table
+            # so the dark background extends through the dead space below
+            closing_table = doc.add_table(rows=1, cols=1)
+            closing_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            self._clear_table_borders(closing_table)
+            closing_cell = closing_table.rows[0].cells[0]
+
+            # Navy fill on the cell
+            tc_pr = closing_cell._element.get_or_add_tcPr()
+            shd = tc_pr.makeelement(qn("w:shd"), {
+                qn("w:fill"): self.c["bg_hex"],
+                qn("w:val"): "clear",
+            })
+            tc_pr.append(shd)
+
+            # Generous padding to push content down and fill the page
+            cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
+            for side, val in (("top", "400"), ("bottom", "2000"),
+                              ("left", "200"), ("right", "200")):
+                m = cell_margin.makeelement(qn(f"w:{side}"), {
+                    qn("w:w"): val, qn("w:type"): "dxa",
+                })
+                cell_margin.append(m)
+            tc_pr.append(cell_margin)
+
+            # Closing text
+            if closing_text:
+                p = closing_cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(8)
+                p.space_after = Pt(16)
+                run = p.add_run(closing_text)
+                run.font.size = Pt(12)
+                run.font.italic = True
+                run.font.color.rgb = self.c["accent"]
+                run.font.name = "Calibri"
+
+            # Logo
             logo_name = self.c.get("cover_logo", "mctv_logo_on_navy.png")
-        else:
-            logo_name = "mctv_logo.png"
-        mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
-        if not mctv_logo.exists():
-            # Fallback to whatever exists
-            mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
-        if mctv_logo.exists():
-            p = doc.add_paragraph()
+            mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
+            if not mctv_logo.exists():
+                mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
+            if mctv_logo.exists():
+                p = closing_cell.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(4)
+                p.space_after = Pt(4)
+                run = p.add_run()
+                run.add_picture(str(mctv_logo), width=Inches(1.8))
+
+            # Website URL
+            p = closing_cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_before = Pt(2)
             p.space_after = Pt(0)
-            run = p.add_run()
-            run.add_picture(str(mctv_logo), width=Inches(1.6))
+            run = p.add_run("www.mctvofms.com")
+            run.font.size = Pt(11)
+            run.font.color.rgb = self.c["accent"]
+            run.font.name = "Calibri"
 
-        # ── Website ──
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_before = Pt(0)
-        p.space_after = Pt(0)
-        run = p.add_run("www.mctvofms.com")
-        run.font.size = Pt(10)
-        url_color = self.c["accent"] if dark_mode else self.c["primary"]
-        run.font.color.rgb = url_color
+        else:
+            # Light mode: regular paragraphs (proposal closing)
+            if closing_text:
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(12)
+                p.space_after = Pt(4)
+                run = p.add_run(closing_text)
+                run.font.size = Pt(12)
+                run.font.italic = True
+                run.font.color.rgb = self.c["accent"]
+                run.font.name = "Calibri"
+
+            # MCTV logo + website
+            logo_name = "mctv_logo.png"
+            mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
+            if mctv_logo.exists():
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(2)
+                p.space_after = Pt(0)
+                run = p.add_run()
+                run.add_picture(str(mctv_logo), width=Inches(1.6))
+
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(0)
+            p.space_after = Pt(0)
+            run = p.add_run("www.mctvofms.com")
+            run.font.size = Pt(10)
+            run.font.color.rgb = self.c["primary"]
         run.font.name = "Calibri"
 
     def add_venue_categories(self, doc: Document):
@@ -1232,17 +1296,21 @@ class DocxService:
         return output_path
 
     def _clear_table_borders(self, table):
-        """Clear table-level (tblBorders) borders so cell-level borders render.
+        """Clear table-level borders AND style so cell-level borders render.
 
-        Word defaults new tables to a style with borders. Those table-level
-        borders can override cell-level tcBorders. Setting tblBorders to 'none'
-        ensures the cell-level accent borders show up correctly.
+        python-docx applies a "Table Grid" style by default which defines
+        borders that can override cell-level tcBorders.  We remove the style
+        reference entirely and set explicit tblBorders to 'none' so the
+        cell-level accent borders are the only borders that render.
         """
         tbl = table._tbl
         tbl_pr = tbl.tblPr
         if tbl_pr is None:
             tbl_pr = tbl.makeelement(qn("w:tblPr"), {})
             tbl.insert(0, tbl_pr)
+        # Remove the "Table Grid" (or any) style — it defines its own borders
+        for style_el in tbl_pr.findall(qn("w:tblStyle")):
+            tbl_pr.remove(style_el)
         # Remove any existing tblBorders
         for existing in tbl_pr.findall(qn("w:tblBorders")):
             tbl_pr.remove(existing)

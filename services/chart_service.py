@@ -84,7 +84,7 @@ def build_venue_bar_chart(data: TractionReportInput, max_venues: int = 15) -> st
     plays = [v.total_plays for v in venues]
     colors = [_get_market_color(v.city or "") for v in venues]
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8, 5.5))
     _setup_chart(fig, ax)
 
     bars = ax.barh(names, plays, color=colors, edgecolor="none", height=0.7)
@@ -130,7 +130,7 @@ def build_category_donut(categories: list) -> str:
     sizes = [c.total_plays for c in sorted_cats]
     colors = CATEGORY_COLORS[:len(sorted_cats)]
 
-    fig, ax = plt.subplots(figsize=(5.5, 5))
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
     fig.patch.set_facecolor(WHITE)
 
     wedges, texts, autotexts = ax.pie(
@@ -188,7 +188,7 @@ def build_scatter_plot(data: TractionReportInput) -> str:
 
     colors = [_get_market_color(v.city or "") for v in venues]
 
-    fig, ax = plt.subplots(figsize=(5.5, 4.5))
+    fig, ax = plt.subplots(figsize=(6.5, 5))
     _setup_chart(fig, ax)
 
     ax.scatter(plays, hours, c=colors, s=50, alpha=0.75, edgecolors=NAVY,
@@ -252,7 +252,7 @@ def build_market_comparison(data: TractionReportInput) -> str:
     avg_plays = [p // v if v > 0 else 0 for p, v in zip(play_counts, venue_counts)]
     market_colors = [_get_market_color(m) for m in markets]
 
-    fig, axes = plt.subplots(1, 3, figsize=(8, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(9.5, 4.5))
     fig.patch.set_facecolor(WHITE)
 
     titles = ["Total Plays", "Venues", "Avg Plays/Venue"]

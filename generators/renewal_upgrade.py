@@ -9,14 +9,11 @@ from services.config_service import get_team_member, get_all_tiers
 class RenewalUpgradeProposal(BaseProposal):
     """Generates a Renewal/Upgrade proposal for existing clients."""
 
-    # Distribute photos across sections to fill whitespace:
-    # - results_summary (page 2): up to 2 client photos beside performance recap
-    # - _results_table (page 3): up to 2 community screen photos above data tables
-    # - getting_started (final): up to 1 photo above contact card
+    # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "results_summary":  {"source": "extra", "max": 2},
-        "_results_table":   {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
-        "getting_started":  {"source": "extra", "max": 1},
+        "results_summary":  {"source": "page2", "max": 2},
+        "_results_table":   {"source": "page4", "max": 6, "cols": 2,
+                             "title": "Our Screens in Your Community"},
     }
 
     @property

@@ -12,14 +12,11 @@ from services.config_service import get_team_member
 class VenuePartnerProposal(BaseProposal):
     """Generates a Venue Partner / Revenue Share proposal."""
 
-    # Distribute photos across sections to fill whitespace:
-    # - opportunity (page 2): up to 2 side-by-side venue photos
-    # - what_mctv_provides (page 3): up to 2 community screen photos
-    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "opportunity":        {"source": "extra", "max": 2},
-        "what_mctv_provides": {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
-        "getting_started":    {"source": "extra", "max": 1},
+        "opportunity":        {"source": "page2", "max": 2},
+        "what_mctv_provides": {"source": "page4", "max": 6, "cols": 2,
+                               "title": "Our Screens in Your Community"},
     }
 
     @property

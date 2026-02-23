@@ -67,9 +67,18 @@ def _save_uploaded_files(uploaded_files) -> list[str]:
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
 
 def _generate_proposal(generator_class, data, client_logo_path=None,
-                       venue_photo_paths=None, ad_example_paths=None,
-                       extra_photo_paths=None, color_scheme="original"):
-    """Run the proposal generation pipeline with progress UI."""
+                       page2_photo_paths=None, page4_photo_paths=None,
+                       color_scheme="original"):
+    """Run the proposal generation pipeline with progress UI.
+
+    Args:
+        generator_class: The proposal generator class.
+        data: Proposal input data.
+        client_logo_path: Path to the client logo image.
+        page2_photo_paths: Photos for The Opportunity (page 2), max 2.
+        page4_photo_paths: Photos for Market Coverage (page 4), max 6.
+        color_scheme: Color scheme key.
+    """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key or api_key == "your-api-key-here":
         st.error(
@@ -84,18 +93,21 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
     claude = ClaudeService(api_key=api_key, model=model)
     docx_svc = DocxService(config, color_scheme=color_scheme)
 
-    # Store photo paths on the docx service so generators can access them
+    # Store photo paths on the docx service — intentional placement only.
+    # page2 = The Opportunity hero photos (max 2)
+    # page4 = Market Coverage grid photos (max 6)
     docx_svc.client_logo_path = client_logo_path
-    docx_svc.venue_photo_paths = venue_photo_paths or []
-    docx_svc.ad_example_paths = ad_example_paths or []
-    docx_svc.extra_photo_paths = extra_photo_paths or []
+    docx_svc.page2_photo_paths = (page2_photo_paths or [])[:2]   # cap at 2
+    docx_svc.page4_photo_paths = (page4_photo_paths or [])[:6]   # cap at 6
 
-    # Auto-include default community screen photos when no venue or extra
-    # photos were uploaded. These live in assets/screens/ and show MCTV
-    # screens in real venues across the community.
-    # Market-aware: if market subdirectories exist (e.g., assets/screens/Oxford/),
-    # pull only from the selected markets. Falls back to root screens/ directory.
-    if not docx_svc.venue_photo_paths and not docx_svc.extra_photo_paths:
+    # Legacy attributes (for backwards compat with other generator types)
+    docx_svc.venue_photo_paths = []
+    docx_svc.ad_example_paths = []
+    docx_svc.extra_photo_paths = docx_svc.page2_photo_paths + docx_svc.page4_photo_paths
+
+    # Auto-include default community screen photos when NO user photos
+    # were uploaded or scraped. These fill Market Coverage (page 4).
+    if not docx_svc.page2_photo_paths and not docx_svc.page4_photo_paths:
         screens_dir = Path(__file__).parent.parent / "assets" / "screens"
         if screens_dir.exists():
             default_screens = []
@@ -109,14 +121,17 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
                             str(p) for p in market_dir.glob("*")
                             if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
                         ))
-            # Fallback: root screens/ directory (any photos not in subdirectories)
+            # Fallback: root screens/ directory
             if not default_screens:
                 default_screens = sorted(
                     str(p) for p in screens_dir.glob("*")
                     if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
                 )
             if default_screens:
-                docx_svc.extra_photo_paths = default_screens
+                # First 2 go to page 2, rest to page 4
+                docx_svc.page2_photo_paths = default_screens[:2]
+                docx_svc.page4_photo_paths = default_screens[2:8]
+                docx_svc.extra_photo_paths = default_screens[:8]
 
     generator = generator_class(config, claude, docx_svc)
 
@@ -187,14 +202,13 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
 
     finally:
         # Clear scraped photo session state so stale paths don't persist
-        st.session_state.pop("scraped_photo_paths", None)
-        st.session_state.pop("scraped_venue_paths", None)
-        st.session_state.pop("scraped_ad_paths", None)
+        st.session_state.pop("scraped_page2_paths", None)
+        st.session_state.pop("scraped_page4_paths", None)
         st.session_state.pop("scraped_logo_path", None)
         st.session_state.pop("scraped_images", None)
 
         # Clean up all temp files
-        all_temps = [client_logo_path] + (venue_photo_paths or []) + (ad_example_paths or []) + (extra_photo_paths or [])
+        all_temps = [client_logo_path] + (page2_photo_paths or []) + (page4_photo_paths or [])
         for tmp in all_temps:
             if tmp:
                 try:
@@ -242,6 +256,10 @@ st.divider()
 
 # ── PHOTOS & IMAGES (shared across all forms) ────────────────────────────────
 st.markdown("#### Photos & Images (optional)")
+st.caption(
+    "Photos are placed on **The Opportunity** (page 2, up to 2 photos) and "
+    "**Market Coverage** (page 4, up to 6 photos). Recommended: **8 total**."
+)
 
 # Website image scraper
 client_website = st.text_input(
@@ -250,7 +268,6 @@ client_website = st.text_input(
     help="Enter the client's website and we'll find their logo and photos automatically.",
 )
 
-scraped_photo_paths = []
 if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
     with st.spinner("Scanning website for images..."):
         from services.web_scraper import scrape_website_images, download_image
@@ -261,64 +278,70 @@ if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
         else:
             st.warning("No images found on that website. Try uploading manually below.")
 
-# Show scraped images for selection with smart slot assignment
+# Show scraped images for OPT-IN selection
+# KEY BEHAVIOR: All scraped photos default to UNSELECTED — the user decides.
+# Exception: logos auto-select if detected with high confidence.
 if st.session_state.get("scraped_images"):
-    st.markdown("**Select images to include in the proposal:**")
-    slot_options = ["Skip", "Client Logo", "Venue Photo", "Ad Example", "Extra Photo"]
-    # Map classifier categories to default slot suggestions
-    _cat_to_slot = {"logo": "Client Logo", "ad_example": "Ad Example", "product": "Extra Photo"}
+    st.markdown("**Scraped images — select which to include:**")
+    st.caption("Images default to *Skip*. Select a placement for each photo you want to use.")
+    # Placement options: Skip (default for non-logo), Logo, or a proposal page
+    _PLACEMENT_OPTIONS = ["Skip", "Client Logo", "The Opportunity (page 2)", "Market Coverage (page 4)"]
+    # Only logos auto-select; everything else defaults to Skip
+    _cat_to_default = {"logo": "Client Logo"}
 
     img_cols = st.columns(4)
-    slot_assignments = {}
     for i, img_info in enumerate(st.session_state["scraped_images"]):
         category = img_info.get("category", "product")
-        default_slot = _cat_to_slot.get(category, "Extra Photo")
-        default_idx = slot_options.index(default_slot)
+        default_placement = _cat_to_default.get(category, "Skip")
+        default_idx = _PLACEMENT_OPTIONS.index(default_placement)
         with img_cols[i % 4]:
             st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], use_container_width=True)
-            slot = st.selectbox("Use as", slot_options, index=default_idx,
-                                key=f"scrape_slot_{i}")
+            st.selectbox("Placement", _PLACEMENT_OPTIONS, index=default_idx,
+                         key=f"scrape_slot_{i}")
+
+    if st.button("📥 Download Selected Images"):
+        from services.web_scraper import download_image
+        # Collect user selections
+        slot_assignments = {}
+        for i, img_info in enumerate(st.session_state["scraped_images"]):
+            slot = st.session_state.get(f"scrape_slot_{i}", "Skip")
             if slot != "Skip":
                 slot_assignments[img_info["url"]] = slot
 
-    if slot_assignments:
-        if st.button("📥 Download Selected Images"):
-            from services.web_scraper import download_image
+        if not slot_assignments:
+            st.warning("No images selected. Check the placement dropdowns above.")
+        else:
             with st.spinner(f"Downloading {len(slot_assignments)} images..."):
-                routed = {"Client Logo": [], "Venue Photo": [], "Ad Example": [], "Extra Photo": []}
+                routed = {"Client Logo": [], "The Opportunity (page 2)": [], "Market Coverage (page 4)": []}
                 for url, slot in slot_assignments.items():
                     path = download_image(url)
                     if path:
                         routed[slot].append(path)
                 total = sum(len(v) for v in routed.values())
                 if total:
-                    # Store routed paths in session state
-                    st.session_state["scraped_photo_paths"] = routed.get("Extra Photo", [])
-                    st.session_state["scraped_venue_paths"] = routed.get("Venue Photo", [])
-                    st.session_state["scraped_ad_paths"] = routed.get("Ad Example", [])
-                    # Logo: only keep the first one
-                    scraped_logos = routed.get("Client Logo", [])
-                    st.session_state["scraped_logo_path"] = scraped_logos[0] if scraped_logos else None
+                    st.session_state["scraped_logo_path"] = routed["Client Logo"][0] if routed["Client Logo"] else None
+                    st.session_state["scraped_page2_paths"] = routed["The Opportunity (page 2)"]
+                    st.session_state["scraped_page4_paths"] = routed["Market Coverage (page 4)"]
                     summary_parts = []
                     if routed["Client Logo"]:
                         summary_parts.append("1 logo")
-                    if routed["Venue Photo"]:
-                        summary_parts.append(f"{len(routed['Venue Photo'])} venue photo(s)")
-                    if routed["Ad Example"]:
-                        summary_parts.append(f"{len(routed['Ad Example'])} ad example(s)")
-                    if routed["Extra Photo"]:
-                        summary_parts.append(f"{len(routed['Extra Photo'])} extra photo(s)")
+                    pg2 = len(routed["The Opportunity (page 2)"])
+                    pg4 = len(routed["Market Coverage (page 4)"])
+                    if pg2:
+                        summary_parts.append(f"{pg2} for page 2")
+                    if pg4:
+                        summary_parts.append(f"{pg4} for page 4")
                     st.success(f"Downloaded {total} images: {', '.join(summary_parts)}")
                 else:
                     st.warning("Could not download any images. Try uploading manually.")
 
-scraped_photo_paths = st.session_state.get("scraped_photo_paths", [])
-scraped_venue_paths = st.session_state.get("scraped_venue_paths", [])
-scraped_ad_paths = st.session_state.get("scraped_ad_paths", [])
 scraped_logo_path = st.session_state.get("scraped_logo_path", None)
+scraped_page2_paths = st.session_state.get("scraped_page2_paths", [])
+scraped_page4_paths = st.session_state.get("scraped_page4_paths", [])
 
 st.divider()
 
+# ── Client Logo Upload ──
 client_logo_file = st.file_uploader(
     "Client Logo — appears on the cover page",
     type=["png", "jpg", "jpeg", "webp"],
@@ -328,41 +351,50 @@ client_logo_file = st.file_uploader(
 if client_logo_file:
     st.image(client_logo_file, width=150, caption="Logo preview")
 
-venue_photos = st.file_uploader(
-    "Venue / Screen Photos — appears in the Market Coverage section",
-    type=["png", "jpg", "jpeg", "webp"],
-    accept_multiple_files=True,
-    key="venue_photos",
-    help="Photos of MCTV screens in real venues. Upload as many as you want.",
+# ── Photo Uploads with Placement Control ──
+st.markdown("##### Proposal Photos")
+st.caption(
+    "Upload photos and assign each to a page. "
+    "Page 2 (The Opportunity) holds up to 2 hero photos. "
+    "Page 4 (Market Coverage) holds up to 6 in a grid."
 )
-if venue_photos:
-    cols = st.columns(min(len(venue_photos), 4))
-    for i, photo in enumerate(venue_photos):
-        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
 
-ad_examples = st.file_uploader(
-    "Ad Creative Examples — appears in the What's Included section",
+page2_photos = st.file_uploader(
+    "The Opportunity photos (page 2) — up to 2 hero showcase photos",
     type=["png", "jpg", "jpeg", "webp"],
     accept_multiple_files=True,
-    key="ad_examples",
-    help="Screenshots of ads you've designed for other clients to showcase quality.",
+    key="page2_photos",
+    help="These appear side-by-side on page 2 as the hero showcase of the client's work.",
 )
-if ad_examples:
-    cols = st.columns(min(len(ad_examples), 4))
-    for i, photo in enumerate(ad_examples):
+if page2_photos:
+    cols = st.columns(min(len(page2_photos), 4))
+    for i, photo in enumerate(page2_photos):
         cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+    if len(page2_photos) > 2:
+        st.warning(f"Page 2 supports up to 2 photos. Only the first 2 of {len(page2_photos)} will be used.")
 
-extra_photos = st.file_uploader(
-    "Other Photos — scattered throughout the proposal",
+page4_photos = st.file_uploader(
+    "Market Coverage photos (page 4) — up to 6 in a grid",
     type=["png", "jpg", "jpeg", "webp"],
     accept_multiple_files=True,
-    key="extra_photos",
-    help="Photos will be distributed across sections (Opportunity, What's Included, Why MCTV) instead of a single gallery page.",
+    key="page4_photos",
+    help="Product photos, venue shots, or client work shown in a 2×3 grid on page 4.",
 )
-if extra_photos:
-    cols = st.columns(min(len(extra_photos), 4))
-    for i, photo in enumerate(extra_photos):
+if page4_photos:
+    cols = st.columns(min(len(page4_photos), 4))
+    for i, photo in enumerate(page4_photos):
         cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+    if len(page4_photos) > 6:
+        st.warning(f"Page 4 supports up to 6 photos. Only the first 6 of {len(page4_photos)} will be used.")
+
+# Show total photo count feedback
+_total_pg2 = len(page2_photos or []) + len(scraped_page2_paths)
+_total_pg4 = len(page4_photos or []) + len(scraped_page4_paths)
+_total_photos = _total_pg2 + _total_pg4
+if _total_photos > 0:
+    st.caption(f"📸 **{_total_photos} photos** selected: {min(_total_pg2, 2)} on page 2, {min(_total_pg4, 6)} on page 4")
+    if _total_photos > 10:
+        st.warning(f"Maximum 10 photos recommended. {_total_photos - 10} will be excluded.")
 
 st.divider()
 
@@ -416,9 +448,8 @@ if proposal_type == "Elite Advertiser":
             st.error("Please fill in all required fields (marked with *).")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = ProposalInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -434,9 +465,8 @@ if proposal_type == "Elite Advertiser":
             )
             _generate_proposal(EliteAdvertiserProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
 
 
@@ -465,9 +495,8 @@ elif proposal_type == "Host Media Kit":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = HostInput(
                 venue_name=venue_name,
                 contact_name=contact_name,
@@ -482,9 +511,8 @@ elif proposal_type == "Host Media Kit":
             )
             _generate_proposal(HostMediaKitProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
 
 
@@ -527,9 +555,8 @@ elif proposal_type == "Multi-Brand Bundle":
             st.error("Please fill in the owner name and at least the first business.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = BundleInput(
                 owner_name=owner_name,
                 owner_email=owner_email,
@@ -540,9 +567,8 @@ elif proposal_type == "Multi-Brand Bundle":
             )
             _generate_proposal(MultiBrandBundleProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
 
 
@@ -577,9 +603,8 @@ elif proposal_type == "Venue Partner / Revenue Share":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = VenuePartnerInput(
                 venue_name=venue_name,
                 contact_name=contact_name,
@@ -597,9 +622,8 @@ elif proposal_type == "Venue Partner / Revenue Share":
             )
             _generate_proposal(VenuePartnerProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
 
 
@@ -631,9 +655,8 @@ elif proposal_type == "Category Exclusivity":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = ExclusivityInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -648,9 +671,8 @@ elif proposal_type == "Category Exclusivity":
             )
             _generate_proposal(CategoryExclusivityProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
 
 
@@ -680,9 +702,8 @@ elif proposal_type == "Renewal / Upgrade":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            v_paths = _save_uploaded_files(venue_photos) + scraped_venue_paths
-            a_paths = _save_uploaded_files(ad_examples) + scraped_ad_paths
-            e_paths = _save_uploaded_files(extra_photos) + scraped_photo_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = RenewalInput(
                 business_name=business_name,
                 contact_name=contact_name,
@@ -698,7 +719,6 @@ elif proposal_type == "Renewal / Upgrade":
             )
             _generate_proposal(RenewalUpgradeProposal, data,
                                client_logo_path=logo_path,
-                               venue_photo_paths=v_paths,
-                               ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
                                color_scheme=color_scheme)
