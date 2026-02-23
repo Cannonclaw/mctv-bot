@@ -1,17 +1,21 @@
-"""Category Exclusivity proposal generator.
-
-Generates a proposal for advertisers who want to lock out all competitors
-from their industry category across the MCTV network (e.g., Cannon Cleary
-McGraw owning the real estate category exclusively).
-"""
+"""Category Exclusivity proposal generator — scannable, visual v20 layout."""
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_pricing_tier, get_all_tiers
-from services.docx_service import NAVY, GOLD, GRAY, Pt, WD_ALIGN_PARAGRAPH
+from services.config_service import get_team_member, get_all_tiers
 
 
 class CategoryExclusivityProposal(BaseProposal):
     """Generates a Category Exclusivity proposal with competitor lockout."""
+
+    # Distribute photos across sections to fill whitespace:
+    # - opportunity (page 2): up to 2 side-by-side client photos
+    # - _market_coverage (page 3): up to 2 community screen photos
+    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    PHOTO_DISTRIBUTION = {
+        "opportunity":        {"source": "extra", "max": 2},
+        "_market_coverage":   {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "getting_started":    {"source": "extra", "max": 1},
+    }
 
     @property
     def proposal_type_key(self) -> str:
@@ -84,7 +88,20 @@ class CategoryExclusivityProposal(BaseProposal):
     def _build_opportunity(self, doc, data, content):
         """The Opportunity section with exclusivity-focused metrics."""
         self.docx.add_section_header(doc, "The Opportunity")
-        self.docx.add_body_text(doc, content)
+
+        # Claude returns: 1 paragraph then 3 dash-bullet reasons
+        # Split on the first dash to separate paragraph from bullets
+        import re
+        parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
+        if len(parts) == 2:
+            # Opening paragraph
+            self.docx.add_body_text(doc, parts[0].strip())
+            # Reconstruct bullets with clean "- " prefix and put in callout box
+            bullets = re.split(r'\n\s*-\s*', parts[1])
+            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
+            self.docx.add_callout_box(doc, clean_bullets)
+        else:
+            self.docx.add_body_text(doc, content)
 
         # Count total screens in selected markets
         total_exclusive_screens = 0
@@ -99,13 +116,11 @@ class CategoryExclusivityProposal(BaseProposal):
             network["monthly_impressions"]: "Network-Wide\nMonthly Impressions",
             f"{network['plays_per_hour']}x/Hour": "Your Ad Plays\nEvery Day",
         })
-        doc.add_page_break()
 
     def _build_exclusivity_value(self, doc, content):
         """Claude-generated section on the strategic value of exclusivity."""
         self.docx.add_section_header(doc, "The Value of Exclusivity")
-        self.docx.add_body_text(doc, content)
-        doc.add_page_break()
+        self.docx.add_bullet_list(doc, content)
 
     def _build_market_coverage(self, doc, data):
         """Config-driven display of which markets the client owns exclusively."""
@@ -154,10 +169,17 @@ class CategoryExclusivityProposal(BaseProposal):
                 f"into new markets before they open to other advertisers."
             )
 
-        doc.add_page_break()
+        # Compact venue callout box
+        venue_text = (
+            "Your ads play in: Restaurants & Bars  |  Barbershops & Salons  |  "
+            "Medical & Dental  |  Gyms & Fitness  |  Auto & Service Shops  |  "
+            "Retail & Boutiques  |  Professional Offices  |  Community Venues"
+        )
+        self.docx.add_callout_box(doc, venue_text)
 
     def _build_pricing(self, doc, data):
         """Config-driven pricing section with exclusivity premium."""
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Exclusivity Pricing")
 
         pricing = self.config["pricing"]
@@ -221,7 +243,6 @@ class CategoryExclusivityProposal(BaseProposal):
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
-        doc.add_page_break()
 
     def _build_why_mctv(self, doc, data):
         """Config-driven reasons why MCTV is the right platform."""
@@ -265,10 +286,8 @@ class CategoryExclusivityProposal(BaseProposal):
         for title, description in reasons:
             self.docx.add_bullet_point(doc, title, description)
 
-        doc.add_page_break()
-
     def _build_getting_started(self, doc, data, content):
-        """Getting Started section with contact card."""
+        """Getting Started section with compact contact callout."""
         self.docx.add_section_header(doc, "Let's Get Started")
 
         if content:
@@ -289,25 +308,5 @@ class CategoryExclusivityProposal(BaseProposal):
             )
 
         rep = get_team_member(self.config, data.sales_rep)
-        self.docx.add_sub_header(doc, "YOUR PARTNERSHIP CONTACT")
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(rep["name"])
-        run.font.size = Pt(14)
-        run.font.bold = True
-        run.font.color.rgb = NAVY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"{rep['email']}\n{rep['phone']}")
-        run.font.size = Pt(11)
-        run.font.color.rgb = GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
-
-        doc.add_page_break()
+        contact_text = f"{rep['name']}  |  {rep['email']}  |  {rep['phone']}  |  MCTV Elite Advertising  |  MCTVofMS.com"
+        self.docx.add_callout_box(doc, contact_text)

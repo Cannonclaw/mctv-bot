@@ -1,17 +1,23 @@
-"""Renewal / Upgrade proposal generator.
+"""Renewal / Upgrade proposal generator — scannable, visual v20 layout."""
 
-Generates a proposal for existing MCTV clients whose partnership is up
-for renewal, highlighting their past performance data and pitching an
-upgrade to a higher tier.
-"""
+import re
 
 from generators.base_proposal import BaseProposal
 from services.config_service import get_team_member, get_all_tiers
-from services.docx_service import NAVY, GOLD, GRAY, Pt, WD_ALIGN_PARAGRAPH
 
 
 class RenewalUpgradeProposal(BaseProposal):
     """Generates a Renewal/Upgrade proposal for existing clients."""
+
+    # Distribute photos across sections to fill whitespace:
+    # - results_summary (page 2): up to 2 client photos beside performance recap
+    # - _results_table (page 3): up to 2 community screen photos above data tables
+    # - getting_started (final): up to 1 photo above contact card
+    PHOTO_DISTRIBUTION = {
+        "results_summary":  {"source": "extra", "max": 2},
+        "_results_table":   {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "getting_started":  {"source": "extra", "max": 1},
+    }
 
     @property
     def proposal_type_key(self) -> str:
@@ -83,7 +89,17 @@ class RenewalUpgradeProposal(BaseProposal):
     def _build_results_summary(self, doc, data, content):
         """Claude-generated results summary with performance metrics banner."""
         self.docx.add_section_header(doc, "Your Results So Far")
-        self.docx.add_body_text(doc, content)
+
+        # Claude returns: 1 paragraph then dash-bullet highlights
+        # Split on the first dash to separate paragraph from bullets
+        parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
+        if len(parts) == 2:
+            self.docx.add_body_text(doc, parts[0].strip())
+            bullets = re.split(r'\n\s*-\s*', parts[1])
+            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
+            self.docx.add_callout_box(doc, clean_bullets)
+        else:
+            self.docx.add_body_text(doc, content)
 
         # Format impressions for the banner
         if data.total_impressions >= 1_000_000:
@@ -99,17 +115,9 @@ class RenewalUpgradeProposal(BaseProposal):
             f"{data.total_venues}": "Venues Playing\nYour Ads",
             impressions_display: "Estimated\nImpressions",
         })
-        doc.add_page_break()
 
     def _build_results_table(self, doc, data):
-        """Config-driven results data table if traction_data is provided.
-
-        The traction_data dict is expected to contain monthly or periodic
-        breakdowns. Supported formats:
-          - {"months": [{"month": "Jan 2025", "plays": 1200, "venues": 10, "impressions": 45000}, ...]}
-          - {"venues": [{"name": "Venue A", "plays": 500, "impressions": 20000}, ...]}
-        If no traction_data is provided, this section is skipped.
-        """
+        """Config-driven results data table if traction_data is provided."""
         if not data.traction_data:
             return
 
@@ -119,7 +127,6 @@ class RenewalUpgradeProposal(BaseProposal):
         monthly_data = data.traction_data.get("months", [])
         if monthly_data:
             self.docx.add_sub_header(doc, "MONTHLY PERFORMANCE")
-
             headers = ["Month", "Ad Plays", "Venues", "Est. Impressions"]
             rows = []
             for entry in monthly_data:
@@ -135,7 +142,6 @@ class RenewalUpgradeProposal(BaseProposal):
         venue_data = data.traction_data.get("venues", [])
         if venue_data:
             self.docx.add_sub_header(doc, "TOP PERFORMING VENUES")
-
             headers = ["Venue", "Ad Plays", "Est. Impressions"]
             rows = []
             for entry in venue_data:
@@ -146,16 +152,14 @@ class RenewalUpgradeProposal(BaseProposal):
                 ])
             self.docx.add_data_table(doc, headers, rows)
 
-        doc.add_page_break()
-
     def _build_upgrade_pitch(self, doc, content):
-        """Claude-generated upgrade pitch."""
+        """Claude-generated upgrade pitch rendered as bullet list."""
         self.docx.add_section_header(doc, "The Next Level")
-        self.docx.add_body_text(doc, content)
-        doc.add_page_break()
+        self.docx.add_bullet_list(doc, content)
 
     def _build_upgrade_pricing(self, doc, data):
         """Config-driven pricing showing current tier vs. upgrade tier."""
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Upgrade Pricing")
 
         self.docx.add_body_text(
@@ -227,7 +231,7 @@ class RenewalUpgradeProposal(BaseProposal):
 
         # Renewal loyalty note
         self.docx.add_sub_header(doc, "RENEWAL LOYALTY BENEFIT")
-        self.docx.add_body_text(
+        self.docx.add_callout_box(
             doc,
             f"As a returning partner, {data.business_name} locks in current pricing "
             f"for the full duration of your renewal term. As MCTV grows and demand "
@@ -238,10 +242,9 @@ class RenewalUpgradeProposal(BaseProposal):
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
-        doc.add_page_break()
 
     def _build_getting_started(self, doc, data, content):
-        """Getting Started section with contact card."""
+        """Getting Started section with compact contact callout."""
         self.docx.add_section_header(doc, "Let's Keep Growing")
 
         if content:
@@ -262,25 +265,5 @@ class RenewalUpgradeProposal(BaseProposal):
             )
 
         rep = get_team_member(self.config, data.sales_rep)
-        self.docx.add_sub_header(doc, "YOUR PARTNERSHIP CONTACT")
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(rep["name"])
-        run.font.size = Pt(14)
-        run.font.bold = True
-        run.font.color.rgb = NAVY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"{rep['email']}\n{rep['phone']}")
-        run.font.size = Pt(11)
-        run.font.color.rgb = GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
-
-        doc.add_page_break()
+        contact_text = f"{rep['name']}  |  {rep['email']}  |  {rep['phone']}  |  MCTV Elite Advertising  |  MCTVofMS.com"
+        self.docx.add_callout_box(doc, contact_text)
