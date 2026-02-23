@@ -57,6 +57,14 @@
 
 ## Changelog
 
+### 2026-02-22 — Sidebar Nav CSS Fix
+
+#### Nav Link Labels Invisible on Navy Background (`665602e`)
+- `st.page_link` elements render as anchors with spans — not covered by `.stMarkdown` CSS selectors
+- Added explicit CSS targeting `[data-testid="stSidebar"] a span`, `[data-testid="stPageLink-NavLink"] span/p`
+- `color: white !important` for labels, `color: #C5A55A !important` on hover
+- All sidebar nav labels now visible and gold-highlighted on hover
+
 ### 2026-02-22 — Prospect Research Tool
 
 #### Competitive Intelligence for Sales Calls

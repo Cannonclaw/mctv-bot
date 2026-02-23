@@ -361,6 +361,22 @@ Add a Custom HTML block in WordPress page editor:
 13. **Section breaks vs page breaks:** `doc.add_page_break()` after a full-page table creates a blank page. Use `doc.add_section()` instead — it changes sections without extra blank space.
 14. **Full-bleed in Word is impossible** but you can get close with tight margins (0.5-0.8cm).
 15. **Photo distribution needs context.** Orphan photos floating between sections with no title feel disconnected. Always give distributed photos a title or attach them to a section.
+16. **Streamlit `st.page_link` CSS is separate from `.stMarkdown`.** Sidebar nav labels use `[data-testid="stPageLink-NavLink"] span` — not covered by `.stMarkdown p/h1/h2/h3` selectors. Need explicit CSS with `!important` to override Streamlit defaults on navy backgrounds.
+17. **Single Claude API call beats multiple.** For the Prospect Research tool, one well-structured prompt generates all 7 sections in ~5 seconds vs 7 separate calls at ~35 seconds and 3x token cost.
+
+---
+
+## Agent Teams
+
+Claude Code's experimental Agent Teams feature is enabled. Config lives in `~/.claude/settings.json`:
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+This allows multiple Claude Code instances to work in parallel on different parts of the project. Useful for upgrading multiple generators simultaneously.
 
 ---
 
@@ -380,3 +396,5 @@ Add a Custom HTML block in WordPress page editor:
 - `86a373c` — Auto-include default community screen photos in proposals
 - `a4ae795` — Add 4 color schemes: Original, Light & Airy, Dark, Peaceful Pastels
 - `ebd42f6` — Add WordPress integration: Samples page, iframe config, no public pricing
+- `4eefad6` — Add Prospect Research tool — competitive intel briefs for sales calls
+- `665602e` — Fix sidebar nav link text invisible on navy background

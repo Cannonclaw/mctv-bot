@@ -1,4 +1,4 @@
-"""Multi-Brand Bundle proposal generator.
+"""Multi-Brand Bundle proposal generator — scannable, visual v20 layout.
 
 Generates a proposal for business owners with multiple brands (e.g.,
 Good Earth / Hayden) who qualify for the Buy 2 Get 1 Free bundle deal.
@@ -7,11 +7,20 @@ Each brand gets its own spotlight section with a dedicated Claude call.
 
 from generators.base_proposal import BaseProposal
 from services.config_service import get_team_member, get_all_tiers
-from services.docx_service import NAVY, GOLD, GRAY, Pt, WD_ALIGN_PARAGRAPH
 
 
 class MultiBrandBundleProposal(BaseProposal):
     """Generates a Multi-Brand Bundle proposal with per-brand spotlights."""
+
+    # Distribute photos across sections to fill whitespace:
+    # - opportunity (page 2): up to 2 side-by-side client photos
+    # - _market_coverage (page 3): up to 2 community screen photos to fill gap
+    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    PHOTO_DISTRIBUTION = {
+        "opportunity": {"source": "extra", "max": 2},
+        "_market_coverage": {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "getting_started": {"source": "extra", "max": 1},
+    }
 
     @property
     def proposal_type_key(self) -> str:
@@ -74,10 +83,23 @@ class MultiBrandBundleProposal(BaseProposal):
     # Section builders
     # ------------------------------------------------------------------
 
+    # -- THE OPPORTUNITY (paragraph + callout bullets + stats banner) --
+
     def _build_opportunity(self, doc, data, content):
         """The Opportunity section with network stats."""
         self.docx.add_section_header(doc, "The Opportunity")
-        self.docx.add_body_text(doc, content)
+
+        # Claude returns: 1 paragraph then 3 dash-bullet reasons
+        # Split on the first dash to separate paragraph from bullets
+        import re
+        parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
+        if len(parts) == 2:
+            self.docx.add_body_text(doc, parts[0].strip())
+            bullets = re.split(r'\n\s*-\s*', parts[1])
+            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
+            self.docx.add_callout_box(doc, clean_bullets)
+        else:
+            self.docx.add_body_text(doc, content)
 
         network = self.config["network"]
         self.docx.add_metrics_banner(doc, {
@@ -86,7 +108,8 @@ class MultiBrandBundleProposal(BaseProposal):
             f"{len(data.businesses)}": "Brands in\nYour Bundle",
             f"{network['plays_per_hour']}x/Hour": "Ad Plays\nPer Brand",
         })
-        doc.add_page_break()
+
+    # -- BRAND SPOTLIGHTS (per-brand Claude calls with bullet rendering) --
 
     def _build_brand_spotlights(self, doc, data):
         """Generate a separate Claude-powered spotlight for each brand.
@@ -116,7 +139,7 @@ class MultiBrandBundleProposal(BaseProposal):
 
             if prompt:
                 spotlight_content = self.claude.generate_section(prompt)
-                self.docx.add_body_text(doc, spotlight_content)
+                self.docx.add_bullet_list(doc, spotlight_content)
             else:
                 self.docx.add_body_text(
                     doc,
@@ -131,20 +154,17 @@ class MultiBrandBundleProposal(BaseProposal):
             if biz.website:
                 details.append(biz.website)
             if details:
-                p = doc.add_paragraph()
-                run = p.add_run(" | ".join(details))
-                run.font.size = Pt(10)
-                run.font.color.rgb = GRAY
-                run.font.italic = True
+                self.docx.add_callout_box(doc, " | ".join(details))
 
-            # Add a small spacer between brands (no page break between them)
+            # Thin gold divider between brands (not after the last one)
             if idx < len(data.businesses) - 1:
-                doc.add_paragraph()
+                self.docx.add_section_divider(doc)
 
-        doc.add_page_break()
+    # -- BUNDLE PRICING (own page: table + contract terms) --
 
     def _build_bundle_pricing(self, doc, data):
         """Config-driven bundle pricing with Buy 2 Get 1 Free deal."""
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Bundle Pricing")
 
         pricing = self.config["pricing"]
@@ -189,7 +209,8 @@ class MultiBrandBundleProposal(BaseProposal):
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
-        doc.add_page_break()
+
+    # -- MARKET COVERAGE (compact: short text + inline venue callout) --
 
     def _build_market_coverage(self, doc, data):
         """Config-driven market coverage overview."""
@@ -227,14 +248,22 @@ class MultiBrandBundleProposal(BaseProposal):
                 f"Bundle partners get first access to new markets as they launch."
             )
 
-        self.docx.add_venue_categories(doc)
-        doc.add_page_break()
+        # Compact venue list as a callout box instead of a grid
+        venue_text = (
+            "Your ads play in: Restaurants & Bars  |  Barbershops & Salons  |  "
+            "Medical & Dental  |  Gyms & Fitness  |  Auto & Service Shops  |  "
+            "Retail & Boutiques  |  Professional Offices  |  Community Venues"
+        )
+        self.docx.add_callout_box(doc, venue_text)
+
+    # -- BUNDLE VALUE (bullet-style rendering) --
 
     def _build_bundle_value(self, doc, content):
         """Claude-generated bundle value proposition."""
         self.docx.add_section_header(doc, "The Bundle Advantage")
-        self.docx.add_body_text(doc, content)
-        doc.add_page_break()
+        self.docx.add_bullet_list(doc, content)
+
+    # -- GETTING STARTED (compact callout contact card) --
 
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with contact card."""
@@ -242,28 +271,8 @@ class MultiBrandBundleProposal(BaseProposal):
         self.docx.add_body_text(doc, content)
 
         rep = get_team_member(self.config, data.sales_rep)
-        self.docx.add_sub_header(doc, "YOUR PARTNERSHIP CONTACT")
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(rep["name"])
-        run.font.size = Pt(14)
-        run.font.bold = True
-        run.font.color.rgb = NAVY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"{rep['email']}\n{rep['phone']}")
-        run.font.size = Pt(11)
-        run.font.color.rgb = GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
-
-        doc.add_page_break()
+        contact_text = f"{rep['name']}  |  {rep['email']}  |  {rep['phone']}  |  MCTV Elite Advertising  |  MCTVofMS.com"
+        self.docx.add_callout_box(doc, contact_text)
 
     def generate(self, input_data, progress_callback=None) -> tuple:
         """Override generate to add the getting_started Claude call with

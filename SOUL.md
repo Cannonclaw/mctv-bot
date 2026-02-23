@@ -36,6 +36,7 @@ This bot is our sales team's secret weapon. It takes a business name and spits o
 - Sound desperate or discount-heavy
 - Use the same generic pitch for every business
 - Bury the value proposition -- lead with why this matters to THEM
+- **Make pricing publicly available** -- no rates, tiers, or dollar amounts on any public-facing page. Pricing is only in password-protected proposals delivered to specific clients.
 
 ## The Sell (What Makes MCTV Different)
 
@@ -62,3 +63,13 @@ These are the points that close deals. Weave them in naturally:
 - **Swayze Hollingsworth** - Director of Sales. The closer. First point of contact for new advertisers.
 
 When writing for a specific rep, match the proposal and email tone to feel like it's coming from that person directly -- not from a faceless company.
+
+## Prospect Research Voice
+
+The Prospect Research tool generates internal competitive intelligence briefs for the sales team. The voice here is different from proposals:
+
+- **Internal memo style.** Not polished marketing copy -- practical notes for a sales call.
+- **Actionable.** Every section should give the rep something to say or do.
+- **Honest about gaps.** If the prospect's online presence is weak, say so -- that's a selling point for MCTV.
+- **Conversation starters, not scripts.** Talking points should feel natural, not rehearsed. A rep should be able to glance at them before walking into the business.
+- **Objection responses should sound human.** Not corporate rebuttals. Think "here's what I'd say over coffee" not "here's our official response."

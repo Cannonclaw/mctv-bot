@@ -1,4 +1,4 @@
-"""Venue Partner / Revenue Share proposal generator.
+"""Venue Partner / Revenue Share proposal generator — scannable, visual style.
 
 Generates a proposal for high-traffic venues (airports, hospitals, arenas)
 where MCTV installs screens at no cost and shares advertising revenue with
@@ -7,11 +7,20 @@ the venue owner.
 
 from generators.base_proposal import BaseProposal
 from services.config_service import get_team_member
-from services.docx_service import NAVY, GOLD, GRAY, Pt, WD_ALIGN_PARAGRAPH
 
 
 class VenuePartnerProposal(BaseProposal):
     """Generates a Venue Partner / Revenue Share proposal."""
+
+    # Distribute photos across sections to fill whitespace:
+    # - opportunity (page 2): up to 2 side-by-side venue photos
+    # - what_mctv_provides (page 3): up to 2 community screen photos
+    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    PHOTO_DISTRIBUTION = {
+        "opportunity":        {"source": "extra", "max": 2},
+        "what_mctv_provides": {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
+        "getting_started":    {"source": "extra", "max": 1},
+    }
 
     @property
     def proposal_type_key(self) -> str:
@@ -71,14 +80,23 @@ class VenuePartnerProposal(BaseProposal):
         elif section_key == "_team":
             self.docx.add_team_section(doc)
 
-    # ------------------------------------------------------------------
-    # Section builders
-    # ------------------------------------------------------------------
+    # ── THE OPPORTUNITY (paragraph + callout bullets + stats banner) ──
 
     def _build_opportunity(self, doc, data, content):
         """The Opportunity section with venue-specific metrics."""
         self.docx.add_section_header(doc, "The Opportunity")
-        self.docx.add_body_text(doc, content)
+
+        # Claude returns: 1 paragraph then dash-bullet reasons
+        # Split on the first dash to separate paragraph from bullets
+        import re
+        parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
+        if len(parts) == 2:
+            self.docx.add_body_text(doc, parts[0].strip())
+            bullets = re.split(r'\n\s*-\s*', parts[1])
+            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
+            self.docx.add_callout_box(doc, clean_bullets)
+        else:
+            self.docx.add_body_text(doc, content)
 
         metrics = {
             f"{data.proposed_screen_count}": "Screens\nInstalled",
@@ -87,19 +105,22 @@ class VenuePartnerProposal(BaseProposal):
             "$0": "Your Cost\nto Participate",
         }
         self.docx.add_metrics_banner(doc, metrics)
-        doc.add_page_break()
+
+    # ── WHAT MCTV PROVIDES (gold-bullet rendering) ──
 
     def _build_what_mctv_provides(self, doc, content):
         """Claude-generated section describing what MCTV provides."""
         self.docx.add_section_header(doc, "What MCTV Provides")
-        self.docx.add_body_text(doc, content)
-        doc.add_page_break()
+        self.docx.add_bullet_list(doc, content)
+
+    # ── REVENUE MODEL (gold-bullet rendering) ──
 
     def _build_revenue_model(self, doc, content):
         """Claude-generated revenue model explanation."""
         self.docx.add_section_header(doc, "Revenue Model")
-        self.docx.add_body_text(doc, content)
-        doc.add_page_break()
+        self.docx.add_bullet_list(doc, content)
+
+    # ── REVENUE PROJECTIONS (own page: table + rate assumptions callout) ──
 
     def _build_revenue_projection(self, doc, data):
         """Config-driven revenue projection table at different fill levels.
@@ -108,6 +129,7 @@ class VenuePartnerProposal(BaseProposal):
         and 100% advertising slot fill rates across both premium and standard
         slot types.
         """
+        doc.add_page_break()
         self.docx.add_section_header(doc, "Revenue Projections")
 
         self.docx.add_body_text(
@@ -157,13 +179,14 @@ class VenuePartnerProposal(BaseProposal):
         self.docx.add_data_table(doc, headers, rows)
 
         self.docx.add_sub_header(doc, "RATE ASSUMPTIONS")
-        self.docx.add_body_text(
+        self.docx.add_callout_box(
             doc,
             f"Premium advertising slots: ${data.premium_slot_rate:,.0f} per slot/month. "
             f"Standard advertising slots: ${data.standard_slot_rate:,.0f} per slot/month. "
             f"Rates are subject to advertiser demand and may increase as the network grows."
         )
-        doc.add_page_break()
+
+    # ── PARTNERSHIP TERMS (bold bullet points) ──
 
     def _build_partnership_terms(self, doc, data):
         """Config-driven partnership terms for venue deals."""
@@ -189,7 +212,7 @@ class VenuePartnerProposal(BaseProposal):
         for title, description in terms_items:
             self.docx.add_bullet_point(doc, title, description)
 
-        doc.add_page_break()
+    # ── GETTING STARTED (content + compact contact callout) ──
 
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with contact card."""
@@ -214,25 +237,5 @@ class VenuePartnerProposal(BaseProposal):
             )
 
         rep = get_team_member(self.config, data.sales_rep)
-        self.docx.add_sub_header(doc, "YOUR PARTNERSHIP CONTACT")
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(rep["name"])
-        run.font.size = Pt(14)
-        run.font.bold = True
-        run.font.color.rgb = NAVY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"{rep['email']}\n{rep['phone']}")
-        run.font.size = Pt(11)
-        run.font.color.rgb = GRAY
-
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV Elite Advertising  |  MCTVofMS.com")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
-
-        doc.add_page_break()
+        contact_text = f"{rep['name']}  |  {rep['email']}  |  {rep['phone']}  |  MCTV Elite Advertising  |  MCTVofMS.com"
+        self.docx.add_callout_box(doc, contact_text)
