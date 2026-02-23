@@ -44,6 +44,7 @@
 - `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
 - `assets/screens/` — Default community screen photos. Auto-included when no user photos uploaded.
 - `pages/6_Samples.py` — Public sample proposals page (no auth, iframe-friendly).
+- `pages/7_Research.py` — Prospect Research page (password-protected). Generates competitive intel briefs.
 - `scripts/generate_samples.py` — CLI script to batch-generate sample PDFs.
 - `assets/samples/` — Pre-generated sample proposal PDFs for website.
 - `SOUL.md` — Brand voice and identity guide.
@@ -234,6 +235,9 @@ Massive formatting overhaul across 20+ PDF iterations:
 - 4 color schemes (Original, Light & Airy, Dark, Peaceful Pastels)
 - Public Samples page (no auth) for WordPress iframe embedding
 - iframe-friendly Streamlit config (XSRF + CORS disabled for embeds)
+- Prospect Research tool (competitive intel briefs for sales calls)
+- Website text scraper (scrape_website_text — extracts title, description, headings, phone, email, social links)
+- Research → Proposal pipeline ("Use in Proposal" pre-fills proposal form from research data)
 
 ### 4 Color Schemes — Live
 Added 4 selectable color palettes via horizontal radio on Proposals page:
@@ -258,6 +262,7 @@ Architecture:
 - Need custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
 - **User needs to save 5 community screen photos to `assets/screens/`** — they shared images in chat but files need to be placed manually
 - Test all 4 color schemes with a real PDF generation
+- **WordPress integration tested but NOT live yet** — Intake form iframe works on mctvofms.com (Divi Fullwidth Code module). Creed wants to wait before making pages public. Still need to: add Samples page, add pages to nav menu, set up Calendly booking, generate sample PDFs (no pricing), configure bot.mctvofms.com subdomain
 
 ---
 
@@ -374,3 +379,4 @@ Add a Custom HTML block in WordPress page editor:
 - `fc014b8` — Add borders, bullet points, and restore photo distribution
 - `86a373c` — Auto-include default community screen photos in proposals
 - `a4ae795` — Add 4 color schemes: Original, Light & Airy, Dark, Peaceful Pastels
+- `ebd42f6` — Add WordPress integration: Samples page, iframe config, no public pricing

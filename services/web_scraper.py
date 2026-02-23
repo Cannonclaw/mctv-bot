@@ -1,4 +1,4 @@
-"""Website image scraper — grabs logos and photos from a client's website."""
+"""Website scraper — grabs images and text content from client websites."""
 
 import urllib.request
 import urllib.error
@@ -7,6 +7,102 @@ import re
 import os
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+
+
+def scrape_website_text(url: str, max_chars: int = 8000) -> dict:
+    """Scrape a website and extract structured text content for prospect research.
+
+    Returns dict with keys:
+        title, description, headings, body_text, phone, email, address,
+        social_links, raw_text
+    """
+    if not url:
+        return {}
+
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        print(f"[web_scraper] Failed to fetch {url}: {e}")
+        return {}
+
+    result = {}
+
+    # Page title
+    title_match = re.search(r'<title[^>]*>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
+    result["title"] = title_match.group(1).strip() if title_match else ""
+
+    # Meta description
+    desc_match = re.search(
+        r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
+        html, re.IGNORECASE,
+    )
+    if not desc_match:
+        desc_match = re.search(
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
+            html, re.IGNORECASE,
+        )
+    result["description"] = desc_match.group(1).strip() if desc_match else ""
+
+    # Headings (h1-h3)
+    headings = []
+    for tag in ["h1", "h2", "h3"]:
+        for m in re.finditer(rf'<{tag}[^>]*>(.*?)</{tag}>', html, re.IGNORECASE | re.DOTALL):
+            text = re.sub(r'<[^>]+>', '', m.group(1)).strip()
+            if text and len(text) < 200:
+                headings.append(text)
+    result["headings"] = headings[:20]
+
+    # Strip HTML tags for body text
+    clean = re.sub(
+        r'<(script|style|nav|footer|header|noscript)[^>]*>.*?</\1>',
+        '', html, flags=re.IGNORECASE | re.DOTALL,
+    )
+    clean = re.sub(r'<[^>]+>', ' ', clean)
+    clean = re.sub(r'\s+', ' ', clean).strip()
+    result["body_text"] = clean[:max_chars]
+
+    # Phone numbers
+    phones = re.findall(r'[\(]?\d{3}[\)\-\.\s]?\s*\d{3}[\-\.\s]\d{4}', html)
+    result["phone"] = phones[0] if phones else ""
+
+    # Email addresses
+    emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', html)
+    biz_emails = [
+        e for e in emails
+        if not any(x in e.lower() for x in
+                   ["@sentry", "@google", "@facebook", "@example", "@wix", "@wordpress"])
+    ]
+    result["email"] = biz_emails[0] if biz_emails else ""
+
+    # Social media links
+    social_domains = [
+        "facebook.com", "instagram.com", "twitter.com", "x.com",
+        "linkedin.com", "youtube.com", "tiktok.com", "yelp.com",
+    ]
+    social = []
+    for domain in social_domains:
+        matches = re.findall(
+            rf'href=["\']([^"\']*{re.escape(domain)}[^"\']*)["\']',
+            html, re.IGNORECASE,
+        )
+        social.extend(matches[:1])
+    result["social_links"] = social
+
+    # Address (look near "address" or structured data)
+    addr_match = re.search(
+        r'(?:street|address)["\s:>]*([^<"]{10,100}(?:MS|Mississippi)\s+\d{5})',
+        html, re.IGNORECASE,
+    )
+    result["address"] = addr_match.group(1).strip() if addr_match else ""
+
+    return result
 
 
 def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:

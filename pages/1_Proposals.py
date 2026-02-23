@@ -31,8 +31,14 @@ from services.auth import check_password
 if not check_password():
     st.stop()
 
+# ── PRE-FILL FROM RESEARCH (if coming from Research page) ────────────────────
+_prefill = st.session_state.pop("prefill_proposal", None)
+
 st.markdown("## Proposal Generator")
 st.caption("Select a proposal type and fill in the details to generate a polished Word document + PDF.")
+
+if _prefill:
+    st.info(f"Pre-filled from research on **{_prefill.get('business_name', '')}**. Review and adjust below.")
 
 
 # ── HELPER: save uploaded logo to temp file ────────────────────────────────
@@ -322,14 +328,22 @@ if proposal_type == "Elite Advertiser":
 
     col1, col2 = st.columns(2)
     with col1:
-        business_name = st.text_input("Business Name *", placeholder="McGlawn Homes, Inc.")
+        business_name = st.text_input("Business Name *",
+            value=_prefill.get("business_name", "") if _prefill else "",
+            placeholder="McGlawn Homes, Inc.")
         contact_name = st.text_input("Contact Name *", placeholder="Josh McGlawn")
         contact_email = st.text_input("Contact Email", placeholder="josh@mcglawnhomes.com")
-        industry = st.text_input("Industry *", placeholder="Custom Home Building / Construction")
+        industry = st.text_input("Industry *",
+            value=_prefill.get("industry", "") if _prefill else "",
+            placeholder="Custom Home Building / Construction")
     with col2:
-        city = st.selectbox("Primary City", market_names)
+        _pf_city = _prefill.get("city", market_names[0]) if _prefill else market_names[0]
+        _city_idx = market_names.index(_pf_city) if _pf_city in market_names else 0
+        city = st.selectbox("Primary City", market_names, index=_city_idx)
         selected_markets = st.multiselect("Markets to Include", market_names, default=[market_names[0]])
-        sales_rep = st.selectbox("Sales Rep", team_names, index=1)
+        _pf_rep = _prefill.get("sales_rep", team_names[1]) if _prefill else team_names[1]
+        _rep_idx = team_names.index(_pf_rep) if _pf_rep in team_names else 1
+        sales_rep = st.selectbox("Sales Rep", team_names, index=_rep_idx)
 
     st.markdown("#### Pricing")
     custom_pricing = st.toggle("Use Custom Pricing", value=False,
@@ -345,6 +359,7 @@ if proposal_type == "Elite Advertiser":
 
     additional_notes = st.text_area(
         "Additional Notes (optional)",
+        value=_prefill.get("additional_notes", "") if _prefill else "",
         placeholder="Any specific details about the business, their goals, competitors, etc. "
                     "This context helps Claude write more tailored content.",
         height=100,

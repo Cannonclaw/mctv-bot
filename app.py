@@ -98,6 +98,7 @@ def main():
         st.page_link("pages/1_Proposals.py", label="Proposal Generator", icon="\U0001F4DD")
         st.page_link("pages/2_Reports.py", label="Traction Reports", icon="\U0001F4CA")
         st.page_link("pages/5_Video_Ads.py", label="Video Ads", icon="\U0001F3AC")
+        st.page_link("pages/7_Research.py", label="Prospect Research", icon="\U0001F50D")
         st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
@@ -113,28 +114,36 @@ def main():
     st.divider()
 
     # Feature cards
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.markdown("### Proposal Generator")
+        st.markdown("### Proposals")
         st.markdown(
             "Create polished advertising proposals tailored to each client. "
-            "6 proposal types including Elite Advertiser, Host Media Kit, "
-            "Multi-Brand Bundle, and more."
+            "6 types including Elite Advertiser, Host Media Kit, and more."
         )
         if st.button("Create Proposal", type="primary", use_container_width=True):
             st.switch_page("pages/1_Proposals.py")
 
     with col2:
+        st.markdown("### Prospect Research")
+        st.markdown(
+            "Research a prospect before your sales call. Get competitive intel, "
+            "talking points, and objection responses in seconds."
+        )
+        if st.button("Research Prospect", type="primary", use_container_width=True):
+            st.switch_page("pages/7_Research.py")
+
+    with col3:
         st.markdown("### Traction Reports")
         st.markdown(
             "Generate professional traction and ad performance reports "
             "from NTV360 data. Upload Excel exports or enter data manually."
         )
-        if st.button("Create Report", type="primary", use_container_width=True):
+        if st.button("Create Report", use_container_width=True):
             st.switch_page("pages/2_Reports.py")
 
-    with col3:
+    with col4:
         st.markdown("### Settings")
         st.markdown(
             "Configure your API key, update pricing, edit team info, "
@@ -157,7 +166,7 @@ def main():
     st.markdown("### Recent Output")
     output_dir = Path(__file__).parent / "output"
     recent_files = []
-    for subdir in ["proposals", "reports", "emails", "videos"]:
+    for subdir in ["proposals", "reports", "emails", "videos", "research"]:
         folder = output_dir / subdir
         if folder.exists():
             for f in sorted(folder.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:
