@@ -43,6 +43,9 @@
 - `assets/branding/mctv_logo_on_navy.png` — White MCTV logo pre-composited on navy (RGB, 934×283) — for cover page.
 - `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
 - `assets/screens/` — Default community screen photos. Auto-included when no user photos uploaded.
+- `pages/6_Samples.py` — Public sample proposals page (no auth, iframe-friendly).
+- `scripts/generate_samples.py` — CLI script to batch-generate sample PDFs.
+- `assets/samples/` — Pre-generated sample proposal PDFs for website.
 - `SOUL.md` — Brand voice and identity guide.
 - `HEARTBEAT.md` — Living changelog and project status.
 - `CLAUDE.md` — Technical project documentation.
@@ -52,6 +55,7 @@
 - **Font:** Calibri throughout
 - **Voice:** Professional but warm. Mississippi local. Partnership over salesmanship. Data-driven. Short and scannable.
 - **Never:** Generic marketing jargon, markdown in proposals, paragraphs longer than 4 sentences, vague claims
+- **NEVER make pricing publicly available.** No pricing tiers, rates, or dollar amounts on any public-facing page (Intake, Samples, website embeds). Pricing is only in password-protected proposals delivered to specific clients.
 
 ### Team
 - **T. Creed Cannon** — Owner/Managing Partner — (601) 201-8202 — creed@mctvofms.com
@@ -227,6 +231,23 @@ Massive formatting overhaul across 20+ PDF iterations:
 - Cover email generation
 - Password authentication with MCTV logo on login page
 - Sidebar shows Claude API + Video API connection status
+- 4 color schemes (Original, Light & Airy, Dark, Peaceful Pastels)
+- Public Samples page (no auth) for WordPress iframe embedding
+- iframe-friendly Streamlit config (XSRF + CORS disabled for embeds)
+
+### 4 Color Schemes — Live
+Added 4 selectable color palettes via horizontal radio on Proposals page:
+- **Original Primary** — Navy (#1B1F3B) + Gold (#C5A55A) + Cream (#F0EDE4)
+- **Light, Bright & Airy** — Sky Blue (#2E5E86) + Warm Amber (#E89E3C) + Ice Blue (#F0F6FB)
+- **Dark & Sophisticated** — Deep Charcoal (#1A1A2E) + Rich Gold (#D4AF37) + Warm Ivory (#F5F0E6)
+- **Peaceful Pastels** — Sage Green (#5B7B7A) + Dusty Rose (#C48D78) + Blush (#F3EEED)
+
+Architecture:
+- `COLOR_SCHEMES` dict in `docx_service.py` — each scheme has `primary`, `accent`, `white`, `gray`, `text`, `light` (RGBColor) + `bg_hex`, `accent_hex`, `light_hex` (strings) + `cover_logo` (filename)
+- `DocxService.__init__` accepts `color_scheme` param → stores as `self.c`
+- All 50+ color references replaced from hardcoded constants to `self.c[...]` lookups
+- Pre-composited logo variants for each scheme: `mctv_logo_on_navy.png`, `mctv_logo_on_light.png`, `mctv_logo_on_dark.png`, `mctv_logo_on_pastel.png`
+- `pages/1_Proposals.py` — horizontal radio selector, passed through all 6 generator calls
 
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
@@ -236,6 +257,85 @@ Massive formatting overhaul across 20+ PDF iterations:
 - No test suite — all testing is manual (generate proposal, check PDF)
 - Need custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
 - **User needs to save 5 community screen photos to `assets/screens/`** — they shared images in chat but files need to be placed manually
+- Test all 4 color schemes with a real PDF generation
+
+---
+
+## WordPress Integration Plan (mctvofms.com)
+
+**Website:** mctvofms.com (WordPress)
+**Goal:** Incorporate all MCTV Bot capabilities into the public-facing website.
+
+### Features to Integrate (all 4 confirmed by Creed)
+
+| Priority | Feature | Effort | Approach |
+|----------|---------|--------|----------|
+| 1 | **Book a Meeting** | 30 min | Calendly (or similar) embed on a WordPress page |
+| 2 | **Sample Proposals** | 1 hour | Pre-generate 3-4 PDFs (restaurant, gym, salon, auto shop), upload to WP gallery page |
+| 3 | **Client Intake Form** | 1-2 hrs | iframe embed → `mctvofms.com/get-started` pointing to Render intake page |
+| 4 | **Custom Subdomain** | 1 hour | `bot.mctvofms.com` → Render (CNAME DNS + Render custom domain config) |
+| 5 | **Self-Serve Proposals** | 2-3 hrs | iframe Streamlit app at `bot.mctvofms.com`, or build public API endpoint |
+
+### Architecture Options
+- **iframe embed** (fastest) — WordPress page with iframe to Render app. Works today.
+- **Native WP form + API webhook** (cleaner) — WPForms/Gravity Forms → webhook POST to Render → Supabase. Looks fully native.
+- **Public API endpoint** — Add `/api/generate` to Render app, returns PDF download link. WordPress form calls API.
+
+### Quick Wins (do first)
+1. Calendly embed for meeting booking
+2. Generate sample proposal PDFs for 3-4 industries
+3. iframe the existing intake form into WordPress
+
+### Custom Subdomain Setup (bot.mctvofms.com)
+1. Add CNAME record in WordPress/DNS host: `bot` → `mctv-bot.onrender.com`
+2. Add custom domain in Render dashboard: https://dashboard.render.com → Service → Settings → Custom Domains
+3. Render auto-provisions SSL certificate
+4. Update iframe URLs to use `bot.mctvofms.com`
+
+### WordPress Embed Code Snippets
+
+**Intake Form (iframe embed):**
+Add a Custom HTML block in WordPress page editor:
+```html
+<iframe
+  src="https://mctv-bot.onrender.com/Intake"
+  width="100%"
+  height="900"
+  style="border: none; border-radius: 8px;"
+  title="MCTV Advertising Intake Form">
+</iframe>
+```
+
+**Sample Proposals Page (iframe embed):**
+```html
+<iframe
+  src="https://mctv-bot.onrender.com/Samples"
+  width="100%"
+  height="800"
+  style="border: none; border-radius: 8px;"
+  title="MCTV Sample Proposals">
+</iframe>
+```
+
+**Calendly Booking (embed):**
+```html
+<div class="calendly-inline-widget"
+  data-url="https://calendly.com/YOUR_CALENDLY_LINK"
+  style="min-width:320px;height:700px;">
+</div>
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+```
+
+**After custom subdomain is set up**, replace `mctv-bot.onrender.com` with `bot.mctvofms.com` in all embed URLs.
+
+### Streamlit iframe Config
+- `.streamlit/config.toml` has `enableXsrfProtection = false` and `enableCORS = false` to allow iframe embedding
+- Public pages (0_Intake.py, 6_Samples.py) hide sidebar and Streamlit chrome for clean embed appearance
+
+### New Files for WordPress Integration
+- `pages/6_Samples.py` — Public sample proposals page (no auth), shows downloadable industry sample PDFs
+- `scripts/generate_samples.py` — CLI script to generate sample PDFs using existing generators
+- `assets/samples/` — Directory for pre-generated sample PDF files
 
 ---
 
@@ -273,3 +373,4 @@ Massive formatting overhaul across 20+ PDF iterations:
 - `2228095` — Polish: full-bleed cover, eliminate orphan photos, skip cover footer
 - `fc014b8` — Add borders, bullet points, and restore photo distribution
 - `86a373c` — Auto-include default community screen photos in proposals
+- `a4ae795` — Add 4 color schemes: Original, Light & Airy, Dark, Peaceful Pastels
