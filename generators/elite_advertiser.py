@@ -10,11 +10,11 @@ class EliteAdvertiserProposal(BaseProposal):
     # Distribute photos across sections to fill whitespace:
     # - opportunity_hook (page 2): up to 2 side-by-side client photos
     # - market_coverage (page 3): up to 2 community screen photos to fill gap
-    # - getting_started (page 5): up to 1 photo above Meet Your Team
+    # NOTE: Do NOT place photos on getting_started or _team pages —
+    #       the team section + logo + URL must fit on one page.
     PHOTO_DISTRIBUTION = {
         "opportunity_hook": {"source": "extra", "max": 2},
         "market_coverage":  {"source": "extra", "max": 2, "title": "Our Screens in Your Community"},
-        "getting_started":  {"source": "extra", "max": 1},
     }
 
     @property
@@ -72,7 +72,7 @@ class EliteAdvertiserProposal(BaseProposal):
         elif section_key == "_team":
             self.docx.add_team_section(doc)
 
-    # ── THE OPPORTUNITY (1 page: paragraph + callout bullets + stats banner) ──
+    # ── THE OPPORTUNITY (1 page: paragraph + selling point cards + stats banner) ──
 
     def _build_opportunity_hook(self, doc, data, content):
         self.docx.add_section_header(doc, "The Opportunity")
@@ -85,10 +85,21 @@ class EliteAdvertiserProposal(BaseProposal):
         if len(parts) == 2:
             # Opening paragraph
             self.docx.add_body_text(doc, parts[0].strip())
-            # Reconstruct bullets with clean "- " prefix and put in callout box
+            # Parse each bullet into (title, description) and render as
+            # individual scannable items with bold heading + body text
             bullets = re.split(r'\n\s*-\s*', parts[1])
-            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
-            self.docx.add_callout_box(doc, clean_bullets)
+            for bullet in bullets:
+                bullet = bullet.strip()
+                if not bullet:
+                    continue
+                # Match "Title: Description" or "Title -- Description"
+                match = re.match(r'^(.+?)(?::|--)\s+(.+)$', bullet)
+                if match:
+                    title = match.group(1).strip()
+                    desc = match.group(2).strip()
+                    self.docx.add_selling_point(doc, title, desc)
+                else:
+                    self.docx.add_selling_point(doc, bullet, "")
         else:
             self.docx.add_body_text(doc, content)
 
@@ -160,9 +171,18 @@ class EliteAdvertiserProposal(BaseProposal):
                 f"all day, every day."
             )
         else:
-            # Standard 4-tier pricing table
+            # Standard 4-tier pricing table — highlight tier 2 (index 1) as recommended
             tiers = get_all_tiers(self.config)
-            self.docx.add_pricing_table(doc, tiers)
+            recommended = 1 if len(tiers) > 1 else None
+            self.docx.add_pricing_table(doc, tiers, recommended_idx=recommended)
+
+        # Pricing callout — encourage conversation
+        self.docx.add_callout_box(
+            doc,
+            "Not sure which package is right for you? Most of our partners start "
+            "with our most popular tier and scale up as they see results. "
+            "Your dedicated rep can help you find the perfect fit."
+        )
 
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")

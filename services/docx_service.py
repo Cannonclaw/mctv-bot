@@ -393,6 +393,8 @@ class DocxService:
             bg_color = self.c["light_hex"]
         table = doc.add_table(rows=1, cols=1)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        # Clear default table-level borders so cell borders render properly
+        self._clear_table_borders(table)
         cell = table.rows[0].cells[0]
 
         # Set background color
@@ -403,6 +405,16 @@ class DocxService:
         })
         tc_pr.append(shd)
 
+        # Generous cell padding
+        cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
+        for side, val in (("top", "160"), ("bottom", "160"),
+                          ("left", "200"), ("right", "140")):
+            m = cell_margin.makeelement(qn(f"w:{side}"), {
+                qn("w:w"): val, qn("w:type"): "dxa",
+            })
+            cell_margin.append(m)
+        tc_pr.append(cell_margin)
+
         # Gold left border accent + thin gray on other sides
         self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=18,
                                other_color="D0D0D0", other_sz=4)
@@ -411,18 +423,59 @@ class DocxService:
         p = cell.paragraphs[0]
         p.space_before = Pt(4)
         p.space_after = Pt(4)
-        pf = p.paragraph_format
-        pf.left_indent = Cm(0.3)
         run = p.add_run(text)
         run.font.size = Pt(10)
         run.font.color.rgb = self.c["text"]
         run.font.name = "Calibri"
 
+    def add_selling_point(self, doc: Document, title: str, body: str):
+        """Add a selling point with colored square bullet, bold title, and body text.
+
+        Used for The Opportunity section to make selling points scannable
+        rather than dumping them into a single callout box.
+        """
+        # Title line with colored square bullet
+        p = doc.add_paragraph()
+        p.paragraph_format.space_before = Pt(8)
+        p.paragraph_format.space_after = Pt(1)
+        p.paragraph_format.left_indent = Cm(0.4)
+        # Square bullet in accent color
+        bullet_run = p.add_run("\u25A0  ")
+        bullet_run.font.size = Pt(9)
+        bullet_run.font.color.rgb = self.c["accent"]
+        # Bold title in primary color
+        title_run = p.add_run(title)
+        title_run.font.size = Pt(11)
+        title_run.font.bold = True
+        title_run.font.color.rgb = self.c["primary"]
+        title_run.font.name = "Calibri"
+
+        # Body text (if provided)
+        if body:
+            p2 = doc.add_paragraph()
+            p2.paragraph_format.space_before = Pt(0)
+            p2.paragraph_format.space_after = Pt(4)
+            p2.paragraph_format.left_indent = Cm(0.9)
+            run2 = p2.add_run(body)
+            run2.font.size = Pt(10)
+            run2.font.color.rgb = self.c["text"]
+            run2.font.name = "Calibri"
+
     def add_accent_card(self, doc: Document, title: str, body: str):
         """Add a styled card with thick accent left border, light background,
         bold title, and body text — used for What's Included and Why MCTV sections."""
+
+        # Spacer paragraph between cards for breathing room
+        spacer = doc.add_paragraph()
+        spacer.paragraph_format.space_before = Pt(0)
+        spacer.paragraph_format.space_after = Pt(0)
+        spacer_run = spacer.add_run()
+        spacer_run.font.size = Pt(4)
+
         table = doc.add_table(rows=1, cols=1)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        # Clear default table-level borders so cell borders render properly
+        self._clear_table_borders(table)
         cell = table.rows[0].cells[0]
 
         # Light background fill
@@ -433,15 +486,24 @@ class DocxService:
         })
         tc_pr.append(shd)
 
+        # Cell padding — generous internal margins so content doesn't feel cramped
+        cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
+        for side, val in (("top", "180"), ("bottom", "180"),
+                          ("left", "200"), ("right", "140")):
+            m = cell_margin.makeelement(qn(f"w:{side}"), {
+                qn("w:w"): val, qn("w:type"): "dxa",
+            })
+            cell_margin.append(m)
+        tc_pr.append(cell_margin)
+
         # Thick accent left border + thin gray on other sides
         self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=24,
                                other_color="D0D0D0", other_sz=2)
 
         # Bold title in primary color
         p = cell.paragraphs[0]
-        p.paragraph_format.space_before = Pt(6)
+        p.paragraph_format.space_before = Pt(4)
         p.paragraph_format.space_after = Pt(2)
-        p.paragraph_format.left_indent = Cm(0.3)
         run = p.add_run(title)
         run.font.size = Pt(11)
         run.font.bold = True
@@ -451,8 +513,7 @@ class DocxService:
         # Body text in text color
         p2 = cell.add_paragraph()
         p2.paragraph_format.space_before = Pt(0)
-        p2.paragraph_format.space_after = Pt(6)
-        p2.paragraph_format.left_indent = Cm(0.3)
+        p2.paragraph_format.space_after = Pt(4)
         run2 = p2.add_run(body)
         run2.font.size = Pt(10)
         run2.font.color.rgb = self.c["text"]
@@ -727,8 +788,15 @@ class DocxService:
             borders.append(border)
             tc_pr.append(borders)
 
-    def add_pricing_table(self, doc: Document, tiers: list):
-        """Add a formatted pricing comparison table."""
+    def add_pricing_table(self, doc: Document, tiers: list,
+                          recommended_idx: int = None):
+        """Add a formatted pricing comparison table.
+
+        Args:
+            tiers: List of tier dicts from config.
+            recommended_idx: 0-based index of the recommended tier row
+                             (gets a gold highlight).
+        """
         table = doc.add_table(rows=1 + len(tiers), cols=4)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
@@ -738,6 +806,8 @@ class DocxService:
             cell = table.rows[0].cells[i]
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_before = Pt(6)
+            p.paragraph_format.space_after = Pt(6)
             run = p.add_run(header)
             run.font.size = Pt(10)
             run.font.bold = True
@@ -763,10 +833,13 @@ class DocxService:
                 tier.get("plays_per_month", ""),
                 cps_str,
             ]
+            is_recommended = (recommended_idx is not None and row_idx == recommended_idx)
             for col_idx, value in enumerate(values):
                 cell = row.cells[col_idx]
                 p = cell.paragraphs[0]
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.paragraph_format.space_before = Pt(8)
+                p.paragraph_format.space_after = Pt(8)
                 run = p.add_run(str(value))
                 run.font.size = Pt(11)
                 if col_idx == 0:
@@ -774,14 +847,34 @@ class DocxService:
                     run.font.color.rgb = self.c["accent"]
                     run.font.size = Pt(14)
 
-                # Alternating row color
-                if row_idx % 2 == 0:
+                # Recommended row gets light gold highlight; others alternate
+                if is_recommended:
+                    shading = cell._element.get_or_add_tcPr()
+                    shading_elm = shading.makeelement(qn("w:shd"), {
+                        qn("w:fill"): "FFF8E7",  # light gold tint
+                        qn("w:val"): "clear",
+                    })
+                    shading.append(shading_elm)
+                elif row_idx % 2 == 0:
                     shading = cell._element.get_or_add_tcPr()
                     shading_elm = shading.makeelement(qn("w:shd"), {
                         qn("w:fill"): "F5F5F5",  # alt-row, universal
                         qn("w:val"): "clear",
                     })
                     shading.append(shading_elm)
+
+            # Add "RECOMMENDED" label on the highlighted tier
+            if is_recommended:
+                # Add a small label in the first cell
+                rec_p = row.cells[0].add_paragraph()
+                rec_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                rec_p.paragraph_format.space_before = Pt(0)
+                rec_p.paragraph_format.space_after = Pt(2)
+                rec_run = rec_p.add_run("\u2605 RECOMMENDED")
+                rec_run.font.size = Pt(7)
+                rec_run.font.bold = True
+                rec_run.font.color.rgb = self.c["accent"]
+                rec_run.font.name = "Calibri"
 
         # Add thin gray borders for structure
         self._set_table_borders(table, color="D0D0D0", sz=4)
@@ -964,28 +1057,28 @@ class DocxService:
         if closing_text:
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(16)
-            p.space_after = Pt(8)
+            p.space_before = Pt(12)
+            p.space_after = Pt(4)
             run = p.add_run(closing_text)
             run.font.size = Pt(12)
             run.font.italic = True
             run.font.color.rgb = self.c["accent"]
             run.font.name = "Calibri"
 
-        # ── MCTV logo ──
+        # ── MCTV logo + website (compact, same page as team) ──
         mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
         if mctv_logo.exists():
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.space_before = Pt(4)
-            p.space_after = Pt(4)
+            p.space_before = Pt(2)
+            p.space_after = Pt(0)
             run = p.add_run()
-            run.add_picture(str(mctv_logo), width=Inches(2.0))
+            run.add_picture(str(mctv_logo), width=Inches(1.6))
 
         # ── Website ──
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_before = Pt(2)
+        p.space_before = Pt(0)
         p.space_after = Pt(0)
         run = p.add_run("www.mctvofms.com")
         run.font.size = Pt(10)
@@ -1109,6 +1202,30 @@ class DocxService:
         output_path.write_text(content, encoding="utf-8")
         return output_path
 
+    def _clear_table_borders(self, table):
+        """Clear table-level (tblBorders) borders so cell-level borders render.
+
+        Word defaults new tables to a style with borders. Those table-level
+        borders can override cell-level tcBorders. Setting tblBorders to 'none'
+        ensures the cell-level accent borders show up correctly.
+        """
+        tbl = table._tbl
+        tbl_pr = tbl.tblPr
+        if tbl_pr is None:
+            tbl_pr = tbl.makeelement(qn("w:tblPr"), {})
+            tbl.insert(0, tbl_pr)
+        # Remove any existing tblBorders
+        for existing in tbl_pr.findall(qn("w:tblBorders")):
+            tbl_pr.remove(existing)
+        tbl_borders = tbl_pr.makeelement(qn("w:tblBorders"), {})
+        for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            b = tbl_borders.makeelement(qn(f"w:{edge}"), {
+                qn("w:val"): "none", qn("w:sz"): "0",
+                qn("w:space"): "0", qn("w:color"): "auto",
+            })
+            tbl_borders.append(b)
+        tbl_pr.append(tbl_borders)
+
     def _remove_table_borders(self, table):
         """Remove all borders from a table (for layout tables)."""
         for row in table.rows:
@@ -1129,6 +1246,9 @@ class DocxService:
                           other_color=None, other_sz=4):
         """Set borders on a single cell. Colors are hex strings (no #)."""
         tc_pr = cell._element.get_or_add_tcPr()
+        # Remove any existing tcBorders to prevent duplicates / conflicts
+        for existing in tc_pr.findall(qn("w:tcBorders")):
+            tc_pr.remove(existing)
         borders = tc_pr.makeelement(qn("w:tcBorders"), {})
         for edge in ("top", "bottom", "right"):
             if other_color:
