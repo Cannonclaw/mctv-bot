@@ -61,7 +61,8 @@ def _save_uploaded_files(uploaded_files) -> list[str]:
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
 
 def _generate_proposal(generator_class, data, client_logo_path=None,
-                       venue_photo_paths=None, ad_example_paths=None, extra_photo_paths=None):
+                       venue_photo_paths=None, ad_example_paths=None,
+                       extra_photo_paths=None, color_scheme="original"):
     """Run the proposal generation pipeline with progress UI."""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key or api_key == "your-api-key-here":
@@ -75,7 +76,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
     model = config["proposal_settings"].get("model", "claude-sonnet-4-5-20250929")
 
     claude = ClaudeService(api_key=api_key, model=model)
-    docx_svc = DocxService(config)
+    docx_svc = DocxService(config, color_scheme=color_scheme)
 
     # Store photo paths on the docx service so generators can access them
     docx_svc.client_logo_path = client_logo_path
@@ -195,6 +196,22 @@ proposal_type = st.selectbox(
         "Renewal / Upgrade",
     ],
     help="Choose the type of proposal to generate.",
+)
+
+st.divider()
+
+# ── COLOR SCHEME ──────────────────────────────────────────────────────────────
+from services.docx_service import COLOR_SCHEMES
+
+st.markdown("#### Color Scheme")
+scheme_options = {k: v["label"] for k, v in COLOR_SCHEMES.items()}
+color_scheme = st.radio(
+    "Choose a color palette for the proposal",
+    options=list(scheme_options.keys()),
+    format_func=lambda k: scheme_options[k],
+    horizontal=True,
+    index=0,
+    help="Changes the cover page, headers, accents, and borders throughout the proposal.",
 )
 
 st.divider()
@@ -358,7 +375,8 @@ if proposal_type == "Elite Advertiser":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)
 
 
 # ── HOST MEDIA KIT FORM ──────────────────────────────────────────────────────
@@ -405,7 +423,8 @@ elif proposal_type == "Host Media Kit":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)
 
 
 # ── MULTI-BRAND BUNDLE FORM ──────────────────────────────────────────────────
@@ -462,7 +481,8 @@ elif proposal_type == "Multi-Brand Bundle":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)
 
 
 # ── VENUE PARTNER / REVENUE SHARE FORM ───────────────────────────────────────
@@ -518,7 +538,8 @@ elif proposal_type == "Venue Partner / Revenue Share":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)
 
 
 # ── CATEGORY EXCLUSIVITY FORM ────────────────────────────────────────────────
@@ -568,7 +589,8 @@ elif proposal_type == "Category Exclusivity":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)
 
 
 # ── RENEWAL / UPGRADE FORM ───────────────────────────────────────────────────
@@ -617,4 +639,5 @@ elif proposal_type == "Renewal / Upgrade":
                                client_logo_path=logo_path,
                                venue_photo_paths=v_paths,
                                ad_example_paths=a_paths,
-                               extra_photo_paths=e_paths)
+                               extra_photo_paths=e_paths,
+                               color_scheme=color_scheme)

@@ -11,13 +11,74 @@ import subprocess
 import shutil
 
 
-# MCTV Brand Colors
-NAVY = RGBColor(0x1B, 0x1F, 0x3B)
-GOLD = RGBColor(0xC5, 0xA5, 0x5A)
-WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-GRAY = RGBColor(0x80, 0x80, 0x80)
-LIGHT_GRAY = RGBColor(0xF5, 0xF5, 0xF5)
-DARK_TEXT = RGBColor(0x33, 0x33, 0x33)
+# ── Color Schemes ────────────────────────────────────────────────────────────
+# Each scheme defines the colors used throughout the proposal.
+# Keys: primary (headers/bg), accent (highlights/bullets), text (body),
+#        light (alt-row bg), bg_hex (cover bg hex), accent_hex (border hex),
+#        light_hex (callout bg hex), cover_logo (filename in assets/branding/)
+
+COLOR_SCHEMES = {
+    "original": {
+        "label": "Original Primary",
+        "primary":    RGBColor(0x1B, 0x1F, 0x3B),  # Navy
+        "accent":     RGBColor(0xC5, 0xA5, 0x5A),  # Gold
+        "white":      RGBColor(0xFF, 0xFF, 0xFF),
+        "gray":       RGBColor(0x80, 0x80, 0x80),
+        "text":       RGBColor(0x33, 0x33, 0x33),
+        "light":      RGBColor(0xF5, 0xF5, 0xF5),
+        "bg_hex":     "1B1F3B",
+        "accent_hex": "C5A55A",
+        "light_hex":  "F0EDE4",
+        "cover_logo": "mctv_logo_on_navy.png",
+    },
+    "light": {
+        "label": "Light, Bright & Airy",
+        "primary":    RGBColor(0x2E, 0x5E, 0x86),  # Sky blue
+        "accent":     RGBColor(0xE8, 0x9E, 0x3C),  # Warm amber
+        "white":      RGBColor(0xFF, 0xFF, 0xFF),
+        "gray":       RGBColor(0x99, 0x99, 0x99),
+        "text":       RGBColor(0x3A, 0x3A, 0x3A),
+        "light":      RGBColor(0xF8, 0xF9, 0xFA),
+        "bg_hex":     "2E5E86",
+        "accent_hex": "E89E3C",
+        "light_hex":  "F0F6FB",
+        "cover_logo": "mctv_logo_on_light.png",
+    },
+    "dark": {
+        "label": "Dark & Sophisticated",
+        "primary":    RGBColor(0x1A, 0x1A, 0x2E),  # Deep charcoal-navy
+        "accent":     RGBColor(0xD4, 0xAF, 0x37),  # Rich gold
+        "white":      RGBColor(0xFF, 0xFF, 0xFF),
+        "gray":       RGBColor(0x88, 0x88, 0x88),
+        "text":       RGBColor(0x2A, 0x2A, 0x2A),
+        "light":      RGBColor(0xF2, 0xF2, 0xF2),
+        "bg_hex":     "1A1A2E",
+        "accent_hex": "D4AF37",
+        "light_hex":  "F5F0E6",
+        "cover_logo": "mctv_logo_on_dark.png",
+    },
+    "pastel": {
+        "label": "Peaceful Pastels",
+        "primary":    RGBColor(0x5B, 0x7B, 0x7A),  # Sage green
+        "accent":     RGBColor(0xC4, 0x8D, 0x78),  # Dusty rose
+        "white":      RGBColor(0xFF, 0xFF, 0xFF),
+        "gray":       RGBColor(0x99, 0x99, 0x99),
+        "text":       RGBColor(0x3D, 0x3D, 0x3D),
+        "light":      RGBColor(0xF7, 0xF5, 0xF3),
+        "bg_hex":     "5B7B7A",
+        "accent_hex": "C48D78",
+        "light_hex":  "F3EEED",
+        "cover_logo": "mctv_logo_on_pastel.png",
+    },
+}
+
+# Legacy module-level aliases (for any code still referencing these directly)
+NAVY = COLOR_SCHEMES["original"]["primary"]
+GOLD = COLOR_SCHEMES["original"]["accent"]
+WHITE = COLOR_SCHEMES["original"]["white"]
+GRAY = COLOR_SCHEMES["original"]["gray"]
+LIGHT_GRAY = COLOR_SCHEMES["original"]["light"]
+DARK_TEXT = COLOR_SCHEMES["original"]["text"]
 
 OUTPUT_DIR = Path(__file__).parent.parent / "output"
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -26,9 +87,11 @@ PROJECT_ROOT = Path(__file__).parent.parent
 class DocxService:
     """Creates branded MCTV Word documents."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, color_scheme: str = "original"):
         self.config = config
         self.company = config["company"]
+        self.scheme_name = color_scheme
+        self.c = COLOR_SCHEMES.get(color_scheme, COLOR_SCHEMES["original"])
 
     def create_document(self) -> Document:
         """Create a new document with MCTV default styles."""
@@ -39,7 +102,7 @@ class DocxService:
         font = style.font
         font.name = "Calibri"
         font.size = Pt(11)
-        font.color.rgb = DARK_TEXT
+        font.color.rgb = self.c["text"]
 
         # Set narrow margins for maximum content density
         for section in doc.sections:
@@ -82,7 +145,7 @@ class DocxService:
         # Set navy background
         tc_pr = cell._element.get_or_add_tcPr()
         shd = tc_pr.makeelement(qn("w:shd"), {
-            qn("w:fill"): "1B1F3B",
+            qn("w:fill"): self.c["bg_hex"],
             qn("w:val"): "clear",
         })
         tc_pr.append(shd)
@@ -114,9 +177,9 @@ class DocxService:
 
         # ── All cover content goes inside this cell ──
 
-        # MCTV logo on navy background (RGB, no transparency needed)
-        # Use the pre-composited navy version for guaranteed rendering
-        mctv_logo_navy = PROJECT_ROOT / "assets" / "branding" / "mctv_logo_on_navy.png"
+        # MCTV logo — use the scheme-specific pre-composited version
+        cover_logo_name = self.c.get("cover_logo", "mctv_logo_on_navy.png")
+        mctv_logo_navy = PROJECT_ROOT / "assets" / "branding" / cover_logo_name
         if mctv_logo_navy.exists():
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -131,7 +194,7 @@ class DocxService:
             p.space_after = Pt(16)
             run = p.add_run("MCTV ELITE ADVERTISING")
             run.font.size = Pt(16)
-            run.font.color.rgb = GOLD
+            run.font.color.rgb = self.c["accent"]
             run.font.bold = True
             run.font.name = "Calibri"
 
@@ -141,7 +204,7 @@ class DocxService:
         p.space_after = Pt(2)
         run = p.add_run("Prepared for")
         run.font.size = Pt(11)
-        run.font.color.rgb = WHITE
+        run.font.color.rgb = self.c["white"]
         run.font.italic = True
         run.font.name = "Calibri"
 
@@ -151,7 +214,7 @@ class DocxService:
         p.space_after = Pt(2)
         run = p.add_run(prepared_for.upper())
         run.font.size = Pt(24)
-        run.font.color.rgb = WHITE
+        run.font.color.rgb = self.c["white"]
         run.font.bold = True
         run.font.name = "Calibri"
 
@@ -161,7 +224,7 @@ class DocxService:
         p.space_after = Pt(4)
         run = p.add_run(subtitle)
         run.font.size = Pt(14)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
         run.font.name = "Calibri"
 
         # Client logo (if provided)
@@ -182,7 +245,7 @@ class DocxService:
         accent.space_after = Pt(16)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
 
         # Title (ADVERTISING PARTNERSHIP PROPOSAL)
         p = cell.add_paragraph()
@@ -191,7 +254,7 @@ class DocxService:
         p.space_after = Pt(4)
         run = p.add_run(title)
         run.font.size = Pt(28)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
         run.font.bold = True
         run.font.name = "Calibri"
 
@@ -202,7 +265,7 @@ class DocxService:
         accent.space_after = Pt(16)
         run = accent.add_run("\u2500" * 30)
         run.font.size = Pt(10)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
 
         # Date
         p = cell.add_paragraph()
@@ -210,7 +273,7 @@ class DocxService:
         p.space_after = Pt(16)
         run = p.add_run(date)
         run.font.size = Pt(12)
-        run.font.color.rgb = WHITE
+        run.font.color.rgb = self.c["white"]
         run.font.name = "Calibri"
 
         # Prepared by (rep info)
@@ -220,7 +283,7 @@ class DocxService:
         run = p.add_run(f"{prepared_by['name']}  |  MCTV Elite Advertising")
         run.font.size = Pt(10)
         run.font.bold = True
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
         run.font.name = "Calibri"
 
         p = cell.add_paragraph()
@@ -228,7 +291,7 @@ class DocxService:
         p.space_after = Pt(2)
         run = p.add_run(f"{prepared_by['email']}  |  {prepared_by['phone']}")
         run.font.size = Pt(9)
-        run.font.color.rgb = WHITE
+        run.font.color.rgb = self.c["white"]
         run.font.name = "Calibri"
 
         # Website
@@ -237,7 +300,7 @@ class DocxService:
         p.space_after = Pt(0)
         run = p.add_run("www.mctvofms.com")
         run.font.size = Pt(9)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
         run.font.name = "Calibri"
 
         # Add a section break (new page) to restore normal margins for
@@ -257,7 +320,7 @@ class DocxService:
         p.space_after = Pt(0)
         run = p.add_run(text.upper())
         run.font.size = Pt(18)
-        run.font.color.rgb = NAVY
+        run.font.color.rgb = self.c["primary"]
         run.font.bold = True
         run.font.name = "Calibri"
 
@@ -269,7 +332,7 @@ class DocxService:
         # Set gold background
         tc_pr = cell._element.get_or_add_tcPr()
         shd = tc_pr.makeelement(qn("w:shd"), {
-            qn("w:fill"): "C5A55A",
+            qn("w:fill"): self.c["accent_hex"],
             qn("w:val"): "clear",
         })
         tc_pr.append(shd)
@@ -290,7 +353,7 @@ class DocxService:
         p.space_after = Pt(1)
         run = p.add_run(f"\u275A  {text}")
         run.font.size = Pt(12)
-        run.font.color.rgb = NAVY
+        run.font.color.rgb = self.c["primary"]
         run.font.bold = True
 
     def add_section_divider(self, doc: Document):
@@ -301,10 +364,12 @@ class DocxService:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run("\u2500" * 50)
         run.font.size = Pt(6)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
 
-    def add_callout_box(self, doc: Document, text: str, bg_color: str = "F0EDE4"):
-        """Add a colored callout/highlight box with gold left border."""
+    def add_callout_box(self, doc: Document, text: str, bg_color: str = None):
+        """Add a colored callout/highlight box with accent left border."""
+        if bg_color is None:
+            bg_color = self.c["light_hex"]
         table = doc.add_table(rows=1, cols=1)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         cell = table.rows[0].cells[0]
@@ -318,7 +383,7 @@ class DocxService:
         tc_pr.append(shd)
 
         # Gold left border accent + thin gray on other sides
-        self._set_cell_borders(cell, left_color="C5A55A", left_sz=18,
+        self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=18,
                                other_color="D0D0D0", other_sz=4)
 
         # Add padding via paragraph formatting
@@ -329,7 +394,7 @@ class DocxService:
         pf.left_indent = Cm(0.3)
         run = p.add_run(text)
         run.font.size = Pt(10)
-        run.font.color.rgb = DARK_TEXT
+        run.font.color.rgb = self.c["text"]
         run.font.name = "Calibri"
 
     def add_body_text(self, doc: Document, text: str):
@@ -361,7 +426,7 @@ class DocxService:
                 run = p.add_run(f"{num}. {first_line}")
                 run.font.size = Pt(10.5)
                 run.font.bold = True
-                run.font.color.rgb = NAVY
+                run.font.color.rgb = self.c["primary"]
                 run.font.name = "Calibri"
 
                 # Body text below the title
@@ -370,14 +435,14 @@ class DocxService:
                     p.space_after = Pt(4)
                     run = p.add_run(rest)
                     run.font.size = Pt(10.5)
-                    run.font.color.rgb = DARK_TEXT
+                    run.font.color.rgb = self.c["text"]
                     run.font.name = "Calibri"
             else:
                 p = doc.add_paragraph()
                 p.space_after = Pt(4)
                 run = p.add_run(para_text)
                 run.font.size = Pt(10.5)
-                run.font.color.rgb = DARK_TEXT
+                run.font.color.rgb = self.c["text"]
                 run.font.name = "Calibri"
 
     def add_bullet_point(self, doc: Document, title: str, description: str):
@@ -392,16 +457,16 @@ class DocxService:
         # Gold bullet character
         run = p.add_run("\u25CF  ")
         run.font.size = Pt(7)
-        run.font.color.rgb = GOLD
+        run.font.color.rgb = self.c["accent"]
 
         run = p.add_run(f"{title}: ")
         run.font.size = Pt(10.5)
         run.font.bold = True
-        run.font.color.rgb = NAVY
+        run.font.color.rgb = self.c["primary"]
 
         run = p.add_run(description)
         run.font.size = Pt(10.5)
-        run.font.color.rgb = DARK_TEXT
+        run.font.color.rgb = self.c["text"]
 
     def add_bullet_list(self, doc: Document, text: str):
         """Parse dash-prefixed bullet items from Claude and render with bold navy titles.
@@ -467,7 +532,7 @@ class DocxService:
             except Exception:
                 run = p.add_run("[Image]")
                 run.font.size = Pt(9)
-                run.font.color.rgb = GRAY
+                run.font.color.rgb = self.c["gray"]
 
         self._remove_table_borders(table)
 
@@ -508,7 +573,7 @@ class DocxService:
             except Exception:
                 run = p.add_run("[Image could not be loaded]")
                 run.font.size = Pt(9)
-                run.font.color.rgb = GRAY
+                run.font.color.rgb = self.c["gray"]
 
         self._remove_table_borders(table)
 
@@ -523,7 +588,7 @@ class DocxService:
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             tc_pr = cell._element.get_or_add_tcPr()
             shd = tc_pr.makeelement(qn("w:shd"), {
-                qn("w:fill"): "1B1F3B",
+                qn("w:fill"): self.c["bg_hex"],
                 qn("w:val"): "clear",
             })
             tc_pr.append(shd)
@@ -534,14 +599,14 @@ class DocxService:
             run = p.add_run(str(value))
             run.font.size = Pt(20)
             run.font.bold = True
-            run.font.color.rgb = GOLD
+            run.font.color.rgb = self.c["accent"]
 
             # Label row — navy background, white text
             cell = table.rows[1].cells[i]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             tc_pr = cell._element.get_or_add_tcPr()
             shd = tc_pr.makeelement(qn("w:shd"), {
-                qn("w:fill"): "1B1F3B",
+                qn("w:fill"): self.c["bg_hex"],
                 qn("w:val"): "clear",
             })
             tc_pr.append(shd)
@@ -551,7 +616,7 @@ class DocxService:
             p.space_after = Pt(6)
             run = p.add_run(label)
             run.font.size = Pt(8)
-            run.font.color.rgb = WHITE
+            run.font.color.rgb = self.c["white"]
 
         # Gold top border on the banner, remove other borders
         self._remove_table_borders(table)
@@ -561,7 +626,7 @@ class DocxService:
             borders = tc_pr.makeelement(qn("w:tcBorders"), {})
             border = borders.makeelement(qn("w:top"), {
                 qn("w:val"): "single", qn("w:sz"): "12",
-                qn("w:space"): "0", qn("w:color"): "C5A55A",
+                qn("w:space"): "0", qn("w:color"): self.c["accent_hex"],
             })
             borders.append(border)
             tc_pr.append(borders)
@@ -580,11 +645,11 @@ class DocxService:
             run = p.add_run(header)
             run.font.size = Pt(10)
             run.font.bold = True
-            run.font.color.rgb = WHITE
+            run.font.color.rgb = self.c["white"]
             # Navy background
             shading = cell._element.get_or_add_tcPr()
             shading_elm = shading.makeelement(qn("w:shd"), {
-                qn("w:fill"): "1B1F3B",
+                qn("w:fill"): self.c["bg_hex"],
                 qn("w:val"): "clear",
             })
             shading.append(shading_elm)
@@ -610,14 +675,14 @@ class DocxService:
                 run.font.size = Pt(11)
                 if col_idx == 0:
                     run.font.bold = True
-                    run.font.color.rgb = GOLD
+                    run.font.color.rgb = self.c["accent"]
                     run.font.size = Pt(14)
 
                 # Alternating row color
                 if row_idx % 2 == 0:
                     shading = cell._element.get_or_add_tcPr()
                     shading_elm = shading.makeelement(qn("w:shd"), {
-                        qn("w:fill"): "F5F5F5",
+                        qn("w:fill"): "F5F5F5",  # alt-row, universal
                         qn("w:val"): "clear",
                     })
                     shading.append(shading_elm)
@@ -640,31 +705,31 @@ class DocxService:
             run = p.add_run(f"{months}-MONTH AGREEMENT")
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = GOLD
+            run.font.color.rgb = self.c["accent"]
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             label = "Minimum commitment" if months == 6 else "Best value \u2014 lock in your rate"
             run = p.add_run(label)
             run.font.size = Pt(9)
-            run.font.color.rgb = GRAY
+            run.font.color.rgb = self.c["gray"]
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(f"PREPAY BONUS: {bonus}")
             run.font.size = Pt(10)
             run.font.bold = True
-            run.font.color.rgb = NAVY
+            run.font.color.rgb = self.c["primary"]
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run("1 extra month free when you pay upfront")
             run.font.size = Pt(9)
-            run.font.color.rgb = GRAY
+            run.font.color.rgb = self.c["gray"]
 
         # Gold top border, thin gray sides for a polished box look
         for cell in table.rows[0].cells:
-            self._set_cell_borders(cell, left_color="C5A55A", left_sz=12,
+            self._set_cell_borders(cell, left_color=self.c["accent_hex"], left_sz=12,
                                    other_color="D0D0D0", other_sz=4)
 
     def add_data_table(self, doc: Document, headers: list, rows: list):
@@ -680,10 +745,10 @@ class DocxService:
             run = p.add_run(header)
             run.font.size = Pt(9)
             run.font.bold = True
-            run.font.color.rgb = WHITE
+            run.font.color.rgb = self.c["white"]
             shading = cell._element.get_or_add_tcPr()
             shading_elm = shading.makeelement(qn("w:shd"), {
-                qn("w:fill"): "1B1F3B",
+                qn("w:fill"): self.c["bg_hex"],
                 qn("w:val"): "clear",
             })
             shading.append(shading_elm)
@@ -697,12 +762,12 @@ class DocxService:
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER if col_idx > 0 else WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(str(value))
                 run.font.size = Pt(9)
-                run.font.color.rgb = DARK_TEXT
+                run.font.color.rgb = self.c["text"]
 
                 if row_idx % 2 == 0:
                     shading = cell._element.get_or_add_tcPr()
                     shading_elm = shading.makeelement(qn("w:shd"), {
-                        qn("w:fill"): "F5F5F5",
+                        qn("w:fill"): "F5F5F5",  # alt-row, universal
                         qn("w:val"): "clear",
                     })
                     shading.append(shading_elm)
@@ -738,26 +803,26 @@ class DocxService:
             run = p.add_run(member["name"])
             run.font.size = Pt(12)
             run.font.bold = True
-            run.font.color.rgb = NAVY
+            run.font.color.rgb = self.c["primary"]
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["title"])
             run.font.size = Pt(10)
-            run.font.color.rgb = GOLD
+            run.font.color.rgb = self.c["accent"]
             run.font.italic = True
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["phone"])
             run.font.size = Pt(10)
-            run.font.color.rgb = GRAY
+            run.font.color.rgb = self.c["gray"]
 
             p = cell.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(member["email"])
             run.font.size = Pt(10)
-            run.font.color.rgb = GRAY
+            run.font.color.rgb = self.c["gray"]
 
         self._remove_table_borders(table)
 
@@ -785,7 +850,7 @@ class DocxService:
             run = p.add_run(name)
             run.font.size = Pt(9)
             run.font.bold = True
-            run.font.color.rgb = NAVY
+            run.font.color.rgb = self.c["primary"]
 
         self._remove_table_borders(table)
 
@@ -814,7 +879,7 @@ class DocxService:
             instr.text = " PAGE "
             run2._element.append(instr)
             run2.font.size = Pt(9)
-            run2.font.color.rgb = GRAY
+            run2.font.color.rgb = self.c["gray"]
             run3 = p.add_run()
             fld_end = run3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
             run3._element.append(fld_end)
@@ -822,7 +887,7 @@ class DocxService:
             # Separator
             sep = p.add_run("  |  ")
             sep.font.size = Pt(9)
-            sep.font.color.rgb = GRAY
+            sep.font.color.rgb = self.c["gray"]
 
             # NUMPAGES field
             run4 = p.add_run()
@@ -833,7 +898,7 @@ class DocxService:
             instr2.text = " NUMPAGES "
             run5._element.append(instr2)
             run5.font.size = Pt(9)
-            run5.font.color.rgb = GRAY
+            run5.font.color.rgb = self.c["gray"]
             run6 = p.add_run()
             fld_end2 = run6._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
             run6._element.append(fld_end2)

@@ -120,7 +120,7 @@ class EliteAdvertiserProposal(BaseProposal):
             "Medical & Dental  |  Gyms & Fitness  |  Auto & Service Shops  |  "
             "Retail & Boutiques  |  Professional Offices  |  Community Venues"
         )
-        self.docx.add_callout_box(doc, venue_text, bg_color="F0EDE4")
+        self.docx.add_callout_box(doc, venue_text)
 
     # ── PRICING (own page: table + contract terms) ──
 
