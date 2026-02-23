@@ -182,6 +182,9 @@ def main():
         folder = output_dir / subdir
         if folder.exists():
             for f in sorted(folder.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:
+                # Skip hidden/dot files like .gitkeep
+                if f.name.startswith("."):
+                    continue
                 recent_files.append((f.name, subdir, f))
 
     if recent_files:
@@ -194,7 +197,7 @@ def main():
                     "Download",
                     data=f.read(),
                     file_name=fname,
-                    key=f"dl_{fname}",
+                    key=f"dl_{category}_{fname}",
                 )
     else:
         st.info("No files generated yet. Create your first proposal or report above!")
