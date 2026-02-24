@@ -88,17 +88,26 @@ with st.sidebar:
 
 # ── Load Dashboard Data ────────────────────────────────────────────────────
 
-client = get_client_by_user_id(user.get("user_id", ""))
+try:
+    client = get_client_by_user_id(user.get("user_id", ""))
+except Exception:
+    client = None
 
-if not client:
+is_admin = role in ("admin", "sales_rep")
+
+if not client and not is_admin:
     st.warning("Your account is being set up. Please check back soon or contact your MCTV representative.")
     st.stop()
 
-client_id = client.get("id", "")
-dashboard = get_client_dashboard(client_id)
+client_id = client.get("id", "") if client else ""
 
-bname = client.get("business_name", "Your Business")
-cstatus = client.get("status", "onboarding")
+try:
+    dashboard = get_client_dashboard(client_id) if client_id else {}
+except Exception:
+    dashboard = {}
+
+bname = client.get("business_name", "MCTV Admin") if client else "MCTV Admin"
+cstatus = client.get("status", "active") if client else "active"
 
 
 # ── Header ──────────────────────────────────────────────────────────────────

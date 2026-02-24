@@ -66,39 +66,56 @@ def get_admin_client():
 
 
 def is_configured() -> bool:
-    """Check if Supabase is configured with URL and key."""
-    url, anon_key, _ = _get_url_and_keys()
-    return bool(url and anon_key)
+    """Check if Supabase is configured with URL and at least one key."""
+    url, anon_key, service_key = _get_url_and_keys()
+    return bool(url and (anon_key or service_key))
 
 
 # ── Auth helpers ─────────────────────────────────────────────────────────────
 
 def sign_up(email: str, password: str, full_name: str, role: str = "advertiser",
             company_name: str = "") -> dict | None:
-    """Create a new user account via Supabase Auth.
+    """Create a new user account via Supabase Auth Admin API (REST).
 
-    The profiles table auto-populates via database trigger.
+    The profiles table auto-populates via database trigger (if it exists).
     Returns user dict on success, None on failure.
     """
-    client = get_admin_client()
-    if not client:
+    url, _, service_key = _get_url_and_keys()
+    if not url or not service_key:
         return None
 
     try:
-        response = client.auth.admin.create_user({
+        body = json.dumps({
             "email": email,
             "password": password,
-            "email_confirm": True,  # Auto-confirm (admin-created accounts)
+            "email_confirm": True,
             "user_metadata": {
                 "full_name": full_name,
                 "role": role,
                 "company_name": company_name,
             },
-        })
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/admin/users",
+            data=body,
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
         return {
-            "user_id": response.user.id,
-            "email": response.user.email,
+            "user_id": result.get("id", ""),
+            "email": result.get("email", email),
         }
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[supabase_client] Sign up failed ({e.code}): {body[:200]}")
+        return None
     except Exception as e:
         print(f"[supabase_client] Sign up failed: {e}")
         return None
@@ -107,67 +124,121 @@ def sign_up(email: str, password: str, full_name: str, role: str = "advertiser",
 def sign_in(email: str, password: str) -> dict | None:
     """Sign in a user and return session info.
 
+    Uses the REST Auth API directly (no SDK dependency for login).
     Returns dict with user_id, email, access_token, role on success.
     """
-    client = get_client()
-    if not client:
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url:
+        return None
+
+    # Use whichever key is available (anon key preferred for auth, service key as fallback)
+    api_key = anon_key or service_key
+    if not api_key:
         return None
 
     try:
-        response = client.auth.sign_in_with_password({
-            "email": email,
-            "password": password,
-        })
-        user = response.user
-        session = response.session
+        # Authenticate via Supabase REST Auth endpoint
+        body = json.dumps({"email": email, "password": password}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/token?grant_type=password",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Content-Type": "application/json",
+            },
+        )
 
-        # Fetch role from profiles table
-        profile = (client.table("profiles")
-                   .select("role, full_name, company_name")
-                   .eq("id", user.id)
-                   .single()
-                   .execute())
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
 
-        role = profile.data.get("role", "advertiser") if profile.data else "advertiser"
-        full_name = profile.data.get("full_name", email) if profile.data else email
+        user = result.get("user", {})
+        meta = user.get("user_metadata", {})
+
+        # Get role + name from user_metadata (always available, set during user creation)
+        role = meta.get("role", "advertiser")
+        full_name = meta.get("full_name", email)
+
+        # Try to fetch from profiles table (may have more up-to-date info)
+        try:
+            profiles = query_table("profiles", select="role,full_name,company_name",
+                                   filters={"id": user.get("id", "")}, limit=1)
+            if profiles and len(profiles) > 0:
+                p = profiles[0]
+                role = p.get("role", role)
+                full_name = p.get("full_name", full_name)
+        except Exception:
+            # profiles table may not exist yet — user_metadata is fine
+            pass
 
         return {
-            "user_id": str(user.id),
-            "email": user.email,
+            "user_id": str(user.get("id", "")),
+            "email": user.get("email", email),
             "full_name": full_name,
             "role": role,
-            "access_token": session.access_token,
-            "refresh_token": session.refresh_token,
+            "access_token": result.get("access_token", ""),
+            "refresh_token": result.get("refresh_token", ""),
         }
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[supabase_client] Sign in failed ({e.code}): {body[:200]}")
+        return None
     except Exception as e:
         print(f"[supabase_client] Sign in failed: {e}")
         return None
 
 
 def sign_out(access_token: str) -> bool:
-    """Sign out the current user."""
-    client = get_client()
-    if not client:
+    """Sign out the current user via REST API."""
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url or not access_token:
+        return False
+
+    api_key = anon_key or service_key
+    if not api_key:
         return False
 
     try:
-        client.auth.sign_out()
+        req = urllib.request.Request(
+            f"{url}/auth/v1/logout",
+            data=b"{}",
+            headers={
+                "apikey": api_key,
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=10)
         return True
     except Exception:
         return False
 
 
 def reset_password(email: str) -> bool:
-    """Send a password reset email."""
-    client = get_client()
-    if not client:
+    """Send a password reset email via REST API."""
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url:
+        return False
+
+    api_key = anon_key or service_key
+    if not api_key:
         return False
 
     try:
         portal_url = os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
-        client.auth.reset_password_email(email, {
-            "redirect_to": f"{portal_url}/portal/portal_login",
-        })
+        body = json.dumps({
+            "email": email,
+            "redirect_to": f"{portal_url}/portal_login",
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/recover",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Content-Type": "application/json",
+            },
+        )
+        urllib.request.urlopen(req, timeout=10)
         return True
     except Exception as e:
         print(f"[supabase_client] Password reset failed: {e}")
