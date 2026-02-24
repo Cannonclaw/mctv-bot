@@ -115,7 +115,7 @@
 - `SUPABASE_SERVICE_KEY` — Service role key (bypasses RLS for admin operations)
 - `PORTAL_URL` — Portal base URL for email links (e.g., https://mctv-bot.onrender.com)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — Email notifications
-- `QB_CLIENT_ID`, `QB_CLIENT_SECRET` — QuickBooks Online API credentials (production keys — need to add to Render)
+- `QB_CLIENT_ID`, `QB_CLIENT_SECRET` — QuickBooks Online API credentials (production keys — ✅ on Render)
 - `QB_REDIRECT_URI` — QB OAuth callback (local: `http://localhost:8501/Settings`, prod: `https://mctv-bot.onrender.com/Settings`)
 - `QB_ENVIRONMENT` — `sandbox` or `production` (currently `production`)
 
@@ -489,7 +489,7 @@ Full QB Online API integration built and connected to **MCTV DIGITAL, INC.** in 
 - `get_connection_status()` → connection health check (configured/connected/company info)
 - Token persistence: local file first (fast), Supabase `app_settings` as backup for production
 
-**QB Environment Variables (need to add to Render):**
+**QB Environment Variables (✅ on Render):**
 - `QB_CLIENT_ID` — Production client ID
 - `QB_CLIENT_SECRET` — Production client secret
 - `QB_REDIRECT_URI` — `https://mctv-bot.onrender.com/Settings`
@@ -526,7 +526,7 @@ Full QB Online API integration built and connected to **MCTV DIGITAL, INC.** in 
   - ✅ Integration tests: 42/42 passing (28 CRUD lifecycle + 14 service layer) — committed `62a9c40`
   - ✅ RLS policies verified (all 8 tables have row-level security enabled)
   - Still need: email notification end-to-end test (requires SMTP credentials configured)
-- **QuickBooks on Render** — QB env vars (`QB_CLIENT_ID`, `QB_CLIENT_SECRET`, `QB_REDIRECT_URI`, `QB_ENVIRONMENT`) need to be added to Render dashboard for cloud deployment
+- **QuickBooks on Render** — ✅ QB env vars added to Render (2026-02-25). Token file (`config/qb_tokens.json`) is local-only — Render needs Supabase `app_settings` table for token persistence across deploys
 - **Host List Import**: 90 hosts, 24 advertisers, 22 hot list leads imported via `scripts/import_host_list.py`. Total: 115 clients in Supabase.
 
 ---

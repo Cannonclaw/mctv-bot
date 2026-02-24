@@ -711,6 +711,21 @@ def process_webhook(payload: dict) -> list[dict]:
 
 # ── Status Check ─────────────────────────────────────────────────────────────
 
+def _is_token_expired(tokens: dict) -> bool:
+    """Check if the access token is likely expired based on obtained_at + expires_in."""
+    obtained = tokens.get("obtained_at", "")
+    expires_in = tokens.get("expires_in", 3600)
+    if not obtained:
+        return True  # Unknown age — assume expired
+    try:
+        obtained_dt = datetime.fromisoformat(obtained)
+        age_seconds = (datetime.now() - obtained_dt).total_seconds()
+        # Consider expired if within 5 minutes of expiry (buffer)
+        return age_seconds > (expires_in - 300)
+    except (ValueError, TypeError):
+        return True
+
+
 def get_connection_status() -> dict:
     """Get QuickBooks connection status and summary."""
     if not QB_CLIENT_ID:
@@ -728,7 +743,19 @@ def get_connection_status() -> dict:
             "message": "QuickBooks not connected. Click Connect to authorize.",
         }
 
-    # Try to get company info
+    # Proactively refresh if token looks expired (avoids slow 401 round-trip)
+    if _is_token_expired(tokens):
+        print("[quickbooks] Token looks expired, refreshing proactively...")
+        refreshed = refresh_access_token()
+        if not refreshed:
+            # Refresh failed — check if refresh token itself is expired
+            return {
+                "configured": True,
+                "connected": False,
+                "message": "Connection expired. Please reconnect QuickBooks.",
+            }
+
+    # Try to get company info (will auto-retry on 401 via _api_request)
     company = get_company_info()
     if company:
         return {
@@ -739,22 +766,9 @@ def get_connection_status() -> dict:
             "environment": QB_ENVIRONMENT,
             "message": f"Connected to {company.get('CompanyName', 'QuickBooks')}",
         }
-    else:
-        # Token might be expired, try refresh
-        if refresh_access_token():
-            company = get_company_info()
-            if company:
-                return {
-                    "configured": True,
-                    "connected": True,
-                    "company_name": company.get("CompanyName", ""),
-                    "realm_id": tokens.get("realm_id", ""),
-                    "environment": QB_ENVIRONMENT,
-                    "message": f"Connected to {company.get('CompanyName', 'QuickBooks')}",
-                }
 
-        return {
-            "configured": True,
-            "connected": False,
-            "message": "Connection expired. Please reconnect QuickBooks.",
-        }
+    return {
+        "configured": True,
+        "connected": False,
+        "message": "Connection expired. Please reconnect QuickBooks.",
+    }

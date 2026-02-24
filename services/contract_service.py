@@ -17,6 +17,46 @@ from services.notification_service import (
 from services.portal_service import get_client, log_activity
 
 
+# ── Contract type mapping ──────────────────────────────────────────────────
+# The UI uses friendly names ('advertiser', 'host') but the DB CHECK constraint
+# requires: 'advertising', 'host_media_kit', 'category_exclusivity', 'bundle'.
+# These maps translate between the two.
+
+_TYPE_TO_DB = {
+    "advertiser": "advertising",
+    "host": "host_media_kit",
+    # DB values pass through unchanged
+    "advertising": "advertising",
+    "host_media_kit": "host_media_kit",
+    "category_exclusivity": "category_exclusivity",
+    "bundle": "bundle",
+}
+
+_TYPE_FROM_DB = {
+    "advertising": "advertiser",
+    "host_media_kit": "host",
+    "category_exclusivity": "category_exclusivity",
+    "bundle": "bundle",
+}
+
+
+def _to_db_type(contract_type: str) -> str:
+    """Convert a UI contract type to the DB-compatible value."""
+    return _TYPE_TO_DB.get(contract_type.lower(), contract_type)
+
+
+def _from_db_type(contract_type: str) -> str:
+    """Convert a DB contract type back to the UI-friendly value."""
+    return _TYPE_FROM_DB.get(contract_type, contract_type)
+
+
+def _normalize_contract(row: dict) -> dict:
+    """Translate contract_type from DB value back to UI-friendly value."""
+    if row and "contract_type" in row:
+        row["contract_type"] = _from_db_type(row["contract_type"])
+    return row
+
+
 # ── Contract CRUD ───────────────────────────────────────────────────────────
 
 def create_contract(
@@ -37,6 +77,9 @@ def create_contract(
 
     Returns the created contract dict or None.
     """
+    # Map UI type to DB-compatible value
+    db_type = _to_db_type(contract_type)
+
     if not title:
         client = get_client(client_id)
         bname = client.get("business_name", "Client") if client else "Client"
@@ -44,7 +87,7 @@ def create_contract(
 
     data = {
         "client_id": client_id,
-        "contract_type": contract_type,
+        "contract_type": db_type,
         "title": title,
         "tier_name": tier_name,
         "screen_count": screen_count,
@@ -74,31 +117,39 @@ def create_contract(
             details={"title": title, "tier": tier_name},
         )
 
+    if result:
+        result = _normalize_contract(result)
     return result
 
 
 def get_contract(contract_id: str) -> dict | None:
     """Get a single contract by ID."""
     results = query_table("contracts", filters={"id": contract_id})
-    return results[0] if results else None
+    return _normalize_contract(results[0]) if results else None
 
 
 def get_contracts_for_client(client_id: str) -> list[dict]:
     """Get all contracts for a client, newest first."""
-    return query_table("contracts", filters={"client_id": client_id},
+    rows = query_table("contracts", filters={"client_id": client_id},
                        order="-created_at")
+    return [_normalize_contract(r) for r in rows]
 
 
 def get_all_contracts(status: str | None = None) -> list[dict]:
     """Get all contracts, optionally filtered by status."""
     filters = {"status": status} if status else None
-    return query_table("contracts", filters=filters, order="-created_at")
+    rows = query_table("contracts", filters=filters, order="-created_at")
+    return [_normalize_contract(r) for r in rows]
 
 
 def update_contract(contract_id: str, data: dict) -> dict | None:
     """Update a contract record."""
+    # Map contract_type to DB value if being updated
+    if "contract_type" in data:
+        data["contract_type"] = _to_db_type(data["contract_type"])
     data["updated_at"] = datetime.now().isoformat()
-    return update_row("contracts", contract_id, data)
+    result = update_row("contracts", contract_id, data)
+    return _normalize_contract(result) if result else None
 
 
 def delete_contract(contract_id: str) -> bool:

@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS contracts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   contract_type TEXT NOT NULL
-    CHECK (contract_type IN ('advertising', 'host_media_kit', 'category_exclusivity', 'bundle')),
+    CHECK (contract_type IN ('advertising', 'host_media_kit', 'category_exclusivity', 'bundle',
+                             'advertiser', 'host')),
   title TEXT NOT NULL,
   -- Pricing terms
   tier_name TEXT,
