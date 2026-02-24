@@ -452,12 +452,13 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 - **Phase 3 Polish (complete):** Scraper preview UI (3A — done in 1B), photo captions (3B), cover logo verified (3C), dynamic presenter verified (3D), venue photo library by market (3E — `assets/screens/{Oxford,Starkville,Tupelo,Columbus,West Point}/` created, auto-include filters by selected markets)
 - **Photo Handling Spec Phases 2-3**: Phase 1 done (4-photo layouts). Phase 2 (scraper preview panel polish — counter bar, validation warnings, overflow handling) and Phase 3 (smart classification pipeline) still pending.
 - **Render deployment**: Auto-deploy from `main` branch may need verification. After `75af231` push, user reported "Not seeing anything on the render logs." May need manual deploy trigger at https://dashboard.render.com or webhook re-connection.
-- **Client Portal — needs before go-live:**
-  - Run `scripts/setup_portal_schema.sql` against Supabase project (8 tables + RLS + indexes)
-  - Set `SUPABASE_SERVICE_KEY` and `PORTAL_URL` environment variables on Render
-  - Create first admin profile in Supabase Auth + profiles table
-  - Test full flow: create client → invite → login → sign contract → view invoice → submit creative → view report
-  - No runtime testing done yet — all 24 files pass syntax checks but need integration testing
+- **Client Portal — LIVE (2026-02-24):**
+  - SQL schema deployed (8 tables + RLS + indexes verified)
+  - Render env vars set (SUPABASE_SERVICE_KEY + PORTAL_URL)
+  - 3 admin profiles created + backfilled (Creed, Mary Michael, Swayze)
+  - 4 storage buckets created (contracts, reports, creative-uploads, creative-deliveries)
+  - Portal login confirmed working at mctv-bot.onrender.com/portal_login
+  - Still need: full integration test, RLS verification, email notification test
 
 ---
 

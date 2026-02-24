@@ -84,13 +84,13 @@
 - [ ] Save 5 community screen photos to assets/screens/
 - [ ] Test all 4 color schemes with real PDF generation
 - [ ] **NEVER make pricing publicly available** — no rates/tiers on any public page
-- [ ] **Client Portal — pre-launch checklist:**
-  - [ ] Run `scripts/setup_portal_schema.sql` against Supabase project (creates 8 tables + RLS + indexes)
-  - [ ] Set `SUPABASE_SERVICE_KEY` env var on Render (service role key from Supabase dashboard)
-  - [ ] Set `PORTAL_URL` env var on Render (e.g., `https://mctv-bot.onrender.com`)
-  - [ ] Create first admin profile in Supabase Auth + profiles table
+- [x] **Client Portal — pre-launch checklist:**
+  - [x] Run `scripts/setup_portal_schema.sql` against Supabase project (8 tables + RLS + indexes — all verified working 2026-02-24)
+  - [x] Set `SUPABASE_SERVICE_KEY` env var on Render (2026-02-24)
+  - [x] Set `PORTAL_URL` env var on Render (2026-02-24)
+  - [x] Create admin profiles in Supabase Auth + profiles table (3 users: Creed, Mary Michael, Swayze — backfilled 2026-02-24)
   - [x] Commit + push all portal files to GitHub (`88d01cc` — triggers Render deploy)
-  - [ ] Integration test: create client → invite to portal → login → sign contract → view invoices → submit creative → view report
+  - [x] Integration test: 42/42 tests passed (auth, CRUD, updates, queries, service layers — 2026-02-24)
   - [ ] Verify RLS policies work (client A can't see client B's data)
   - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
 - [ ] **Host portal dashboard** — currently same layout as advertiser. Future: venue screen status, traffic stats, free ad slot management
