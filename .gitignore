@@ -13,4 +13,7 @@ data/leads/*
 data/logos/*
 !data/leads/.gitkeep
 !data/logos/.gitkeep
+config/qb_tokens.json
+output/contracts/*
+!output/contracts/.gitkeep
 .claude/

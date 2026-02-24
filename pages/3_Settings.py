@@ -3,6 +3,7 @@
 import streamlit as st
 import os
 import sys
+import secrets
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -16,6 +17,25 @@ st.set_page_config(page_title="Settings - MCTV Bot", page_icon="\u2699\uFE0F", l
 from services.auth import check_password
 if not check_password():
     st.stop()
+
+# ── QuickBooks OAuth Callback Handler ────────────────────────────────────────
+# When Intuit redirects back after authorization, the URL will contain
+# ?code=xxx&realmId=xxx&state=xxx  — we catch those here BEFORE rendering.
+_qb_code = st.query_params.get("code", "")
+_qb_realm = st.query_params.get("realmId", "")
+_qb_state = st.query_params.get("state", "")
+
+if _qb_code and _qb_realm:
+    from services.quickbooks_service import exchange_code
+    with st.spinner("Connecting to QuickBooks..."):
+        result = exchange_code(_qb_code, _qb_realm)
+    if result:
+        st.success("QuickBooks connected successfully!")
+        st.balloons()
+    else:
+        st.error("Failed to connect QuickBooks. Please try again.")
+    # Clear the URL params so they don't fire again on refresh
+    st.query_params.clear()
 
 st.markdown("## Settings")
 st.caption("Configure your MCTV Elite Advertising Bot.")
@@ -58,6 +78,140 @@ selected_model = st.selectbox(
     index=list(model_options.keys()).index(current_model) if current_model in model_options else 0,
     format_func=lambda x: model_options[x],
 )
+
+st.divider()
+
+# ── QUICKBOOKS INTEGRATION ───────────────────────────────────────────────────
+st.markdown("### QuickBooks Integration")
+st.caption("Connect QuickBooks Online to sync invoices and track payments automatically.")
+
+try:
+    from services.quickbooks_service import (
+        get_connection_status, get_auth_url, disconnect,
+        sync_all_clients, sync_unpaid_invoices, get_company_info,
+        QB_CLIENT_ID, QB_REDIRECT_URI,
+    )
+
+    qb_status = get_connection_status()
+
+    if not qb_status.get("configured"):
+        st.warning(
+            "QuickBooks API credentials not configured. "
+            "Add `QB_CLIENT_ID` and `QB_CLIENT_SECRET` to your .env file."
+        )
+    elif qb_status.get("connected"):
+        # ── Connected state ──────────────────────────────────
+        qb_col1, qb_col2 = st.columns([2, 1])
+        with qb_col1:
+            st.success(f"\u2705 {qb_status.get('message', 'Connected')}")
+            st.text(f"Environment: {qb_status.get('environment', 'sandbox').title()}")
+            st.text(f"Company: {qb_status.get('company_name', 'Unknown')}")
+            st.text(f"Realm ID: {qb_status.get('realm_id', '')}")
+
+        with qb_col2:
+            if st.button("\U0001F50C Disconnect QuickBooks", use_container_width=True):
+                disconnect()
+                st.info("QuickBooks disconnected.")
+                st.rerun()
+
+        # ── Sync controls ────────────────────────────────────
+        st.markdown("#### Sync Operations")
+        sync_col1, sync_col2, sync_col3 = st.columns(3)
+
+        with sync_col1:
+            if st.button("\U0001F465 Sync All Clients \u2192 QB",
+                         use_container_width=True, key="qb_sync_clients"):
+                with st.spinner("Syncing clients to QuickBooks..."):
+                    result = sync_all_clients()
+                    st.success(
+                        f"Synced {result.get('synced', 0)} clients. "
+                        f"Failed: {result.get('failed', 0)}"
+                    )
+
+        with sync_col2:
+            if st.button("\U0001F4B0 Check QB Payments",
+                         use_container_width=True, key="qb_sync_payments"):
+                with st.spinner("Checking QuickBooks for payments..."):
+                    result = sync_unpaid_invoices()
+                    st.success(
+                        f"Checked {result.get('checked', 0)} invoices. "
+                        f"Newly paid: {result.get('newly_paid', 0)}"
+                    )
+
+        with sync_col3:
+            if st.button("\U0001F4CA Company Info", use_container_width=True,
+                         key="qb_company_info"):
+                info = get_company_info()
+                if info:
+                    st.json({
+                        "Company": info.get("CompanyName", ""),
+                        "Legal Name": info.get("LegalName", ""),
+                        "Country": info.get("Country", ""),
+                        "Email": info.get("Email", {}).get("Address", ""),
+                    })
+                else:
+                    st.warning("Could not retrieve company info.")
+
+    else:
+        # ── Not connected — show Connect button ─────────────
+        st.info(qb_status.get("message", "QuickBooks not connected."))
+
+        # Generate OAuth URL with CSRF state
+        if "qb_oauth_state" not in st.session_state:
+            st.session_state.qb_oauth_state = secrets.token_hex(16)
+
+        auth_url = get_auth_url(state=st.session_state.qb_oauth_state)
+
+        # Method 1: Copy-paste URL (most reliable — avoids Intuit popup issues)
+        st.markdown("**Step 1:** Copy this URL and open it in a new browser tab:")
+        st.code(auth_url, language=None)
+        st.markdown("**Step 2:** Authorize the app in QuickBooks, then paste the redirect URL below.")
+        st.caption("After authorizing, your browser will redirect to a URL starting with "
+                   f"`{QB_REDIRECT_URI}?code=...` — copy the **entire URL** from your browser bar.")
+
+        callback_url = st.text_input(
+            "Paste the callback URL here",
+            placeholder=f"{QB_REDIRECT_URI}?code=xxx&realmId=xxx&state=xxx",
+            key="qb_callback_url",
+        )
+
+        if st.button("\u2705 Connect", type="primary", use_container_width=True, key="qb_connect_btn"):
+            if callback_url:
+                try:
+                    from urllib.parse import urlparse, parse_qs
+                    parsed = urlparse(callback_url)
+                    params = parse_qs(parsed.query)
+                    code = params.get("code", [""])[0]
+                    realm_id = params.get("realmId", [""])[0]
+                    if code and realm_id:
+                        with st.spinner("Exchanging tokens with QuickBooks..."):
+                            result = exchange_code(code, realm_id)
+                        if result:
+                            st.success("QuickBooks connected successfully!")
+                            st.balloons()
+                            st.rerun()
+                        else:
+                            st.error("Token exchange failed. The authorization code may have expired. Try again.")
+                    else:
+                        st.error("Could not find `code` and `realmId` in that URL. Make sure you copied the full URL.")
+                except Exception as e:
+                    st.error(f"Error parsing URL: {e}")
+            else:
+                st.warning("Paste the callback URL from your browser after authorizing.")
+
+        # Method 2: Direct link (may not work with all Intuit apps due to popup behavior)
+        with st.expander("Alternative: Direct connect link"):
+            st.caption("This opens Intuit's OAuth page directly. If you see an 'undefined' error, use the copy-paste method above instead.")
+            st.link_button(
+                "\U0001F517 Connect QuickBooks (Direct)",
+                url=auth_url,
+                use_container_width=True,
+            )
+
+except ImportError as e:
+    st.error(f"QuickBooks service not available: {e}")
+except Exception as e:
+    st.error(f"QuickBooks error: {e}")
 
 st.divider()
 

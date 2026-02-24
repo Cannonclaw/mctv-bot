@@ -323,6 +323,19 @@ with tab_create:
                     if result:
                         inv_num = result.get("invoice_number", "")
                         st.success(f"Invoice **{inv_num}** created for ${amount:,.2f}.")
+
+                        # Auto-sync to QuickBooks if connected
+                        try:
+                            from services.quickbooks_service import is_connected, sync_invoice_to_qb
+                            if is_connected():
+                                client_data = get_client(selected_client_id)
+                                if client_data:
+                                    qb_inv = sync_invoice_to_qb(result, client_data)
+                                    if qb_inv:
+                                        st.info(f"Synced to QuickBooks (QB #{qb_inv.get('DocNumber', '')})")
+                        except Exception as qb_err:
+                            st.caption(f"QB sync skipped: {qb_err}")
+
                         st.balloons()
                         st.rerun()
                     else:
@@ -408,3 +421,79 @@ with tab_tools:
                     st.caption(f"  {inv.get('invoice_number', '')} — ${float(inv.get('amount', 0)):,.2f}")
             else:
                 st.info("No new invoices needed. All active contracts already invoiced for this period.")
+
+    # ── QuickBooks Sync ──────────────────────────────────────────────
+    st.divider()
+
+    try:
+        from services.quickbooks_service import (
+            is_connected as qb_is_connected,
+            sync_all_clients as qb_sync_all_clients,
+            sync_unpaid_invoices as qb_sync_unpaid,
+            sync_invoice_to_qb,
+        )
+
+        if qb_is_connected():
+            st.markdown("#### QuickBooks Sync")
+            st.caption("Sync invoices and payments with QuickBooks Online.")
+
+            qb_col1, qb_col2 = st.columns(2)
+
+            with qb_col1:
+                st.markdown("**Sync Payments from QB**")
+                st.caption(
+                    "Check QuickBooks for payments on outstanding invoices and "
+                    "auto-mark them as paid in the portal."
+                )
+                if st.button("\U0001F4B0 Sync Payments from QuickBooks",
+                             type="primary", use_container_width=True,
+                             key="batch_qb_payments"):
+                    with st.spinner("Checking QuickBooks for payments..."):
+                        result = qb_sync_unpaid()
+                        if result.get("newly_paid", 0) > 0:
+                            st.success(
+                                f"Found {result['newly_paid']} new payment(s)! "
+                                f"Checked {result['checked']} invoice(s)."
+                            )
+                        else:
+                            st.info(
+                                f"No new payments found. "
+                                f"Checked {result.get('checked', 0)} invoice(s)."
+                            )
+
+            with qb_col2:
+                st.markdown("**Push All Invoices to QB**")
+                st.caption(
+                    "Sync all unsent/sent invoices to QuickBooks. "
+                    "Creates customers automatically if needed."
+                )
+                if st.button("\U0001F4E4 Push Invoices to QuickBooks",
+                             use_container_width=True, key="batch_qb_push"):
+                    with st.spinner("Syncing invoices to QuickBooks..."):
+                        all_invs = get_all_invoices()
+                        pushed = 0
+                        failed = 0
+                        for inv in all_invs:
+                            if inv.get("status") in ("draft", "sent", "viewed", "overdue"):
+                                client_data = get_client(inv.get("client_id", ""))
+                                if client_data:
+                                    try:
+                                        qb_inv = sync_invoice_to_qb(inv, client_data)
+                                        if qb_inv:
+                                            pushed += 1
+                                        else:
+                                            failed += 1
+                                    except Exception:
+                                        failed += 1
+                        st.success(f"Pushed {pushed} invoice(s) to QuickBooks. Failed: {failed}")
+
+        else:
+            st.markdown("#### QuickBooks")
+            st.info(
+                "QuickBooks is not connected. Go to **Settings** to connect "
+                "your QuickBooks Online account for invoice and payment sync."
+            )
+            st.page_link("pages/3_Settings.py", label="Go to Settings", icon="\u2699\uFE0F")
+
+    except ImportError:
+        pass  # QB service not available, skip silently

@@ -172,6 +172,16 @@ def send_invoice(invoice_id: str) -> dict | None:
         entity_id=invoice_id,
     )
 
+    # Auto-sync to QuickBooks if connected
+    try:
+        from services.quickbooks_service import is_connected, sync_invoice_to_qb
+        if is_connected():
+            qb_inv = sync_invoice_to_qb(invoice, client)
+            if qb_inv:
+                print(f"[invoice_service] Synced to QuickBooks: {invoice.get('invoice_number', '')}")
+    except Exception as e:
+        print(f"[invoice_service] QB sync skipped: {e}")
+
     return updated
 
 

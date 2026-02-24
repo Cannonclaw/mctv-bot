@@ -51,6 +51,7 @@
 - `services/invoice_service.py` — Invoice CRUD, AR aging, batch generation, overdue scanning.
 - `services/storage_service.py` — Supabase Storage wrapper (upload, signed URLs, delete).
 - `services/notification_service.py` — Email notifications for all portal events (accounts, contracts, invoices, creative, reports).
+- `services/quickbooks_service.py` — QuickBooks Online API integration (~740 lines). OAuth 2.0 flow, customer/invoice/payment sync, webhook verification. Stdlib urllib only.
 - `generators/contract_generator.py` — Branded contract PDFs using DocxService (advertiser + host clauses).
 - `pages/1_Proposals.py` — Main proposal generation page. Handles photo uploads (up to 4 page-2) + default screen photos.
 - `pages/2_Reports.py` — Traction report generation + "Share with Client" button for portal.
@@ -71,6 +72,7 @@
 - `scripts/integration_test.py` — Full CRUD lifecycle test (28 tests: auth, clients, contracts, invoices, creative, reports, activity, updates, queries, cleanup).
 - `scripts/service_test.py` — Service layer test (14 tests: portal_service, contract_service, invoice_service).
 - `scripts/setup_portal.py` — One-shot portal setup (prompts for service key, creates users, buckets, saves .env).
+- `scripts/import_host_list.py` — Bulk import script: 90 hosts, 24 advertisers, 22 hot list leads from Excel → Supabase.
 - `assets/branding/mctv_logo.png` — Dark MCTV logo (RGB, 1920×1080) — for login page, white backgrounds.
 - `assets/branding/mctv_logo_on_navy.png` — White MCTV logo pre-composited on navy (RGB, 934×283) — for cover page.
 - `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
@@ -113,6 +115,9 @@
 - `SUPABASE_SERVICE_KEY` — Service role key (bypasses RLS for admin operations)
 - `PORTAL_URL` — Portal base URL for email links (e.g., https://mctv-bot.onrender.com)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — Email notifications
+- `QB_CLIENT_ID`, `QB_CLIENT_SECRET` — QuickBooks Online API credentials (NOT YET on Render — local .env only)
+- `QB_REDIRECT_URI` — QB OAuth callback (local: `http://localhost:8501/Settings`, prod: `https://mctv-bot.onrender.com/Settings`)
+- `QB_ENVIRONMENT` — `sandbox` or `production` (currently `sandbox`)
 
 ---
 
@@ -270,7 +275,7 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 
 ---
 
-## What's Been Done (as of 2026-02-24)
+## What's Been Done (as of 2026-02-25)
 
 ### Elite Advertiser Proposal — v15 through v20
 Massive formatting overhaul across 20+ PDF iterations:
@@ -366,6 +371,12 @@ Massive formatting overhaul across 20+ PDF iterations:
   - Report sharing: "Share with Client" button on traction reports → uploads to Storage + creates portal record
   - Portal pages: dashboard (role-aware), contract signing, invoice viewing, creative submissions, reports, profile editor
   - Supabase Auth with RLS (row-level security) for data isolation — clients only see their own data
+- **QuickBooks Online Integration** (code complete, OAuth blocked):
+  - Full QB API service: OAuth 2.0, customer sync, invoice sync, payment tracking, batch operations
+  - Settings page: connect/disconnect QB, sync controls, connection status
+  - Auto-sync: invoice creation/sending auto-pushes to QB if connected
+  - Invoices page: QB sync section (sync payments, push all invoices)
+  - Blocked on Intuit Developer Portal "undefined didn't connect" error (app config issue, not code)
 
 ### 4 Color Schemes — Live
 Added 4 selectable color palettes via horizontal radio on Proposals page:
@@ -446,6 +457,57 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 - Routed images stored in session state: `scraped_logo_path`, `scraped_venue_paths`, `scraped_ad_paths`, `scraped_photo_paths`
 - All 6 generator forms merge scraped routes with manual uploads
 
+### QuickBooks Online Integration (2026-02-24) — IN PROGRESS
+Full QB Online API integration built. OAuth flow, customer sync, invoice sync, payment tracking all coded and unit-tested. **Blocked on Intuit Developer Portal configuration** — OAuth consent screen shows "undefined didn't connect" error.
+
+**New Files:**
+- `services/quickbooks_service.py` — Full QB API service (~740 lines). OAuth 2.0 flow (auth URL, code exchange, token refresh, revoke), customer CRUD, invoice CRUD, payment queries, batch sync, webhook verification. Uses stdlib urllib (no QB SDK). Token storage: local file (`config/qb_tokens.json`) primary, Supabase `app_settings` table as backup.
+
+**Modified Files:**
+- `pages/3_Settings.py` — Added OAuth callback handler (catches `code`/`realmId` query params at page top), QuickBooks Integration section (connect/disconnect/sync controls), redirect URI display
+- `pages/10_Invoices.py` — Added auto-sync to QB on invoice creation, QuickBooks Sync section in Batch Tools tab (Sync Payments, Push All Invoices)
+- `services/invoice_service.py` — Added auto-sync to QB in `send_invoice()` (try/except so failures don't block)
+- `.gitignore` — Added `config/qb_tokens.json` and `output/contracts/*`
+- `.env` — Added `QB_CLIENT_ID`, `QB_CLIENT_SECRET`, `QB_REDIRECT_URI=http://localhost:8501/Settings`, `QB_ENVIRONMENT=sandbox`
+
+**QB Service Architecture:**
+- `get_auth_url(state)` → generates OAuth URL for Intuit authorization
+- `exchange_code(auth_code, realm_id)` → exchanges OAuth code for access+refresh tokens
+- `refresh_access_token()` → auto-refresh on 401
+- `disconnect()` → revoke tokens + clear local/Supabase storage
+- `_api_request(method, endpoint, data)` → authenticated QB API calls with auto-retry on 401
+- `_query(entity, where)` → SQL-like QB query (SELECT * FROM Customer WHERE ...)
+- `sync_client_to_qb(client)` → find-or-create QB customer from MCTV client
+- `sync_invoice_to_qb(invoice, client)` → create QB invoice (auto-creates customer if needed)
+- `check_invoice_payments(invoice_number)` → check if invoice is paid/partial in QB
+- `sync_all_clients()` → batch sync all MCTV clients to QB as customers
+- `sync_unpaid_invoices()` → check QB for payments, auto-mark paid in portal
+- `get_connection_status()` → connection health check (configured/connected/company info)
+- Token persistence: local file first (fast), Supabase `app_settings` as backup for production
+
+**QB Environment Variables (need to add to Render for production):**
+- `QB_CLIENT_ID` — Intuit app client ID
+- `QB_CLIENT_SECRET` — Intuit app client secret
+- `QB_REDIRECT_URI` — OAuth callback URL (localhost for dev, Render URL for prod)
+- `QB_ENVIRONMENT` — `sandbox` or `production`
+
+**OAuth Flow Status — BLOCKED:**
+The OAuth URL is generated correctly (all params verified). The error "undefined didn't connect" comes from the Intuit Developer Portal side. Troubleshooting done so far:
+1. ✅ Redirect URIs added: `http://localhost:8501/Settings` (confirmed in portal screenshot)
+2. ✅ App Name set: "MCTV Bot" (confirmed in portal screenshot)
+3. ✅ App URLs configured: Host Domain=`mctv-bot.onrender.com`, Launch URL=`https://mctv-bot.onrender.com/Settings`, Disconnect URL=`https://mctv-bot.onrender.com/Settings`
+4. ❌ Still getting "undefined didn't connect" error
+5. **Next steps to try:**
+   - Use Intuit's OAuth 2.0 Playground (https://developer.intuit.com/app/developer/playground or "Test connect to app (OAuth)" link from app dashboard) to test credentials independently
+   - Try in incognito/private browser window (cache/cookie issues)
+   - Check ALL required fields in Intuit portal: scopes selected? App logo uploaded? Terms of Service URL? Privacy Policy URL? App categories?
+   - Verify Client ID is from **Development** tab (not Production) since `QB_ENVIRONMENT=sandbox`
+   - The `app_settings` Supabase table doesn't exist yet — not needed for local dev (local file works), but need to create for production token persistence
+
+**Test Results:** 14/14 service tests + 5/5 QB unit tests passing
+
+**NOT YET COMMITTED** — All QB changes are staged but not committed/pushed. Files: `services/quickbooks_service.py` (new), `pages/3_Settings.py`, `pages/10_Invoices.py`, `services/invoice_service.py`, `.gitignore` (modified)
+
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
 - Custom domain not set up (bot.mctvofms.com)
@@ -466,6 +528,8 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
   - ✅ Integration tests: 42/42 passing (28 CRUD lifecycle + 14 service layer) — committed `62a9c40`
   - ✅ RLS policies verified (all 8 tables have row-level security enabled)
   - Still need: email notification end-to-end test (requires SMTP credentials configured)
+- **QuickBooks Integration — code complete, OAuth blocked** (see QuickBooks section above)
+- **Host List Import**: 90 hosts, 24 advertisers, 22 hot list leads imported via `scripts/import_host_list.py`. Total: 115 clients in Supabase.
 
 ---
 
@@ -571,6 +635,9 @@ Add a Custom HTML block in WordPress page editor:
 20. **Bash quoting on Windows.** Python test scripts with single quotes in string literals (e.g., `"4 Corner's Chevron"`) cause `bad substitution` when passed via `python -c`. Write to a temp `.py` file instead.
 21. **Integration tests against live Supabase.** Use service role key to create test data, verify operations, then clean up. All 42 tests create/read/update/delete real rows. Name test data obviously (e.g., `INTEGRATION_TEST_Coffee_Shop`) so orphans are easy to identify.
 22. **Unicode in Windows terminal.** `sys.stdout.reconfigure(encoding='utf-8')` is required for emoji/unicode characters on Windows cp1252 terminals. ASCII fallbacks (`[PASS]`/`[FAIL]`) are more reliable than emoji (✅/❌).
+23. **Intuit Developer Portal is finicky.** The "undefined didn't connect" OAuth error is NOT a code issue — it's an app configuration issue. Intuit requires: App Name, App Logo (*required), Redirect URIs, Host Domain, Launch URL, Disconnect URL, and possibly Terms of Service URL and Privacy Policy URL. Launch/Disconnect URLs require https:// (no localhost). Use the Render domain for those fields. The OAuth Playground (https://developer.intuit.com/app/developer/playground) is the best way to test credentials independently.
+24. **QB token dual-storage pattern.** Local file (`config/qb_tokens.json`) as primary (fast, always available), Supabase `app_settings` table as backup (cross-deploy persistence). Load order: local → Supabase. Save order: local + Supabase. Graceful degradation if either fails.
+25. **Supabase tables can't be created via REST API.** No `exec_sql` RPC available on hosted Supabase. Must create tables via Supabase Dashboard SQL Editor or migrations. Services should gracefully handle missing tables (try/except with fallback).
 
 ---
 
