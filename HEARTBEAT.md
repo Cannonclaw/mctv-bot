@@ -1,12 +1,11 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live on Render + Client Portal Built (uncommitted)
+## Current Status: Live on Render — Client Portal Deployed
 
-**Last deploy:** 2026-02-23 (pending — `75af231` pushed to GitHub, Render deploy may need manual trigger)
+**Last deploy:** 2026-02-24 — `88d01cc` pushed to GitHub, Render auto-deploying
 **URL:** https://mctv-bot.onrender.com
 **Branch:** main (auto-deploys on push)
-**Latest commit:** `75af231` — V4: dashboard impressions/CPM, table split fix, photo system upgrade
-**Uncommitted:** Client Portal — 20+ new files, full client lifecycle platform (contracts, invoices, creative, reports)
+**Latest commit:** `88d01cc` — Client Portal: full lifecycle platform (28 files, 5,822 insertions)
 
 ---
 
@@ -90,7 +89,7 @@
   - [ ] Set `SUPABASE_SERVICE_KEY` env var on Render (service role key from Supabase dashboard)
   - [ ] Set `PORTAL_URL` env var on Render (e.g., `https://mctv-bot.onrender.com`)
   - [ ] Create first admin profile in Supabase Auth + profiles table
-  - [ ] Commit + push all portal files to GitHub (triggers Render deploy)
+  - [x] Commit + push all portal files to GitHub (`88d01cc` — triggers Render deploy)
   - [ ] Integration test: create client → invite to portal → login → sign contract → view invoices → submit creative → view report
   - [ ] Verify RLS policies work (client A can't see client B's data)
   - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
@@ -100,7 +99,7 @@
 
 ## Changelog
 
-### 2026-02-23 — Client Portal: Full Lifecycle Platform (uncommitted)
+### 2026-02-24 — Client Portal: Full Lifecycle Platform (`88d01cc`)
 
 20+ new files, 7 new services, 7 portal pages, 4 internal management pages. Built in 7 phases in a single session.
 

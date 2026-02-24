@@ -606,4 +606,4 @@ This allows multiple Claude Code instances to work in parallel on different part
 - `3dadf11` — Traction report v2 fixes (10 items)
 - `fb4b743` — V3 fixes: proposal photo system overhaul + traction report polish
 - `75af231` — V4: dashboard impressions/CPM, table split fix, photo system upgrade (12 files, 357 insertions)
-- *(uncommitted)* — Client Portal: full lifecycle platform (20+ new files — auth, contracts, invoices, creative, reports, 7 portal pages, 4 internal pages, 7 services)
+- `88d01cc` — Client Portal: full lifecycle platform (28 files, 5,822 insertions — auth, contracts, invoices, creative, reports, 7 portal pages, 4 internal pages, 7 services)
