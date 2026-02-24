@@ -79,7 +79,9 @@
 - [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
 - [ ] Email notifications (SMTP configured but not confirmed working end-to-end)
 - [ ] Custom domain (bot.mctvofms.com CNAME to Render — not yet set up)
-- [ ] No test suite — all testing is manual (generate proposal, check PDF)
+- [x] **Integration test suite** — 42/42 tests passing (28 CRUD + 14 service layer) — 2026-02-24
+- [x] **MCP Servers configured** — Memory (knowledge graph), Google Workspace, Canva Dev — `~/.claude/.mcp.json` (2026-02-24)
+- [ ] **GA4 MCP** — needs Google Cloud service account setup (guide in doc)
 - [ ] Custom Creatomate template (currently using demo "Search Field Simple")
 - [ ] Save 5 community screen photos to assets/screens/
 - [ ] Test all 4 color schemes with real PDF generation

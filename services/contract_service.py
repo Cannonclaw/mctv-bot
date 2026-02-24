@@ -8,7 +8,9 @@ from datetime import datetime
 from pathlib import Path
 
 from services.supabase_client import query_table, insert_row, update_row, delete_row
-from services.storage_service import upload_from_path, get_signed_url, BUCKET_CONTRACTS
+from services.storage_service import (
+    upload_file, upload_from_path, get_signed_url, BUCKET_CONTRACTS,
+)
 from services.notification_service import (
     notify_contract_ready, notify_contract_signed,
 )
@@ -125,7 +127,7 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
     from generators.contract_generator import ContractGenerator
 
     generator = ContractGenerator(config)
-    docx_path, pdf_path = generator.generate(
+    docx_path, pdf_path, docx_bytes = generator.generate(
         client_name=client.get("contact_name", ""),
         business_name=client.get("business_name", ""),
         contract_type=contract.get("contract_type", "advertiser"),
@@ -140,11 +142,20 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         notes="",
     )
 
-    # Upload the PDF (or docx) to Supabase Storage
-    upload_path = pdf_path if pdf_path and pdf_path.exists() else docx_path
-    storage_path = f"{client.get('id', 'unknown')}/{upload_path.name}"
+    # Upload to Supabase Storage — prefer PDF, fall back to docx
+    if pdf_path and pdf_path.exists():
+        upload_path = pdf_path
+        storage_path = f"{client.get('id', 'unknown')}/{pdf_path.name}"
+        uploaded = upload_from_path(BUCKET_CONTRACTS, storage_path, str(pdf_path))
+    else:
+        # Use pre-captured docx bytes (avoids file-lock issues from PDF conversion)
+        upload_path = docx_path
+        storage_path = f"{client.get('id', 'unknown')}/{docx_path.name}"
+        uploaded = upload_file(
+            BUCKET_CONTRACTS, storage_path, docx_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
 
-    uploaded = upload_from_path(BUCKET_CONTRACTS, storage_path, str(upload_path))
     if not uploaded:
         print(f"[contract_service] Failed to upload contract to storage")
         # Still save the local path as fallback

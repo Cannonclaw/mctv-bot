@@ -5,6 +5,9 @@ Falls back gracefully when Supabase Storage is not configured.
 """
 
 import os
+import json
+import urllib.request
+import urllib.error
 from pathlib import Path
 from datetime import datetime
 
@@ -21,23 +24,135 @@ ALL_BUCKETS = [BUCKET_CONTRACTS, BUCKET_REPORTS, BUCKET_CREATIVE_UPLOADS,
                BUCKET_CREATIVE_DELIVERIES]
 
 
-def ensure_buckets():
-    """Create storage buckets if they don't exist. Call once at startup."""
-    client = get_admin_client()
-    if not client:
+def _rest_ensure_buckets():
+    """Create storage buckets via REST API if they don't exist."""
+    url = os.environ.get("SUPABASE_URL", "")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not url or not service_key:
         return
 
     try:
-        existing = {b.name for b in client.storage.list_buckets()}
+        # List existing buckets
+        req = urllib.request.Request(
+            f"{url}/storage/v1/bucket",
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+            },
+            method="GET",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            buckets = json.loads(resp.read().decode("utf-8"))
+        existing = {b["name"] for b in buckets} if isinstance(buckets, list) else set()
+
         for bucket_name in ALL_BUCKETS:
             if bucket_name not in existing:
-                client.storage.create_bucket(bucket_name, options={
+                body = json.dumps({
+                    "id": bucket_name,
+                    "name": bucket_name,
                     "public": False,
-                    "file_size_limit": 20 * 1024 * 1024,  # 20MB per file
-                })
-                print(f"[storage] Created bucket: {bucket_name}")
+                    "file_size_limit": 20 * 1024 * 1024,
+                }).encode("utf-8")
+                create_req = urllib.request.Request(
+                    f"{url}/storage/v1/bucket",
+                    data=body,
+                    headers={
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
+                        "Content-Type": "application/json",
+                    },
+                    method="POST",
+                )
+                with urllib.request.urlopen(create_req, timeout=15) as resp:
+                    resp.read()
+                print(f"[storage] Created bucket via REST: {bucket_name}")
     except Exception as e:
-        print(f"[storage] Failed to ensure buckets: {e}")
+        print(f"[storage] REST ensure_buckets failed: {e}")
+
+
+def ensure_buckets():
+    """Create storage buckets if they don't exist. Call once at startup."""
+    # Try SDK first
+    client = get_admin_client()
+    if client:
+        try:
+            existing = {b.name for b in client.storage.list_buckets()}
+            for bucket_name in ALL_BUCKETS:
+                if bucket_name not in existing:
+                    client.storage.create_bucket(bucket_name, options={
+                        "public": False,
+                        "file_size_limit": 20 * 1024 * 1024,  # 20MB per file
+                    })
+                    print(f"[storage] Created bucket: {bucket_name}")
+            return
+        except Exception as e:
+            print(f"[storage] SDK ensure_buckets failed: {e}")
+
+    # REST fallback
+    _rest_ensure_buckets()
+
+
+def _rest_upload(bucket: str, path: str, file_bytes: bytes,
+                 content_type: str = "application/octet-stream") -> str | None:
+    """Upload a file via Supabase Storage REST API (no SDK needed)."""
+    url = os.environ.get("SUPABASE_URL", "")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not url or not service_key:
+        return None
+
+    try:
+        req = urllib.request.Request(
+            f"{url}/storage/v1/object/{bucket}/{path}",
+            data=file_bytes,
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": content_type,
+                "x-upsert": "true",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            resp.read()
+        return f"{bucket}/{path}"
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")[:200]
+        print(f"[storage] REST upload failed ({e.code}): {body}")
+        return None
+    except Exception as e:
+        print(f"[storage] REST upload failed: {e}")
+        return None
+
+
+def _rest_signed_url(bucket: str, path: str, expires_in: int = 3600) -> str | None:
+    """Get a signed download URL via Supabase Storage REST API (no SDK needed)."""
+    url = os.environ.get("SUPABASE_URL", "")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not url or not service_key:
+        return None
+
+    try:
+        body = json.dumps({"expiresIn": expires_in}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/storage/v1/object/sign/{bucket}/{path}",
+            data=body,
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+        signed_url = result.get("signedURL") or result.get("signedUrl", "")
+        if signed_url and not signed_url.startswith("http"):
+            signed_url = f"{url}/storage/v1{signed_url}"
+        return signed_url or None
+    except Exception as e:
+        print(f"[storage] REST signed URL failed: {e}")
+        return None
 
 
 def upload_file(bucket: str, path: str, file_bytes: bytes,
@@ -53,32 +168,32 @@ def upload_file(bucket: str, path: str, file_bytes: bytes,
     Returns:
         Storage path on success, None on failure.
     """
+    # Try SDK first, fall back to REST
     client = get_admin_client()
-    if not client:
-        return None
+    if client:
+        try:
+            client.storage.from_(bucket).upload(
+                path,
+                file_bytes,
+                file_options={"content-type": content_type},
+            )
+            return f"{bucket}/{path}"
+        except Exception as e:
+            if "Duplicate" in str(e) or "already exists" in str(e):
+                try:
+                    client.storage.from_(bucket).update(
+                        path,
+                        file_bytes,
+                        file_options={"content-type": content_type},
+                    )
+                    return f"{bucket}/{path}"
+                except Exception as e2:
+                    print(f"[storage] SDK upload update failed: {e2}")
+            else:
+                print(f"[storage] SDK upload failed: {e}")
 
-    try:
-        client.storage.from_(bucket).upload(
-            path,
-            file_bytes,
-            file_options={"content-type": content_type},
-        )
-        return f"{bucket}/{path}"
-    except Exception as e:
-        # If file already exists, try to update it
-        if "Duplicate" in str(e) or "already exists" in str(e):
-            try:
-                client.storage.from_(bucket).update(
-                    path,
-                    file_bytes,
-                    file_options={"content-type": content_type},
-                )
-                return f"{bucket}/{path}"
-            except Exception as e2:
-                print(f"[storage] Upload update failed: {e2}")
-                return None
-        print(f"[storage] Upload failed: {e}")
-        return None
+    # REST fallback
+    return _rest_upload(bucket, path, file_bytes, content_type)
 
 
 def upload_from_path(bucket: str, storage_path: str,
@@ -126,16 +241,17 @@ def get_signed_url(bucket: str, path: str, expires_in: int = 3600) -> str | None
     Returns:
         Signed URL string, or None on failure.
     """
+    # Try SDK first
     client = get_admin_client()
-    if not client:
-        return None
+    if client:
+        try:
+            result = client.storage.from_(bucket).create_signed_url(path, expires_in)
+            return result.get("signedURL") or result.get("signedUrl")
+        except Exception as e:
+            print(f"[storage] SDK signed URL failed: {e}")
 
-    try:
-        result = client.storage.from_(bucket).create_signed_url(path, expires_in)
-        return result.get("signedURL") or result.get("signedUrl")
-    except Exception as e:
-        print(f"[storage] Signed URL failed: {e}")
-        return None
+    # REST fallback
+    return _rest_signed_url(bucket, path, expires_in)
 
 
 def get_public_url(bucket: str, path: str) -> str | None:
@@ -155,18 +271,78 @@ def get_public_url(bucket: str, path: str) -> str | None:
         return None
 
 
-def delete_file(bucket: str, path: str) -> bool:
-    """Delete a file from storage. Returns True on success."""
-    client = get_admin_client()
-    if not client:
+def _rest_delete(bucket: str, path: str) -> bool:
+    """Delete a file via Supabase Storage REST API."""
+    url = os.environ.get("SUPABASE_URL", "")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not url or not service_key:
         return False
 
     try:
-        client.storage.from_(bucket).remove([path])
+        body = json.dumps({"prefixes": [path]}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/storage/v1/object/{bucket}",
+            data=body,
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            method="DELETE",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            resp.read()
         return True
     except Exception as e:
-        print(f"[storage] Delete failed: {e}")
+        print(f"[storage] REST delete failed: {e}")
         return False
+
+
+def _rest_list_files(bucket: str, folder: str = "") -> list[dict]:
+    """List files in a bucket/folder via Supabase Storage REST API."""
+    url = os.environ.get("SUPABASE_URL", "")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not url or not service_key:
+        return []
+
+    try:
+        body = json.dumps({
+            "prefix": folder,
+            "limit": 100,
+            "offset": 0,
+            "sortBy": {"column": "name", "order": "asc"},
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/storage/v1/object/list/{bucket}",
+            data=body,
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        return result if isinstance(result, list) else []
+    except Exception as e:
+        print(f"[storage] REST list failed: {e}")
+        return []
+
+
+def delete_file(bucket: str, path: str) -> bool:
+    """Delete a file from storage. Returns True on success."""
+    # Try SDK first
+    client = get_admin_client()
+    if client:
+        try:
+            client.storage.from_(bucket).remove([path])
+            return True
+        except Exception as e:
+            print(f"[storage] SDK delete failed: {e}")
+
+    # REST fallback
+    return _rest_delete(bucket, path)
 
 
 def list_files(bucket: str, folder: str = "") -> list[dict]:
@@ -174,16 +350,17 @@ def list_files(bucket: str, folder: str = "") -> list[dict]:
 
     Returns list of dicts with 'name', 'id', 'created_at', 'metadata'.
     """
+    # Try SDK first
     client = get_admin_client()
-    if not client:
-        return []
+    if client:
+        try:
+            result = client.storage.from_(bucket).list(folder)
+            return result if result else []
+        except Exception as e:
+            print(f"[storage] SDK list failed: {e}")
 
-    try:
-        result = client.storage.from_(bucket).list(folder)
-        return result if result else []
-    except Exception as e:
-        print(f"[storage] List failed: {e}")
-        return []
+    # REST fallback
+    return _rest_list_files(bucket, folder)
 
 
 def build_storage_path(client_id: str, filename: str, prefix: str = "") -> str:

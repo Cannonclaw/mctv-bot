@@ -154,21 +154,31 @@ for contract in contracts:
     if contract.get("document_url"):
         st.divider()
         doc_url = contract.get("document_url", "")
-        local_path = Path(doc_url) if doc_url else None
+
+        # Check if it's a local file path (starts with drive letter or /)
+        is_local_path = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
+        local_path = Path(doc_url) if is_local_path else None
 
         if local_path and local_path.exists():
             with open(local_path, "rb") as f:
                 st.download_button(
-                    "Download Contract PDF",
+                    "\U0001F4E5 Download Contract Document",
                     data=f.read(),
                     file_name=local_path.name,
                     key=f"dl_contract_{cid}",
                     type="primary",
                 )
         else:
+            # Get a signed download URL from Supabase Storage
             download_url = get_contract_download_url(cid)
             if download_url:
-                st.markdown(f"[Download Contract PDF]({download_url})")
+                st.link_button(
+                    "\U0001F4E5 Download Contract Document",
+                    url=download_url,
+                    type="primary",
+                )
+            elif doc_url:
+                st.caption("Contract document is being processed. Please check back shortly.")
 
     # ── Mark as viewed (if status is 'sent') ────────────────────────
     if cstatus == "sent":

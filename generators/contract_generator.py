@@ -198,7 +198,7 @@ class ContractGenerator:
         auto_renew: bool = True,
         prepared_by: str = "",
         notes: str = "",
-    ) -> tuple[Path, Path | None]:
+    ) -> tuple[Path, Path | None, bytes]:
         """Generate a contract document.
 
         Args:
@@ -216,7 +216,8 @@ class ContractGenerator:
             notes: Additional notes/terms
 
         Returns:
-            Tuple of (docx_path, pdf_path or None).
+            Tuple of (docx_path, pdf_path or None, docx_bytes).
+            docx_bytes captured before PDF conversion to avoid file locking.
         """
         if not markets:
             markets = ["Oxford"]
@@ -311,10 +312,13 @@ class ContractGenerator:
         docx_path = OUTPUT_DIR / filename
         doc.save(docx_path)
 
+        # Read docx bytes immediately (before PDF conversion may lock the file)
+        docx_bytes = docx_path.read_bytes()
+
         # Try PDF conversion
         pdf_path = self.docx_service._convert_to_pdf(docx_path)
 
-        return docx_path, pdf_path
+        return docx_path, pdf_path, docx_bytes
 
     def _get_rep_info(self, rep_name: str) -> dict:
         """Get rep info from config, or return default."""

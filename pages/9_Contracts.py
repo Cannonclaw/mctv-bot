@@ -210,8 +210,9 @@ with tab_list:
                     # Download document
                     if has_doc:
                         doc_url = contract.get("document_url", "")
-                        # Check if it's a local file path
-                        local_path = Path(doc_url) if doc_url else None
+                        # Check if it's a local file path (starts with drive letter, / or output)
+                        is_local = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
+                        local_path = Path(doc_url) if is_local else None
                         if local_path and local_path.exists():
                             with open(local_path, "rb") as f:
                                 st.download_button(
@@ -222,13 +223,16 @@ with tab_list:
                                     use_container_width=True,
                                 )
                         else:
-                            if st.button("Get Download Link", key=f"link_{cid}",
-                                         use_container_width=True):
-                                url = get_contract_download_url(cid)
-                                if url:
-                                    st.markdown(f"[Download Contract]({url})")
-                                else:
-                                    st.error("Could not generate download link.")
+                            # Get signed URL from Supabase Storage
+                            url = get_contract_download_url(cid)
+                            if url:
+                                st.link_button(
+                                    "Download",
+                                    url=url,
+                                    use_container_width=True,
+                                )
+                            else:
+                                st.caption("Unavailable")
 
                 with action_cols[4]:
                     # Cancel / Delete

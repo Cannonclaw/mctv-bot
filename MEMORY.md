@@ -13,6 +13,8 @@
 - Says "back to the proposals" when he wants to refocus after tangents
 - When he says a file name (like "MEMORY.md"), he means "update it" or "create it"
 - Calls me "pup" when he's in a good mood and wants me to keep going
+- "Anytime you can do a step, do it" — handle as much as possible programmatically, don't wait for permission on obvious next steps
+- Says "IMPECCABLE.style" when extremely satisfied with results
 
 ### Important Corrections (DO NOT GET THESE WRONG)
 - **Swayze Hollingsworth is a woman** — use she/her pronouns
@@ -66,6 +68,9 @@
 - `pages/portal_reports.py` — Client traction report viewer.
 - `pages/portal_profile.py` — Client profile editor + password reset.
 - `scripts/setup_portal_schema.sql` — Supabase schema (8 tables + RLS + indexes).
+- `scripts/integration_test.py` — Full CRUD lifecycle test (28 tests: auth, clients, contracts, invoices, creative, reports, activity, updates, queries, cleanup).
+- `scripts/service_test.py` — Service layer test (14 tests: portal_service, contract_service, invoice_service).
+- `scripts/setup_portal.py` — One-shot portal setup (prompts for service key, creates users, buckets, saves .env).
 - `assets/branding/mctv_logo.png` — Dark MCTV logo (RGB, 1920×1080) — for login page, white backgrounds.
 - `assets/branding/mctv_logo_on_navy.png` — White MCTV logo pre-composited on navy (RGB, 934×283) — for cover page.
 - `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
@@ -265,7 +270,7 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 
 ---
 
-## What's Been Done (as of 2026-02-23)
+## What's Been Done (as of 2026-02-24)
 
 ### Elite Advertiser Proposal — v15 through v20
 Massive formatting overhaul across 20+ PDF iterations:
@@ -444,7 +449,7 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
 - Custom domain not set up (bot.mctvofms.com)
-- No test suite — all testing is manual (generate proposal, check PDF)
+- **Integration test suite**: 42/42 tests passing (28 CRUD lifecycle + 14 service layer) — `scripts/integration_test.py` + `scripts/service_test.py`. Proposal testing still manual (generate PDF, visual check).
 - Need custom MCTV-branded Creatomate template (currently using demo "Search Field Simple")
 - **User needs to save 5 community screen photos to `assets/screens/`** — they shared images in chat but files need to be placed manually
 - Test all 4 color schemes with a real PDF generation
@@ -453,12 +458,14 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 - **Photo Handling Spec Phases 2-3**: Phase 1 done (4-photo layouts). Phase 2 (scraper preview panel polish — counter bar, validation warnings, overflow handling) and Phase 3 (smart classification pipeline) still pending.
 - **Render deployment**: Auto-deploy from `main` branch may need verification. After `75af231` push, user reported "Not seeing anything on the render logs." May need manual deploy trigger at https://dashboard.render.com or webhook re-connection.
 - **Client Portal — LIVE (2026-02-24):**
-  - SQL schema deployed (8 tables + RLS + indexes verified)
-  - Render env vars set (SUPABASE_SERVICE_KEY + PORTAL_URL)
-  - 3 admin profiles created + backfilled (Creed, Mary Michael, Swayze)
-  - 4 storage buckets created (contracts, reports, creative-uploads, creative-deliveries)
-  - Portal login confirmed working at mctv-bot.onrender.com/portal_login
-  - Still need: full integration test, RLS verification, email notification test
+  - ✅ SQL schema deployed (8 tables + RLS + indexes verified via REST API)
+  - ✅ Render env vars set (SUPABASE_SERVICE_KEY + PORTAL_URL)
+  - ✅ 3 admin profiles created + backfilled (Creed, Mary Michael, Swayze)
+  - ✅ 4 storage buckets created (contracts, reports, creative-uploads, creative-deliveries)
+  - ✅ Portal login confirmed working at mctv-bot.onrender.com/portal_login
+  - ✅ Integration tests: 42/42 passing (28 CRUD lifecycle + 14 service layer) — committed `62a9c40`
+  - ✅ RLS policies verified (all 8 tables have row-level security enabled)
+  - Still need: email notification end-to-end test (requires SMTP credentials configured)
 
 ---
 
@@ -562,6 +569,57 @@ Add a Custom HTML block in WordPress page editor:
 18. **Proportional CPM is uniform.** When allocating a flat monthly rate across venues by impression share, every venue gets the same CPM. This is mathematically correct — `(rate × share / impressions) × 1000 = rate / total_impressions × 1000` is constant.
 19. **python-docx cell merge for layouts.** For 3-photo (2+1) layout, use `bottom_cell.merge(table.rows[1].cells[1])` to create a centered bottom row. Merged cells need explicit paragraph alignment.
 20. **Bash quoting on Windows.** Python test scripts with single quotes in string literals (e.g., `"4 Corner's Chevron"`) cause `bad substitution` when passed via `python -c`. Write to a temp `.py` file instead.
+21. **Integration tests against live Supabase.** Use service role key to create test data, verify operations, then clean up. All 42 tests create/read/update/delete real rows. Name test data obviously (e.g., `INTEGRATION_TEST_Coffee_Shop`) so orphans are easy to identify.
+22. **Unicode in Windows terminal.** `sys.stdout.reconfigure(encoding='utf-8')` is required for emoji/unicode characters on Windows cp1252 terminals. ASCII fallbacks (`[PASS]`/`[FAIL]`) are more reliable than emoji (✅/❌).
+
+---
+
+## Licensing / Franchise Opportunity
+
+Creed is interested in packaging this platform to sell to other NTV franchises. Key points discussed (2026-02-24):
+- **Copyright**: Register at copyright.gov (~$65) — covers the source code, documentation, and generated content templates
+- **Keep repo private**: GitHub private repo is sufficient IP protection for now
+- **Trademark**: Consider trademarking the product name if it's branded separately from MCTV
+- **License model**: White-label SaaS — each franchise gets their own instance with their branding, markets, venues
+- **Pricing idea**: $500-1,000/month per franchise (they get proposal generator, client portal, video ads, lead management)
+- **What makes it licensable**: Everything is data-driven (config.json, prompts.json) — swap out branding, markets, and pricing tiers and it's a new instance
+- **Next steps**: Focus on operations first (get portal used by real clients), then productize
+
+---
+
+## MCP Servers (Model Context Protocol)
+
+Configured in `~/.claude/.mcp.json` (user-level, applies to all projects). Set up 2026-02-24.
+Reference guide: `C:\Users\msaac\Downloads\MCTV_Claude_Code_MCP_Setup_Guide.docx`
+Node.js v24.13.1 installed via winget (required for all MCP servers).
+
+### Active Servers
+| Server | Package | Status | What It Does |
+|--------|---------|--------|-------------|
+| **memory** | `@modelcontextprotocol/server-memory` | ✅ Ready | Persistent knowledge graph — remembers MCTV branding, team, clients across sessions |
+| **google-workspace** | `@presto-ai/google-workspace-mcp` | ✅ Ready (needs OAuth on first run) | Gmail, Sheets, Docs, Drive, Calendar — proposal delivery, client data, scheduling |
+| **canva-dev** | `@canva/cli@latest mcp` | ✅ Ready | Canva design assistance — billboard content, social media, client mockups |
+
+### Pending Servers
+| Server | Package | Blocked By |
+|--------|---------|-----------|
+| **google-analytics** | `mcp-server-google-analytics` | Needs GCP service account + GA4 property ID |
+
+### Memory Knowledge Graph
+Pre-seeded with MCTV core data at `~/.claude/memory/memory.jsonl`:
+- Company info (MCTV Elite Advertising — markets, screens, brand colors)
+- Team profiles (Creed, Mary Michael, Swayze — contact info, roles, pronouns)
+- Pricing tiers (NEVER public)
+- Supabase project details
+- MCTV Bot architecture
+- Good Earth reference standard
+- MSAAC cross-business context
+
+### Key Notes
+- **Windows requires `cmd /c` wrapper** when calling `npx` in MCP configs
+- Google Workspace will prompt browser OAuth on first use — sign in with Creed's Google account
+- GA4 MCP requires: Google Cloud project → enable Analytics Data API → create service account → download JSON key → add as Viewer to GA4 property
+- Verify servers with `/mcp` command inside Claude Code
 
 ---
 
@@ -608,3 +666,6 @@ This allows multiple Claude Code instances to work in parallel on different part
 - `fb4b743` — V3 fixes: proposal photo system overhaul + traction report polish
 - `75af231` — V4: dashboard impressions/CPM, table split fix, photo system upgrade (12 files, 357 insertions)
 - `88d01cc` — Client Portal: full lifecycle platform (28 files, 5,822 insertions — auth, contracts, invoices, creative, reports, 7 portal pages, 4 internal pages, 7 services)
+- `39ad15d` — Portal documentation updates (HEARTBEAT, MEMORY, CLAUDE)
+- `d2dc9e3` — Fix portal login page routing
+- `62a9c40` — Add integration tests (42/42 pass) + update portal checklist (integration_test.py, service_test.py, setup_portal.py)
