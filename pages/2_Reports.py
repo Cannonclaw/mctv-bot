@@ -33,6 +33,25 @@ st.caption("Generate professional traction and ad performance reports.")
 
 config = load_config()
 
+# ── Pre-load client list for advertiser name dropdown ─────────────────────
+_clients_cache = []
+if supabase_configured():
+    try:
+        _clients_cache = get_all_clients() or []
+    except Exception:
+        pass  # If Supabase is down, fall back to manual entry
+
+# Build separate lists for advertiser and host/venue clients
+_advertiser_names = sorted(set(
+    c.get("business_name", "") for c in _clients_cache
+    if c.get("business_name") and c.get("client_type") != "host"
+))
+_venue_names = sorted(set(
+    c.get("business_name", "") for c in _clients_cache
+    if c.get("business_name")
+))
+_CUSTOM_OPTION = "— Type a custom name —"
+
 
 # ── SHARE WITH CLIENT PORTAL ─────────────────────────────────────────────────
 
@@ -351,11 +370,27 @@ with tab_upload:
             col1, col2 = st.columns(2)
             with col1:
                 if report_type == "Advertiser Traction Report":
-                    advertiser_name = st.text_input("Advertiser Name *",
-                                                     placeholder="Rebel Body Fitness")
+                    name_options = _advertiser_names + [_CUSTOM_OPTION]
+                    selected_name = st.selectbox("Advertiser Name *", name_options,
+                                                  index=0 if name_options[0] != _CUSTOM_OPTION else 0,
+                                                  key="excel_adv_select")
+                    if selected_name == _CUSTOM_OPTION:
+                        advertiser_name = st.text_input("Custom Advertiser Name *",
+                                                         placeholder="Rebel Body Fitness",
+                                                         key="excel_adv_custom")
+                    else:
+                        advertiser_name = selected_name
                 else:
-                    advertiser_name = st.text_input("Venue Name *",
-                                                     placeholder="Oxford Park Commission")
+                    name_options = _venue_names + [_CUSTOM_OPTION]
+                    selected_name = st.selectbox("Venue Name *", name_options,
+                                                  index=0 if name_options[0] != _CUSTOM_OPTION else 0,
+                                                  key="excel_venue_select")
+                    if selected_name == _CUSTOM_OPTION:
+                        advertiser_name = st.text_input("Custom Venue Name *",
+                                                         placeholder="Oxford Park Commission",
+                                                         key="excel_venue_custom")
+                    else:
+                        advertiser_name = selected_name
                 campaign_period = st.text_input("Campaign Period",
                                                  value=auto_period,
                                                  placeholder="November 2025 - February 2026")
@@ -406,11 +441,27 @@ with tab_manual:
     col1, col2 = st.columns(2)
     with col1:
         if report_type == "Advertiser Traction Report":
-            name = st.text_input("Advertiser Name *", key="manual_name",
-                                  placeholder="Rebel Body Fitness")
+            name_options = _advertiser_names + [_CUSTOM_OPTION]
+            selected_name = st.selectbox("Advertiser Name *", name_options,
+                                          index=0 if name_options[0] != _CUSTOM_OPTION else 0,
+                                          key="manual_adv_select")
+            if selected_name == _CUSTOM_OPTION:
+                name = st.text_input("Custom Advertiser Name *",
+                                      placeholder="Rebel Body Fitness",
+                                      key="manual_adv_custom")
+            else:
+                name = selected_name
         else:
-            name = st.text_input("Venue Name *", key="manual_name",
-                                  placeholder="Oxford Park Commission")
+            name_options = _venue_names + [_CUSTOM_OPTION]
+            selected_name = st.selectbox("Venue Name *", name_options,
+                                          index=0 if name_options[0] != _CUSTOM_OPTION else 0,
+                                          key="manual_venue_select")
+            if selected_name == _CUSTOM_OPTION:
+                name = st.text_input("Custom Venue Name *",
+                                      placeholder="Oxford Park Commission",
+                                      key="manual_venue_custom")
+            else:
+                name = selected_name
         campaign_period = st.text_input("Campaign Period", key="manual_period",
                                          placeholder="6 Month Campaign")
     with col2:

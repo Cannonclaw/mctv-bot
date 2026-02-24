@@ -207,10 +207,10 @@ with tab_list:
                                      use_container_width=True, type="primary"):
                             st.session_state[f"show_invite_{cid}"] = True
 
-                # Edit notes
+                # Edit client info
                 with action_cols[3]:
-                    if st.button("Edit Notes", key=f"notes_btn_{cid}", use_container_width=True):
-                        st.session_state[f"show_notes_{cid}"] = not st.session_state.get(f"show_notes_{cid}", False)
+                    if st.button("Edit Client", key=f"edit_btn_{cid}", use_container_width=True):
+                        st.session_state[f"show_edit_{cid}"] = not st.session_state.get(f"show_edit_{cid}", False)
 
                 # Delete
                 with action_cols[4]:
@@ -264,26 +264,89 @@ with tab_list:
                             del st.session_state[f"show_invite_{cid}"]
                             st.rerun()
 
-                # ── Notes editor (shown when clicked) ───────────────────
-                if st.session_state.get(f"show_notes_{cid}"):
+                # ── Edit client form (shown when clicked) ──────────────
+                if st.session_state.get(f"show_edit_{cid}"):
                     st.markdown("---")
-                    updated_notes = st.text_area(
+                    st.markdown("**Edit Client Information**")
+
+                    edit_col1, edit_col2 = st.columns(2)
+
+                    with edit_col1:
+                        edit_bname = st.text_input(
+                            "Business Name", value=bname, key=f"edit_bname_{cid}")
+                        edit_cname = st.text_input(
+                            "Contact Name", value=cname, key=f"edit_cname_{cid}")
+                        edit_cemail = st.text_input(
+                            "Contact Email", value=cemail, key=f"edit_cemail_{cid}")
+                        edit_cphone = st.text_input(
+                            "Contact Phone",
+                            value=client.get("contact_phone", ""),
+                            key=f"edit_cphone_{cid}")
+
+                    with edit_col2:
+                        type_options = ["advertiser", "host"]
+                        edit_ctype = st.selectbox(
+                            "Client Type",
+                            type_options,
+                            index=type_options.index(client.get("client_type", "advertiser")) if client.get("client_type", "advertiser") in type_options else 0,
+                            key=f"edit_ctype_{cid}")
+                        edit_industry = st.text_input(
+                            "Industry",
+                            value=client.get("industry", ""),
+                            key=f"edit_industry_{cid}")
+                        city_options = ["Oxford", "Starkville", "Tupelo", "Columbus",
+                                        "West Point", "Other"]
+                        current_city = client.get("city", "")
+                        edit_city = st.selectbox(
+                            "City",
+                            city_options,
+                            index=city_options.index(current_city) if current_city in city_options else 0,
+                            key=f"edit_city_{cid}")
+
+                    edit_notes = st.text_area(
                         "Notes",
                         value=client.get("notes", ""),
-                        key=f"notes_area_{cid}",
-                        height=100,
+                        key=f"edit_notes_{cid}",
+                        height=80,
                     )
-                    nc1, nc2 = st.columns(2)
-                    with nc1:
-                        if st.button("Save Notes", key=f"save_notes_{cid}", type="primary",
+
+                    edit_btn1, edit_btn2 = st.columns(2)
+                    with edit_btn1:
+                        if st.button("Save Changes", key=f"save_edit_{cid}",
+                                     type="primary", use_container_width=True):
+                            changes = {}
+                            if edit_bname != bname:
+                                changes["business_name"] = edit_bname
+                            if edit_cname != cname:
+                                changes["contact_name"] = edit_cname
+                            if edit_cemail != cemail:
+                                changes["contact_email"] = edit_cemail
+                            if edit_cphone != client.get("contact_phone", ""):
+                                changes["contact_phone"] = edit_cphone
+                            if edit_ctype != client.get("client_type", "advertiser"):
+                                changes["client_type"] = edit_ctype
+                            if edit_industry != client.get("industry", ""):
+                                changes["industry"] = edit_industry
+                            if edit_city != current_city:
+                                changes["city"] = edit_city
+                            if edit_notes != client.get("notes", ""):
+                                changes["notes"] = edit_notes
+
+                            if changes:
+                                update_client(cid, changes)
+                                log_activity(cid, "Client info updated",
+                                             entity_type="client", entity_id=cid,
+                                             details={"fields": list(changes.keys())})
+                                st.success(f"Updated {len(changes)} field(s) for **{edit_bname}**")
+                                st.session_state[f"show_edit_{cid}"] = False
+                                st.rerun()
+                            else:
+                                st.info("No changes detected.")
+
+                    with edit_btn2:
+                        if st.button("Cancel", key=f"cancel_edit_{cid}",
                                      use_container_width=True):
-                            update_client(cid, {"notes": updated_notes})
-                            st.success("Notes saved")
-                            st.session_state[f"show_notes_{cid}"] = False
-                            st.rerun()
-                    with nc2:
-                        if st.button("Cancel", key=f"cancel_notes_{cid}", use_container_width=True):
-                            st.session_state[f"show_notes_{cid}"] = False
+                            st.session_state[f"show_edit_{cid}"] = False
                             st.rerun()
 
                 # ── Delete confirmation ─────────────────────────────────
