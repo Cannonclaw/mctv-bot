@@ -310,7 +310,7 @@ class AdvertiserReportGenerator:
         # Build table headers and rows — includes impressions/CPM when available
         headers = ["Venue", "City", "Category", "Total Plays", "Air Time", "% of Total"]
         if has_impressions:
-            headers.append("Impressions")
+            headers.append("Monthly Impressions")
         if has_cpm:
             headers.append("CPM")
 
@@ -320,8 +320,12 @@ class AdvertiserReportGenerator:
 
         rows = []
         for venue in sorted_venues:
+            # Truncate long venue names to prevent column overflow
+            display_name = venue.host_name
+            if len(display_name) > 35:
+                display_name = display_name[:33].rstrip() + "\u2026"
             row = [
-                venue.host_name,
+                display_name,
                 venue.city or "--",
                 venue.business_category or "General",
                 f"{venue.total_plays:,}",
@@ -334,12 +338,12 @@ class AdvertiserReportGenerator:
                 else:
                     row.append("--")
             if has_cpm:
-                if venue.monthly_impressions > 0:
+                if venue.monthly_impressions > 0 and data.total_plays > 0:
                     # CPM = (venue's share of cost / impressions) × 1000
-                    # Allocate cost by share of total impressions
-                    venue_share = venue.monthly_impressions / data.total_impressions if data.total_impressions > 0 else 0
-                    venue_cost = data.monthly_rate * venue_share
-                    cpm = (venue_cost / venue.monthly_impressions) * 1000 if venue.monthly_impressions > 0 else 0
+                    # Allocate cost proportional to PLAYS, not impressions
+                    play_share = venue.total_plays / data.total_plays
+                    venue_cost = data.monthly_rate * play_share
+                    cpm = (venue_cost / venue.monthly_impressions) * 1000
                     row.append(f"${cpm:.2f}")
                 else:
                     row.append("--")
@@ -362,8 +366,18 @@ class AdvertiserReportGenerator:
             net_cpm = (data.monthly_rate / data.total_impressions) * 1000 if data.total_impressions > 0 else 0
             totals_row.append(f"${net_cpm:.2f}")
 
-        self.docx.add_data_table(doc, headers, rows,
-                                 bold_rows=3, totals_row=totals_row)
+        table = self.docx.add_data_table(doc, headers, rows,
+                                         bold_rows=3, totals_row=totals_row)
+
+        # Post-process: use smaller font for long venue names
+        if table:
+            from docx.shared import Pt as DPt
+            for row_idx in range(1, len(rows) + 1):  # skip header (row 0)
+                cell = table.rows[row_idx].cells[0]  # first column = venue name
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        if len(run.text) > 25:
+                            run.font.size = DPt(8)
 
     def _add_category_table(self, doc, categories: list, data: TractionReportInput):
         """Add the category breakdown summary table + market breakdown below."""
@@ -776,16 +790,25 @@ class AdvertiserReportGenerator:
         )
 
     def _get_next_period_text(self, data: TractionReportInput) -> str:
-        """Generate a 'Next Reporting Period' line."""
+        """Generate a 'Next Reporting Period' line matching campaign duration."""
         from datetime import datetime as dt, timedelta
+
+        start = data.campaign_start or ""
         end = data.campaign_end or ""
-        if not end:
+
+        # Both dates required to calculate duration
+        if not start or not end:
             return ""
-        for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d"):
+
+        for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y"):
             try:
+                start_date = dt.strptime(start[:10], fmt)
                 end_date = dt.strptime(end[:10], fmt)
+                campaign_days = (end_date - start_date).days
+                if campaign_days <= 0:
+                    return ""
                 next_start = end_date + timedelta(days=1)
-                next_end = next_start + timedelta(days=29)
+                next_end = next_start + timedelta(days=campaign_days - 1)
                 return (
                     f"Next Reporting Period: "
                     f"{next_start.strftime('%B %d')} \u2013 "

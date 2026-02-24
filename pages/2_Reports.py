@@ -21,6 +21,7 @@ from services.supabase_client import is_configured as supabase_configured, inser
 from services.portal_service import get_all_clients
 from services.storage_service import upload_from_path, BUCKET_REPORTS
 from services.notification_service import notify_report_shared
+from services.dashboard_service import load_dashboard, get_dashboard_status, save_dashboard
 
 st.set_page_config(page_title="Traction Reports - MCTV Bot", page_icon="\U0001F4CA", layout="wide")
 
@@ -286,29 +287,52 @@ with tab_upload:
         help="Supports all NTV360 export formats (content reports, per-content reports, pre-formatted traction reports)",
     )
 
-    # Network Dashboard upload (optional — enriches report with impressions, dwell, traffic)
-    st.markdown("##### Network Dashboard *(optional)*")
-    st.caption(
-        "Upload the MCTV Network Dashboard Excel for impression counts, "
-        "dwell times, and foot traffic data. This adds Impressions and CPM "
-        "columns to the venue table."
-    )
-    dashboard_file = st.file_uploader(
-        "Network Dashboard (.xlsx)",
-        type=["xlsx", "xls"],
-        accept_multiple_files=False,
-        key="dashboard_upload",
-        help="The 'MCTV - Network Dashboard' Excel file with Traffic, Dwell Time, and Impressions columns.",
-    )
+    # ── Network Dashboard (persistent + optional override) ──
+    st.markdown("##### Network Dashboard")
 
-    # Parse dashboard if provided
+    db_status = get_dashboard_status()
+    if db_status["loaded"]:
+        updated_date = db_status["updated_at"][:10] if db_status["updated_at"] else "Unknown"
+        st.success(
+            f"Dashboard loaded: **{db_status['venue_count']} venues** "
+            f"(last updated {updated_date})"
+        )
+    else:
+        st.info(
+            "No network dashboard stored yet. Upload one below to enable "
+            "impression counts, dwell times, and CPM in reports."
+        )
+
+    with st.expander("Upload / Update Dashboard", expanded=not db_status["loaded"]):
+        st.caption(
+            "Upload the MCTV Network Dashboard Excel to update the stored "
+            "venue data. This persists across report generations — you only "
+            "need to upload it once."
+        )
+        dashboard_file = st.file_uploader(
+            "Network Dashboard (.xlsx)",
+            type=["xlsx", "xls"],
+            accept_multiple_files=False,
+            key="dashboard_upload",
+            help="The 'MCTV - Network Dashboard' Excel file with Traffic, Dwell Time, and Impressions columns.",
+        )
+
+    # Load dashboard: per-report upload takes priority, then stored JSON
     dashboard_lookup = {}
     if dashboard_file:
         try:
-            dashboard_lookup = parse_network_dashboard(dashboard_file)
-            st.success(f"Dashboard loaded: {len(dashboard_lookup)} venues with impression data")
+            result = save_dashboard(dashboard_file)
+            if result["success"]:
+                dashboard_lookup = load_dashboard()
+                st.success(
+                    f"Dashboard updated and saved: {result['venue_count']} venues"
+                )
+            else:
+                st.error(f"Error: {result.get('error', 'Unknown error')}")
         except Exception as e:
             st.error(f"Error parsing dashboard: {e}")
+    elif db_status["loaded"]:
+        dashboard_lookup = load_dashboard()
 
     if uploaded_files:
         all_records = []

@@ -995,10 +995,23 @@ class DocxService:
             rows: List of row data (each row is a list of strings).
             bold_rows: Bold the first N data rows (top performers).
             totals_row: Optional summary row appended at the bottom.
+
+        Returns:
+            The python-docx Table object (for caller post-processing).
         """
         total_rows = 1 + len(rows) + (1 if totals_row else 0)
-        table = doc.add_table(rows=total_rows, cols=len(headers))
+        num_cols = len(headers)
+        table = doc.add_table(rows=total_rows, cols=num_cols)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # ── Column widths: give first column (venue name) more space ──
+        page_width_in = 6.3  # usable width (Letter minus margins)
+        if num_cols > 1:
+            first_col_width = Inches(page_width_in * 0.28)
+            other_col_width = Inches((page_width_in * 0.72) / (num_cols - 1))
+            for tbl_row in table.rows:
+                for idx, cell in enumerate(tbl_row.cells):
+                    cell.width = first_col_width if idx == 0 else other_col_width
 
         # Header row
         for i, header in enumerate(headers):
@@ -1056,6 +1069,20 @@ class DocxService:
                     qn("w:val"): "clear",
                 })
                 shading.append(shading_elm)
+
+        # ── Prevent rows from splitting across pages ──
+        for row_idx, tbl_row in enumerate(table.rows):
+            tr = tbl_row._tr
+            trPr = tr.get_or_add_trPr()
+            # cantSplit: keep entire row on one page
+            cant_split = trPr.makeelement(qn("w:cantSplit"), {})
+            trPr.append(cant_split)
+            # tblHeader: repeat header row on continuation pages
+            if row_idx == 0:
+                tbl_header = trPr.makeelement(qn("w:tblHeader"), {})
+                trPr.append(tbl_header)
+
+        return table
 
     def add_team_section(self, doc: Document,
                          closing_text: str = "We look forward to partnering with you.",

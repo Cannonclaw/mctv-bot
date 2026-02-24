@@ -295,6 +295,44 @@ for i, tier in enumerate(config["pricing"]["elite_tiers"]):
 
 st.divider()
 
+# ── NETWORK DASHBOARD ────────────────────────────────────────────────────────
+st.markdown("### Network Dashboard")
+st.caption(
+    "Upload the MCTV Network Dashboard Excel to store venue metadata "
+    "(impressions, dwell time, traffic). This data is used to enrich "
+    "traction reports with CPM and impression columns."
+)
+
+from services.dashboard_service import get_dashboard_status, save_dashboard
+
+_db_status = get_dashboard_status()
+if _db_status["loaded"]:
+    _updated = _db_status["updated_at"][:10] if _db_status["updated_at"] else "Unknown"
+    st.success(
+        f"Dashboard loaded: **{_db_status['venue_count']} venues** "
+        f"(updated {_updated})"
+    )
+else:
+    st.warning("No network dashboard stored yet.")
+
+_settings_db_file = st.file_uploader(
+    "Upload / Replace Dashboard (.xlsx)",
+    type=["xlsx", "xls"],
+    key="settings_dashboard_upload",
+)
+
+if _settings_db_file:
+    if st.button("Update Dashboard", type="primary", key="settings_db_update"):
+        with st.spinner("Processing dashboard..."):
+            _result = save_dashboard(_settings_db_file)
+        if _result["success"]:
+            st.success(f"Dashboard saved: {_result['venue_count']} venues")
+            st.rerun()
+        else:
+            st.error(f"Error: {_result.get('error', 'Unknown error')}")
+
+st.divider()
+
 # ── SAVE ALL ──────────────────────────────────────────────────────────────────
 if st.button("Save All Settings", type="primary", use_container_width=True):
     config["company"]["name"] = company_name
