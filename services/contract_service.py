@@ -25,6 +25,9 @@ from services.portal_service import get_client, log_activity
 _TYPE_TO_DB = {
     "advertiser": "advertising",
     "host": "host_media_kit",
+    # Host Advertising stores as 'advertising' in DB (constraint compatible).
+    # Distinguished by tier_name starting with "Host Discount".
+    "host_advertising": "advertising",
     # DB values pass through unchanged
     "advertising": "advertising",
     "host_media_kit": "host_media_kit",
@@ -54,6 +57,11 @@ def _normalize_contract(row: dict) -> dict:
     """Translate contract_type from DB value back to UI-friendly value."""
     if row and "contract_type" in row:
         row["contract_type"] = _from_db_type(row["contract_type"])
+        # Detect host advertising: stored as 'advertising' but tier_name
+        # starts with "Host Discount"
+        if (row["contract_type"] == "advertiser"
+                and row.get("tier_name", "").startswith("Host Discount")):
+            row["contract_type"] = "host_advertising"
     return row
 
 
@@ -83,7 +91,8 @@ def create_contract(
     if not title:
         client = get_client(client_id)
         bname = client.get("business_name", "Client") if client else "Client"
-        title = f"MCTV {contract_type.title()} Agreement - {bname}"
+        type_label = contract_type.replace("_", " ").title()
+        title = f"MCTV {type_label} Agreement - {bname}"
 
     data = {
         "client_id": client_id,

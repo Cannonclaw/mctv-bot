@@ -137,7 +137,8 @@ with tab_list:
                     st.markdown("**Contract Details**")
                     st.text(f"Title: {title}")
                     st.text(f"Client: {client_name}")
-                    st.text(f"Type: {contract.get('contract_type', 'advertiser').title()}")
+                    ctype_display = contract.get('contract_type', 'advertiser').replace('_', ' ').title()
+                    st.text(f"Type: {ctype_display}")
                     st.text(f"Tier: {tier or 'Custom'}")
                     st.text(f"Screens: {screens}")
                     st.text(f"Monthly Rate: ${rate:,.2f}")
@@ -309,6 +310,9 @@ with tab_create:
         for c in clients
     }
 
+    # Load host benefit config for free screen count
+    host_free_screens = config.get("pricing", {}).get("host_free_outside_screens", 10)
+
     with st.form("new_contract_form"):
         # Client selection
         selected_client_label = st.selectbox(
@@ -322,7 +326,8 @@ with tab_create:
         with fc1:
             contract_type = st.selectbox(
                 "Contract Type *",
-                ["Advertiser", "Host"],
+                ["Advertiser", "Host", "Host Advertising"],
+                help="**Host Advertising** = hosts who pay a discounted rate for extra screens beyond their free allotment",
             )
         with fc2:
             title = st.text_input(
@@ -330,7 +335,22 @@ with tab_create:
                 placeholder="Auto-generated if blank",
             )
 
-        # Tier selection (advertiser only)
+        # Host Advertising discount slider
+        is_host_ad = (contract_type == "Host Advertising")
+        discount_pct = 0
+        if is_host_ad:
+            st.markdown(
+                f"**Host Advertising Discount** — This host gets "
+                f"**{host_free_screens} free screens** for hosting. "
+                f"Additional screens are billed at a discounted rate."
+            )
+            discount_pct = st.slider(
+                "Discount off standard rate (%)",
+                min_value=0, max_value=50, value=10, step=5,
+                help="10% = host pays 90% of the normal advertiser rate for extra screens",
+            )
+
+        # Tier / package selection
         st.markdown("**Package Details**")
         tier_col1, tier_col2, tier_col3 = st.columns(3)
 
@@ -349,12 +369,17 @@ with tab_create:
                 value=tier_data.get("screens", 10) if tier_data else 10,
             )
 
+        # Calculate rate — apply discount for Host Advertising
+        base_rate = float(tier_data.get("monthly_rate", 350.0)) if tier_data else 350.0
+        default_rate = base_rate * (1 - discount_pct / 100) if is_host_ad else base_rate
+
         with tier_col3:
             monthly_rate = st.number_input(
                 "Monthly Rate ($)",
                 min_value=0.0, max_value=50000.0,
-                value=float(tier_data.get("monthly_rate", 350.0)) if tier_data else 350.0,
+                value=round(default_rate, 2),
                 step=50.0,
+                help=f"{discount_pct}% discount applied" if is_host_ad and discount_pct > 0 else "",
             )
 
         # Term and dates
@@ -400,12 +425,19 @@ with tab_create:
                 end_dt = start_date + timedelta(days=term_months * 30)
                 end_str = end_dt.strftime("%Y-%m-%d")
 
+                # Determine contract type and tier name
+                ct_value = contract_type.lower().replace(" ", "_")
+                if is_host_ad:
+                    tier_label = f"Host Discount {discount_pct}% - {selected_tier if selected_tier != 'Custom' else f'{screen_count} Screens'}"
+                else:
+                    tier_label = selected_tier if selected_tier != "Custom" else f"{screen_count} Screens"
+
                 with st.spinner("Creating contract..."):
                     result = create_contract(
                         client_id=selected_client_id,
-                        contract_type=contract_type.lower(),
+                        contract_type=ct_value,
                         title=title,
-                        tier_name=selected_tier if selected_tier != "Custom" else f"{screen_count} Screens",
+                        tier_name=tier_label,
                         screen_count=screen_count,
                         monthly_rate=monthly_rate,
                         term_months=term_months,

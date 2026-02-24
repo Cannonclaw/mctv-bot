@@ -175,6 +175,100 @@ HOST_CLAUSES = [
 ]
 
 
+HOST_ADVERTISING_CLAUSES = [
+    {
+        "title": "1. Host Advertising Partnership",
+        "body": (
+            "This agreement covers additional advertising screens for an existing "
+            "MCTV Venue Host ('Host Advertiser'). As a current venue host, the Host "
+            "Advertiser receives complimentary advertising on a specified number of "
+            "screens across the MCTV network. This agreement provides advertising on "
+            "additional screens beyond the complimentary allotment at a preferred "
+            "discounted rate, as detailed in the Partnership Details section above."
+        ),
+    },
+    {
+        "title": "2. Complimentary Screens & Additional Screens",
+        "body": (
+            "The Host Advertiser's complimentary screen allotment (earned through "
+            "the venue hosting agreement) remains unchanged by this agreement. The "
+            "additional screens covered by this agreement are billed at the discounted "
+            "monthly rate specified in the Partnership Details. The discount is applied "
+            "as a courtesy to recognize the Host Advertiser's ongoing partnership with "
+            "MCTV as a venue host."
+        ),
+    },
+    {
+        "title": "3. Content Ownership",
+        "body": (
+            "All creative content produced by MCTV for this partnership remains the "
+            "property of the Host Advertiser. The Host Advertiser may use any content "
+            "created by MCTV on social media, websites, print, or any other medium at "
+            "no additional cost. MCTV retains a non-exclusive right to display the "
+            "content on the MCTV network for the duration of this agreement."
+        ),
+    },
+    {
+        "title": "4. Term and Renewal",
+        "body": (
+            "This agreement begins on the Start Date specified above and continues "
+            "for the agreed term. Unless either party provides written notice of "
+            "non-renewal at least 30 days before the end of the current term, this "
+            "agreement will automatically renew for successive periods of equal length "
+            "at the then-current discounted rate."
+        ),
+    },
+    {
+        "title": "5. Payment Terms",
+        "body": (
+            "Invoices are issued monthly on the first business day of each month. "
+            "Payment is due within 30 days of the invoice date. MCTV reserves the "
+            "right to suspend additional ad display (beyond the complimentary allotment) "
+            "for accounts more than 45 days past due. A late fee of 1.5% per month "
+            "may be applied to overdue balances."
+        ),
+    },
+    {
+        "title": "6. Content Guidelines",
+        "body": (
+            "All content must comply with applicable local, state, and federal laws. "
+            "MCTV reserves the right to refuse or remove content that is offensive, "
+            "misleading, or inappropriate for the venue environments in which screens "
+            "are placed. The Host Advertiser will be notified promptly if any content "
+            "is declined and given the opportunity to submit revised creative."
+        ),
+    },
+    {
+        "title": "7. Cancellation",
+        "body": (
+            "Either party may cancel this agreement with 60 days written notice. "
+            "Cancellation of this advertising add-on does not affect the underlying "
+            "venue hosting agreement or the complimentary screen allotment. If the "
+            "Host Advertiser cancels before the end of the agreed term, any prepay "
+            "bonuses or discounts already applied will be prorated and billed."
+        ),
+    },
+    {
+        "title": "8. Liability Limitation",
+        "body": (
+            "MCTV's total liability under this agreement shall not exceed the total "
+            "fees paid by the Host Advertiser in the 12 months preceding the claim. "
+            "MCTV shall not be liable for incidental, consequential, or indirect "
+            "damages. MCTV makes no guarantee of specific business results from "
+            "advertising display."
+        ),
+    },
+    {
+        "title": "9. Governing Law",
+        "body": (
+            "This agreement shall be governed by and construed in accordance with "
+            "the laws of the State of Mississippi. Any disputes arising under this "
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
+        ),
+    },
+]
+
+
 # ── Contract Generator ──────────────────────────────────────────────────────
 
 def _format_date(iso_date: str) -> str:
@@ -249,7 +343,12 @@ class ContractGenerator:
         doc = self.docx_service.create_document()
 
         # Cover page
-        contract_label = "Advertising Partnership Agreement" if contract_type == "advertiser" else "Venue Hosting Agreement"
+        contract_labels = {
+            "advertiser": "Advertising Partnership Agreement",
+            "host": "Venue Hosting Agreement",
+            "host_advertising": "Host Advertising Agreement",
+        }
+        contract_label = contract_labels.get(contract_type, "Partnership Agreement")
         self.docx_service.add_cover_page(
             doc,
             title=contract_label,
@@ -265,7 +364,13 @@ class ContractGenerator:
         # ── Partnership Details section ─────────────────────────────
         self.docx_service.add_section_header(doc, "Partnership Details")
 
-        if contract_type == "advertiser":
+        if contract_type == "host_advertising":
+            self._add_host_advertising_details(
+                doc, business_name, client_name, tier_name, screen_count,
+                monthly_rate, term_months, markets, start_date, end_date,
+                auto_renew,
+            )
+        elif contract_type == "advertiser":
             self._add_advertiser_details(
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
@@ -285,15 +390,20 @@ class ContractGenerator:
         doc.add_page_break()
         self.docx_service.add_section_header(doc, "Terms & Conditions")
 
-        clauses = STANDARD_CLAUSES if contract_type == "advertiser" else HOST_CLAUSES
+        if contract_type == "host_advertising":
+            clauses = HOST_ADVERTISING_CLAUSES
+        elif contract_type == "advertiser":
+            clauses = STANDARD_CLAUSES
+        else:
+            clauses = HOST_CLAUSES
 
         for clause in clauses:
             self.docx_service.add_sub_header(doc, clause["title"])
             self.docx_service.add_body_text(doc, clause["body"])
             self.docx_service.add_body_text(doc, "")  # spacer
 
-        # ── Prepay bonuses (advertiser only) ────────────────────────
-        if contract_type == "advertiser":
+        # ── Prepay bonuses (advertiser / host advertising) ────────────
+        if contract_type in ("advertiser", "host_advertising"):
             pricing = self.config.get("pricing", {})
             contract_terms = pricing.get("contract_terms", {})
             bonus_6 = contract_terms.get("prepay_6mo_bonus", "")
@@ -406,10 +516,66 @@ class ContractGenerator:
             rows=details,
         )
 
+    def _add_host_advertising_details(self, doc, business_name, client_name,
+                                       tier_name, screen_count, monthly_rate,
+                                       term_months, markets, start_date,
+                                       end_date, auto_renew):
+        """Add the host advertising partnership details table."""
+        pricing = self.config.get("pricing", {})
+        free_screens = pricing.get("host_free_outside_screens", 10)
+        total_value = monthly_rate * term_months
+
+        # Parse discount from tier_name (e.g., "Host Discount 10% - 10 Screens")
+        discount_str = "N/A"
+        standard_rate_str = ""
+        if "Host Discount" in tier_name:
+            import re
+            match = re.search(r"(\d+)%", tier_name)
+            if match:
+                pct = int(match.group(1))
+                discount_str = f"{pct}%"
+                if pct > 0:
+                    standard_rate = monthly_rate / (1 - pct / 100)
+                    standard_rate_str = f"${standard_rate:,.2f}"
+
+        details = [
+            ("Host Advertiser", business_name),
+            ("Contact", client_name),
+            ("Complimentary Screens", f"{free_screens} (included with hosting agreement)"),
+            ("Additional Paid Screens", str(screen_count)),
+            ("Total Screens", str(free_screens + screen_count)),
+        ]
+
+        if standard_rate_str:
+            details.append(("Standard Rate", f"{standard_rate_str}/mo"))
+            details.append(("Host Discount", discount_str))
+        details += [
+            ("Discounted Monthly Rate", f"${monthly_rate:,.2f}"),
+            ("Term", f"{term_months} months"),
+            ("Total Contract Value", f"${total_value:,.2f}"),
+            ("Market(s)", ", ".join(markets)),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
+            ("Auto-Renew", "Yes" if auto_renew else "No"),
+            ("Content Creation", "Included at no additional cost"),
+            ("Plays per Hour", "4 per screen"),
+        ]
+
+        self.docx_service.add_data_table(
+            doc,
+            headers=["Detail", "Value"],
+            rows=details,
+        )
+
     def _add_signature_section(self, doc, business_name, client_name,
                                 contract_type):
         """Add the signature and agreement block."""
-        party_label = "Advertiser" if contract_type == "advertiser" else "Venue Host"
+        party_labels = {
+            "advertiser": "Advertiser",
+            "host": "Venue Host",
+            "host_advertising": "Host Advertiser",
+        }
+        party_label = party_labels.get(contract_type, "Advertiser")
 
         agreement_text = (
             f"By signing below, {client_name} on behalf of {business_name} "
