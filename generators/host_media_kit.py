@@ -9,7 +9,7 @@ class HostMediaKitProposal(BaseProposal):
 
     # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "opportunity":    {"source": "page2", "max": 2},
+        "opportunity":    {"source": "page2", "max": 4},
         "_host_package":  {"source": "page4", "max": 6, "cols": 2,
                            "title": "Our Screens in Your Community"},
     }

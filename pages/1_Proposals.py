@@ -75,7 +75,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
         generator_class: The proposal generator class.
         data: Proposal input data.
         client_logo_path: Path to the client logo image.
-        page2_photo_paths: Photos for The Opportunity (page 2), max 2.
+        page2_photo_paths: Photos for The Opportunity (page 2), max 4.
         page4_photo_paths: Photos for Market Coverage (page 4), max 6.
         color_scheme: Color scheme key.
     """
@@ -94,10 +94,10 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
     docx_svc = DocxService(config, color_scheme=color_scheme)
 
     # Store photo paths on the docx service — intentional placement only.
-    # page2 = The Opportunity hero photos (max 2)
+    # page2 = The Opportunity hero photos (max 4)
     # page4 = Market Coverage grid photos (max 6)
     docx_svc.client_logo_path = client_logo_path
-    docx_svc.page2_photo_paths = (page2_photo_paths or [])[:2]   # cap at 2
+    docx_svc.page2_photo_paths = (page2_photo_paths or [])[:4]   # cap at 4
     docx_svc.page4_photo_paths = (page4_photo_paths or [])[:6]   # cap at 6
 
     # Legacy attributes (for backwards compat with other generator types)
@@ -355,23 +355,23 @@ if client_logo_file:
 st.markdown("##### Proposal Photos")
 st.caption(
     "Upload photos and assign each to a page. "
-    "Page 2 (The Opportunity) holds up to 2 hero photos. "
-    "Page 4 (Market Coverage) holds up to 6 in a grid."
+    "Page 2 (The Opportunity) holds up to 4 photos (1=centered, 2=side-by-side, 3=2+1, 4=2×2 grid). "
+    "Page 4 (Market Coverage) holds up to 6 in a 2×3 grid."
 )
 
 page2_photos = st.file_uploader(
-    "The Opportunity photos (page 2) — up to 2 hero showcase photos",
+    "The Opportunity photos (page 2) — up to 4 hero showcase photos",
     type=["png", "jpg", "jpeg", "webp"],
     accept_multiple_files=True,
     key="page2_photos",
-    help="These appear side-by-side on page 2 as the hero showcase of the client's work.",
+    help="These appear on page 2 as the hero showcase of the client's work. 1=centered, 2=side-by-side, 3=2+1, 4=2×2 grid.",
 )
 if page2_photos:
     cols = st.columns(min(len(page2_photos), 4))
     for i, photo in enumerate(page2_photos):
         cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
-    if len(page2_photos) > 2:
-        st.warning(f"Page 2 supports up to 2 photos. Only the first 2 of {len(page2_photos)} will be used.")
+    if len(page2_photos) > 4:
+        st.warning(f"Page 2 supports up to 4 photos. Only the first 4 of {len(page2_photos)} will be used.")
 
 page4_photos = st.file_uploader(
     "Market Coverage photos (page 4) — up to 6 in a grid",
@@ -392,9 +392,9 @@ _total_pg2 = len(page2_photos or []) + len(scraped_page2_paths)
 _total_pg4 = len(page4_photos or []) + len(scraped_page4_paths)
 _total_photos = _total_pg2 + _total_pg4
 if _total_photos > 0:
-    st.caption(f"📸 **{_total_photos} photos** selected: {min(_total_pg2, 2)} on page 2, {min(_total_pg4, 6)} on page 4")
+    st.caption(f"📸 **{_total_photos} photos** selected: {min(_total_pg2, 4)} on page 2, {min(_total_pg4, 6)} on page 4")
     if _total_photos > 10:
-        st.warning(f"Maximum 10 photos recommended. {_total_photos - 10} will be excluded.")
+        st.warning(f"Maximum 10 photos recommended. {_total_photos - 10} may be excluded.")
 
 st.divider()
 
@@ -448,7 +448,7 @@ if proposal_type == "Elite Advertiser":
             st.error("Please fill in all required fields (marked with *).")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = ProposalInput(
                 business_name=business_name,
@@ -495,7 +495,7 @@ elif proposal_type == "Host Media Kit":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = HostInput(
                 venue_name=venue_name,
@@ -555,7 +555,7 @@ elif proposal_type == "Multi-Brand Bundle":
             st.error("Please fill in the owner name and at least the first business.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = BundleInput(
                 owner_name=owner_name,
@@ -603,7 +603,7 @@ elif proposal_type == "Venue Partner / Revenue Share":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = VenuePartnerInput(
                 venue_name=venue_name,
@@ -655,7 +655,7 @@ elif proposal_type == "Category Exclusivity":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = ExclusivityInput(
                 business_name=business_name,
@@ -702,7 +702,7 @@ elif proposal_type == "Renewal / Upgrade":
             st.error("Please fill in all required fields.")
         else:
             logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
-            pg2_paths = _save_uploaded_files(page2_photos)[:2] + scraped_page2_paths
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
             pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
             data = RenewalInput(
                 business_name=business_name,

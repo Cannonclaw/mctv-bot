@@ -123,6 +123,145 @@ def format_duration(seconds: int) -> str:
     return f"{minutes}m"
 
 
+def parse_network_dashboard(file_path) -> dict:
+    """Parse the MCTV Network Dashboard Excel file.
+
+    Returns a dict mapping host_name (lowercase) -> {
+        host_name, category, general_category, address,
+        license_count, traffic, dwell_time, impressions
+    }
+
+    The dashboard has per-venue data including monthly foot traffic estimates,
+    average dwell time (minutes), and estimated monthly impressions.
+    Formula: Impressions = Traffic × Dwell Time × License Count / 15
+
+    file_path can be a string path or a file-like object (from Streamlit uploader).
+    """
+    if hasattr(file_path, "read"):
+        wb = openpyxl.load_workbook(file_path, data_only=True)
+    else:
+        wb = openpyxl.load_workbook(str(file_path), data_only=True)
+
+    # Use the "All MCTV Hosts" sheet if available, else first sheet
+    if "All MCTV Hosts" in wb.sheetnames:
+        ws = wb["All MCTV Hosts"]
+    else:
+        ws = wb.active
+
+    # Find header row and build column map
+    col_map = {}
+    header_row = 1
+    for c in range(1, min((ws.max_column or 10) + 1, 30)):
+        hdr = str(ws.cell(1, c).value or "").strip().lower()
+        if not hdr:
+            continue
+        if hdr in ("host name", "host"):
+            col_map["host"] = c
+        elif hdr == "category":
+            col_map["category"] = c
+        elif "general" in hdr and "category" in hdr:
+            col_map["general_category"] = c
+        elif hdr == "address":
+            col_map["address"] = c
+        elif "license" in hdr or "screen" in hdr:
+            col_map["licenses"] = c
+        elif "traffic" in hdr:
+            col_map["traffic"] = c
+        elif "dwell" in hdr:
+            col_map["dwell"] = c
+        elif "impression" in hdr:
+            col_map["impressions"] = c
+        elif hdr in ("dealer name", "dealer"):
+            col_map["dealer"] = c
+
+    if "host" not in col_map:
+        return {}
+
+    lookup = {}
+    for r in range(header_row + 1, (ws.max_row or 0) + 1):
+        host = str(ws.cell(r, col_map["host"]).value or "").strip()
+        if not host:
+            continue
+        # Skip summary rows
+        if host.lower() in ("sum", "ave", "total", "average"):
+            continue
+
+        def _float(col_key):
+            if col_key not in col_map:
+                return 0.0
+            val = ws.cell(r, col_map[col_key]).value
+            try:
+                return float(val) if val else 0.0
+            except (ValueError, TypeError):
+                return 0.0
+
+        def _int(col_key):
+            if col_key not in col_map:
+                return 1
+            val = ws.cell(r, col_map[col_key]).value
+            try:
+                return int(val) if val else 1
+            except (ValueError, TypeError):
+                return 1
+
+        def _str(col_key):
+            if col_key not in col_map:
+                return ""
+            return str(ws.cell(r, col_map[col_key]).value or "").strip()
+
+        entry = {
+            "host_name": host,
+            "category": _str("category"),
+            "general_category": _str("general_category"),
+            "address": _str("address"),
+            "license_count": _int("licenses"),
+            "traffic": _float("traffic"),
+            "dwell_time": _float("dwell"),
+            "impressions": _float("impressions"),
+        }
+
+        lookup[host.lower()] = entry
+
+    return lookup
+
+
+def enrich_report_with_dashboard(data, dashboard_lookup: dict):
+    """Enrich a TractionReportInput with data from the Network Dashboard.
+
+    Matches venue records by host name and populates:
+      - monthly_traffic, dwell_time_minutes, monthly_impressions, screen_count, address
+    Also computes totals on the report data object.
+    """
+    if not dashboard_lookup:
+        return
+
+    total_impressions = 0.0
+    total_traffic = 0.0
+    dwell_sum = 0.0
+    dwell_count = 0
+
+    for venue in data.venue_records:
+        key = venue.host_name.lower()
+        entry = dashboard_lookup.get(key)
+        if entry:
+            venue.monthly_traffic = entry["traffic"]
+            venue.dwell_time_minutes = entry["dwell_time"]
+            venue.monthly_impressions = entry["impressions"]
+            venue.screen_count = entry["license_count"]
+            if not venue.address:
+                venue.address = entry["address"]
+            total_impressions += entry["impressions"]
+            total_traffic += entry["traffic"]
+            if entry["dwell_time"] > 0:
+                dwell_sum += entry["dwell_time"]
+                dwell_count += 1
+
+    data.total_impressions = total_impressions
+    data.total_monthly_traffic = total_traffic
+    if dwell_count > 0:
+        data.avg_dwell_time = round(dwell_sum / dwell_count, 1)
+
+
 def detect_format(wb: openpyxl.Workbook) -> str:
     """Auto-detect which NTV360 export format this workbook uses.
 

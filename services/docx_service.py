@@ -622,34 +622,100 @@ class DocxService:
 
     def add_inline_photos(self, doc: Document, photo_paths: list,
                           max_width: float = 2.0, cols: int = 2):
-        """Add 1-2 photos inline within a section (no title, compact).
+        """Add 1-4 photos inline within a section (no title, compact).
 
-        Single photo: centered at 2.5 inches (compact, not dominant).
-        Multiple photos: side-by-side at max_width each.
+        Responsive layouts based on photo count:
+          1 photo:  Single centered image, ~70% page width (3.0in)
+          2 photos: Side-by-side, each ~48% page width (2.8in)
+          3 photos: Top row 2 side-by-side + bottom row 1 centered
+          4 photos: 2×2 grid
+
         Photos should complement the text, not dominate the page.
         """
         photo_paths = [p for p in (photo_paths or []) if Path(p).exists()]
         if not photo_paths:
             return
 
-        # Single photo: centered, moderate size
-        if len(photo_paths) == 1:
+        count = len(photo_paths)
+
+        # Single photo: centered, generous size
+        if count == 1:
             p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_before = Pt(4)
+            p.space_after = Pt(4)
+            try:
+                run = p.add_run()
+                run.add_picture(photo_paths[0], width=Inches(3.0))
+            except Exception:
+                pass
+            return
+
+        # 2 photos: side-by-side
+        if count == 2:
+            table = doc.add_table(rows=1, cols=2)
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            for i in range(2):
+                cell = table.rows[0].cells[i]
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(2)
+                p.space_after = Pt(2)
+                try:
+                    run = p.add_run()
+                    run.add_picture(photo_paths[i], width=Inches(2.8))
+                except Exception:
+                    run = p.add_run("[Image]")
+                    run.font.size = Pt(9)
+                    run.font.color.rgb = self.c["gray"]
+            self._remove_table_borders(table)
+            return
+
+        # 3 photos: top row 2 side-by-side + bottom row 1 centered
+        if count == 3:
+            # Top row: 2 side-by-side
+            table = doc.add_table(rows=2, cols=2)
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            for i in range(2):
+                cell = table.rows[0].cells[i]
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.space_before = Pt(2)
+                p.space_after = Pt(2)
+                try:
+                    run = p.add_run()
+                    run.add_picture(photo_paths[i], width=Inches(2.8))
+                except Exception:
+                    run = p.add_run("[Image]")
+                    run.font.size = Pt(9)
+                    run.font.color.rgb = self.c["gray"]
+            # Bottom row: merge cells and center one photo
+            bottom_cell = table.rows[1].cells[0]
+            bottom_cell.merge(table.rows[1].cells[1])
+            p = bottom_cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.space_before = Pt(2)
             p.space_after = Pt(2)
             try:
                 run = p.add_run()
-                run.add_picture(photo_paths[0], width=Inches(2.0))
+                run.add_picture(photo_paths[2], width=Inches(3.0))
             except Exception:
-                pass
+                run = p.add_run("[Image]")
+                run.font.size = Pt(9)
+                run.font.color.rgb = self.c["gray"]
+            self._remove_table_borders(table)
             return
 
-        # Multiple photos: side-by-side grid
-        table = doc.add_table(rows=1, cols=min(len(photo_paths), cols))
+        # 4+ photos: 2×2 grid (cap at 4)
+        photos = photo_paths[:4]
+        table = doc.add_table(rows=2, cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        for i, photo_path in enumerate(photo_paths[:cols]):
-            cell = table.rows[0].cells[i]
+        for i, photo_path in enumerate(photos):
+            row_idx = i // 2
+            col_idx = i % 2
+            cell = table.rows[row_idx].cells[col_idx]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -657,12 +723,11 @@ class DocxService:
             p.space_after = Pt(2)
             try:
                 run = p.add_run()
-                run.add_picture(photo_path, width=Inches(max_width))
+                run.add_picture(photo_path, width=Inches(2.8))
             except Exception:
                 run = p.add_run("[Image]")
                 run.font.size = Pt(9)
                 run.font.color.rgb = self.c["gray"]
-
         self._remove_table_borders(table)
 
     def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
@@ -1122,9 +1187,12 @@ class DocxService:
                 run.font.color.rgb = self.c["accent"]
                 run.font.name = "Calibri"
 
-            # Logo
-            logo_name = self.c.get("cover_logo", "mctv_logo_on_navy.png")
-            mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
+            # Logo — use white-on-transparent for dark mode (seamless on navy bg),
+            # fall back to scheme cover logo, then generic logo as last resort.
+            mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo_white.png"
+            if not mctv_logo.exists():
+                logo_name = self.c.get("cover_logo", "mctv_logo_on_navy.png")
+                mctv_logo = PROJECT_ROOT / "assets" / "branding" / logo_name
             if not mctv_logo.exists():
                 mctv_logo = PROJECT_ROOT / "assets" / "branding" / "mctv_logo.png"
             if mctv_logo.exists():

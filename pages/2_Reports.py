@@ -12,7 +12,7 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 from services.config_service import load_config, get_team_names
 from services.claude_service import ClaudeService
 from services.docx_service import DocxService
-from services.excel_parser import parse_excel, aggregate_by_host, build_report_data, format_duration, format_date_range
+from services.excel_parser import parse_excel, aggregate_by_host, build_report_data, format_duration, format_date_range, parse_network_dashboard, enrich_report_with_dashboard
 from services.pdf_service import convert_docx_to_pdf, is_pdf_available
 from models.report_data import TractionReportInput, VenueRecord
 from generators.advertiser_report import AdvertiserReportGenerator
@@ -166,6 +166,30 @@ with tab_upload:
         help="Supports all NTV360 export formats (content reports, per-content reports, pre-formatted traction reports)",
     )
 
+    # Network Dashboard upload (optional — enriches report with impressions, dwell, traffic)
+    st.markdown("##### Network Dashboard *(optional)*")
+    st.caption(
+        "Upload the MCTV Network Dashboard Excel for impression counts, "
+        "dwell times, and foot traffic data. This adds Impressions and CPM "
+        "columns to the venue table."
+    )
+    dashboard_file = st.file_uploader(
+        "Network Dashboard (.xlsx)",
+        type=["xlsx", "xls"],
+        accept_multiple_files=False,
+        key="dashboard_upload",
+        help="The 'MCTV - Network Dashboard' Excel file with Traffic, Dwell Time, and Impressions columns.",
+    )
+
+    # Parse dashboard if provided
+    dashboard_lookup = {}
+    if dashboard_file:
+        try:
+            dashboard_lookup = parse_network_dashboard(dashboard_file)
+            st.success(f"Dashboard loaded: {len(dashboard_lookup)} venues with impression data")
+        except Exception as e:
+            st.error(f"Error parsing dashboard: {e}")
+
     if uploaded_files:
         all_records = []
         for uploaded_file in uploaded_files:
@@ -183,10 +207,20 @@ with tab_upload:
             total_hosts = preview_data.total_screen_count
 
             st.markdown("#### Data Summary")
-            mc1, mc2, mc3 = st.columns(3)
+            mc1, mc2, mc3, mc4 = st.columns(4)
             mc1.metric("Total Play Records", f"{len(all_records):,}")
             mc2.metric("Unique Venues", f"{total_hosts}")
             mc3.metric("Total Ad Plays", f"{total_plays:,}")
+
+            # Show dashboard match rate if dashboard is loaded
+            if dashboard_lookup:
+                matched = sum(
+                    1 for v in preview_data.venue_records
+                    if v.host_name.lower() in dashboard_lookup
+                )
+                mc4.metric("Dashboard Matches", f"{matched}/{total_hosts}")
+            else:
+                mc4.metric("Dashboard", "Not loaded")
 
             # Show content names found
             content_names = set()
@@ -234,6 +268,15 @@ with tab_upload:
                             else "Install LibreOffice to enable PDF."),
                 )
 
+            # Monthly rate (for CPM calculation) — only show if dashboard is loaded
+            monthly_rate = 0.0
+            if dashboard_lookup:
+                monthly_rate = st.number_input(
+                    "Advertiser Monthly Rate ($)",
+                    min_value=0.0, value=0.0, step=50.0,
+                    help="Enter the advertiser's monthly ad spend to calculate CPM (Cost Per Thousand Impressions) by venue. Leave at $0 to skip CPM.",
+                )
+
             if st.button("Generate Report", type="primary", use_container_width=True):
                 if not advertiser_name:
                     st.error("Please enter the advertiser/venue name.")
@@ -241,7 +284,13 @@ with tab_upload:
                     report_data = build_report_data(all_records, advertiser_name, campaign_period)
                     report_data.include_insights = include_insights
                     report_data.sales_rep = sales_rep
+                    report_data.monthly_rate = monthly_rate
                     report_data.report_type = "advertiser" if report_type == "Advertiser Traction Report" else "venue"
+
+                    # Enrich with dashboard data (impressions, dwell, traffic)
+                    if dashboard_lookup:
+                        enrich_report_with_dashboard(report_data, dashboard_lookup)
+
                     _generate_report(report_data, output_format=output_format)
 
 

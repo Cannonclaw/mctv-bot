@@ -76,8 +76,12 @@ class AdvertiserReportGenerator:
             progress_callback("Building venue breakdown", current_step, total_steps)
 
         # --- Step 5: Category breakdown (always present now with classify_venue) ---
+        # Page break so both summary tables (category + market) start on a fresh
+        # page together, avoiding the awkward split where the venue data TOTAL row
+        # ends mid-page and the category table gets orphaned across two pages.
         categories = self._build_category_breakdown(data)
         if categories:
+            doc.add_page_break()
             self._add_category_table(doc, categories, data)
             current_step += 1
             if progress_callback:
@@ -228,7 +232,11 @@ class AdvertiserReportGenerator:
         metrics_row1[str(data.total_screen_count)] = "Active\nVenues"
         if data.total_air_time:
             metrics_row1[data.total_air_time] = "Total\nScreen Time"
-        metrics_row1[f"{avg_plays:,}"] = "Avg Plays\nPer Venue"
+        # Show impressions if available from dashboard, otherwise avg plays
+        if data.total_impressions > 0:
+            metrics_row1[self._format_large_number(data.total_impressions)] = "Est. Monthly\nImpressions"
+        else:
+            metrics_row1[f"{avg_plays:,}"] = "Avg Plays\nPer Venue"
         self.docx.add_metrics_banner(doc, metrics_row1)
 
         # ── KPI Row 2 — Contextual metrics ──
@@ -250,7 +258,10 @@ class AdvertiserReportGenerator:
         metrics_row2[markets_str] = "Markets\nCovered"
         if num_categories > 0:
             metrics_row2[str(num_categories)] = "Venue\nCategories"
-        if days_active:
+        # Show avg dwell time if available from dashboard, otherwise days active
+        if data.avg_dwell_time > 0:
+            metrics_row2[f"{data.avg_dwell_time:.0f} min"] = "Avg Dwell\nTime"
+        elif days_active:
             metrics_row2[str(days_active)] = "Days\nActive"
         if metrics_row2:
             self.docx.add_metrics_banner(doc, metrics_row2)
@@ -280,15 +291,28 @@ class AdvertiserReportGenerator:
             self.docx.add_body_text(doc, "No venue data available for this report period.")
             return
 
-        self.docx.add_body_text(
-            doc,
+        # Check if we have dashboard enrichment data (impressions, dwell, traffic)
+        has_impressions = any(v.monthly_impressions > 0 for v in data.venue_records)
+        has_cpm = has_impressions and data.monthly_rate > 0
+
+        intro = (
             f"Your ad played across {len(data.venue_records)} venue locations during "
             f"this campaign period. The table below shows performance at each host, "
             f"sorted by total ad plays."
         )
+        if has_impressions:
+            intro += (
+                f" Impression counts and dwell times are sourced from NTV360 network "
+                f"analytics for each venue."
+            )
+        self.docx.add_body_text(doc, intro)
 
-        # Build table headers and rows — now includes City column
+        # Build table headers and rows — includes impressions/CPM when available
         headers = ["Venue", "City", "Category", "Total Plays", "Air Time", "% of Total"]
+        if has_impressions:
+            headers.append("Impressions")
+        if has_cpm:
+            headers.append("CPM")
 
         sorted_venues = sorted(
             data.venue_records, key=lambda v: v.total_plays, reverse=True
@@ -296,14 +320,30 @@ class AdvertiserReportGenerator:
 
         rows = []
         for venue in sorted_venues:
-            rows.append([
+            row = [
                 venue.host_name,
                 venue.city or "--",
                 venue.business_category or "General",
                 f"{venue.total_plays:,}",
                 venue.total_air_time or "--",
                 f"{venue.pct_of_total:.1f}%",
-            ])
+            ]
+            if has_impressions:
+                if venue.monthly_impressions > 0:
+                    row.append(f"{venue.monthly_impressions:,.0f}")
+                else:
+                    row.append("--")
+            if has_cpm:
+                if venue.monthly_impressions > 0:
+                    # CPM = (venue's share of cost / impressions) × 1000
+                    # Allocate cost by share of total impressions
+                    venue_share = venue.monthly_impressions / data.total_impressions if data.total_impressions > 0 else 0
+                    venue_cost = data.monthly_rate * venue_share
+                    cpm = (venue_cost / venue.monthly_impressions) * 1000 if venue.monthly_impressions > 0 else 0
+                    row.append(f"${cpm:.2f}")
+                else:
+                    row.append("--")
+            rows.append(row)
 
         # Totals row
         total_seconds = sum(
@@ -315,6 +355,12 @@ class AdvertiserReportGenerator:
             format_duration(total_seconds),
             "100.0%",
         ]
+        if has_impressions:
+            totals_row.append(f"{data.total_impressions:,.0f}")
+        if has_cpm:
+            # Network-wide CPM
+            net_cpm = (data.monthly_rate / data.total_impressions) * 1000 if data.total_impressions > 0 else 0
+            totals_row.append(f"${net_cpm:.2f}")
 
         self.docx.add_data_table(doc, headers, rows,
                                  bold_rows=3, totals_row=totals_row)
@@ -818,6 +864,11 @@ class AdvertiserReportGenerator:
             prompt += f"  - Est. Monthly Impressions: {self._format_large_number(data.total_impressions)}\n"
         if data.avg_dwell_time and data.avg_dwell_time > 0:
             prompt += f"  - Avg. Dwell Time: {data.avg_dwell_time:.0f} minutes\n"
+        if data.total_monthly_traffic and data.total_monthly_traffic > 0:
+            prompt += f"  - Total Monthly Foot Traffic: {self._format_large_number(data.total_monthly_traffic)}\n"
+        if data.monthly_rate and data.monthly_rate > 0 and data.total_impressions > 0:
+            cpm = (data.monthly_rate / data.total_impressions) * 1000
+            prompt += f"  - Network CPM: ${cpm:.2f}\n"
 
         prompt += f"\nTop 5 Venues by Ad Plays:\n{venue_summary}\n"
 

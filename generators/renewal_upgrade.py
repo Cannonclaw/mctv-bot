@@ -11,7 +11,7 @@ class RenewalUpgradeProposal(BaseProposal):
 
     # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "results_summary":  {"source": "page2", "max": 2},
+        "results_summary":  {"source": "page2", "max": 4},
         "_results_table":   {"source": "page4", "max": 6, "cols": 2,
                              "title": "Our Screens in Your Community"},
     }

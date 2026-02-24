@@ -52,6 +52,7 @@ class TractionReportInput:
     total_impressions: float = 0.0
     avg_dwell_time: float = 0.0
     total_monthly_traffic: float = 0.0
+    monthly_rate: float = 0.0  # advertiser's monthly cost (for CPM calculation)
     sales_rep: str = "Mary Michael Cannon"
     include_insights: bool = False
     additional_notes: str = ""

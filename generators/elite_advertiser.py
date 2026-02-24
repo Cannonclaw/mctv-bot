@@ -8,11 +8,11 @@ class EliteAdvertiserProposal(BaseProposal):
     """Generates the flagship 5-6 page advertiser proposal."""
 
     # Intentional photo placement — every photo has a specific page.
-    # page2 = The Opportunity (max 2 hero photos, side-by-side)
+    # page2 = The Opportunity (max 4 hero photos, responsive grid)
     # page4 = Market Coverage (max 6 in a 2×3 grid with captions)
     # No "scattered" behavior — photos only appear where assigned.
     PHOTO_DISTRIBUTION = {
-        "opportunity_hook": {"source": "page2", "max": 2},
+        "opportunity_hook": {"source": "page2", "max": 4},
         "market_coverage":  {"source": "page4", "max": 6, "cols": 2,
                              "title": "Our Screens in Your Community"},
     }

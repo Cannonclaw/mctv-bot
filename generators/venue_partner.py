@@ -14,7 +14,7 @@ class VenuePartnerProposal(BaseProposal):
 
     # Intentional photo placement — no scattered behavior.
     PHOTO_DISTRIBUTION = {
-        "opportunity":        {"source": "page2", "max": 2},
+        "opportunity":        {"source": "page2", "max": 4},
         "what_mctv_provides": {"source": "page4", "max": 6, "cols": 2,
                                "title": "Our Screens in Your Community"},
     }
