@@ -164,17 +164,18 @@ with tab_list:
                 st.divider()
 
                 # ── Action buttons ──────────────────────────────────────
-                action_cols = st.columns(5)
+                action_cols = st.columns(6)
 
                 with action_cols[0]:
-                    # Generate document (draft only, or regenerate)
+                    # Generate / regenerate document (draft only)
                     if cstatus == "draft":
-                        if st.button("Generate PDF", key=f"gen_{cid}",
+                        gen_label = "Regenerate Doc" if has_doc else "Generate Doc"
+                        if st.button(gen_label, key=f"gen_{cid}",
                                      use_container_width=True, type="primary"):
                             with st.spinner("Generating contract document..."):
                                 result = generate_contract_document(cid, config)
                                 if result:
-                                    st.success("Contract PDF generated.")
+                                    st.success("Contract document generated!")
                                     st.rerun()
                                 else:
                                     st.error("Failed to generate contract. Check logs.")
@@ -194,7 +195,7 @@ with tab_list:
                     elif cstatus == "draft" and not has_doc:
                         st.button("Send to Client", key=f"send_{cid}",
                                   use_container_width=True, disabled=True,
-                                  help="Generate the PDF first")
+                                  help="Generate the document first")
 
                 with action_cols[2]:
                     # Activate (signed contracts only)
@@ -206,35 +207,44 @@ with tab_list:
                                 st.success("Contract activated.")
                                 st.rerun()
 
+                # Download — check for local PDF and DOCX files
+                doc_url = contract.get("document_url", "")
+                local_docx = Path(doc_url) if doc_url else None
+                local_pdf = local_docx.with_suffix(".pdf") if local_docx else None
+
                 with action_cols[3]:
-                    # Download document
-                    if has_doc:
-                        doc_url = contract.get("document_url", "")
-                        # Check if it's a local file path (starts with drive letter, / or output)
-                        is_local = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
-                        local_path = Path(doc_url) if is_local else None
-                        if local_path and local_path.exists():
-                            with open(local_path, "rb") as f:
-                                st.download_button(
-                                    "Download",
-                                    data=f.read(),
-                                    file_name=local_path.name,
-                                    key=f"dl_{cid}",
-                                    use_container_width=True,
-                                )
-                        else:
-                            # Get signed URL from Supabase Storage
-                            url = get_contract_download_url(cid)
-                            if url:
-                                st.link_button(
-                                    "Download",
-                                    url=url,
-                                    use_container_width=True,
-                                )
-                            else:
-                                st.caption("Unavailable")
+                    # PDF download (preferred)
+                    if local_pdf and local_pdf.exists():
+                        with open(local_pdf, "rb") as f:
+                            st.download_button(
+                                "\U0001F4C4 PDF",
+                                data=f.read(),
+                                file_name=local_pdf.name,
+                                mime="application/pdf",
+                                key=f"dl_pdf_{cid}",
+                                use_container_width=True,
+                            )
+                    elif has_doc and not (local_docx and local_docx.exists()):
+                        # Try Supabase Storage signed URL
+                        url = get_contract_download_url(cid)
+                        if url:
+                            st.link_button("\U0001F4C4 Download", url=url,
+                                           use_container_width=True)
 
                 with action_cols[4]:
+                    # DOCX download (always available if doc exists)
+                    if local_docx and local_docx.exists():
+                        with open(local_docx, "rb") as f:
+                            st.download_button(
+                                "\U0001F4DD Word",
+                                data=f.read(),
+                                file_name=local_docx.name,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_docx_{cid}",
+                                use_container_width=True,
+                            )
+
+                with action_cols[5]:
                     # Cancel / Delete
                     if cstatus in ("draft", "sent", "viewed"):
                         if st.button("Cancel", key=f"cancel_{cid}",
@@ -407,23 +417,28 @@ with tab_create:
                     )
 
                     if result:
-                        st.success(f"Contract created for **{selected_client_label}**.")
-
-                        # Offer to generate PDF immediately
                         contract_id = result.get("id", "")
+
+                        # Auto-generate the document immediately
                         if contract_id:
-                            st.info("Now generate the branded PDF document.")
-                            if st.button("Generate PDF Now", key="gen_new_pdf",
-                                         type="primary"):
-                                with st.spinner("Generating contract document..."):
-                                    doc_result = generate_contract_document(
-                                        contract_id, config
-                                    )
-                                    if doc_result:
-                                        st.success("Contract PDF generated. Find it in the All Contracts tab.")
-                                        st.rerun()
-                                    else:
-                                        st.error("Failed to generate PDF. You can try again from the All Contracts tab.")
+                            doc_result = generate_contract_document(
+                                contract_id, config
+                            )
+                            if doc_result:
+                                st.success(
+                                    f"Contract created for **{selected_client_label}** "
+                                    f"and document generated! Go to the **All Contracts** "
+                                    f"tab to download the PDF and Word file."
+                                )
+                            else:
+                                st.success(f"Contract created for **{selected_client_label}**.")
+                                st.warning(
+                                    "Document generation failed. You can try again "
+                                    "from the All Contracts tab."
+                                )
+                        else:
+                            st.success(f"Contract created for **{selected_client_label}**.")
+
                         st.balloons()
                     else:
                         st.error("Failed to create contract. Check logs for details.")

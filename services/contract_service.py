@@ -160,9 +160,13 @@ def delete_contract(contract_id: str) -> bool:
 # ── Contract Lifecycle ──────────────────────────────────────────────────────
 
 def generate_contract_document(contract_id: str, config: dict | None = None) -> dict | None:
-    """Generate the contract PDF and upload to Supabase Storage.
+    """Generate the contract document (DOCX + PDF) and store paths.
 
-    Returns updated contract dict with document_url, or None on failure.
+    Saves the local DOCX path as document_url (always reliable) and the
+    local PDF path as pdf_url when conversion succeeds.
+    Also attempts to upload to Supabase Storage as a cloud backup.
+
+    Returns updated contract dict, or None on failure.
     """
     contract = get_contract(contract_id)
     if not contract:
@@ -193,27 +197,32 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         notes="",
     )
 
-    # Upload to Supabase Storage — prefer PDF, fall back to docx
-    if pdf_path and pdf_path.exists():
-        upload_path = pdf_path
-        storage_path = f"{client.get('id', 'unknown')}/{pdf_path.name}"
-        uploaded = upload_from_path(BUCKET_CONTRACTS, storage_path, str(pdf_path))
-    else:
-        # Use pre-captured docx bytes (avoids file-lock issues from PDF conversion)
-        upload_path = docx_path
-        storage_path = f"{client.get('id', 'unknown')}/{docx_path.name}"
-        uploaded = upload_file(
-            BUCKET_CONTRACTS, storage_path, docx_bytes,
-            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
+    print(f"[contract_service] DOCX generated: {docx_path}")
+    print(f"[contract_service] PDF generated: {pdf_path}")
 
-    if not uploaded:
-        print(f"[contract_service] Failed to upload contract to storage")
-        # Still save the local path as fallback
-        storage_path = str(upload_path)
+    # Store the local DOCX path as the document_url.
+    # The UI layer will also check for a .pdf sibling file for download.
+    local_docx = str(docx_path.resolve())
+    update_data = {"document_url": local_docx}
 
-    # Update contract record with document URL
-    update_data = {"document_url": storage_path}
+    # Also try uploading to Supabase Storage as cloud backup (non-blocking)
+    try:
+        preferred = pdf_path if (pdf_path and pdf_path.exists()) else docx_path
+        storage_path = f"{client.get('id', 'unknown')}/{preferred.name}"
+        if preferred.suffix == ".pdf":
+            uploaded = upload_from_path(BUCKET_CONTRACTS, storage_path, str(preferred))
+        else:
+            uploaded = upload_file(
+                BUCKET_CONTRACTS, storage_path, docx_bytes,
+                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        if uploaded:
+            print(f"[contract_service] Uploaded to Supabase Storage: {storage_path}")
+        else:
+            print(f"[contract_service] Supabase Storage upload skipped (non-blocking)")
+    except Exception as e:
+        print(f"[contract_service] Storage upload error (non-blocking): {e}")
+
     updated = update_contract(contract_id, update_data)
 
     log_activity(
@@ -221,7 +230,7 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         action="Contract document generated",
         entity_type="contract",
         entity_id=contract_id,
-        details={"document_url": storage_path},
+        details={"document_url": local_docx},
     )
 
     return updated

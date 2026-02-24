@@ -1463,7 +1463,7 @@ class DocxService:
 
     @staticmethod
     def _convert_to_pdf(docx_path: Path) -> Path | None:
-        """Convert .docx to PDF. Tries LibreOffice (Linux cloud) then docx2pdf (Windows).
+        """Convert .docx to PDF. Tries multiple methods in order.
         Returns the PDF path on success, or None if conversion is unavailable."""
         pdf_path = docx_path.with_suffix(".pdf")
 
@@ -1481,7 +1481,44 @@ class DocxService:
         except Exception:
             pass
 
-        # Method 2: docx2pdf (requires Microsoft Word on Windows)
+        # Method 2: Direct win32com (Windows + MS Word) via temp directory.
+        # Using a temp path avoids COM errors from OneDrive/spaces in paths.
+        try:
+            import win32com.client
+            import pythoncom
+            import tempfile
+
+            pythoncom.CoInitialize()
+            tmp_dir = Path(tempfile.mkdtemp(prefix="mctv_pdf_"))
+            tmp_docx = tmp_dir / "contract.docx"
+            tmp_pdf = tmp_dir / "contract.pdf"
+
+            shutil.copy2(docx_path, tmp_docx)
+
+            word = win32com.client.DispatchEx("Word.Application")
+            word.Visible = False
+            word.DisplayAlerts = False
+            try:
+                doc = word.Documents.Open(str(tmp_docx), ReadOnly=True)
+                doc.SaveAs2(str(tmp_pdf), FileFormat=17)  # 17 = wdFormatPDF
+                doc.Close(False)
+            finally:
+                word.Quit()
+                pythoncom.CoUninitialize()
+
+            if tmp_pdf.exists():
+                shutil.copy2(tmp_pdf, pdf_path)
+                # Clean up temp files
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                if pdf_path.exists():
+                    print(f"[docx_service] PDF converted via win32com: {pdf_path}")
+                    return pdf_path
+        except ImportError:
+            pass  # win32com not available (Linux)
+        except Exception as e:
+            print(f"[docx_service] win32com PDF conversion failed: {e}")
+
+        # Method 3: docx2pdf fallback (also uses Word COM but different approach)
         try:
             from docx2pdf import convert
             convert(str(docx_path), str(pdf_path))
