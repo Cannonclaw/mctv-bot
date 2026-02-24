@@ -17,6 +17,10 @@ from services.pdf_service import convert_docx_to_pdf, is_pdf_available
 from models.report_data import TractionReportInput, VenueRecord
 from generators.advertiser_report import AdvertiserReportGenerator
 from generators.venue_report import VenueReportGenerator
+from services.supabase_client import is_configured as supabase_configured, insert_row
+from services.portal_service import get_all_clients
+from services.storage_service import upload_from_path, BUCKET_REPORTS
+from services.notification_service import notify_report_shared
 
 st.set_page_config(page_title="Traction Reports - MCTV Bot", page_icon="\U0001F4CA", layout="wide")
 
@@ -28,6 +32,103 @@ st.markdown("## Traction Report Generator")
 st.caption("Generate professional traction and ad performance reports.")
 
 config = load_config()
+
+
+# ── SHARE WITH CLIENT PORTAL ─────────────────────────────────────────────────
+
+def _show_share_with_client(report_path, data: TractionReportInput):
+    """Show a 'Share with Client Portal' section after report generation."""
+    if not supabase_configured():
+        return
+
+    st.divider()
+    st.markdown("#### Share with Client Portal")
+    st.caption("Upload this report to a client's portal so they can view it anytime.")
+
+    clients = get_all_clients()
+    if not clients:
+        st.info("No clients in the system yet. Add clients on the Client Management page.")
+        return
+
+    client_options = {
+        f"{c.get('business_name', 'Unknown')} ({c.get('contact_name', '')})": c
+        for c in clients
+    }
+
+    share_col1, share_col2 = st.columns([3, 1])
+
+    with share_col1:
+        selected_label = st.selectbox(
+            "Share with Client",
+            options=["-- Select a client --"] + list(client_options.keys()),
+            key="share_client_select",
+        )
+
+    with share_col2:
+        st.markdown("")  # spacer
+        if selected_label != "-- Select a client --":
+            if st.button("Share Report", type="primary", use_container_width=True,
+                         key="share_report_btn"):
+                selected_client = client_options.get(selected_label)
+                if selected_client:
+                    _do_share_report(report_path, data, selected_client)
+
+
+def _do_share_report(report_path, data: TractionReportInput, client: dict):
+    """Upload report to storage and create a client_reports record."""
+    client_id = client.get("id", "")
+    bname = client.get("business_name", "")
+
+    with st.spinner("Sharing report with client portal..."):
+        # Upload to Supabase Storage
+        storage_path = f"{client_id}/{report_path.name}"
+        uploaded = upload_from_path(BUCKET_REPORTS, storage_path, str(report_path))
+
+        # Determine report title
+        title = f"{bname} Traction Report"
+        if hasattr(data, "campaign_period") and data.campaign_period:
+            title += f" - {data.campaign_period}"
+        elif hasattr(data, "report_period") and data.report_period:
+            title += f" - {data.report_period}"
+
+        # Get totals from data
+        total_plays = None
+        total_impressions = None
+        total_venues = None
+        if hasattr(data, "venue_records") and data.venue_records:
+            total_venues = len(data.venue_records)
+            total_plays = sum(v.total_plays for v in data.venue_records if hasattr(v, "total_plays"))
+
+        # Create client_reports record
+        report_data = {
+            "client_id": client_id,
+            "report_type": data.report_type if hasattr(data, "report_type") else "advertiser",
+            "title": title,
+            "document_url": storage_path if uploaded else str(report_path),
+        }
+        if hasattr(data, "campaign_period"):
+            report_data["campaign_period"] = data.campaign_period
+        elif hasattr(data, "report_period"):
+            report_data["campaign_period"] = data.report_period
+        if total_plays:
+            report_data["total_plays"] = total_plays
+        if total_impressions:
+            report_data["total_impressions"] = total_impressions
+        if total_venues:
+            report_data["total_venues"] = total_venues
+
+        result = insert_row("client_reports", report_data)
+
+        if result:
+            # Notify client
+            notify_report_shared(
+                client_email=client.get("contact_email", ""),
+                client_name=client.get("contact_name", ""),
+                report_title=title,
+            )
+            st.success(f"Report shared with **{bname}**. They've been notified by email.")
+        else:
+            st.error("Failed to share report. Check logs for details.")
 
 
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
@@ -135,6 +236,9 @@ def _generate_report(data: TractionReportInput, output_format: str = "DOCX"):
                 st.caption("Tip: Copy the text above and paste into your email client.")
             else:
                 st.info("Email generation not available. Set your API key to enable.")
+
+        # ── Share with Client Portal ──
+        _show_share_with_client(report_path, data)
 
     except Exception as e:
         progress_bar.empty()

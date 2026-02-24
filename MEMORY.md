@@ -14,6 +14,11 @@
 - When he says a file name (like "MEMORY.md"), he means "update it" or "create it"
 - Calls me "pup" when he's in a good mood and wants me to keep going
 
+### Important Corrections (DO NOT GET THESE WRONG)
+- **Swayze Hollingsworth is a woman** — use she/her pronouns
+- **MCTV does NOT do revenue sharing** with most venue partners — don't suggest or imply it
+- **Walk through WordPress like user is 12** — step-by-step, no assumed knowledge
+
 ---
 
 ## The Project
@@ -26,7 +31,8 @@
 - **Database:** Supabase REST API (leads/intake) — https://dtapevlfnekzepbtlabj.supabase.co
 - **AI:** Anthropic Claude API (claude-sonnet-4-5-20250929 for proposal content)
 - **Video:** Creatomate API v1 (https://creatomate.com) — template-based video rendering
-- **Auth:** Simple shared password gate (APP_PASSWORD env var)
+- **Auth:** Dual-mode — team password (APP_PASSWORD) for internal tools + Supabase Auth (email/password) for client portal
+- **Portal:** Full client lifecycle platform (contracts, invoices, creative requests, reports) — Supabase Auth + RLS
 
 ### Key Files
 - `services/docx_service.py` — The big one. All Word document formatting, branding, borders, photos.
@@ -36,9 +42,30 @@
 - `generators/multi_brand_bundle.py` — Multi-business bundle (Good Earth was built with this).
 - `config/prompts.json` — Claude prompt templates per proposal type.
 - `config/config.json` — Company info, pricing tiers, team, markets, venues.
-- `services/auth.py` — Login page with MCTV logo.
-- `pages/1_Proposals.py` — Main proposal generation page. Handles photo uploads + default screen photos.
+- `services/auth.py` — Dual-mode auth: team password (APP_PASSWORD) + Supabase Auth (email/password) for client portal.
+- `services/supabase_client.py` — Centralized Supabase client (Auth + Storage + DB REST helpers).
+- `services/portal_service.py` — Client portal CRUD (dashboard data, profile updates, lead conversion, portal invites).
+- `services/contract_service.py` — Contract lifecycle (create, send, sign, track, activate, cancel).
+- `services/invoice_service.py` — Invoice CRUD, AR aging, batch generation, overdue scanning.
+- `services/storage_service.py` — Supabase Storage wrapper (upload, signed URLs, delete).
+- `services/notification_service.py` — Email notifications for all portal events (accounts, contracts, invoices, creative, reports).
+- `generators/contract_generator.py` — Branded contract PDFs using DocxService (advertiser + host clauses).
+- `pages/1_Proposals.py` — Main proposal generation page. Handles photo uploads (up to 4 page-2) + default screen photos.
+- `pages/2_Reports.py` — Traction report generation + "Share with Client" button for portal.
 - `pages/5_Video_Ads.py` — Video ad generator page.
+- `pages/4_Leads.py` — Leads dashboard with "Convert to Client" button.
+- `pages/8_Clients.py` — Internal client management (create, invite to portal, assign rep, status).
+- `pages/9_Contracts.py` — Internal contract management (create, generate PDF, send, track signing).
+- `pages/10_Invoices.py` — Internal invoicing (create, send, mark paid, AR aging, batch tools).
+- `pages/11_Creative.py` — Internal creative request management (review, assign, status, notes).
+- `pages/portal_login.py` — Client portal login (Supabase Auth email/password).
+- `pages/portal_dashboard.py` — Client dashboard (role-aware: advertiser vs host).
+- `pages/portal_contract.py` — Click-to-sign contract page (typed name + "I Agree" + timestamp).
+- `pages/portal_invoices.py` — Client invoice viewer.
+- `pages/portal_creative.py` — Client creative requests (submit photos/logos, track status).
+- `pages/portal_reports.py` — Client traction report viewer.
+- `pages/portal_profile.py` — Client profile editor + password reset.
+- `scripts/setup_portal_schema.sql` — Supabase schema (8 tables + RLS + indexes).
 - `assets/branding/mctv_logo.png` — Dark MCTV logo (RGB, 1920×1080) — for login page, white backgrounds.
 - `assets/branding/mctv_logo_on_navy.png` — White MCTV logo pre-composited on navy (RGB, 934×283) — for cover page.
 - `assets/branding/mctv_logo_white.png` — White MCTV logo with transparency (RGBA, 934×283).
@@ -75,9 +102,11 @@
 
 ### Environment Variables (Render)
 - `ANTHROPIC_API_KEY` — Claude API
-- `APP_PASSWORD` — Login gate password
+- `APP_PASSWORD` — Login gate password (internal tools)
 - `CREATOMATE_API_KEY` — Video generation API
-- `SUPABASE_URL`, `SUPABASE_KEY` — Lead storage
+- `SUPABASE_URL`, `SUPABASE_KEY` — Lead storage + portal (anon key for client auth)
+- `SUPABASE_SERVICE_KEY` — Service role key (bypasses RLS for admin operations)
+- `PORTAL_URL` — Portal base URL for email links (e.g., https://mctv-bot.onrender.com)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — Email notifications
 
 ---
@@ -126,6 +155,8 @@ Three photo pools:
 - **ad_example_paths** — uploaded ad screenshots → after whats_included with "Ad Creative Examples"
 - **extra_photo_paths** — scraped/uploaded/default photos → distributed via PHOTO_DISTRIBUTION
 
+**Photo pool consumption:** `base_proposal.py` builds pools from docx_svc attributes, consumes photos via `del pool[:count]`. Pipeline caps: `[:4]` for page 2 photos.
+
 **Default screen photos:** When no venue or extra photos uploaded, `assets/screens/*.{png,jpg,jpeg,webp}` auto-populate as extra photos. (Implemented in `pages/1_Proposals.py`.)
 
 ### Document Formatting (v21 — MUC Standard)
@@ -140,12 +171,12 @@ All branding lives in `DocxService`. Key methods and their current settings:
 - `add_bullet_list()` — parses "- Title: Description" format, calls add_bullet_point
 - `add_pricing_table()` — navy header row, alternating gray rows, **thin gray borders**
 - `add_contract_terms()` — 6/12 month boxes with **gold left border** + gray sides
-- `add_inline_photos()` — single: 2.0in centered, multi: 2.0in side-by-side
+- `add_inline_photos()` — responsive 1-4 photo layouts: 1=centered 3.0", 2=side-by-side 2.8", 3=2+1 merged bottom row, 4=2×2 grid
 - `add_photos_grid()` — max 2.5in per photo in 2-col grid, **compact spacing (Pt(0))**, keep_with_next on title, **optional `captions` list** (italic gray 8pt under each photo)
 - `add_section_divider()` — thin gold horizontal rule (─ × 50, 6pt)
 - `add_footer()` — **"MCTV Elite Advertising | Confidential Partnership Proposal | Page X"** center-aligned, 8pt, accent/gray colors. Optional `footer_text` param for reports.
 - `add_body_text()` — 10.5pt, auto-detects numbered items for bold navy titles, **pre-splits single-newline numbered items** so all steps get bold formatting
-- `add_team_section()` — team cards + **closing statement** (italic accent) + **MCTV logo** (2.0in) + website URL. Team reordered so **preparer (sales rep) appears first**. Optional `closing_text` param.
+- `add_team_section()` — team cards + **closing statement** (italic accent) + **MCTV logo** (2.0in) + website URL. Team reordered so **preparer (sales rep) appears first**. Optional `closing_text` param. Dark mode uses `mctv_logo_white.png` (white text, transparent bg) instead of `mctv_logo_on_navy.png`.
 
 Border helpers:
 - `_set_cell_borders(cell, left_color, left_sz, other_color, other_sz)` — per-cell borders
@@ -154,19 +185,68 @@ Border helpers:
 
 PDF conversion: LibreOffice headless (Docker) or docx2pdf (Windows)
 
-### Traction Report Pipeline (v2 — Gold Standard)
+### Traction Report Pipeline (v4 — Current)
 - `services/excel_parser.py` — NTV360 parser with 3 format auto-detection. `parse_per_content_report()` uses **header-name-based column mapping** (not hardcoded indices). Extracts city, playlist, play count, duration, dates. Demo venues auto-excluded.
 - `classify_venue(name)` — 10-rule regex classifier (Restaurant, Salon, Medical, Auto, Fitness, Liquor, Education, Professional, Retail, Community). Applied automatically in `build_report_data()`.
 - `services/chart_service.py` — 4 matplotlib charts: venue bar chart, category donut, scatter plot, market comparison. All in MCTV brand colors. `generate_all_charts(data, categories)` returns PNG paths.
-- `generators/advertiser_report.py` — Full report pipeline: cover page → executive summary + KPIs → venue table (with city, category, bold top 3, totals row) → category breakdown → analytics charts (2×2 grid) → AI insights → team section → footer
+- `generators/advertiser_report.py` — Full report pipeline: cover page → executive summary + KPIs → venue table (with city, category, bold top 3, totals row) → **page break** → category breakdown → analytics charts (2×2 grid) → AI insights → team section → footer
 - `add_data_table()` now accepts `bold_rows=N` (bolds top N data rows) and `totals_row=[...]` (navy-styled summary row)
-- `models/report_data.py` — `PlayRecord` has `city` field, `VenueRecord` has `city` + `business_category`
+- `models/report_data.py` — `PlayRecord` has `city` field, `VenueRecord` has `city` + `business_category` + `monthly_traffic` + `dwell_time_minutes` + `monthly_impressions` + `screen_count`. `TractionReportInput` has `monthly_rate` for CPM.
+- **Network Dashboard Integration** (V4): `parse_network_dashboard()` reads "All MCTV Hosts" sheet from MCTV Network Dashboard Excel. `enrich_report_with_dashboard()` matches venues by lowercase host_name and populates traffic, dwell time, impressions, screen count.
+- **Impression formula**: `Impressions = Traffic × Dwell Time × License Count / 15` (the `/15` is the ad loop rotation — 15 ads, each gets 1/15th)
+- **CPM per venue**: Uses proportional allocation: `venue_share = venue.impressions / total_impressions`, `venue_cost = monthly_rate × venue_share`, `CPM = (venue_cost / venue.impressions) × 1000`. Result: uniform CPM across all venues (mathematically correct for flat-rate campaigns).
+- **Dynamic venue table columns**: Impressions + CPM columns appear only when dashboard data is loaded
+- **KPI grid**: Shows impressions and avg dwell time when dashboard data available, falls back to avg plays and days active
 
 ### Prompt Engineering
 - Strict word limits per section (150/100/75/80/60 for Elite Advertiser)
 - Claude MAY use bullet dashes when prompt asks for them
 - No markdown in output — clean plain text only
 - Each proposal type has its own prompt keys in prompts.json
+
+### Client Portal Architecture
+
+**Dual-mode Authentication:**
+- Internal tools: `APP_PASSWORD` gate (unchanged) — `st.session_state["auth_mode"] = "team"`
+- Client portal: Supabase Auth (email/password) — `st.session_state["auth_mode"] = "portal"`
+- Parallel paths: portal uses `portal_*` session state keys, zero impact on existing team login
+- Portal roles: `advertiser`, `host`, `admin`, `sales_rep` (stored in `profiles` table)
+
+**Supabase Schema (8 tables):**
+- `profiles` — links Supabase Auth users to roles
+- `clients` — business entities (advertisers + hosts), linked to portal_user_id
+- `contracts` — service agreements with click-to-sign fields (signed_by, signed_at, signed_ip, signed_user_agent)
+- `invoices` — billing records with auto-numbered IDs (MCTV-YYYYMM-XXXX)
+- `creative_requests` — client asset submissions (5 types: new_ad, update_ad, logo_upload, photo_upload, general)
+- `creative_files` — files attached to creative requests (stored in Supabase Storage)
+- `client_reports` — traction reports shared with clients
+- `activity_log` — audit trail with user_id, action, entity, details JSONB
+
+**RLS (Row-Level Security):**
+- All client-facing tables have RLS policies: clients only see their own data
+- Admin operations use `SUPABASE_SERVICE_KEY` (service role) to bypass RLS
+- Portal queries use anon key with authenticated user context
+
+**Storage Buckets:**
+- `contracts` — generated contract PDFs
+- `reports` — shared traction report files
+- `creative-uploads` — client-uploaded photos/logos
+- `creative-deliveries` — finished assets delivered to clients
+
+**Contract Signing Flow:**
+1. Admin creates contract → `contract_generator.py` produces branded PDF → uploads to Storage
+2. Email sent to client with portal link
+3. Client views contract → `portal_contract.py` shows details + download
+4. Client types full legal name, checks "I Agree", clicks Sign
+5. System records: typed name, timestamp, IP address, user agent
+6. Status → "signed", notification email to MCTV team
+
+**Invoice Lifecycle:**
+- Auto-numbered MCTV-YYYYMM-XXXX format
+- Status flow: draft → sent → viewed → paid (or overdue → paid)
+- `check_and_mark_overdue()` — batch scan for past-due invoices, sends reminder emails
+- `generate_monthly_invoices()` — creates drafts from all active contracts (deduplicates by period)
+- AR aging: 5 buckets (current, 1-30, 31-60, 61-90, 90+ days)
 
 ---
 
@@ -185,7 +265,7 @@ The **Good Earth / Oxford Pools** proposal (`MCTV_Good_Earth_Proposal.pdf`) is t
 
 ---
 
-## What's Been Done (as of 2026-02-22)
+## What's Been Done (as of 2026-02-23)
 
 ### Elite Advertiser Proposal — v15 through v20
 Massive formatting overhaul across 20+ PDF iterations:
@@ -221,6 +301,30 @@ Massive formatting overhaul across 20+ PDF iterations:
 - Auto-included in every proposal when no user photos uploaded
 - User has 5 community screen photos to add (shared in chat, needs to save to assets/screens/)
 
+### V3 Fixes — Proposal Photo Overhaul + Traction Report Polish (`fb4b743`)
+- **Proposal photos**: Dedicated page 2 photo uploads (2 max at time), page 4 photos separate. Photo pools properly routed.
+- **Cover page photo**: Client logo centered under client name
+- **Traction report**: KPI word-boundary truncation (target ~18 chars), auto-scaling font sizes (>15 chars→14pt, >10 chars→16pt)
+- **Venue name fix**: "Oxford Park Commissi on" broken mid-word → proper word-boundary truncation
+- **Chart sizing**: Expanded 15-20% for better readability
+
+### V4 Fixes — Dashboard Integration + Photo System Phase 1 (`75af231`)
+**Traction Report:**
+- **Table split fix**: Category/market summary tables were splitting across pages 5-6 with ~70% dead space. Added `doc.add_page_break()` before category table.
+- **Team section logo**: Dark mode now uses `mctv_logo_white.png` (white text, transparent bg) instead of `mctv_logo_on_navy.png` (5.7KB, low-res baked navy).
+- **Network Dashboard integration**: Upload MCTV Network Dashboard Excel → auto-populates impressions, dwell time, traffic, screen count for all matched venues. Shows match rate metric.
+- **CPM by location**: Monthly rate input → calculates CPM per venue using proportional cost allocation.
+- **Dynamic columns**: Venue table adds Impressions + CPM columns only when dashboard data loaded.
+- **KPI grid enrichment**: Shows total impressions and avg dwell time when dashboard available.
+- **AI insights**: Prompt now includes foot traffic, impressions, and CPM data when available.
+
+**Photo System Phase 1:**
+- Page 2 max photos increased from 2 → 4
+- Responsive layouts: 1=centered 3.0", 2=side-by-side 2.8", 3=2+1 merged bottom row, 4=2×2 grid
+- All 6 generators updated: `PHOTO_DISTRIBUTION` max: 2→4
+- Pipeline caps updated in `pages/1_Proposals.py`: `[:2]` → `[:4]`
+- UI labels updated: "up to 4 hero showcase photos"
+
 ### Creatomate Video Integration — Live
 - `services/creatomate_service.py` — stdlib-only API wrapper (urllib, no requests)
 - `pages/5_Video_Ads.py` — template selector, render form, progress bar, video preview + download
@@ -233,14 +337,14 @@ Massive formatting overhaul across 20+ PDF iterations:
 - 6 proposal types + 2 report types
 - Video ad generation via Creatomate
 - Client intake form (public-facing, saves to Supabase)
-- Leads dashboard
+- Leads dashboard with "Convert to Client" button
 - Website image scraper (stdlib only — urllib)
-- Photo uploads (venue screens, ad examples, custom images)
+- Photo uploads (venue screens, ad examples, custom images) — up to 4 page-2 photos with responsive layouts
 - Default community screen photos from assets/screens/
 - Client logo on cover page (scraped or uploaded)
 - PDF conversion (LibreOffice in Docker)
 - Cover email generation
-- Password authentication with MCTV logo on login page
+- Dual-mode authentication: team password (internal) + Supabase Auth (client portal)
 - Sidebar shows Claude API + Video API connection status
 - 4 color schemes (Original, Light & Airy, Dark, Peaceful Pastels)
 - Public Samples page (no auth) for WordPress iframe embedding
@@ -248,6 +352,15 @@ Massive formatting overhaul across 20+ PDF iterations:
 - Prospect Research tool (competitive intel briefs for sales calls)
 - Website text scraper (scrape_website_text — extracts title, description, headings, phone, email, social links)
 - Research → Proposal pipeline ("Use in Proposal" pre-fills proposal form from research data)
+- **Network Dashboard integration** — upload MCTV dashboard Excel for impressions, dwell time, CPM enrichment in traction reports
+- **Client Portal** — full lifecycle platform for advertisers and venue hosts:
+  - Client management (internal): create clients, convert leads, invite to portal, assign reps
+  - Contract system: generate branded PDFs, send to client, click-to-sign (typed name + "I Agree" + timestamp/IP)
+  - Invoice management: auto-numbered (MCTV-YYYYMM-XXXX), send/track/mark paid, AR aging (5 buckets), batch generation
+  - Creative request management: clients submit photos/logos, team reviews/assigns/updates status, file uploads to Supabase Storage
+  - Report sharing: "Share with Client" button on traction reports → uploads to Storage + creates portal record
+  - Portal pages: dashboard (role-aware), contract signing, invoice viewing, creative submissions, reports, profile editor
+  - Supabase Auth with RLS (row-level security) for data isolation — clients only see their own data
 
 ### 4 Color Schemes — Live
 Added 4 selectable color palettes via horizontal radio on Proposals page:
@@ -337,6 +450,14 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 - Test all 4 color schemes with a real PDF generation
 - **WordPress integration tested but NOT live yet** — Intake form iframe works on mctvofms.com (Divi Fullwidth Code module). Creed wants to wait before making pages public. Still need to: add Samples page, add pages to nav menu, set up Calendly booking, generate sample PDFs (no pricing), configure bot.mctvofms.com subdomain
 - **Phase 3 Polish (complete):** Scraper preview UI (3A — done in 1B), photo captions (3B), cover logo verified (3C), dynamic presenter verified (3D), venue photo library by market (3E — `assets/screens/{Oxford,Starkville,Tupelo,Columbus,West Point}/` created, auto-include filters by selected markets)
+- **Photo Handling Spec Phases 2-3**: Phase 1 done (4-photo layouts). Phase 2 (scraper preview panel polish — counter bar, validation warnings, overflow handling) and Phase 3 (smart classification pipeline) still pending.
+- **Render deployment**: Auto-deploy from `main` branch may need verification. After `75af231` push, user reported "Not seeing anything on the render logs." May need manual deploy trigger at https://dashboard.render.com or webhook re-connection.
+- **Client Portal — needs before go-live:**
+  - Run `scripts/setup_portal_schema.sql` against Supabase project (8 tables + RLS + indexes)
+  - Set `SUPABASE_SERVICE_KEY` and `PORTAL_URL` environment variables on Render
+  - Create first admin profile in Supabase Auth + profiles table
+  - Test full flow: create client → invite → login → sign contract → view invoice → submit creative → view report
+  - No runtime testing done yet — all 24 files pass syntax checks but need integration testing
 
 ---
 
@@ -437,6 +558,9 @@ Add a Custom HTML block in WordPress page editor:
 15. **Photo distribution needs context.** Orphan photos floating between sections with no title feel disconnected. Always give distributed photos a title or attach them to a section.
 16. **Streamlit `st.page_link` CSS is separate from `.stMarkdown`.** Sidebar nav labels use `[data-testid="stPageLink-NavLink"] span` — not covered by `.stMarkdown p/h1/h2/h3` selectors. Need explicit CSS with `!important` to override Streamlit defaults on navy backgrounds.
 17. **Single Claude API call beats multiple.** For the Prospect Research tool, one well-structured prompt generates all 7 sections in ~5 seconds vs 7 separate calls at ~35 seconds and 3x token cost.
+18. **Proportional CPM is uniform.** When allocating a flat monthly rate across venues by impression share, every venue gets the same CPM. This is mathematically correct — `(rate × share / impressions) × 1000 = rate / total_impressions × 1000` is constant.
+19. **python-docx cell merge for layouts.** For 3-photo (2+1) layout, use `bottom_cell.merge(table.rows[1].cells[1])` to create a centered bottom row. Merged cells need explicit paragraph alignment.
+20. **Bash quoting on Windows.** Python test scripts with single quotes in string literals (e.g., `"4 Corner's Chevron"`) cause `bad substitution` when passed via `python -c`. Write to a temp `.py` file instead.
 
 ---
 
@@ -475,3 +599,11 @@ This allows multiple Claude Code instances to work in parallel on different part
 - `d01c6e8` — Upgrade 3 generators to v20 formatting (Host Media Kit, Multi-Brand, Venue Partner)
 - `7fbfaa7` — Upgrade category_exclusivity + renewal_upgrade to v20 formatting
 - `57ac721` — Add SEO infrastructure — meta tags, schema, content strategy, blog drafts (11 files)
+- `89bde56` — v21 MUC gold standard upgrade
+- `c852480` — Fix duplicate .gitkeep key crash
+- `dc0b858` — v2 traction reports (15 items)
+- `a6254f9` — Proposal v2 fixes
+- `3dadf11` — Traction report v2 fixes (10 items)
+- `fb4b743` — V3 fixes: proposal photo system overhaul + traction report polish
+- `75af231` — V4: dashboard impressions/CPM, table split fix, photo system upgrade (12 files, 357 insertions)
+- *(uncommitted)* — Client Portal: full lifecycle platform (20+ new files — auth, contracts, invoices, creative, reports, 7 portal pages, 4 internal pages, 7 services)

@@ -112,7 +112,14 @@ def main():
         st.page_link("pages/5_Video_Ads.py", label="Video Ads", icon="\U0001F3AC")
         st.page_link("pages/7_Research.py", label="Prospect Research", icon="\U0001F50D")
         st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
+        st.page_link("pages/8_Clients.py", label="Client Management", icon="\U0001F465")
+        st.page_link("pages/9_Contracts.py", label="Contracts", icon="\U0001F4DD")
+        st.page_link("pages/10_Invoices.py", label="Invoices", icon="\U0001F4B0")
+        st.page_link("pages/11_Creative.py", label="Creative Requests", icon="\U0001F3A8")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
+
+        st.divider()
+        st.page_link("pages/portal_login.py", label="Client Portal", icon="\U0001F310")
 
         st.divider()
         st.caption("MCTV Elite Advertising")
@@ -178,7 +185,7 @@ def main():
     st.markdown("### Recent Output")
     output_dir = Path(__file__).parent / "output"
     recent_files = []
-    for subdir in ["proposals", "reports", "emails", "videos", "research"]:
+    for subdir in ["proposals", "reports", "contracts", "emails", "videos", "research"]:
         folder = output_dir / subdir
         if folder.exists():
             for f in sorted(folder.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:

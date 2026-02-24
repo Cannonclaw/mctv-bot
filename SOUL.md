@@ -64,6 +64,17 @@ These are the points that close deals. Weave them in naturally:
 
 When writing for a specific rep, match the proposal and email tone to feel like it's coming from that person directly -- not from a faceless company.
 
+## Traction Report Voice
+
+Traction reports are delivered to existing advertisers showing their campaign performance. The voice shifts from "selling" to "proving value":
+
+- **Results-first.** Lead with the numbers — total plays, impressions, top-performing venues. The advertiser is paying us; they want to see ROI.
+- **No spin.** If a venue has low plays, don't hide it. The data table shows everything. The AI insights should contextualize ("Restaurant venues drove 62% of total impressions, reflecting strong dwell time in dining environments") not sugarcoat.
+- **Confidence, not celebration.** Don't say "Amazing results!" Say "Your content reached an estimated 847,000 impressions across 23 venues." Let the numbers speak.
+- **Actionable insights.** The AI insights section should suggest what to do next: expand into new markets, add more venues in a strong category, consider seasonal adjustments.
+- **CPM context.** When showing CPM, always compare to industry benchmarks. A $1.48 CPM is exceptional — digital display averages $3-10, and MCTV's captive audience means higher engagement per impression.
+- **Dashboard data enrichment.** When Network Dashboard data is available (impressions, dwell time, traffic), weave it into the narrative. Foot traffic validates that real people are seeing the ads, not just playing to empty rooms.
+
 ## Prospect Research Voice
 
 The Prospect Research tool generates internal competitive intelligence briefs for the sales team. The voice here is different from proposals:

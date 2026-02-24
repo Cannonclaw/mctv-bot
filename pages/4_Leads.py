@@ -10,6 +10,8 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import check_password
 from services.leads_service import get_all_leads, update_lead_status
+from services.supabase_client import is_configured as supabase_configured
+from services.portal_service import convert_lead_to_client
 
 st.set_page_config(page_title="Leads - MCTV Bot", page_icon="\U0001F4CB", layout="wide")
 
@@ -115,7 +117,7 @@ for lead in leads:
 
         # ── Actions ──────────────────────────────────────────────────────
         st.divider()
-        action_cols = st.columns(4)
+        action_cols = st.columns(5)
 
         lead_id = lead.get("id", "")
 
@@ -141,3 +143,59 @@ for lead in leads:
                 icon="\U0001F4DD",
                 use_container_width=True,
             )
+
+        with action_cols[4]:
+            if supabase_configured():
+                if st.button("Convert to Client", key=f"convert_{lead_id}",
+                             use_container_width=True, type="primary"):
+                    st.session_state[f"show_convert_{lead_id}"] = True
+            else:
+                st.button("Convert to Client", key=f"convert_{lead_id}",
+                          use_container_width=True, disabled=True,
+                          help="Configure Supabase to enable client management")
+
+        # ── Convert to Client form (shown when clicked) ──────────────
+        if st.session_state.get(f"show_convert_{lead_id}"):
+            st.markdown("---")
+            st.markdown("**Convert to Client**")
+            st.caption("This will create a client record from this lead's info.")
+
+            conv_col1, conv_col2 = st.columns(2)
+            with conv_col1:
+                conv_type = st.selectbox(
+                    "Client Type",
+                    ["Advertiser", "Host"],
+                    key=f"conv_type_{lead_id}",
+                )
+            with conv_col2:
+                conv_rep = st.selectbox(
+                    "Assign Rep",
+                    ["", "Creed", "Mary Michael", "Swayze"],
+                    key=f"conv_rep_{lead_id}",
+                )
+
+            conv_btn1, conv_btn2 = st.columns(2)
+            with conv_btn1:
+                if st.button("Create Client", key=f"do_convert_{lead_id}",
+                             type="primary", use_container_width=True):
+                    with st.spinner("Converting lead to client..."):
+                        result = convert_lead_to_client(
+                            lead=lead,
+                            client_type=conv_type.lower(),
+                            assigned_rep=conv_rep,
+                        )
+                        if result:
+                            update_lead_status(lead_id, "closed")
+                            st.success(
+                                f"**{lead.get('business_name', '')}** converted to client. "
+                                f"Go to the Clients page to manage their account."
+                            )
+                            del st.session_state[f"show_convert_{lead_id}"]
+                            st.rerun()
+                        else:
+                            st.error("Failed to convert lead. Check logs for details.")
+            with conv_btn2:
+                if st.button("Cancel", key=f"cancel_convert_{lead_id}",
+                             use_container_width=True):
+                    del st.session_state[f"show_convert_{lead_id}"]
+                    st.rerun()

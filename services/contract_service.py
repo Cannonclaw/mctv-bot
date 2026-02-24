@@ -1,0 +1,378 @@
+"""Contract lifecycle service.
+
+Handles contract CRUD, status transitions, document generation,
+storage upload, and signature recording.
+"""
+
+from datetime import datetime
+from pathlib import Path
+
+from services.supabase_client import query_table, insert_row, update_row, delete_row
+from services.storage_service import upload_from_path, get_signed_url, BUCKET_CONTRACTS
+from services.notification_service import (
+    notify_contract_ready, notify_contract_signed,
+)
+from services.portal_service import get_client, log_activity
+
+
+# ── Contract CRUD ───────────────────────────────────────────────────────────
+
+def create_contract(
+    client_id: str,
+    contract_type: str = "advertiser",
+    title: str = "",
+    tier_name: str = "",
+    screen_count: int = 10,
+    monthly_rate: float = 350.0,
+    term_months: int = 6,
+    start_date: str = "",
+    end_date: str = "",
+    auto_renew: bool = True,
+    markets: list[str] | None = None,
+    created_by: str = "",
+) -> dict | None:
+    """Create a new contract record (draft status).
+
+    Returns the created contract dict or None.
+    """
+    if not title:
+        client = get_client(client_id)
+        bname = client.get("business_name", "Client") if client else "Client"
+        title = f"MCTV {contract_type.title()} Agreement - {bname}"
+
+    data = {
+        "client_id": client_id,
+        "contract_type": contract_type,
+        "title": title,
+        "tier_name": tier_name,
+        "screen_count": screen_count,
+        "monthly_rate": monthly_rate,
+        "term_months": term_months,
+        "auto_renew": auto_renew,
+        "status": "draft",
+    }
+
+    if start_date:
+        data["start_date"] = start_date
+    if end_date:
+        data["end_date"] = end_date
+    if markets:
+        data["markets"] = markets
+    if created_by:
+        data["created_by"] = created_by
+
+    result = insert_row("contracts", data)
+
+    if result:
+        log_activity(
+            client_id=client_id,
+            action="Contract created",
+            entity_type="contract",
+            entity_id=result.get("id", ""),
+            details={"title": title, "tier": tier_name},
+        )
+
+    return result
+
+
+def get_contract(contract_id: str) -> dict | None:
+    """Get a single contract by ID."""
+    results = query_table("contracts", filters={"id": contract_id})
+    return results[0] if results else None
+
+
+def get_contracts_for_client(client_id: str) -> list[dict]:
+    """Get all contracts for a client, newest first."""
+    return query_table("contracts", filters={"client_id": client_id},
+                       order="-created_at")
+
+
+def get_all_contracts(status: str | None = None) -> list[dict]:
+    """Get all contracts, optionally filtered by status."""
+    filters = {"status": status} if status else None
+    return query_table("contracts", filters=filters, order="-created_at")
+
+
+def update_contract(contract_id: str, data: dict) -> dict | None:
+    """Update a contract record."""
+    data["updated_at"] = datetime.now().isoformat()
+    return update_row("contracts", contract_id, data)
+
+
+def delete_contract(contract_id: str) -> bool:
+    """Delete a contract record."""
+    return delete_row("contracts", contract_id)
+
+
+# ── Contract Lifecycle ──────────────────────────────────────────────────────
+
+def generate_contract_document(contract_id: str, config: dict | None = None) -> dict | None:
+    """Generate the contract PDF and upload to Supabase Storage.
+
+    Returns updated contract dict with document_url, or None on failure.
+    """
+    contract = get_contract(contract_id)
+    if not contract:
+        print(f"[contract_service] Contract {contract_id} not found")
+        return None
+
+    client = get_client(contract.get("client_id", ""))
+    if not client:
+        print(f"[contract_service] Client not found for contract {contract_id}")
+        return None
+
+    # Generate document
+    from generators.contract_generator import ContractGenerator
+
+    generator = ContractGenerator(config)
+    docx_path, pdf_path = generator.generate(
+        client_name=client.get("contact_name", ""),
+        business_name=client.get("business_name", ""),
+        contract_type=contract.get("contract_type", "advertiser"),
+        tier_name=contract.get("tier_name", ""),
+        screen_count=contract.get("screen_count", 10),
+        monthly_rate=float(contract.get("monthly_rate", 350)),
+        term_months=contract.get("term_months", 6),
+        markets=contract.get("markets", ["Oxford"]),
+        start_date=contract.get("start_date", ""),
+        auto_renew=contract.get("auto_renew", True),
+        prepared_by=contract.get("created_by", ""),
+        notes="",
+    )
+
+    # Upload the PDF (or docx) to Supabase Storage
+    upload_path = pdf_path if pdf_path and pdf_path.exists() else docx_path
+    storage_path = f"{client.get('id', 'unknown')}/{upload_path.name}"
+
+    uploaded = upload_from_path(BUCKET_CONTRACTS, storage_path, str(upload_path))
+    if not uploaded:
+        print(f"[contract_service] Failed to upload contract to storage")
+        # Still save the local path as fallback
+        storage_path = str(upload_path)
+
+    # Update contract record with document URL
+    update_data = {"document_url": storage_path}
+    updated = update_contract(contract_id, update_data)
+
+    log_activity(
+        client_id=client.get("id", ""),
+        action="Contract document generated",
+        entity_type="contract",
+        entity_id=contract_id,
+        details={"document_url": storage_path},
+    )
+
+    return updated
+
+
+def send_contract(contract_id: str) -> dict | None:
+    """Mark contract as 'sent' and email the client.
+
+    Returns updated contract or None.
+    """
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    if contract.get("status") not in ("draft", "sent"):
+        print(f"[contract_service] Cannot send contract in status: {contract.get('status')}")
+        return None
+
+    client = get_client(contract.get("client_id", ""))
+    if not client:
+        return None
+
+    # Update status to sent
+    updated = update_contract(contract_id, {
+        "status": "sent",
+        "sent_at": datetime.now().isoformat(),
+    })
+
+    # Send notification email
+    notify_contract_ready(
+        client_email=client.get("contact_email", ""),
+        client_name=client.get("contact_name", ""),
+        contract_title=contract.get("title", ""),
+    )
+
+    log_activity(
+        client_id=client.get("id", ""),
+        action="Contract sent to client",
+        entity_type="contract",
+        entity_id=contract_id,
+    )
+
+    return updated
+
+
+def record_contract_view(contract_id: str) -> dict | None:
+    """Mark that the client viewed the contract."""
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    if contract.get("status") == "sent":
+        return update_contract(contract_id, {
+            "status": "viewed",
+            "viewed_at": datetime.now().isoformat(),
+        })
+    return contract
+
+
+def sign_contract(
+    contract_id: str,
+    signed_by: str,
+    ip_address: str = "",
+    user_agent: str = "",
+    user_id: str = "",
+) -> dict | None:
+    """Record a contract signature (click-to-sign).
+
+    Args:
+        contract_id: Contract to sign
+        signed_by: Full name typed by signer
+        ip_address: Signer's IP address
+        user_agent: Signer's browser user agent
+        user_id: Signer's portal user ID
+
+    Returns:
+        Updated contract dict or None.
+    """
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    if contract.get("status") not in ("sent", "viewed"):
+        print(f"[contract_service] Cannot sign contract in status: {contract.get('status')}")
+        return None
+
+    # Record signature
+    updated = update_contract(contract_id, {
+        "status": "signed",
+        "signed_by": signed_by,
+        "signed_at": datetime.now().isoformat(),
+        "signed_ip": ip_address,
+        "signed_user_agent": user_agent,
+    })
+
+    # Notify the MCTV team
+    client = get_client(contract.get("client_id", ""))
+    if client:
+        notify_contract_signed(
+            contract_title=contract.get("title", ""),
+            client_name=client.get("contact_name", ""),
+            business_name=client.get("business_name", ""),
+            signed_by=signed_by,
+        )
+
+        log_activity(
+            client_id=client.get("id", ""),
+            action="Contract signed",
+            entity_type="contract",
+            entity_id=contract_id,
+            user_id=user_id,
+            details={
+                "signed_by": signed_by,
+                "signed_at": datetime.now().isoformat(),
+            },
+            ip_address=ip_address,
+        )
+
+    return updated
+
+
+def activate_contract(contract_id: str) -> dict | None:
+    """Transition a signed contract to active status."""
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    if contract.get("status") != "signed":
+        print(f"[contract_service] Can only activate 'signed' contracts, got: {contract.get('status')}")
+        return None
+
+    updated = update_contract(contract_id, {"status": "active"})
+
+    log_activity(
+        client_id=contract.get("client_id", ""),
+        action="Contract activated",
+        entity_type="contract",
+        entity_id=contract_id,
+    )
+
+    return updated
+
+
+def cancel_contract(contract_id: str, reason: str = "") -> dict | None:
+    """Cancel a contract."""
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    updated = update_contract(contract_id, {"status": "cancelled"})
+
+    log_activity(
+        client_id=contract.get("client_id", ""),
+        action="Contract cancelled",
+        entity_type="contract",
+        entity_id=contract_id,
+        details={"reason": reason} if reason else None,
+    )
+
+    return updated
+
+
+# ── Document Access ─────────────────────────────────────────────────────────
+
+def get_contract_download_url(contract_id: str, expires_in: int = 3600) -> str | None:
+    """Get a temporary download URL for a contract document.
+
+    Returns a signed URL (expires in 1 hour by default), or None.
+    """
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    doc_url = contract.get("document_url", "")
+    if not doc_url:
+        return None
+
+    # If it's a local path, return it directly
+    if doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output"):
+        return doc_url
+
+    # Otherwise, get a signed URL from Supabase Storage
+    return get_signed_url(BUCKET_CONTRACTS, doc_url, expires_in=expires_in)
+
+
+# ── Summary Stats ───────────────────────────────────────────────────────────
+
+def get_contract_summary() -> dict:
+    """Get high-level contract stats for the admin dashboard."""
+    all_contracts = get_all_contracts()
+
+    draft = [c for c in all_contracts if c.get("status") == "draft"]
+    sent = [c for c in all_contracts if c.get("status") == "sent"]
+    viewed = [c for c in all_contracts if c.get("status") == "viewed"]
+    signed = [c for c in all_contracts if c.get("status") == "signed"]
+    active = [c for c in all_contracts if c.get("status") == "active"]
+    cancelled = [c for c in all_contracts if c.get("status") == "cancelled"]
+
+    awaiting_signature = sent + viewed  # Sent but not yet signed
+
+    total_active_mrr = sum(
+        float(c.get("monthly_rate", 0)) for c in all_contracts
+        if c.get("status") in ("signed", "active")
+    )
+
+    return {
+        "total": len(all_contracts),
+        "draft": len(draft),
+        "sent": len(sent),
+        "viewed": len(viewed),
+        "signed": len(signed),
+        "active": len(active),
+        "cancelled": len(cancelled),
+        "awaiting_signature": len(awaiting_signature),
+        "active_mrr": total_active_mrr,
+    }

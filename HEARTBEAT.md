@@ -1,10 +1,12 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live on Render
+## Current Status: Live on Render + Client Portal Built (uncommitted)
 
-**Last deploy:** 2026-02-22
+**Last deploy:** 2026-02-23 (pending — `75af231` pushed to GitHub, Render deploy may need manual trigger)
 **URL:** https://mctv-bot.onrender.com
 **Branch:** main (auto-deploys on push)
+**Latest commit:** `75af231` — V4: dashboard impressions/CPM, table split fix, photo system upgrade
+**Uncommitted:** Client Portal — 20+ new files, full client lifecycle platform (contracts, invoices, creative, reports)
 
 ---
 
@@ -16,12 +18,13 @@
 - [x] Venue Partner proposal
 - [x] Category Exclusivity proposal
 - [x] Renewal/Upgrade proposal
-- [x] Advertiser Traction Reports (from NTV360 Excel uploads)
+- [x] Advertiser Traction Reports (from NTV360 Excel uploads + Network Dashboard enrichment)
 - [x] Venue Partner Reports
+- [x] Network Dashboard integration (impressions, dwell time, CPM per venue)
 - [x] Client intake form (public-facing, saves to Supabase)
 - [x] Leads dashboard (view/manage submissions)
 - [x] Website image scraper (pulls client photos for proposals)
-- [x] Photo uploads (venue screens, ad examples, custom images)
+- [x] Photo uploads (venue screens, ad examples, custom images) — up to 4 page-2 photos with responsive layouts
 - [x] Default community screen photos (auto-included from assets/screens/)
 - [x] Client logo on cover page (scraped or uploaded)
 - [x] PDF conversion (LibreOffice headless in Docker)
@@ -39,6 +42,19 @@
 - [x] Prospect Research tool (competitive intel briefs for sales calls)
 - [x] Website text scraper (title, description, headings, phone, email, social links)
 - [x] Research → Proposal pipeline ("Use in Proposal" pre-fills form from research)
+- [x] Client Management page (create clients, convert leads, invite to portal, assign reps)
+- [x] Contract system (generate branded PDFs, send, click-to-sign, track lifecycle)
+- [x] Invoice system (auto-numbered, send/track/mark paid, AR aging, batch generation)
+- [x] Creative request management (internal review, assignment, status updates, file downloads)
+- [x] Report sharing ("Share with Client" button → Supabase Storage + portal record)
+- [x] Client Portal login (Supabase Auth — email/password)
+- [x] Portal Dashboard (role-aware: advertiser vs host, activity feed, onboarding banner)
+- [x] Portal Contract signing (view details, download PDF, click-to-sign with legal record)
+- [x] Portal Invoice viewer (summary metrics, expandable invoice cards)
+- [x] Portal Creative Requests (submit new requests + files, track status)
+- [x] Portal Reports (view shared traction reports with download links)
+- [x] Portal Profile (edit contact info, change password, support contacts)
+- [x] Dual-mode authentication (team password for internal + Supabase Auth for portal)
 
 ## What Needs Attention
 
@@ -56,7 +72,11 @@
 - [x] **Team headshots + team photo** — added to About Us (2026-02-23)
 - [ ] **GA4 setup** — guide ready in seo/ga4_setup_guide.md
 - [x] **v21 proposal upgrade** — ALL 14 items complete: Phase 1 bugs (1A-1C), Phase 2 design (2A-2H), Phase 3 polish (3A-3E) (2026-02-23)
-- [x] **Traction Report v2 upgrade** — 15-item Spec B complete: parser fix (0→32K plays), demo exclusion, venue categorization, cover page, exec summary, KPIs, 4 charts, enhanced data table, team section, multi-market breakdown, campaign auto-detect (2026-02-23)
+- [x] **Traction Report v2 upgrade** — 15-item Spec B complete (2026-02-23)
+- [x] **V3 fixes** — Proposal photo overhaul, traction report KPI polish, chart sizing (`fb4b743`)
+- [x] **V4 fixes** — Table split, dashboard impressions/CPM, photo system Phase 1 (`75af231`)
+- [ ] **Photo Handling Phases 2-3** — Phase 1 done (4-photo layouts). Phase 2 (scraper preview polish), Phase 3 (smart classification) pending
+- [ ] **Render deployment** — `75af231` pushed to GitHub but user reported no Render logs. May need manual deploy or webhook check
 - [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
 - [ ] Email notifications (SMTP configured but not confirmed working end-to-end)
 - [ ] Custom domain (bot.mctvofms.com CNAME to Render — not yet set up)
@@ -65,10 +85,141 @@
 - [ ] Save 5 community screen photos to assets/screens/
 - [ ] Test all 4 color schemes with real PDF generation
 - [ ] **NEVER make pricing publicly available** — no rates/tiers on any public page
+- [ ] **Client Portal — pre-launch checklist:**
+  - [ ] Run `scripts/setup_portal_schema.sql` against Supabase project (creates 8 tables + RLS + indexes)
+  - [ ] Set `SUPABASE_SERVICE_KEY` env var on Render (service role key from Supabase dashboard)
+  - [ ] Set `PORTAL_URL` env var on Render (e.g., `https://mctv-bot.onrender.com`)
+  - [ ] Create first admin profile in Supabase Auth + profiles table
+  - [ ] Commit + push all portal files to GitHub (triggers Render deploy)
+  - [ ] Integration test: create client → invite to portal → login → sign contract → view invoices → submit creative → view report
+  - [ ] Verify RLS policies work (client A can't see client B's data)
+  - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
+- [ ] **Host portal dashboard** — currently same layout as advertiser. Future: venue screen status, traffic stats, free ad slot management
 
 ---
 
 ## Changelog
+
+### 2026-02-23 — Client Portal: Full Lifecycle Platform (uncommitted)
+
+20+ new files, 7 new services, 7 portal pages, 4 internal management pages. Built in 7 phases in a single session.
+
+#### Phase 0: Foundation
+- **`scripts/setup_portal_schema.sql`** — Complete Supabase schema: 8 tables (profiles, clients, contracts, invoices, creative_requests, creative_files, client_reports, activity_log) + RLS policies + indexes + auto-profile trigger
+- **`services/supabase_client.py`** — Centralized Supabase client with Auth helpers (`sign_up`, `sign_in`, `sign_out`, `reset_password`), REST API helpers (`_rest_request`), and CRUD helpers (`query_table`, `insert_row`, `update_row`, `delete_row`)
+- **`services/storage_service.py`** — Supabase Storage wrapper: `upload_file()`, `upload_from_path()`, `get_signed_url()`, `delete_file()`. 4 private buckets: contracts, reports, creative-uploads, creative-deliveries
+- **`services/notification_service.py`** — Email notifications for all portal events: account creation (with temp password), contract sent/signed, invoice sent/paid/overdue reminder, creative status update, report shared
+- **`requirements.txt`** — Added `supabase>=2.5.0`
+
+#### Phase 1: Client Management
+- **`services/portal_service.py`** — Client CRUD: `create_client`, `update_client`, `get_all_clients`, `get_client_by_user_id`, `convert_lead_to_client` (from leads table), `invite_client_to_portal` (creates Supabase Auth user + profile), `get_admin_summary`, `get_dashboard_data`
+- **`pages/8_Clients.py`** — Internal client management page: summary metrics, filter by status/type, expandable client cards, portal invite with temp password generation, notes editor, assign rep, delete with confirmation
+- **`pages/4_Leads.py`** (modified) — Added "Convert to Client" button with inline form (select client type + rep)
+- **`app.py`** (modified) — Added Client Management to sidebar navigation
+
+#### Phase 2: Contract System
+- **`generators/contract_generator.py`** — Branded contract PDF generator using DocxService. Cover page, partnership details table, terms & conditions (8 advertiser clauses / 7 host clauses), signature section with e-sign notice (Mississippi Uniform Electronic Transactions Act)
+- **`services/contract_service.py`** — Full lifecycle: `create_contract`, `generate_contract_document` (PDF + upload to Storage), `send_contract` (marks sent + emails client), `record_contract_view`, `sign_contract` (records name, timestamp, IP, user agent), `activate_contract`, `cancel_contract`, `get_contract_download_url`, `get_contract_summary`
+- **`pages/9_Contracts.py`** — Internal management: summary metrics (total, drafts, awaiting sig, active, MRR), filter by status, expandable contract cards, action buttons (Generate PDF, Send, Activate, Download, Cancel/Delete), Create New Contract tab with tier auto-fill from config.json
+- **`Dockerfile`** (modified) — Added `output/contracts` directory
+
+#### Phase 3: Portal Core
+- **`services/auth.py`** (rewritten) — Dual-mode authentication. `check_password()` unchanged behavior + `auth_mode="team"`. New: `portal_login()` (Supabase sign_in, sets all portal session state), `portal_logout()`, `get_portal_user()`, `get_portal_role()`, `is_portal_advertiser()`, `is_portal_host()`, `require_portal_auth()` (redirects to login if not authenticated)
+- **`pages/portal_login.py`** — Client login page: branded MCTV styling, hidden sidebar, email/password form, forgot password with Supabase reset, auto-redirect if already logged in
+- **`pages/portal_dashboard.py`** — Role-aware dashboard: different metrics for advertisers vs hosts, quick action tiles (contracts, invoices, creative, reports), recent activity feed, onboarding banner, full portal sidebar navigation
+- **`pages/portal_contract.py`** — Click-to-sign page: contract details, download PDF button, signature section (type full legal name + "I Agree" checkbox + Sign button), records name + timestamp + user agent, shows signature record after signing
+- **`pages/portal_invoices.py`** — Invoice viewer: summary metrics (total owed, paid, overdue count), expandable invoice cards with status badges
+- **`pages/portal_creative.py`** — Creative request system: view existing requests with status, submit new requests (5 types: new_ad, update_ad, logo_upload, photo_upload, general) with multi-file upload to Supabase Storage
+- **`pages/portal_reports.py`** — Report viewer: expandable report cards with key metrics (plays, impressions, venues), download links from Storage or local files
+- **`pages/portal_profile.py`** — Profile editor: contact info form, account details (read-only), password reset via Supabase email, support contacts (Creed, Mary Michael, Swayze)
+
+#### Phase 4: Invoicing
+- **`services/invoice_service.py`** — Auto-generated invoice numbers (MCTV-YYYYMM-XXXX), full lifecycle: `create_invoice`, `send_invoice` (with email notification), `mark_paid`, `void_invoice`, `mark_overdue` (with reminder email), `check_and_mark_overdue()` (batch scan), `generate_monthly_invoices()` (batch creation from active contracts, deduplicates by period), `get_ar_aging()` (5-bucket aging: current, 1-30, 31-60, 61-90, 90+ days), `get_invoice_summary()`
+- **`pages/10_Invoices.py`** — Internal management with 4 tabs: All Invoices (filter, send, mark paid, void, delete), Create Invoice (client + contract selection, auto-fill amount), AR Aging (visual aging report with expandable buckets + summary metrics), Batch Tools (one-click overdue scan, monthly invoice generation)
+
+#### Phase 5: Creative Request Management
+- **`pages/11_Creative.py`** — Internal creative request management: summary metrics (total, pending, in_progress, review, completed), filter by status, expandable request cards with client info + description + attached files, file download links from Supabase Storage, action row (update status, assign to Creed/Mary Michael/Swayze, set priority), client notification on status change, internal notes editor (not visible to client)
+
+#### Phase 6: Report Sharing
+- **`pages/2_Reports.py`** (modified) — Added "Share with Client" button after report generation. `_show_share_with_client()` shows client dropdown (only if Supabase configured). `_do_share_report()` uploads file to Storage, creates `client_reports` record, sends email notification to client
+
+#### Phase 7: Polish
+- All 24 files pass Python syntax verification (tested with `py_compile`)
+- MEMORY.md updated with portal architecture, key files, environment variables, working features
+- HEARTBEAT.md updated with changelog
+
+#### Files Created (20 new)
+- `services/supabase_client.py`, `services/portal_service.py`, `services/contract_service.py`, `services/invoice_service.py`, `services/storage_service.py`, `services/notification_service.py`
+- `generators/contract_generator.py`
+- `pages/8_Clients.py`, `pages/9_Contracts.py`, `pages/10_Invoices.py`, `pages/11_Creative.py`
+- `pages/portal_login.py`, `pages/portal_dashboard.py`, `pages/portal_contract.py`, `pages/portal_invoices.py`, `pages/portal_creative.py`, `pages/portal_reports.py`, `pages/portal_profile.py`
+- `scripts/setup_portal_schema.sql`
+
+#### Files Modified (5 existing)
+- `services/auth.py` — rewritten for dual-mode auth
+- `app.py` — sidebar navigation (added Clients, Contracts, Invoices, Creative Requests, Client Portal links)
+- `pages/4_Leads.py` — added "Convert to Client" button
+- `pages/2_Reports.py` — added "Share with Client" button
+- `requirements.txt` — added `supabase>=2.5.0`
+- `Dockerfile` — added `output/contracts` directory
+
+---
+
+### 2026-02-23 — V4: Dashboard Integration + Photo System Phase 1 (`75af231`)
+
+12 files changed, 357 insertions, 49 deletions.
+
+#### Traction Report — Network Dashboard Integration
+- **`services/excel_parser.py`** — New `parse_network_dashboard()` reads "All MCTV Hosts" sheet from MCTV Network Dashboard Excel (97 venues). New `enrich_report_with_dashboard()` matches venues by lowercase host_name and populates traffic, dwell time, impressions, screen count.
+- **Impression formula**: `Impressions = Traffic × Dwell Time × License Count / 15` (verified 100% match across all 97 venues — `/15` is the ad loop rotation)
+- **`generators/advertiser_report.py`** — Dynamic Impressions + CPM columns in venue table. CPM uses proportional cost allocation. KPI grid shows impressions + avg dwell time when dashboard available.
+- **`models/report_data.py`** — Added `monthly_rate: float` to `TractionReportInput`
+- **`pages/2_Reports.py`** — Dashboard upload field, monthly rate input (for CPM), match rate metric, enrichment pipeline
+
+#### Traction Report — Table Split Fix
+- Category/market summary tables were splitting across pages 5-6 with ~70% dead space
+- Added `doc.add_page_break()` before `_add_category_table()` in `advertiser_report.py`
+
+#### Traction Report — Team Section Logo
+- Dark mode team section now uses `mctv_logo_white.png` (white text, transparent bg) instead of `mctv_logo_on_navy.png` (low-res baked navy)
+- Fallback chain: `mctv_logo_white.png` → `cover_logo` from config → `mctv_logo.png`
+
+#### Photo System Phase 1 (from MCTV_Photo_Handling_Spec.md)
+- Page 2 max photos: 2 → 4
+- **Responsive layouts in `docx_service.py`**: 1=centered 3.0", 2=side-by-side 2.8", 3=2+1 merged bottom row (cell merge), 4=2×2 grid
+- All 6 generators: `PHOTO_DISTRIBUTION` max: 2→4
+- `pages/1_Proposals.py`: Pipeline caps `[:2]`→`[:4]`, UI labels "up to 4 hero showcase photos", warning threshold `>4`
+
+#### Files Modified
+- `generators/advertiser_report.py` — table split, impressions/CPM columns, KPI updates, AI insights enrichment
+- `services/docx_service.py` — white logo fallback, responsive 1-4 photo layouts
+- `services/excel_parser.py` — `parse_network_dashboard()`, `enrich_report_with_dashboard()`
+- `models/report_data.py` — `monthly_rate` field
+- `pages/2_Reports.py` — dashboard upload, monthly rate, enrichment call
+- `pages/1_Proposals.py` — photo caps, UI labels
+- 6 generator files — PHOTO_DISTRIBUTION max: 2→4
+
+---
+
+### 2026-02-23 — V3: Proposal Photo Overhaul + Traction Report Polish (`fb4b743`)
+
+#### Proposal Changes
+- Dedicated page 2 photo uploads, page 4 photos separate. Photo pools properly routed.
+- Client logo centered under client name on cover page.
+
+#### Traction Report Changes
+- KPI grid word-boundary truncation (target ~18 chars, loop through words until exceeding 20)
+- Auto-scaling font sizes: >15 chars→14pt, >10 chars→16pt, otherwise 20pt
+- "Oxford Park Commissi on" → proper word-boundary truncation (no more mid-word breaks)
+- Chart sizing expanded 15-20% for better readability
+
+---
+
+### 2026-02-23 — Proposal v2 Fixes (`a6254f9`) + Traction Report v2 Fixes (`3dadf11`)
+
+10-item traction report fix spec across 3 phases (padding, borders, photo routing, selling points for proposals; 10 items for reports).
+
+---
 
 ### 2026-02-23 — Traction Report v2 (Gold Standard Upgrade)
 
