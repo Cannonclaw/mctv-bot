@@ -61,12 +61,12 @@
       "description": "25 screens in Tupelo bring your brand to the largest city in Northeast Mississippi."
     },
     "Columbus": {
-      "screens": 0,
+      "screens": 2,
       "status": "expanding",
-      "description": "MCTV is actively expanding into Columbus."
+      "description": "MCTV is expanding into Columbus with initial screen placements at key venues."
     },
     "West Point": {
-      "screens": 2,
+      "screens": 1,
       "status": "expanding",
       "description": "MCTV is growing into West Point with initial screen placements."
     }

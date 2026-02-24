@@ -115,9 +115,9 @@
 - `SUPABASE_SERVICE_KEY` — Service role key (bypasses RLS for admin operations)
 - `PORTAL_URL` — Portal base URL for email links (e.g., https://mctv-bot.onrender.com)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — Email notifications
-- `QB_CLIENT_ID`, `QB_CLIENT_SECRET` — QuickBooks Online API credentials (NOT YET on Render — local .env only)
+- `QB_CLIENT_ID`, `QB_CLIENT_SECRET` — QuickBooks Online API credentials (production keys — need to add to Render)
 - `QB_REDIRECT_URI` — QB OAuth callback (local: `http://localhost:8501/Settings`, prod: `https://mctv-bot.onrender.com/Settings`)
-- `QB_ENVIRONMENT` — `sandbox` or `production` (currently `sandbox`)
+- `QB_ENVIRONMENT` — `sandbox` or `production` (currently `production`)
 
 ---
 
@@ -371,12 +371,13 @@ Massive formatting overhaul across 20+ PDF iterations:
   - Report sharing: "Share with Client" button on traction reports → uploads to Storage + creates portal record
   - Portal pages: dashboard (role-aware), contract signing, invoice viewing, creative submissions, reports, profile editor
   - Supabase Auth with RLS (row-level security) for data isolation — clients only see their own data
-- **QuickBooks Online Integration** (code complete, OAuth blocked):
+- **QuickBooks Online Integration** (✅ LIVE — Production):
+  - Connected to **MCTV DIGITAL, INC.** (Realm ID: `9341452762347065`) — 29 real customers
   - Full QB API service: OAuth 2.0, customer sync, invoice sync, payment tracking, batch operations
-  - Settings page: connect/disconnect QB, sync controls, connection status
+  - Settings page: connect/disconnect QB, sync controls, connection status, company info
   - Auto-sync: invoice creation/sending auto-pushes to QB if connected
   - Invoices page: QB sync section (sync payments, push all invoices)
-  - Blocked on Intuit Developer Portal "undefined didn't connect" error (app config issue, not code)
+  - Copy-paste OAuth flow (Intuit popup approach didn't work — see Lesson #23)
 
 ### 4 Color Schemes — Live
 Added 4 selectable color palettes via horizontal radio on Proposals page:
@@ -457,18 +458,21 @@ MCTVofMS.com was **NOT indexed by Google** — `site:mctvofms.com` returned 0 re
 - Routed images stored in session state: `scraped_logo_path`, `scraped_venue_paths`, `scraped_ad_paths`, `scraped_photo_paths`
 - All 6 generator forms merge scraped routes with manual uploads
 
-### QuickBooks Online Integration (2026-02-24) — IN PROGRESS
-Full QB Online API integration built. OAuth flow, customer sync, invoice sync, payment tracking all coded and unit-tested. **Blocked on Intuit Developer Portal configuration** — OAuth consent screen shows "undefined didn't connect" error.
+### QuickBooks Online Integration (2026-02-24/25) — ✅ LIVE (PRODUCTION)
+Full QB Online API integration built and connected to **MCTV DIGITAL, INC.** in production.
 
-**New Files:**
-- `services/quickbooks_service.py` — Full QB API service (~740 lines). OAuth 2.0 flow (auth URL, code exchange, token refresh, revoke), customer CRUD, invoice CRUD, payment queries, batch sync, webhook verification. Uses stdlib urllib (no QB SDK). Token storage: local file (`config/qb_tokens.json`) primary, Supabase `app_settings` table as backup.
+**Production Connection:**
+- Company: **MCTV DIGITAL, INC.**
+- Realm ID: `9341452762347065`
+- Environment: `production` (API: `quickbooks.api.intuit.com`)
+- 29 real customers synced (Allegiant Insurance, FNB Oxford Bank, MS Asthma & Allergy Clinic, etc.)
+- Committed: `2eae20a` (initial QB integration)
 
-**Modified Files:**
-- `pages/3_Settings.py` — Added OAuth callback handler (catches `code`/`realmId` query params at page top), QuickBooks Integration section (connect/disconnect/sync controls), redirect URI display
-- `pages/10_Invoices.py` — Added auto-sync to QB on invoice creation, QuickBooks Sync section in Batch Tools tab (Sync Payments, Push All Invoices)
-- `services/invoice_service.py` — Added auto-sync to QB in `send_invoice()` (try/except so failures don't block)
-- `.gitignore` — Added `config/qb_tokens.json` and `output/contracts/*`
-- `.env` — Added `QB_CLIENT_ID`, `QB_CLIENT_SECRET`, `QB_REDIRECT_URI=http://localhost:8501/Settings`, `QB_ENVIRONMENT=sandbox`
+**Files:**
+- `services/quickbooks_service.py` — Full QB API service (~740 lines). OAuth 2.0, customer CRUD, invoice CRUD, payment queries, batch sync, webhook verification. Stdlib urllib only. Token storage: local file (`config/qb_tokens.json`) primary, Supabase `app_settings` as backup.
+- `pages/3_Settings.py` — OAuth callback handler + QuickBooks Integration section (connect/disconnect/sync). **Copy-paste OAuth flow** (user copies URL → opens in new tab → pastes callback URL back).
+- `pages/10_Invoices.py` — Auto-sync to QB on invoice creation, QuickBooks Sync section in Batch Tools tab
+- `services/invoice_service.py` — Auto-sync to QB in `send_invoice()` (try/except so failures don't block)
 
 **QB Service Architecture:**
 - `get_auth_url(state)` → generates OAuth URL for Intuit authorization
@@ -485,28 +489,22 @@ Full QB Online API integration built. OAuth flow, customer sync, invoice sync, p
 - `get_connection_status()` → connection health check (configured/connected/company info)
 - Token persistence: local file first (fast), Supabase `app_settings` as backup for production
 
-**QB Environment Variables (need to add to Render for production):**
-- `QB_CLIENT_ID` — Intuit app client ID
-- `QB_CLIENT_SECRET` — Intuit app client secret
-- `QB_REDIRECT_URI` — OAuth callback URL (localhost for dev, Render URL for prod)
-- `QB_ENVIRONMENT` — `sandbox` or `production`
+**QB Environment Variables (need to add to Render):**
+- `QB_CLIENT_ID` — Production client ID
+- `QB_CLIENT_SECRET` — Production client secret
+- `QB_REDIRECT_URI` — `https://mctv-bot.onrender.com/Settings`
+- `QB_ENVIRONMENT` — `production`
 
-**OAuth Flow Status — BLOCKED:**
-The OAuth URL is generated correctly (all params verified). The error "undefined didn't connect" comes from the Intuit Developer Portal side. Troubleshooting done so far:
-1. ✅ Redirect URIs added: `http://localhost:8501/Settings` (confirmed in portal screenshot)
-2. ✅ App Name set: "MCTV Bot" (confirmed in portal screenshot)
-3. ✅ App URLs configured: Host Domain=`mctv-bot.onrender.com`, Launch URL=`https://mctv-bot.onrender.com/Settings`, Disconnect URL=`https://mctv-bot.onrender.com/Settings`
-4. ❌ Still getting "undefined didn't connect" error
-5. **Next steps to try:**
-   - Use Intuit's OAuth 2.0 Playground (https://developer.intuit.com/app/developer/playground or "Test connect to app (OAuth)" link from app dashboard) to test credentials independently
-   - Try in incognito/private browser window (cache/cookie issues)
-   - Check ALL required fields in Intuit portal: scopes selected? App logo uploaded? Terms of Service URL? Privacy Policy URL? App categories?
-   - Verify Client ID is from **Development** tab (not Production) since `QB_ENVIRONMENT=sandbox`
-   - The `app_settings` Supabase table doesn't exist yet — not needed for local dev (local file works), but need to create for production token persistence
+**Intuit Developer Portal:**
+- App: "MCTV Bot" — production keys approved 2026-02-25
+- Production redirect URIs: `https://mctv-bot.onrender.com/Settings`, `https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl`
+- Permissions: `com.intuit.quickbooks.accounting`
+- OAuth Playground used for token generation (Intuit's popup OAuth broken for `st.link_button()` — see Lesson #23)
+
+**OAuth Troubleshooting History (RESOLVED):**
+"undefined didn't connect" error was NOT a code issue. Intuit's OAuth consent screen fails with full page navigation (`st.link_button()`). OAuth Playground (popup-based) works. Solution: copy-paste flow in Settings page.
 
 **Test Results:** 14/14 service tests + 5/5 QB unit tests passing
-
-**NOT YET COMMITTED** — All QB changes are staged but not committed/pushed. Files: `services/quickbooks_service.py` (new), `pages/3_Settings.py`, `pages/10_Invoices.py`, `services/invoice_service.py`, `.gitignore` (modified)
 
 ### Known Issues / TODO
 - Email notifications (SMTP configured but not verified end-to-end)
@@ -528,7 +526,7 @@ The OAuth URL is generated correctly (all params verified). The error "undefined
   - ✅ Integration tests: 42/42 passing (28 CRUD lifecycle + 14 service layer) — committed `62a9c40`
   - ✅ RLS policies verified (all 8 tables have row-level security enabled)
   - Still need: email notification end-to-end test (requires SMTP credentials configured)
-- **QuickBooks Integration — code complete, OAuth blocked** (see QuickBooks section above)
+- **QuickBooks on Render** — QB env vars (`QB_CLIENT_ID`, `QB_CLIENT_SECRET`, `QB_REDIRECT_URI`, `QB_ENVIRONMENT`) need to be added to Render dashboard for cloud deployment
 - **Host List Import**: 90 hosts, 24 advertisers, 22 hot list leads imported via `scripts/import_host_list.py`. Total: 115 clients in Supabase.
 
 ---
@@ -736,3 +734,4 @@ This allows multiple Claude Code instances to work in parallel on different part
 - `39ad15d` — Portal documentation updates (HEARTBEAT, MEMORY, CLAUDE)
 - `d2dc9e3` — Fix portal login page routing
 - `62a9c40` — Add integration tests (42/42 pass) + update portal checklist (integration_test.py, service_test.py, setup_portal.py)
+- `2eae20a` — QuickBooks Online integration: OAuth flow, customer/invoice sync, payment tracking (7 files, 1,330 insertions)
