@@ -102,7 +102,7 @@ STANDARD_CLAUSES = [
         "body": (
             "This agreement shall be governed by and construed in accordance with "
             "the laws of the State of Mississippi. Any disputes arising under this "
-            "agreement shall be resolved in the courts of Lafayette County, Mississippi."
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
         ),
     },
 ]
@@ -169,13 +169,24 @@ HOST_CLAUSES = [
         "body": (
             "This agreement shall be governed by and construed in accordance with "
             "the laws of the State of Mississippi. Any disputes arising under this "
-            "agreement shall be resolved in the courts of Lafayette County, Mississippi."
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
         ),
     },
 ]
 
 
 # ── Contract Generator ──────────────────────────────────────────────────────
+
+def _format_date(iso_date: str) -> str:
+    """Convert ISO date (YYYY-MM-DD) to human-readable format (e.g., February 24, 2026)."""
+    if not iso_date:
+        return "TBD"
+    try:
+        dt = datetime.strptime(iso_date[:10], "%Y-%m-%d")
+        return dt.strftime("%B %d, %Y").replace(" 0", " ")  # "February 04" → "February 4"
+    except (ValueError, TypeError):
+        return iso_date  # Return as-is if parsing fails
+
 
 class ContractGenerator:
     """Generate branded MCTV contract documents."""
@@ -248,8 +259,8 @@ class ContractGenerator:
             date=datetime.now().strftime("%B %d, %Y"),
         )
 
-        # Page break
-        doc.add_page_break()
+        # Note: add_cover_page() already ends with a section break (new page),
+        # so no additional page break is needed here.
 
         # ── Partnership Details section ─────────────────────────────
         self.docx_service.add_section_header(doc, "Partnership Details")
@@ -352,8 +363,8 @@ class ContractGenerator:
             ("Term", f"{term_months} months"),
             ("Total Contract Value", f"${total_value:,.2f}"),
             ("Market(s)", ", ".join(markets)),
-            ("Start Date", start_date),
-            ("End Date", end_date),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
             ("Auto-Renew", "Yes" if auto_renew else "No"),
             ("Content Creation", "Included at no additional cost"),
             ("Plays per Hour", "4 per screen"),
@@ -380,8 +391,8 @@ class ContractGenerator:
             ("Screens Hosted", str(screen_count)),
             ("Term", f"{term_months} months"),
             ("Market(s)", ", ".join(markets)),
-            ("Start Date", start_date),
-            ("End Date", end_date),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
             ("Venue Ad Plays (In-Store)", f"{free_inside} plays/hour across network"),
             ("Venue Ad Plays (Outside)", f"{free_outside_plays} plays/hour on {free_outside_screens} screens"),
             ("Content Creation", "Included at no additional cost"),

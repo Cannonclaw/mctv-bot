@@ -211,20 +211,11 @@ class DocxService:
         # Client name (big, white, bold)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(2)
+        p.space_after = Pt(4)
         run = p.add_run(prepared_for.upper())
         run.font.size = Pt(24)
         run.font.color.rgb = self.c["white"]
         run.font.bold = True
-        run.font.name = "Calibri"
-
-        # Subtitle (business name)
-        p = cell.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(4)
-        run = p.add_run(subtitle)
-        run.font.size = Pt(14)
-        run.font.color.rgb = self.c["accent"]
         run.font.name = "Calibri"
 
         # Client logo (if provided)
