@@ -304,9 +304,27 @@ class DocxService:
         new_section.left_margin = Cm(2.0)
         new_section.right_margin = Cm(2.0)
 
-    def add_section_header(self, doc: Document, text: str):
+    def add_section_header(self, doc: Document, text: str, new_page: bool = False):
         """Add a full-width section header bar with navy background, white text,
-        and a thin gold accent line underneath — matching the MUC gold standard."""
+        and a thin gold accent line underneath — matching the MUC gold standard.
+
+        Args:
+            new_page: If True, ensure this header starts at the top of a new page.
+                Uses page_break_before (not doc.add_page_break) so that if the
+                previous content already pushed us to a new page, no blank page
+                is created.
+        """
+        if new_page:
+            # Insert a zero-height paragraph with page_break_before.
+            # Unlike doc.add_page_break(), this does NOT create a blank page
+            # when we're already at the top of a page.
+            spacer = doc.add_paragraph()
+            spacer.paragraph_format.page_break_before = True
+            spacer.paragraph_format.space_before = Pt(0)
+            spacer.paragraph_format.space_after = Pt(0)
+            # Minimal line height so the spacer is invisible
+            spacer_run = spacer.add_run()
+            spacer_run.font.size = Pt(1)
 
         # ── Navy background bar (full-width single-cell table) ──
         header_table = doc.add_table(rows=1, cols=1)
@@ -1086,14 +1104,16 @@ class DocxService:
 
     def add_team_section(self, doc: Document,
                          closing_text: str = "We look forward to partnering with you.",
-                         dark_mode: bool = False):
+                         dark_mode: bool = False,
+                         new_page: bool = False):
         """Add the Meet Your Team section with photos, closing statement, and logo.
 
         Args:
             dark_mode: If True, use dark navy background with white/gold text
                        (used for traction reports for a premium closing page).
+            new_page: If True, start this section on a new page.
         """
-        self.add_section_header(doc, "Meet Your Team")
+        self.add_section_header(doc, "Meet Your Team", new_page=new_page)
 
         team = list(self.config["team"])
 

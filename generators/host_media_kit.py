@@ -160,8 +160,7 @@ class HostMediaKitProposal(BaseProposal):
 
     def _build_addon_pricing(self, doc, data):
         """Config-driven add-on pricing tiers with host discount note."""
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Add-On Advertising Packages")
+        self.docx.add_section_header(doc, "Add-On Advertising Packages", new_page=True)
 
         self.docx.add_body_text(
             doc,

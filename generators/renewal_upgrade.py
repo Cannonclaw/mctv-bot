@@ -156,8 +156,7 @@ class RenewalUpgradeProposal(BaseProposal):
 
     def _build_upgrade_pricing(self, doc, data):
         """Config-driven pricing showing current tier vs. upgrade tier."""
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Upgrade Pricing")
+        self.docx.add_section_header(doc, "Upgrade Pricing", new_page=True)
 
         self.docx.add_body_text(
             doc,

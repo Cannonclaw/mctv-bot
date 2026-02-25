@@ -126,8 +126,7 @@ class VenuePartnerProposal(BaseProposal):
         and 100% advertising slot fill rates across both premium and standard
         slot types.
         """
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Revenue Projections")
+        self.docx.add_section_header(doc, "Revenue Projections", new_page=True)
 
         self.docx.add_body_text(
             doc,

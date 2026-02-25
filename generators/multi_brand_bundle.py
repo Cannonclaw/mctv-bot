@@ -161,8 +161,7 @@ class MultiBrandBundleProposal(BaseProposal):
 
     def _build_bundle_pricing(self, doc, data):
         """Config-driven bundle pricing with Buy 2 Get 1 Free deal."""
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Bundle Pricing")
+        self.docx.add_section_header(doc, "Bundle Pricing", new_page=True)
 
         pricing = self.config["pricing"]
         bundle_deal = pricing["bundle_deal"]

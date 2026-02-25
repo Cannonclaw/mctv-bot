@@ -387,8 +387,7 @@ class ContractGenerator:
             self.docx_service.add_callout_box(doc, f"Additional Notes: {notes}")
 
         # ── Terms & Conditions section ──────────────────────────────
-        doc.add_page_break()
-        self.docx_service.add_section_header(doc, "Terms & Conditions")
+        self.docx_service.add_section_header(doc, "Terms & Conditions", new_page=True)
 
         if contract_type == "host_advertising":
             clauses = HOST_ADVERTISING_CLAUSES
@@ -419,8 +418,7 @@ class ContractGenerator:
                 self.docx_service.add_body_text(doc, "")
 
         # ── Signature section ───────────────────────────────────────
-        doc.add_page_break()
-        self.docx_service.add_section_header(doc, "Agreement & Signature")
+        self.docx_service.add_section_header(doc, "Agreement & Signature", new_page=True)
         self._add_signature_section(doc, business_name, client_name, contract_type)
 
         # ── Save ────────────────────────────────────────────────────

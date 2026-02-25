@@ -69,7 +69,6 @@ class AdvertiserReportGenerator:
             progress_callback("Adding executive summary", current_step, total_steps)
 
         # --- Step 4: Per-venue performance table ---
-        doc.add_page_break()
         self._add_venue_table(doc, data)
         current_step += 1
         if progress_callback:
@@ -81,7 +80,6 @@ class AdvertiserReportGenerator:
         # ends mid-page and the category table gets orphaned across two pages.
         categories = self._build_category_breakdown(data)
         if categories:
-            doc.add_page_break()
             self._add_category_table(doc, categories, data)
             current_step += 1
             if progress_callback:
@@ -101,7 +99,6 @@ class AdvertiserReportGenerator:
             self._add_insights_section(doc, data, categories)
 
         # --- Step 7: Team section ---
-        doc.add_page_break()
         self._add_team_section(doc, data)
         current_step += 1
         if progress_callback:
@@ -285,7 +282,7 @@ class AdvertiserReportGenerator:
 
     def _add_venue_table(self, doc, data: TractionReportInput):
         """Add the per-venue performance breakdown table."""
-        self.docx.add_section_header(doc, "Performance by Venue")
+        self.docx.add_section_header(doc, "Performance by Venue", new_page=True)
 
         if not data.venue_records:
             self.docx.add_body_text(doc, "No venue data available for this report period.")
@@ -381,7 +378,7 @@ class AdvertiserReportGenerator:
 
     def _add_category_table(self, doc, categories: list, data: TractionReportInput):
         """Add the category breakdown summary table + market breakdown below."""
-        self.docx.add_section_header(doc, "Performance by Venue Category")
+        self.docx.add_section_header(doc, "Performance by Venue Category", new_page=True)
 
         self.docx.add_body_text(
             doc,
@@ -488,8 +485,7 @@ class AdvertiserReportGenerator:
           - Recommended Actions callout
           - Next Reporting Period line
         """
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "What This Means for Your Business")
+        self.docx.add_section_header(doc, "What This Means for Your Business", new_page=True)
 
         # Sanity check: don't let Claude fabricate explanations for broken data
         if data.total_plays == 0 and len(data.venue_records) > 0:
@@ -554,8 +550,7 @@ class AdvertiserReportGenerator:
         if not chart_paths:
             return
 
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Performance Analytics")
+        self.docx.add_section_header(doc, "Performance Analytics", new_page=True)
 
         # Use photos_grid for 2×2 layout — sized to fill the page
         self.docx.add_photos_grid(doc, chart_paths, cols=2, max_width=3.8)
@@ -589,7 +584,7 @@ class AdvertiserReportGenerator:
             f"We're committed to maximizing {data.advertiser_name}'s visibility "
             f"across our network."
         )
-        self.docx.add_team_section(doc, closing_text=closing, dark_mode=True)
+        self.docx.add_team_section(doc, closing_text=closing, dark_mode=True, new_page=True)
 
     # ------------------------------------------------------------------
     # Helper methods

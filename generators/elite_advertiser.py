@@ -115,8 +115,7 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── WHAT'S INCLUDED (accent cards — each benefit is its own card) ──
 
     def _build_whats_included(self, doc, content):
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "What's Included")
+        self.docx.add_section_header(doc, "What's Included", new_page=True)
 
         # Parse Claude's "- Title: Description" lines into accent cards
         import re
@@ -139,8 +138,7 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── MARKET COVERAGE (compact: short text + inline venue list) ──
 
     def _build_market_coverage(self, doc, data, content):
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Your Market Coverage")
+        self.docx.add_section_header(doc, "Your Market Coverage", new_page=True)
         self.docx.add_body_text(doc, content)
 
         # Compact venue list as a callout box instead of a grid
@@ -154,8 +152,7 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── PRICING (own page: table + contract terms) ──
 
     def _build_pricing(self, doc, data):
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Partnership Pricing")
+        self.docx.add_section_header(doc, "Partnership Pricing", new_page=True)
 
         if data.custom_pricing:
             # Custom pricing display
@@ -191,8 +188,7 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── WHY MCTV (accent cards — each selling point is its own card) ──
 
     def _build_why_choose_mctv(self, doc, content):
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Why MCTV")
+        self.docx.add_section_header(doc, "Why MCTV", new_page=True)
 
         # Parse Claude's output into (title, description) pairs.
         # Claude may return various formats:
@@ -231,6 +227,5 @@ class EliteAdvertiserProposal(BaseProposal):
     # ── GETTING STARTED (numbered steps like Good Earth) ──
 
     def _build_getting_started(self, doc, data, content):
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Getting Started")
+        self.docx.add_section_header(doc, "Getting Started", new_page=True)
         self.docx.add_body_text(doc, content)

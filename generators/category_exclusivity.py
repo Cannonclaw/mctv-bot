@@ -176,8 +176,7 @@ class CategoryExclusivityProposal(BaseProposal):
 
     def _build_pricing(self, doc, data):
         """Config-driven pricing section with exclusivity premium."""
-        doc.add_page_break()
-        self.docx.add_section_header(doc, "Exclusivity Pricing")
+        self.docx.add_section_header(doc, "Exclusivity Pricing", new_page=True)
 
         pricing = self.config["pricing"]
         exclusivity_desc = pricing.get(
