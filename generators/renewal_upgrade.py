@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Renewal / Upgrade proposal generator — scannable, visual v20 layout."""
 
 import re

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """MCTV Elite Advertising Bot - Main Streamlit Application."""
 
 import streamlit as st
@@ -126,6 +129,7 @@ def main():
         st.caption("MCTV Elite Advertising")
         st.caption("Oxford | Starkville | Tupelo")
         st.caption("www.mctvofms.com")
+        st.caption("© 2026 MCTV Digital, Inc.")
 
     # Main content - Home page
     st.markdown('<p class="main-header">MCTV Elite Advertising Bot</p>', unsafe_allow_html=True)

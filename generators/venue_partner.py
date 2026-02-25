@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Venue Partner / Revenue Share proposal generator — scannable, visual style.
 
 Generates a proposal for high-traffic venues (airports, hospitals, arenas)

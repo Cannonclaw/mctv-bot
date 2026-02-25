@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Category Exclusivity proposal generator — scannable, visual v20 layout."""
 
 from generators.base_proposal import BaseProposal

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """End-to-end contract flow test for MCTV Client Portal.
 
 Tests: create client → create contract → generate PDF → send → sign → activate → cleanup.

@@ -1,11 +1,11 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live on Render — Client Portal Deployed
+## Current Status: Live on Render — CPM + SMS Messaging Deployed
 
-**Last deploy:** 2026-02-24 — `88d01cc` pushed to GitHub, Render auto-deploying
+**Last deploy:** 2026-02-24 — `4a37c90` pushed to GitHub, Render auto-deploying
 **URL:** https://mctv-bot.onrender.com
 **Branch:** main (auto-deploys on push)
-**Latest commit:** `88d01cc` — Client Portal: full lifecycle platform (28 files, 5,822 insertions)
+**Latest commit:** `4a37c90` — SMS Messaging: Twilio integration with compose, templates, opt-in, history
 
 ---
 
@@ -54,6 +54,12 @@
 - [x] Portal Reports (view shared traction reports with download links)
 - [x] Portal Profile (edit contact info, change password, support contacts)
 - [x] Dual-mode authentication (team password for internal + Supabase Auth for portal)
+- [x] CPM metrics in traction reports (KPI banner, chart column, category table, AI insights enrichment)
+- [x] CPM in all 6 proposal types (per-tier calculations, industry benchmark comparison)
+- [x] Industry CPM benchmarks: Radio $5-12, Print $10-30, Outdoor $3-8, Cable TV $15-30, Digital $5-15, Social $6-12
+- [x] SMS Messaging dashboard (compose, quick templates, opt-in management, message history)
+- [x] Twilio SMS integration (send_sms, send_template, 8 built-in templates, consent enforcement)
+- [x] SMS notification hooks (proposal sent, contract ready, invoice reminder, welcome, creative live, traction report)
 
 ## What Needs Attention
 
@@ -95,11 +101,69 @@
   - [x] Integration test: 42/42 tests passed (auth, CRUD, updates, queries, service layers — 2026-02-24)
   - [ ] Verify RLS policies work (client A can't see client B's data)
   - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
+- [ ] **Twilio SMS activation** — Dashboard built, needs: sign up at twilio.com, get SID/token/phone, add to Render env vars, register A2P 10DLC (1-2 weeks approval)
 - [ ] **Host portal dashboard** — currently same layout as advertiser. Future: venue screen status, traffic stats, free ad slot management
 
 ---
 
 ## Changelog
+
+### 2026-02-24 — SMS Messaging System (`4a37c90`)
+
+Full Twilio SMS integration with TCPA-compliant consent management. Dashboard ready — activates when Twilio credentials are added.
+
+#### New Files
+- **`services/sms_service.py`** — Core SMS engine: Twilio client management, `format_phone()` (any format → E.164), `set_consent()` / `check_consent()` / `get_all_consent()` (Supabase + local JSON fallback), `send_sms()` (consent enforcement, auto-appends STOP, logs history), `send_template()` (variable substitution). 8 built-in templates: proposal_sent, follow_up_3day, traction_report, invoice_reminder, contract_ready, welcome_new_client, creative_live, host_check_in.
+- **`pages/12_Messaging.py`** — 4-tab SMS dashboard: Compose (contact picker from leads/clients, consent check, char/segment counter), Quick Templates (selector, auto-fill, live preview), Opt-In Management (add/bulk opt-in, consent records viewer), Message History (expandable log with status icons).
+
+#### Modified Files
+- **`services/notification_service.py`** — Added SMS counterparts for all email notifications: `_try_sms()` generic helper, `sms_proposal_sent()`, `sms_contract_ready()`, `sms_invoice_reminder()`, `sms_welcome_client()`, `sms_creative_live()`, `sms_traction_report()`. All fail silently if Twilio not configured.
+- **`requirements.txt`** — Added `twilio>=9.0.0`
+- **`.env`** — Added Twilio placeholders: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
+- **`app.py`** — Added SMS Messaging to sidebar navigation
+
+---
+
+### 2026-02-24 — CPM in All 6 Proposal Types + Industry Benchmarks (`c70ac34`)
+
+Every proposal now shows calculated CPM with comparison to Radio, Print, Outdoor/Billboards, Cable TV, Digital display, and Social media benchmarks.
+
+#### New Helpers in `services/config_service.py`
+- `parse_impression_count()` — Parses "1.9M+" or "409K+" to float
+- `get_network_impressions()`, `get_total_screens()` — Extract from config
+- `calculate_cpm()` — `(monthly_rate / impressions) × 1000`
+- `get_tier_impressions()` — `(tier_screens / total_screens) × total_impressions`
+- `CPM_BENCHMARK_TEXT` — Single constant imported by all 6 generators: "Radio $5–$12 | Print $10–$30 | Outdoor $3–$8 | Cable TV $15–$30 | Digital $5–$15 | Social $6–$12"
+
+#### Generator Updates
+- **`elite_advertiser.py`** — Per-tier CPM in pricing callout, custom CPM display
+- **`category_exclusivity.py`** — CPM in exclusivity metrics banner + callout
+- **`host_media_kit.py`** — CPM comparison after add-on pricing table
+- **`multi_brand_bundle.py`** — Per-brand CPM, bundle CPM efficiency
+- **`renewal_upgrade.py`** — CPM in current vs upgrade banners, improvement text
+- **`venue_partner.py`** — Advertiser CPM context in rate assumptions
+
+#### CPM Values (at 1.9M impressions / 125 screens)
+| Tier | Screens | Monthly Rate | CPM |
+|------|---------|-------------|-----|
+| Community | 10 | $350 | $2.30 |
+| Market | 20 | $500 | $1.64 |
+| Regional | 40 | $800 | $1.32 |
+| Elite | 75+ | $1,300 | $1.14 |
+
+---
+
+### 2026-02-24 — CPM Metrics in Traction Reports (`4203458`)
+
+Added CPM data to traction report KPI banner, venue table, category breakdown, and AI insights prompt.
+
+- **KPI banner** — New CPM metric alongside Total Plays, Active Venues, Screen Time
+- **Venue table** — CPM column when monthly rate provided (proportional cost allocation per venue)
+- **Category table** — CPM per category
+- **Chart service** — CPM data point on scatter chart
+- **AI insights** — CPM context added to Claude prompt for smarter analysis
+
+---
 
 ### 2026-02-24 — Client Portal: Full Lifecycle Platform (`88d01cc`)
 

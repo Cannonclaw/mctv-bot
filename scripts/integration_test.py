@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Integration test for MCTV Client Portal.
 
 Tests the full CRUD lifecycle: client → contract → invoice → creative → report → activity.

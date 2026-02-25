@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Client portal login — email/password via Supabase Auth."""
 
 import streamlit as st
@@ -136,6 +139,9 @@ st.markdown(
     <div style="text-align: center; color: #888; font-size: 0.85rem;">
         <p>MCTV Elite Advertising | Oxford | Starkville | Tupelo</p>
         <p>www.mctvofms.com</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">
+            &copy; 2026 MCTV Digital, Inc. All rights reserved.
+        </p>
     </div>
     """,
     unsafe_allow_html=True,

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Supabase Storage wrapper for file upload, download, and management.
 
 Handles client uploads (photos, logos), contract PDFs, reports, and deliveries.

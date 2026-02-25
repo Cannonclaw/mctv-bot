@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Persistent Network Dashboard service.
 
 Stores the parsed MCTV Network Dashboard as a JSON file so it only needs

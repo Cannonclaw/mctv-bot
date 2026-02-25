@@ -1,3 +1,6 @@
+# Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+# Proprietary and confidential. Unauthorized copying, distribution,
+# or modification of this file is strictly prohibited.
 """Creatomate API wrapper for generating video ad mockups.
 
 Uses stdlib urllib only (no requests dependency) to match project conventions.
