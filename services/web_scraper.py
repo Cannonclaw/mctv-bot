@@ -127,7 +127,7 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
         print(f"[web_scraper] Failed to fetch {url}: {e}")
         return []
 
-    # Find all image tags
+    # Find all image tags — src attribute
     img_pattern = re.compile(
         r'<img[^>]+src=["\']([^"\']+)["\'][^>]*(?:alt=["\']([^"\']*)["\'])?',
         re.IGNORECASE
@@ -135,6 +135,17 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
     # Also try reversed order (alt before src)
     img_pattern2 = re.compile(
         r'<img[^>]+alt=["\']([^"\']*)["\'][^>]*src=["\']([^"\']+)["\']',
+        re.IGNORECASE
+    )
+    # Lazy-loaded images: data-src, data-lazy-src, data-original
+    lazy_pattern = re.compile(
+        r'<img[^>]+data-(?:lazy-)?(?:src|original)=["\']([^"\']+)["\'][^>]*'
+        r'(?:alt=["\']([^"\']*)["\'])?',
+        re.IGNORECASE
+    )
+    # srcset: grab the largest resolution image
+    srcset_pattern = re.compile(
+        r'<img[^>]+srcset=["\']([^"\']+)["\']',
         re.IGNORECASE
     )
 
@@ -152,6 +163,30 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
         full_url = urljoin(url, src)
         if _is_valid_image(full_url):
             found[full_url] = alt
+
+    # Lazy-loaded images (data-src, data-lazy-src, data-original)
+    for match in lazy_pattern.finditer(html):
+        src = match.group(1)
+        alt = match.group(2) or ""
+        full_url = urljoin(url, src)
+        if full_url not in found and _is_valid_image(full_url):
+            found[full_url] = alt
+
+    # srcset: pick the largest image from each srcset
+    for match in srcset_pattern.finditer(html):
+        srcset_str = match.group(1)
+        best_url, best_w = "", 0
+        for entry in srcset_str.split(","):
+            parts = entry.strip().split()
+            if len(parts) >= 1:
+                candidate = parts[0]
+                w = int(parts[1].rstrip("w")) if len(parts) > 1 and parts[1].endswith("w") else 0
+                if w > best_w:
+                    best_url, best_w = candidate, w
+        if best_url:
+            full_url = urljoin(url, best_url)
+            if full_url not in found and _is_valid_image(full_url):
+                found[full_url] = ""
 
     # Also find OG image and favicon
     og_match = re.search(
@@ -181,32 +216,111 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
     return results
 
 
+def _normalize_cdn_url(img_url: str) -> str:
+    """Rewrite CDN thumbnail URLs to request full-size images.
+
+    Handles Wix, Squarespace, and Shopify CDN URL patterns that serve
+    tiny placeholders or unsupported formats (AVIF) in the initial HTML.
+    """
+    # Wix: rewrite /v1/fill/... to request ~800px wide, JPEG format
+    if "wixstatic.com/media/" in img_url and "/v1/fill/" in img_url:
+        # Extract base: everything up to /v1/fill/
+        base, _, params_and_name = img_url.partition("/v1/fill/")
+        # Get the filename at the end (after the last /)
+        filename = params_and_name.rsplit("/", 1)[-1] if "/" in params_and_name else ""
+        if filename:
+            return f"{base}/v1/fill/w_800,h_800,al_c,q_85,enc_auto/{filename}"
+        return img_url
+
+    # Squarespace: remove ?format=XXXw size constraint
+    if "squarespace-cdn.com" in img_url or "sqspcdn.com" in img_url:
+        if "?format=" in img_url:
+            return img_url.split("?format=")[0] + "?format=1500w"
+
+    # Shopify: request large size instead of thumbnail
+    if "cdn.shopify.com" in img_url:
+        # Replace _100x, _200x etc with _800x
+        img_url = re.sub(r'_\d+x(\d+)?\.', '_800x.', img_url)
+
+    return img_url
+
+
 def download_image(img_url: str) -> str | None:
-    """Download an image to a temp file. Returns the file path or None."""
+    """Download an image to a temp file. Returns the file path or None.
+
+    Converts .webp images to .png so they embed correctly in Word documents
+    (python-docx does not support .webp). Also validates minimum pixel
+    dimensions to filter out thumbnails and spacers.
+    """
     try:
+        img_url = _normalize_cdn_url(img_url)
         parsed = urlparse(img_url)
-        ext = Path(parsed.path).suffix or ".jpg"
+        ext = Path(parsed.path).suffix.lower().split("?")[0] or ".jpg"
         if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"):
             ext = ".jpg"
 
         req = urllib.request.Request(img_url, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Referer": f"{parsed.scheme}://{parsed.netloc}/",
         })
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = resp.read()
 
-        # Skip tiny images (icons, spacers) — less than 5KB
-        if len(data) < 5000:
+        # Skip tiny images (icons, spacers) — less than 3KB
+        if len(data) < 3000:
             return None
 
         # Skip SVGs (they don't embed well in docx)
         if ext == ".svg" or b"<svg" in data[:500]:
             return None
 
+        # Detect actual format from file header (CDNs often ignore extension)
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            ext = ".webp"
+        elif data[:8] == b"\x89PNG\r\n\x1a\n":
+            ext = ".png"
+        elif data[:2] in (b"\xff\xd8",):
+            ext = ".jpg"
+
+        # Save raw download first
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
         tmp.write(data)
         tmp.close()
-        return tmp.name
+        raw_path = tmp.name
+
+        # Convert .webp to .png (python-docx doesn't support webp)
+        if ext == ".webp":
+            try:
+                from PIL import Image
+                with Image.open(raw_path) as img:
+                    # Also validate pixel dimensions
+                    w, h = img.size
+                    if w < 50 or h < 50:
+                        os.unlink(raw_path)
+                        return None
+                    png_path = raw_path.replace(".webp", ".png")
+                    img.convert("RGB").save(png_path, "PNG")
+                os.unlink(raw_path)
+                return png_path
+            except Exception as e:
+                print(f"[web_scraper] webp conversion failed for {img_url}: {e}")
+                os.unlink(raw_path)
+                return None
+
+        # Validate pixel dimensions for non-webp images
+        try:
+            from PIL import Image
+            with Image.open(raw_path) as img:
+                w, h = img.size
+                if w < 50 or h < 50:
+                    os.unlink(raw_path)
+                    return None
+        except Exception:
+            pass  # If PIL can't read it, let docx try anyway
+
+        return raw_path
 
     except Exception as e:
         print(f"[web_scraper] Failed to download {img_url}: {e}")

@@ -1,0 +1,976 @@
+{
+  "updated_at": "2026-02-24T20:46:40.744351",
+  "venue_count": 97,
+  "venues": {
+    "39759 nutrition": {
+      "host_name": "39759 Nutrition",
+      "category": "Health Food Store",
+      "general_category": "Retail",
+      "address": "450 MS-12 Suite B, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "4 corner's chevron (chicken on a stick)": {
+      "host_name": "4 Corner's Chevron (Chicken On A Stick)",
+      "category": "Gas Station",
+      "general_category": "Gas/ Grocery",
+      "address": "502 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 12546.5,
+      "dwell_time": 30.2,
+      "impressions": 25260.28667
+    },
+    "662 wine and liquor": {
+      "host_name": "662 Wine and Liquor",
+      "category": "Liquor Store",
+      "general_category": "Liquor/Wine/Beer Store",
+      "address": "3650 N Gloster St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 5947.0,
+      "dwell_time": 28.1,
+      "impressions": 11140.71333
+    },
+    "aaron wash beard co": {
+      "host_name": "Aaron Wash Beard Co",
+      "category": "Barber Shop",
+      "general_category": "Barbershop/Salon",
+      "address": "793 S Gloster St, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "all shook up nutrition": {
+      "host_name": "All Shook Up Nutrition",
+      "category": "Cafe",
+      "general_category": "Bar/Restaurant",
+      "address": "5383 Cliff Gookin Blvd, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "amara salon & aesthetics": {
+      "host_name": "Amara Salon & Aesthetics",
+      "category": "Hair Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "1550 University Ave, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 14671.36
+    },
+    "arepas coffee & bar": {
+      "host_name": "Arepas Coffee & Bar",
+      "category": "Venezuelan Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "102 Rue Du Grand Fromage, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "b's hickory smoke bbq": {
+      "host_name": "B's Hickory Smoke BBQ",
+      "category": "Barbecue Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "825 College Hill Rd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "bennett home furniture & more": {
+      "host_name": "Bennett Home Furniture & More",
+      "category": "Shopping Mall",
+      "general_category": "Retail",
+      "address": "404 MS-12, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "bep haus": {
+      "host_name": "Bep Haus",
+      "category": "Pho restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "1502 Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "big e\u2019s dinner club": {
+      "host_name": "Big E\u2019s Dinner Club",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "100 Starr Ave Suite H, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "bj's family pharmacy": {
+      "host_name": "BJ's Family Pharmacy",
+      "category": "Pharmacy",
+      "general_category": "Medical",
+      "address": "605 S Jackson St, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "booth's barbeque and yard": {
+      "host_name": "Booth's Barbeque and Yard",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "2200 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "built different fitness": {
+      "host_name": "Built Different Fitness",
+      "category": "Gym",
+      "general_category": "Health & Fitness",
+      "address": "2580 Jackson Ave W Suite 39, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 4786.5,
+      "dwell_time": 57.1,
+      "impressions": 18220.61
+    },
+    "cannon chevrolet buick cadillac of oxford": {
+      "host_name": "Cannon Chevrolet Buick Cadillac of Oxford",
+      "category": "Building",
+      "general_category": "Other",
+      "address": "100 N Thacker Lp, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "cannon chevrolet gmc of west point": {
+      "host_name": "Cannon Chevrolet GMC of West Point",
+      "category": "Chevrolet Dealer",
+      "general_category": "Other",
+      "address": "1522 US-45 ALT, West Point MS 39773",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "cannon collision center": {
+      "host_name": "Cannon Collision Center",
+      "category": "Building",
+      "general_category": "Other",
+      "address": "100 N Thacker Lp, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "cardiology associates of north mississippi": {
+      "host_name": "Cardiology Associates of North Mississippi",
+      "category": "Cardiologist",
+      "general_category": "Medical",
+      "address": "499 S Gloster St B-2, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "casa mexicana of oxford": {
+      "host_name": "Casa Mexicana of Oxford",
+      "category": "Mexican Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "422 MS-6, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 42113.736
+    },
+    "cellars wine & spirits": {
+      "host_name": "Cellars Wine & Spirits",
+      "category": "Liquor Store",
+      "general_category": "Liquor/Wine/Beer Store",
+      "address": "500 Russell St APT 11, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5947.0,
+      "dwell_time": 28.1,
+      "impressions": 11140.71333
+    },
+    "copy cow": {
+      "host_name": "Copy Cow",
+      "category": "Print Shop",
+      "general_category": "Retail",
+      "address": "500 Russell St STE 1, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "crossfit tupelo": {
+      "host_name": "CrossFit Tupelo",
+      "category": "Gym",
+      "general_category": "Health & Fitness",
+      "address": "1892 McCullough Blvd, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 4786.5,
+      "dwell_time": 57.1,
+      "impressions": 18220.61
+    },
+    "el charro cocina & cantina": {
+      "host_name": "El Charro Cocina & Cantina",
+      "category": "Mexican Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "669 Sisk Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "element hair studio": {
+      "host_name": "Element Hair Studio",
+      "category": "Hair Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "404 S 11th St, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "elm lake golf course": {
+      "host_name": "Elm Lake Golf Course",
+      "category": "Golf Course",
+      "general_category": "Family Rec & Entertainment",
+      "address": "1609 Taylor Thurston Rd, Columbus MS 39701",
+      "license_count": 2,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 55749.672
+    },
+    "exceed technologies": {
+      "host_name": "Exceed Technologies",
+      "category": "Computer repair service",
+      "general_category": "Professional Services",
+      "address": "499 S Gloster St, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2117.1,
+      "dwell_time": 32.7,
+      "impressions": 4615.278
+    },
+    "finch & kelly": {
+      "host_name": "Finch & Kelly",
+      "category": "Men's Clothing Store",
+      "general_category": "Retail",
+      "address": "1003 Van Buren Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "hobie\u2019s tiki dawgs & daqs": {
+      "host_name": "Hobie\u2019s Tiki Dawgs & Daqs",
+      "category": "Bar",
+      "general_category": "Bar/Restaurant",
+      "address": "203 Maxwell St, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "hotel tupelo": {
+      "host_name": "Hotel Tupelo",
+      "category": "Hotel",
+      "general_category": "Travel & Tourism",
+      "address": "314 E Main St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 12843.2,
+      "dwell_time": 161.1,
+      "impressions": 137935.968
+    },
+    "internal medicine associates of oxford": {
+      "host_name": "Internal Medicine Associates of Oxford",
+      "category": "Internist",
+      "general_category": "Medical",
+      "address": "551 Azalea Dr, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 33632.42667
+    },
+    "james food center post office": {
+      "host_name": "James Food Center Post Office",
+      "category": "Post Office",
+      "general_category": "Non Profit, Community, Government",
+      "address": "505 E Jackson Ave, Oxford MS38655",
+      "license_count": 1,
+      "traffic": 3838.2,
+      "dwell_time": 66.2,
+      "impressions": 16939.256
+    },
+    "landshark seafood & catfish": {
+      "host_name": "LandShark Seafood & Catfish",
+      "category": "Seafood Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "2311 Jackson Ave W UNIT 301, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "legends hair salon": {
+      "host_name": "Legends Hair Salon",
+      "category": "Beauty Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "448 MS-12 Suite 7, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "little bambini children's boutique": {
+      "host_name": "Little Bambini Children's Boutique",
+      "category": "Children's Clothing Store",
+      "general_category": "Retail",
+      "address": "1529 University Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "little magnolia gifts & apparel - starkville": {
+      "host_name": "Little Magnolia Gifts & Apparel - Starkville",
+      "category": "Children's Store",
+      "general_category": "Other",
+      "address": "87 Mill St, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "little magnolia gifts and apparel": {
+      "host_name": "Little Magnolia Gifts and Apparel",
+      "category": "Children's Clothing Store",
+      "general_category": "Retail",
+      "address": "1608 W Main St, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "loaded nutrition - tupelo": {
+      "host_name": "Loaded Nutrition - Tupelo",
+      "category": "Cafe",
+      "general_category": "Bar/Restaurant",
+      "address": "623 W Main St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "lucky nails & spa": {
+      "host_name": "Lucky Nails & Spa",
+      "category": "Nail Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "831 MS-12 suite D, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "luxe styling studio": {
+      "host_name": "Luxe Styling Studio",
+      "category": "Beauty Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "1312b University Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "magnolia dermatology: columbus clinic": {
+      "host_name": "Magnolia Dermatology: Columbus Clinic",
+      "category": "Dermatologist",
+      "general_category": "Medical",
+      "address": "428 Hospital Dr, Columbus MS  39705",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "magnolia wine & spirits": {
+      "host_name": "Magnolia Wine & Spirits",
+      "category": "Liquor Store",
+      "general_category": "Liquor/Wine/Beer Store",
+      "address": "1453 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5947.0,
+      "dwell_time": 28.1,
+      "impressions": 11140.71333
+    },
+    "marathon south lamar": {
+      "host_name": "MARATHON South Lamar",
+      "category": "Gas Station",
+      "general_category": "Gas/ Grocery",
+      "address": "1455 S Lamar Blvd, Oxford MS  38655",
+      "license_count": 1,
+      "traffic": 12546.5,
+      "dwell_time": 30.2,
+      "impressions": 25260.28667
+    },
+    "midtown pointe shopping center": {
+      "host_name": "Midtown Pointe Shopping Center",
+      "category": "Business center",
+      "general_category": "Non Profit, Community, Government",
+      "address": "499 S Gloster St Suite F-9, Tupelo MS 38801",
+      "license_count": 2,
+      "traffic": 3838.2,
+      "dwell_time": 66.2,
+      "impressions": 33878.512
+    },
+    "mississippi asthma & allergy clinic, p.a.": {
+      "host_name": "Mississippi Asthma & Allergy Clinic, P.A.",
+      "category": "Allergist",
+      "general_category": "Medical",
+      "address": "1190 S 18th St, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "mississippi asthma & allergy clinic, pa - starkville": {
+      "host_name": "Mississippi Asthma & Allergy Clinic, PA - Starkville",
+      "category": "Medical Clinic",
+      "general_category": "Medical",
+      "address": "100 Brandon Rd, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "mississippi ice daiquiri shop": {
+      "host_name": "Mississippi Ice Daiquiri Shop",
+      "category": "Bar",
+      "general_category": "Bar/Restaurant",
+      "address": "395 College View Dr Suite 32, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "montgomery's jewelry": {
+      "host_name": "Montgomery's Jewelry",
+      "category": "Jewelry Store",
+      "general_category": "Retail",
+      "address": "218 E Main St, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "mudcreek wine and spirit": {
+      "host_name": "Mudcreek wine and spirit",
+      "category": "Liquor Store",
+      "general_category": "Liquor/Wine/Beer Store",
+      "address": "2989A W Barnes Crossing Rd, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 5947.0,
+      "dwell_time": 28.1,
+      "impressions": 11140.71333
+    },
+    "nail e!": {
+      "host_name": "Nail E!",
+      "category": "Nail Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "2580 Jackson Ave W, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 14671.36
+    },
+    "nail e! tupelo": {
+      "host_name": "Nail E! Tupelo",
+      "category": "Nail Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "3952B N Gloster St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "nail thology": {
+      "host_name": "Nail Thology",
+      "category": "Nail Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "1535 University Ave, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 14671.36
+    },
+    "oktibbeha county co-op": {
+      "host_name": "Oktibbeha County Co-op",
+      "category": "Animal Feed Store",
+      "general_category": "Retail",
+      "address": "201 Pollard Rd, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "oxford dental": {
+      "host_name": "Oxford Dental",
+      "category": "Dentist",
+      "general_category": "Medical",
+      "address": "2155 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "oxford park commission": {
+      "host_name": "Oxford Park Commission",
+      "category": "Recreation Center",
+      "general_category": "Family Rec & Entertainment",
+      "address": "396 Price St, Oxford MS  38655",
+      "license_count": 5,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 139374.18
+    },
+    "oxford super tan": {
+      "host_name": "Oxford Super Tan",
+      "category": "Tanning Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "301 Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "oxford t-shirt co.": {
+      "host_name": "Oxford T-Shirt Co.",
+      "category": "Clothing Store",
+      "general_category": "Retail",
+      "address": "1453 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "oxford urology -tupelo": {
+      "host_name": "Oxford Urology -Tupelo",
+      "category": "Medical Clinic",
+      "general_category": "Medical",
+      "address": "2089 Southridge Dr, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "oxford-lafayette county chamber of commerce": {
+      "host_name": "Oxford-Lafayette County Chamber of Commerce",
+      "category": "Chamber Of Commerce",
+      "general_category": "Other",
+      "address": "299 Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "party in the sip": {
+      "host_name": "Party in the Sip",
+      "category": "Party Store",
+      "general_category": "Retail",
+      "address": "1527 University Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "pizza doctor": {
+      "host_name": "Pizza Doctor",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "499 S Gloster St, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "premier aesthetics": {
+      "host_name": "Premier Aesthetics",
+      "category": "Medical Spa",
+      "general_category": "Education",
+      "address": "1890 McCullough Blvd Suite 102, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "rafters music and food": {
+      "host_name": "Rafters Music and Food",
+      "category": "Live Music Bar",
+      "general_category": "Family Rec & Entertainment",
+      "address": "1006 E Jackson Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 27874.836
+    },
+    "rainbow cleaners": {
+      "host_name": "Rainbow Cleaners",
+      "category": "Dry Cleaner",
+      "general_category": "Professional Services",
+      "address": "1203 Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 2117.1,
+      "dwell_time": 32.7,
+      "impressions": 4615.278
+    },
+    "rebel body fitness": {
+      "host_name": "Rebel Body Fitness",
+      "category": "Gym",
+      "general_category": "Health & Fitness",
+      "address": "1627 Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 4786.5,
+      "dwell_time": 57.1,
+      "impressions": 18220.61
+    },
+    "rebel yell rooftop bar": {
+      "host_name": "Rebel Yell Rooftop Bar",
+      "category": "Building",
+      "general_category": "Other",
+      "address": "1107 E Jackson Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "redmed urgent clinic of oxford - jackson ave": {
+      "host_name": "RedMed Urgent Clinic of Oxford - Jackson Ave",
+      "category": "Urgent Care Center",
+      "general_category": "Non Profit, Community, Government",
+      "address": "1902 B Jackson Ave W, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3838.2,
+      "dwell_time": 66.2,
+      "impressions": 16939.256
+    },
+    "revive wellness clinic - starkville": {
+      "host_name": "Revive Wellness Clinic - Starkville",
+      "category": "Medical Spa",
+      "general_category": "Education",
+      "address": "100 Russell St #19, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "revive wellness of oxford": {
+      "host_name": "Revive Wellness of Oxford",
+      "category": "Doctor",
+      "general_category": "Medical",
+      "address": "2166 South Lamar Boulevard, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "right track medical group - oxford": {
+      "host_name": "Right Track Medical Group - Oxford",
+      "category": "Mental Health Clinic",
+      "general_category": "Medical",
+      "address": "1203 Medical Park Dr, Oxford MS 38655",
+      "license_count": 3,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 50448.64
+    },
+    "right track medical group - starkville": {
+      "host_name": "Right Track Medical Group - Starkville",
+      "category": "Mental Health Clinic",
+      "general_category": "Medical",
+      "address": "200 MS-12, Starkville MS 39759",
+      "license_count": 2,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 33632.42667
+    },
+    "right track medical group - tupelo": {
+      "host_name": "Right Track Medical Group - Tupelo",
+      "category": "Counselor",
+      "general_category": "Other",
+      "address": "4428 S Eason Blvd # 1, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 3414.5,
+      "dwell_time": 62.7,
+      "impressions": 14272.61
+    },
+    "rosati's pizza": {
+      "host_name": "Rosati's Pizza",
+      "category": "Pizza Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "319 N Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "second skin waxing": {
+      "host_name": "Second Skin Waxing",
+      "category": "Beauty Salon",
+      "general_category": "Barbershop/Salon",
+      "address": "623 W Main St Suite 21, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2084.0,
+      "dwell_time": 52.8,
+      "impressions": 7335.68
+    },
+    "sip oxford": {
+      "host_name": "Sip Oxford",
+      "category": "Sports Nutrition Store",
+      "general_category": "Retail",
+      "address": "1537 University Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "skate odyssey inc": {
+      "host_name": "Skate Odyssey Inc",
+      "category": "Roller Skating Rink",
+      "general_category": "Family Rec & Entertainment",
+      "address": "830 Louisville St, Starkville MS 39759",
+      "license_count": 2,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 55749.672
+    },
+    "skate zone in tupelo": {
+      "host_name": "Skate Zone in Tupelo",
+      "category": "Roller Skating Rink",
+      "general_category": "Family Rec & Entertainment",
+      "address": "103 Parkgate Dr, Tupelo MS 38801",
+      "license_count": 2,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 55749.672
+    },
+    "sophia misaki beauty": {
+      "host_name": "Sophia Misaki Beauty",
+      "category": "Day Spa",
+      "general_category": "Family Rec & Entertainment",
+      "address": "207 N Madison St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 4419.9,
+      "dwell_time": 94.6,
+      "impressions": 27874.836
+    },
+    "southern coop": {
+      "host_name": "Southern Coop",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "705 Sisk Ave #111, Oxford MS 38655",
+      "license_count": 2,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 42113.736
+    },
+    "starkvegas pawnshop": {
+      "host_name": "starkvegas pawnshop",
+      "category": "Pawn Shop",
+      "general_category": "Retail",
+      "address": "202 Dr Martin Luther King Jr Dr W, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "starkville veterinary hospital": {
+      "host_name": "Starkville Veterinary Hospital",
+      "category": "Veterinarian",
+      "general_category": "Education",
+      "address": "1400 Louisville St, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "stouts carpet & flooring": {
+      "host_name": "Stouts Carpet & Flooring",
+      "category": "Flooring Store",
+      "general_category": "Retail",
+      "address": "2 Private Rd 2050, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3855.6,
+      "dwell_time": 32.2,
+      "impressions": 8276.688
+    },
+    "style society": {
+      "host_name": "STYLE SOCIETY",
+      "category": "Medical Spa",
+      "general_category": "Education",
+      "address": "1890 McCullough Blvd Suite 101, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "texaco lamar express": {
+      "host_name": "Texaco lamar express",
+      "category": "Gas Station",
+      "general_category": "Gas/ Grocery",
+      "address": "1448 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 12546.5,
+      "dwell_time": 30.2,
+      "impressions": 25260.28667
+    },
+    "the blind pig pub": {
+      "host_name": "The Blind Pig Pub",
+      "category": "Pub",
+      "general_category": "Bar/Restaurant",
+      "address": "105 N Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "the breakfast club": {
+      "host_name": "The Breakfast Club",
+      "category": "Breakfast Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "105 Eckford Ln, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "the children's dental center": {
+      "host_name": "The Children's Dental Center",
+      "category": "Dentist",
+      "general_category": "Medical",
+      "address": "2408 S Lamar Blvd #1, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "the oxford growler": {
+      "host_name": "The Oxford Growler",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "265 N Lamar Blvd Suite Y, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "the velvet ditch - sports bar & seafood": {
+      "host_name": "The Velvet Ditch - Sports bar & Seafood",
+      "category": "Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "430 S Lamar Blvd, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "tupelo river coffee": {
+      "host_name": "Tupelo River Coffee",
+      "category": "Coffee Shop",
+      "general_category": "Coffee/Donut/Bagel Shop",
+      "address": "522 W Main St, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 6817.2,
+      "dwell_time": 32.2,
+      "impressions": 14634.256
+    },
+    "tupelo small animal hospital": {
+      "host_name": "Tupelo Small Animal Hospital",
+      "category": "Veterinarian",
+      "general_category": "Education",
+      "address": "422 S Veterans Memorial, Tupelo MS 38804",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "two brothers smoked meats": {
+      "host_name": "Two Brothers Smoked Meats",
+      "category": "Barbecue Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "621 University Dr, Starkville MS 39759",
+      "license_count": 3,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 63170.604
+    },
+    "umi japanese steakhouse & sushi bar": {
+      "host_name": "Umi Japanese Steakhouse & Sushi Bar",
+      "category": "Japanese Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "315 MS-12, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "uno mas tacos y tequila jackson ave": {
+      "host_name": "Uno Mas Tacos y Tequila Jackson Ave",
+      "category": "Taco Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "1101 E Jackson Ave, Oxford MS 38655",
+      "license_count": 1,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 21056.868
+    },
+    "uno mas tacos y tequila starkville": {
+      "host_name": "Uno Mas Tacos y Tequila Starkville",
+      "category": "Mexican Restaurant",
+      "general_category": "Bar/Restaurant",
+      "address": "106 Maxwell St, Starkville MS 39759",
+      "license_count": 3,
+      "traffic": 5570.6,
+      "dwell_time": 56.7,
+      "impressions": 63170.604
+    },
+    "vibe aesthetics and wellness": {
+      "host_name": "VIBE Aesthetics and Wellness",
+      "category": "Medical Spa",
+      "general_category": "Education",
+      "address": "495 S Gloster St Suite 201, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 2418.3,
+      "dwell_time": 66.3,
+      "impressions": 10688.886
+    },
+    "vibe performance and testosterone": {
+      "host_name": "VIBE Performance and Testosterone",
+      "category": "Men's health physician",
+      "general_category": "Medical",
+      "address": "311 S Gloster St Suite 103, Tupelo MS 38801",
+      "license_count": 1,
+      "traffic": 3941.3,
+      "dwell_time": 64.0,
+      "impressions": 16816.21333
+    },
+    "william wells tire & auto": {
+      "host_name": "William Wells Tire & Auto",
+      "category": "Auto Repair Shop",
+      "general_category": "Auto Shop/Auto Dealer/Oil Change",
+      "address": "12919 MS-182, Starkville MS 39759",
+      "license_count": 1,
+      "traffic": 2156.3,
+      "dwell_time": 32.2,
+      "impressions": 4628.857333
+    }
+  }
+}
