@@ -3,7 +3,10 @@
 import re
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_all_tiers
+from services.config_service import (
+    get_team_member, get_all_tiers,
+    get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+)
 
 
 class RenewalUpgradeProposal(BaseProposal):
@@ -178,21 +181,37 @@ class RenewalUpgradeProposal(BaseProposal):
 
         # Show current vs. upgrade comparison
         if current_tier_data and suggested_tier_data:
+            # CPM for current tier
+            current_impressions = get_tier_impressions(self.config, current_tier_data["screens"])
+            current_cpm = calculate_cpm(current_tier_data["monthly_rate"], current_impressions)
+
             self.docx.add_sub_header(doc, "YOUR CURRENT PACKAGE")
-            self.docx.add_metrics_banner(doc, {
+            current_metrics = {
                 f"${current_tier_data['monthly_rate']:,}/mo": "Current Rate",
                 f"{current_tier_data['screens']}": "Current Screens",
-                current_tier_data.get("plays_per_month", ""): "Current Plays/Mo",
-                f"${current_tier_data.get('cost_per_screen', 0):.2f}": "Cost Per Screen",
-            })
+            }
+            if current_cpm > 0:
+                current_metrics[f"${current_cpm:.2f}"] = "Current CPM"
+            else:
+                current_metrics[current_tier_data.get("plays_per_month", "")] = "Current Plays/Mo"
+            current_metrics[f"${current_tier_data.get('cost_per_screen', 0):.2f}"] = "Cost Per Screen"
+            self.docx.add_metrics_banner(doc, current_metrics)
+
+            # CPM for upgrade tier
+            upgrade_impressions = get_tier_impressions(self.config, suggested_tier_data["screens"])
+            upgrade_cpm = calculate_cpm(suggested_tier_data["monthly_rate"], upgrade_impressions)
 
             self.docx.add_sub_header(doc, "RECOMMENDED UPGRADE")
-            self.docx.add_metrics_banner(doc, {
+            upgrade_metrics = {
                 f"${suggested_tier_data['monthly_rate']:,}/mo": "New Rate",
                 f"{suggested_tier_data['screens']}": "Screens",
-                suggested_tier_data.get("plays_per_month", ""): "Plays/Mo",
-                f"${suggested_tier_data.get('cost_per_screen', 0):.2f}": "Cost Per Screen",
-            })
+            }
+            if upgrade_cpm > 0:
+                upgrade_metrics[f"${upgrade_cpm:.2f}"] = "New CPM"
+            else:
+                upgrade_metrics[suggested_tier_data.get("plays_per_month", "")] = "Plays/Mo"
+            upgrade_metrics[f"${suggested_tier_data.get('cost_per_screen', 0):.2f}"] = "Cost Per Screen"
+            self.docx.add_metrics_banner(doc, upgrade_metrics)
 
             # Calculate the value improvement
             current_screens = current_tier_data["screens"]
@@ -207,13 +226,21 @@ class RenewalUpgradeProposal(BaseProposal):
             upgrade_cps = suggested_tier_data.get("cost_per_screen", 0)
 
             self.docx.add_sub_header(doc, "THE VALUE")
-            self.docx.add_body_text(
-                doc,
+            value_text = (
                 f"For just ${rate_increase:,.0f} more per month, {data.business_name} "
                 f"adds {screen_increase} screens to your campaign. Your cost per screen "
-                f"drops from ${current_cps:.2f} to ${upgrade_cps:.2f} \u2014 more "
-                f"visibility at a better value per location."
+                f"drops from ${current_cps:.2f} to ${upgrade_cps:.2f}"
             )
+            if current_cpm > 0 and upgrade_cpm > 0:
+                value_text += (
+                    f", and your CPM improves from ${current_cpm:.2f} to "
+                    f"${upgrade_cpm:.2f}"
+                )
+            value_text += " \u2014 more visibility at a better value per location."
+            self.docx.add_body_text(doc, value_text)
+
+            if current_cpm > 0 or upgrade_cpm > 0:
+                self.docx.add_callout_box(doc, CPM_BENCHMARK_TEXT)
         else:
             # Show full pricing table if we cannot match tier names
             self.docx.add_pricing_table(doc, tiers)

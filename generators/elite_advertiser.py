@@ -1,7 +1,10 @@
 """Elite Advertiser proposal generator — scannable, visual, 5-6 pages."""
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_pricing_tier, get_all_tiers
+from services.config_service import (
+    get_team_member, get_pricing_tier, get_all_tiers,
+    get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+)
 
 
 class EliteAdvertiserProposal(BaseProposal):
@@ -157,6 +160,10 @@ class EliteAdvertiserProposal(BaseProposal):
         if data.custom_pricing:
             # Custom pricing display
             self.docx.add_sub_header(doc, f"YOUR PARTNERSHIP PACKAGE")
+
+            tier_impressions = get_tier_impressions(self.config, data.custom_screen_count)
+            cpm = calculate_cpm(data.custom_monthly_rate, tier_impressions)
+
             self.docx.add_body_text(
                 doc,
                 f"${data.custom_monthly_rate:,.0f} / month  \u2014  "
@@ -167,11 +174,33 @@ class EliteAdvertiserProposal(BaseProposal):
                 f"on a {self.config['network']['content_loop_minutes']}-minute loop, "
                 f"all day, every day."
             )
+
+            if cpm > 0:
+                self.docx.add_callout_box(
+                    doc,
+                    f"Your CPM (Cost Per 1,000 Impressions): ${cpm:.2f}\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
         else:
             # Standard 4-tier pricing table — highlight tier 2 (index 1) as recommended
             tiers = get_all_tiers(self.config)
             recommended = 1 if len(tiers) > 1 else None
             self.docx.add_pricing_table(doc, tiers, recommended_idx=recommended)
+
+            # CPM comparison across tiers
+            cpm_parts = []
+            for tier in tiers:
+                tier_imp = get_tier_impressions(self.config, tier["screens"])
+                tier_cpm = calculate_cpm(tier["monthly_rate"], tier_imp)
+                if tier_cpm > 0:
+                    cpm_parts.append(f"{tier['name']}: ${tier_cpm:.2f}")
+            if cpm_parts:
+                self.docx.add_callout_box(
+                    doc,
+                    f"Your CPM (Cost Per 1,000 Impressions):  "
+                    f"{'  |  '.join(cpm_parts)}\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
 
         # Pricing callout — encourage conversation
         self.docx.add_callout_box(

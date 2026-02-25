@@ -6,7 +6,10 @@ the venue owner.
 """
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member
+from services.config_service import (
+    get_team_member,
+    get_network_impressions, get_total_screens, CPM_BENCHMARK_TEXT,
+)
 
 
 class VenuePartnerProposal(BaseProposal):
@@ -175,12 +178,27 @@ class VenuePartnerProposal(BaseProposal):
         self.docx.add_data_table(doc, headers, rows)
 
         self.docx.add_sub_header(doc, "RATE ASSUMPTIONS")
-        self.docx.add_callout_box(
-            doc,
+
+        # Calculate advertiser CPM context for venue partners
+        total_impressions = get_network_impressions(self.config)
+        total_screens = get_total_screens(self.config)
+        impressions_per_screen = total_impressions / total_screens if total_screens else 0
+        venue_impressions = impressions_per_screen * data.proposed_screen_count
+
+        rate_text = (
             f"Premium advertising slots: ${data.premium_slot_rate:,.0f} per slot/month. "
             f"Standard advertising slots: ${data.standard_slot_rate:,.0f} per slot/month. "
             f"Rates are subject to advertiser demand and may increase as the network grows."
         )
+        if venue_impressions > 0:
+            avg_slot_rate = (data.premium_slot_rate + data.standard_slot_rate) / 2
+            advertiser_cpm = (avg_slot_rate / impressions_per_screen) * 1000
+            rate_text += (
+                f"\n\nAdvertiser CPM across the MCTV network: ~${advertiser_cpm:.2f} "
+                f"per 1,000 impressions. {CPM_BENCHMARK_TEXT}"
+            )
+
+        self.docx.add_callout_box(doc, rate_text)
 
     # ── PARTNERSHIP TERMS (bold bullet points) ──
 

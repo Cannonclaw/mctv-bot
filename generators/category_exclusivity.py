@@ -1,7 +1,10 @@
 """Category Exclusivity proposal generator — scannable, visual v20 layout."""
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_all_tiers
+from services.config_service import (
+    get_team_member, get_all_tiers,
+    get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+)
 
 
 class CategoryExclusivityProposal(BaseProposal):
@@ -208,12 +211,21 @@ class CategoryExclusivityProposal(BaseProposal):
             days_per_month = 30
             monthly_plays = plays_per_hour * hours_per_day * days_per_month * total_screens
 
-            self.docx.add_metrics_banner(doc, {
+            # CPM for exclusivity package
+            tier_impressions = get_tier_impressions(self.config, total_screens)
+            cpm = calculate_cpm(data.monthly_rate, tier_impressions)
+
+            metrics = {
                 f"${data.monthly_rate:,.0f}/mo": "Exclusivity Rate",
                 f"{total_screens}": "Exclusive Screens",
                 f"${cost_per_screen:,.2f}": "Cost Per Screen",
-                f"{monthly_plays:,}": "Monthly\nAd Plays",
-            })
+            }
+            if cpm > 0:
+                metrics[f"${cpm:.2f}"] = "CPM"
+            else:
+                metrics[f"{monthly_plays:,}"] = "Monthly\nAd Plays"
+
+            self.docx.add_metrics_banner(doc, metrics)
 
             self.docx.add_body_text(
                 doc,
@@ -223,11 +235,35 @@ class CategoryExclusivityProposal(BaseProposal):
                 f"ad playing {plays_per_hour}x per hour on every screen in your "
                 f"exclusive markets."
             )
+
+            if cpm > 0:
+                self.docx.add_callout_box(
+                    doc,
+                    f"Your Exclusivity CPM: ${cpm:.2f} per 1,000 impressions \u2014 "
+                    f"and zero competitor ads in your category.\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
         else:
             # Show base tier as starting point
             self.docx.add_sub_header(doc, "BASE TIER + EXCLUSIVITY PREMIUM")
             tiers = get_all_tiers(self.config)
             self.docx.add_pricing_table(doc, tiers)
+
+            # CPM comparison across tiers
+            cpm_parts = []
+            for tier in tiers:
+                tier_imp = get_tier_impressions(self.config, tier["screens"])
+                tier_cpm = calculate_cpm(tier["monthly_rate"], tier_imp)
+                if tier_cpm > 0:
+                    cpm_parts.append(f"{tier['name']}: ${tier_cpm:.2f}")
+            if cpm_parts:
+                self.docx.add_callout_box(
+                    doc,
+                    f"Base CPM:  {'  |  '.join(cpm_parts)}\n"
+                    f"With exclusivity, you also lock out every competitor \u2014 "
+                    f"zero shared impressions.\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
 
             self.docx.add_body_text(
                 doc,

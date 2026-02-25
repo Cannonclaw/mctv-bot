@@ -59,3 +59,55 @@ def get_pricing_tier(config: dict, index: int) -> dict:
 def get_all_tiers(config: dict) -> list:
     """Get all pricing tiers."""
     return config["pricing"]["elite_tiers"]
+
+
+# ── CPM Helpers ──────────────────────────────────────────────────────────────
+
+def parse_impression_count(impression_str) -> float:
+    """Parse '1.9M+' or '409K+' or plain numbers to a float."""
+    text = str(impression_str).strip().rstrip("+").replace(",", "")
+    if text.upper().endswith("M"):
+        return float(text[:-1]) * 1_000_000
+    elif text.upper().endswith("K"):
+        return float(text[:-1]) * 1_000
+    try:
+        return float(text)
+    except ValueError:
+        return 0.0
+
+
+def get_network_impressions(config: dict) -> float:
+    """Get total monthly impressions from config."""
+    return parse_impression_count(config["network"]["monthly_impressions"])
+
+
+def get_total_screens(config: dict) -> int:
+    """Get total screen count from config."""
+    text = str(config["network"]["total_screens"]).strip().rstrip("+")
+    try:
+        return int(text)
+    except ValueError:
+        return 0
+
+
+def calculate_cpm(monthly_rate: float, impressions: float) -> float:
+    """Calculate CPM (Cost Per Thousand Impressions)."""
+    if impressions <= 0 or monthly_rate <= 0:
+        return 0.0
+    return (monthly_rate / impressions) * 1000
+
+
+def get_tier_impressions(config: dict, screen_count: int) -> float:
+    """Estimate monthly impressions for a given screen count."""
+    total_screens = get_total_screens(config)
+    total_impressions = get_network_impressions(config)
+    if total_screens <= 0:
+        return 0.0
+    return (screen_count / total_screens) * total_impressions
+
+
+CPM_BENCHMARK_TEXT = (
+    "Industry CPM comparison:  Radio $5\u2013$12  |  Print $10\u2013$30  |  "
+    "Outdoor/Billboards $3\u2013$8  |  Cable TV $15\u2013$30  |  "
+    "Digital display $5\u2013$15  |  Social media $6\u2013$12"
+)

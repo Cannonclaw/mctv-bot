@@ -6,7 +6,11 @@ Each brand gets its own spotlight section with a dedicated Claude call.
 """
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_all_tiers
+from services.config_service import (
+    get_team_member, get_all_tiers,
+    get_tier_impressions, calculate_cpm, get_network_impressions,
+    CPM_BENCHMARK_TEXT,
+)
 
 
 class MultiBrandBundleProposal(BaseProposal):
@@ -182,17 +186,51 @@ class MultiBrandBundleProposal(BaseProposal):
             # Calculate effective per-brand cost
             per_brand = data.custom_monthly_rate / num_businesses if num_businesses else 0
 
-            self.docx.add_metrics_banner(doc, {
+            # Bundle CPM — total rate vs total network impressions shared across brands
+            total_impressions = get_network_impressions(self.config)
+            bundle_cpm = calculate_cpm(data.custom_monthly_rate, total_impressions)
+
+            metrics = {
                 f"${data.custom_monthly_rate:,.0f}/mo": "Total Bundle Rate",
                 f"{num_businesses}": "Brands Included",
                 f"${per_brand:,.0f}/mo": "Effective Rate\nPer Brand",
-                bundle_deal: "Bundle Deal\nApplied",
-            })
+            }
+            if bundle_cpm > 0:
+                metrics[f"${bundle_cpm:.2f}"] = "Bundle CPM"
+            else:
+                metrics[bundle_deal] = "Bundle Deal\nApplied"
+
+            self.docx.add_metrics_banner(doc, metrics)
+
+            if bundle_cpm > 0:
+                per_brand_cpm = calculate_cpm(per_brand, total_impressions)
+                self.docx.add_callout_box(
+                    doc,
+                    f"Bundle CPM: ${bundle_cpm:.2f} per 1,000 impressions across "
+                    f"all {num_businesses} brands \u2014 effectively "
+                    f"${per_brand_cpm:.2f} per brand.\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
         else:
             # Show standard tiers with bundle math
             self.docx.add_sub_header(doc, "STANDARD PRICING")
             tiers = get_all_tiers(self.config)
             self.docx.add_pricing_table(doc, tiers)
+
+            # CPM comparison across tiers
+            cpm_parts = []
+            for tier in tiers:
+                tier_imp = get_tier_impressions(self.config, tier["screens"])
+                tier_cpm = calculate_cpm(tier["monthly_rate"], tier_imp)
+                if tier_cpm > 0:
+                    cpm_parts.append(f"{tier['name']}: ${tier_cpm:.2f}")
+            if cpm_parts:
+                self.docx.add_callout_box(
+                    doc,
+                    f"CPM Per Brand:  {'  |  '.join(cpm_parts)}\n"
+                    f"With {bundle_deal}, your effective per-brand CPM drops even lower.\n"
+                    f"{CPM_BENCHMARK_TEXT}"
+                )
 
             self.docx.add_sub_header(doc, f"BUNDLE SAVINGS: {bundle_deal.upper()}")
             self.docx.add_body_text(

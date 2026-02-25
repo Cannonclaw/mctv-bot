@@ -1,7 +1,10 @@
 """Host Media Kit proposal generator — scannable, visual, v20 format."""
 
 from generators.base_proposal import BaseProposal
-from services.config_service import get_team_member, get_all_tiers
+from services.config_service import (
+    get_team_member, get_all_tiers,
+    get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+)
 
 
 class HostMediaKitProposal(BaseProposal):
@@ -172,6 +175,21 @@ class HostMediaKitProposal(BaseProposal):
         # Standard tiers table
         tiers = get_all_tiers(self.config)
         self.docx.add_pricing_table(doc, tiers)
+
+        # CPM value comparison
+        cpm_parts = []
+        for tier in tiers:
+            tier_imp = get_tier_impressions(self.config, tier["screens"])
+            tier_cpm = calculate_cpm(tier["monthly_rate"], tier_imp)
+            if tier_cpm > 0:
+                cpm_parts.append(f"{tier['name']}: ${tier_cpm:.2f}")
+        if cpm_parts:
+            self.docx.add_callout_box(
+                doc,
+                f"CPM (Cost Per 1,000 Impressions):  "
+                f"{'  |  '.join(cpm_parts)}\n"
+                f"{CPM_BENCHMARK_TEXT}"
+            )
 
         self.docx.add_sub_header(doc, "HOST VENUE ADVANTAGE")
         self.docx.add_body_text(
