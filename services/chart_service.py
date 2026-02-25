@@ -288,6 +288,66 @@ def build_market_comparison(data: TractionReportInput) -> str:
     return path
 
 
+def build_cpm_bar_chart(data: TractionReportInput, max_venues: int = 15) -> str:
+    """Horizontal bar chart showing CPM by venue — cost efficiency visualization.
+
+    Lower CPM = better value. Color-coded by market. Returns path to saved PNG.
+    """
+    if not data.venue_records or data.monthly_rate <= 0 or data.total_impressions <= 0:
+        return ""
+
+    # Calculate CPM per venue
+    venue_cpms = []
+    for v in data.venue_records:
+        if v.monthly_impressions > 0 and data.total_plays > 0:
+            play_share = v.total_plays / data.total_plays
+            venue_cost = data.monthly_rate * play_share
+            cpm = (venue_cost / v.monthly_impressions) * 1000
+            venue_cpms.append((v, cpm))
+
+    if not venue_cpms:
+        return ""
+
+    # Sort by CPM ascending (best value first), take top N
+    venue_cpms.sort(key=lambda x: x[1])
+    venue_cpms = venue_cpms[:max_venues]
+
+    # Reverse for horizontal bar (best CPM at top)
+    venue_cpms = list(reversed(venue_cpms))
+    names = [vc[0].host_name[:30] for vc in venue_cpms]
+    cpms = [vc[1] for vc in venue_cpms]
+    colors = [_get_market_color(vc[0].city or "") for vc in venue_cpms]
+
+    # Network-wide CPM line
+    net_cpm = (data.monthly_rate / data.total_impressions) * 1000
+
+    fig, ax = plt.subplots(figsize=(8, 5.5))
+    _setup_chart(fig, ax)
+
+    bars = ax.barh(names, cpms, color=colors, edgecolor="none", height=0.7)
+
+    # Add value labels
+    for bar, cpm_val in zip(bars, cpms):
+        ax.text(bar.get_width() + max(cpms) * 0.02, bar.get_y() + bar.get_height() / 2,
+                f"${cpm_val:.2f}", va="center", ha="left",
+                fontsize=7, color=NAVY, fontweight="bold")
+
+    # Network average CPM line
+    ax.axvline(x=net_cpm, color=GOLD, linestyle="--", linewidth=1.5, alpha=0.8)
+    ax.text(net_cpm, len(venue_cpms) - 0.5, f"  Network Avg: ${net_cpm:.2f}",
+            fontsize=7, color=GOLD, fontweight="bold", va="bottom")
+
+    ax.set_xlabel("Cost Per 1,000 Impressions (CPM)", fontsize=9, color=NAVY)
+    ax.set_title("CPM by Venue — Cost Efficiency", fontsize=12, color=NAVY,
+                 fontweight="bold", pad=10)
+
+    plt.tight_layout()
+    path = tempfile.mktemp(suffix=".png", prefix="mctv_cpm_bar_")
+    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=WHITE)
+    plt.close(fig)
+    return path
+
+
 def generate_all_charts(data: TractionReportInput,
                         categories: list = None) -> list:
     """Generate all available charts for a traction report.
@@ -309,7 +369,13 @@ def generate_all_charts(data: TractionReportInput,
             if path:
                 charts.append(path)
 
-        # 3. Scatter plot (needs venues with non-zero air time)
+        # 3. CPM chart (needs impressions + monthly rate)
+        if data.monthly_rate > 0 and data.total_impressions > 0:
+            path = build_cpm_bar_chart(data)
+            if path:
+                charts.append(path)
+
+        # 4. Scatter plot (needs venues with non-zero air time)
         has_air_time = any(
             v.total_air_time and v.total_air_time not in ("", "0h 0m", "0m")
             for v in data.venue_records
@@ -319,7 +385,7 @@ def generate_all_charts(data: TractionReportInput,
             if path:
                 charts.append(path)
 
-        # 4. Market comparison (needs 2+ markets)
+        # 5. Market comparison (needs 2+ markets)
         cities = set(v.city for v in data.venue_records if v.city)
         if len(cities) > 1:
             path = build_market_comparison(data)

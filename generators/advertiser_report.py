@@ -253,7 +253,11 @@ class AdvertiserReportGenerator:
                 display_name = truncated or words[0]  # at least first word
             metrics_row2[display_name] = f"Top Venue\n({top_venue_plays:,} plays)"
         metrics_row2[markets_str] = "Markets\nCovered"
-        if num_categories > 0:
+        # Show Network CPM when available — key cost efficiency metric
+        if data.monthly_rate > 0 and data.total_impressions > 0:
+            net_cpm = (data.monthly_rate / data.total_impressions) * 1000
+            metrics_row2[f"${net_cpm:.2f}"] = "Network\nCPM"
+        elif num_categories > 0:
             metrics_row2[str(num_categories)] = "Venue\nCategories"
         # Show avg dwell time if available from dashboard, otherwise days active
         if data.avg_dwell_time > 0:
@@ -387,17 +391,43 @@ class AdvertiserReportGenerator:
             f"the most ad exposure for {data.advertiser_name}."
         )
 
-        headers = ["Category", "# Venues", "Total Plays", "% of Total"]
+        # Include CPM per category when impression and rate data available
+        has_cat_cpm = data.monthly_rate > 0 and data.total_impressions > 0
+
+        headers = ["Category", "Venues", "Plays", "% Total"]
+        if has_cat_cpm:
+            headers.append("CPM")
+
         sorted_cats = sorted(categories, key=lambda c: c.total_plays, reverse=True)
+
+        # Pre-calculate category impressions for CPM
+        cat_impressions = {}
+        if has_cat_cpm:
+            for cat in sorted_cats:
+                imp_total = 0.0
+                for v in data.venue_records:
+                    if v.business_category == cat.category:
+                        imp_total += v.monthly_impressions
+                cat_impressions[cat.category] = imp_total
 
         rows = []
         for cat in sorted_cats:
-            rows.append([
+            row = [
                 cat.category,
                 str(cat.host_count),
                 f"{cat.total_plays:,}",
                 f"{cat.pct_of_total:.1f}%",
-            ])
+            ]
+            if has_cat_cpm:
+                imp = cat_impressions.get(cat.category, 0)
+                if imp > 0:
+                    play_share = cat.total_plays / data.total_plays if data.total_plays > 0 else 0
+                    cat_cost = data.monthly_rate * play_share
+                    cpm = (cat_cost / imp) * 1000
+                    row.append(f"${cpm:.2f}")
+                else:
+                    row.append("--")
+            rows.append(row)
 
         self.docx.add_data_table(doc, headers, rows)
 
@@ -897,9 +927,12 @@ class AdvertiserReportGenerator:
             f"\nWrite 2-3 concise paragraphs explaining what these numbers mean for "
             f"{data.advertiser_name}'s business. Highlight which venue types are "
             f"delivering the most exposure, note any standout performers, and give a "
-            f"brief actionable recommendation. Keep the tone professional but warm -- "
-            f"this is a partner update, not a sales pitch. Do not use bullet points or "
-            f"headers -- just flowing paragraphs."
+            f"brief actionable recommendation. If CPM data is available, emphasize the "
+            f"cost efficiency — compare to industry benchmarks (traditional billboards: "
+            f"$3-8 CPM, digital display: $5-15 CPM, social media: $6-12 CPM). "
+            f"Frame their CPM as a competitive advantage. Keep the tone professional "
+            f"but warm -- this is a partner update, not a sales pitch. Do not use "
+            f"bullet points or headers -- just flowing paragraphs."
         )
 
         return prompt
