@@ -1031,13 +1031,14 @@ class DocxService:
                 for idx, cell in enumerate(tbl_row.cells):
                     cell.width = first_col_width if idx == 0 else other_col_width
 
-        # Header row
+        # Header row — use smaller font when many columns
+        header_font_size = Pt(8) if num_cols > 6 else Pt(9)
         for i, header in enumerate(headers):
             cell = table.rows[0].cells[i]
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(header)
-            run.font.size = Pt(9)
+            run.font.size = header_font_size
             run.font.bold = True
             run.font.color.rgb = self.c["white"]
             shading = cell._element.get_or_add_tcPr()
@@ -1047,7 +1048,8 @@ class DocxService:
             })
             shading.append(shading_elm)
 
-        # Data rows
+        # Data rows — use smaller font when many columns
+        data_font_size = Pt(8) if num_cols > 6 else Pt(9)
         for row_idx, row_data in enumerate(rows):
             row = table.rows[row_idx + 1]
             for col_idx, value in enumerate(row_data):
@@ -1055,7 +1057,7 @@ class DocxService:
                 p = cell.paragraphs[0]
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER if col_idx > 0 else WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(str(value))
-                run.font.size = Pt(9)
+                run.font.size = data_font_size
                 run.font.color.rgb = self.c["text"]
                 # Bold top N performers
                 if row_idx < bold_rows:

@@ -309,8 +309,11 @@ def generate_all_charts(data: TractionReportInput,
             if path:
                 charts.append(path)
 
-        # 3. Scatter plot (needs venues with air time)
-        has_air_time = any(v.total_air_time for v in data.venue_records)
+        # 3. Scatter plot (needs venues with non-zero air time)
+        has_air_time = any(
+            v.total_air_time and v.total_air_time not in ("", "0h 0m", "0m")
+            for v in data.venue_records
+        )
         if data.venue_records and has_air_time:
             path = build_scatter_plot(data)
             if path:

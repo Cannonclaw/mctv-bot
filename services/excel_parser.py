@@ -95,21 +95,55 @@ def format_date_range(start: str, end: str) -> str:
         return f"{d1.strftime('%B %d, %Y')} \u2013 {d2.strftime('%B %d, %Y')}"
 
 
-def parse_duration(text: str) -> int:
-    """Parse NTV360 duration strings like '8h 17m 40s' to total seconds."""
-    if not text or not isinstance(text, str):
+def parse_duration(text) -> int:
+    """Parse NTV360 duration values to total seconds.
+
+    Handles:
+      - "8h 17m 40s" format (NTV360 text export)
+      - "8:17:40" / "0:17:40" (HH:MM:SS from Excel time cells)
+      - datetime.timedelta objects (openpyxl returns these for duration cells)
+      - datetime.time objects (openpyxl returns these for time-formatted cells)
+    """
+    from datetime import timedelta, time as dt_time
+
+    if not text:
         return 0
-    hours = minutes = seconds = 0
+
+    # Handle timedelta objects directly (openpyxl duration cells)
+    if isinstance(text, timedelta):
+        return int(text.total_seconds())
+
+    # Handle datetime.time objects (openpyxl time-formatted cells)
+    if isinstance(text, dt_time):
+        return text.hour * 3600 + text.minute * 60 + text.second
+
+    text = str(text).strip()
+    if not text:
+        return 0
+
+    # Try "Xh Ym Zs" format
     h_match = re.search(r"(\d+)\s*h", text)
     m_match = re.search(r"(\d+)\s*m", text)
     s_match = re.search(r"(\d+)\s*s", text)
-    if h_match:
-        hours = int(h_match.group(1))
-    if m_match:
-        minutes = int(m_match.group(1))
-    if s_match:
-        seconds = int(s_match.group(1))
-    return hours * 3600 + minutes * 60 + seconds
+    if h_match or m_match or s_match:
+        hours = int(h_match.group(1)) if h_match else 0
+        minutes = int(m_match.group(1)) if m_match else 0
+        seconds = int(s_match.group(1)) if s_match else 0
+        return hours * 3600 + minutes * 60 + seconds
+
+    # Try "HH:MM:SS" or "H:MM:SS" format (Excel time cells stringified)
+    colon_match = re.match(r"(\d+):(\d{1,2}):(\d{1,2})", text)
+    if colon_match:
+        return (int(colon_match.group(1)) * 3600 +
+                int(colon_match.group(2)) * 60 +
+                int(colon_match.group(3)))
+
+    # Try "MM:SS" format
+    short_match = re.match(r"(\d+):(\d{1,2})$", text)
+    if short_match:
+        return int(short_match.group(1)) * 60 + int(short_match.group(2))
+
+    return 0
 
 
 def format_duration(seconds: int) -> str:
@@ -398,8 +432,10 @@ def parse_per_content_report(wb: openpyxl.Workbook) -> list:
             except (ValueError, TypeError):
                 play_count = 0
 
-            # Read duration
-            duration = str(sheet.cell(r, col_map.get("duration", 3)).value or "")
+            # Read duration — keep raw value for parse_duration (handles timedelta)
+            raw_duration = sheet.cell(r, col_map.get("duration", 3)).value
+            duration_seconds = parse_duration(raw_duration)
+            duration_str = format_duration(duration_seconds) if duration_seconds else str(raw_duration or "")
 
             # Read optional fields
             city = str(sheet.cell(r, col_map["city"]).value or "").strip() if "city" in col_map else ""
@@ -415,8 +451,8 @@ def parse_per_content_report(wb: openpyxl.Workbook) -> list:
                 host_name=host,
                 content_name=content_name,
                 play_count=play_count,
-                play_duration_str=duration,
-                play_duration_seconds=parse_duration(duration),
+                play_duration_str=duration_str,
+                play_duration_seconds=duration_seconds,
                 playlist=playlist,
                 city=city,
                 start_date=start,
@@ -451,7 +487,7 @@ def parse_content_report(wb: openpyxl.Workbook) -> list:
             content_name = str(sheet.cell(r, 1).value or "").strip()
             host_name = str(sheet.cell(r, 2).value or "").strip()
             play_count = sheet.cell(r, 3).value or 0
-            duration = str(sheet.cell(r, 4).value or "")
+            raw_duration = sheet.cell(r, 4).value
 
             if not host_name:
                 continue
@@ -465,12 +501,15 @@ def parse_content_report(wb: openpyxl.Workbook) -> list:
             except (ValueError, TypeError):
                 play_count = 0
 
+            duration_seconds = parse_duration(raw_duration)
+            duration_str = format_duration(duration_seconds) if duration_seconds else str(raw_duration or "")
+
             records.append(PlayRecord(
                 host_name=host_name,
                 content_name=content_name,
                 play_count=play_count,
-                play_duration_str=duration,
-                play_duration_seconds=parse_duration(duration),
+                play_duration_str=duration_str,
+                play_duration_seconds=duration_seconds,
             ))
 
     return records
@@ -546,17 +585,19 @@ def parse_traction_report(wb: openpyxl.Workbook) -> list:
                 except (ValueError, TypeError):
                     play_count = 0
 
-            duration = ""
+            raw_duration = None
             if "duration" in col_map:
-                duration = str(sheet.cell(r, col_map["duration"]).value or "")
+                raw_duration = sheet.cell(r, col_map["duration"]).value
+            duration_seconds = parse_duration(raw_duration)
+            duration_str = format_duration(duration_seconds) if duration_seconds else str(raw_duration or "")
 
             city = str(sheet.cell(r, col_map["city"]).value or "").strip() if "city" in col_map else ""
 
             records.append(PlayRecord(
                 host_name=host,
                 play_count=play_count,
-                play_duration_str=duration,
-                play_duration_seconds=parse_duration(duration),
+                play_duration_str=duration_str,
+                play_duration_seconds=duration_seconds,
                 playlist=playlist,
                 city=city,
             ))

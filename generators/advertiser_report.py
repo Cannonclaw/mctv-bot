@@ -305,9 +305,9 @@ class AdvertiserReportGenerator:
         self.docx.add_body_text(doc, intro)
 
         # Build table headers and rows — includes impressions/CPM when available
-        headers = ["Venue", "City", "Category", "Total Plays", "Air Time", "% of Total"]
+        headers = ["Venue", "City", "Category", "Plays", "Air Time", "% Total"]
         if has_impressions:
-            headers.append("Monthly Impressions")
+            headers.append("Impressions")
         if has_cpm:
             headers.append("CPM")
 
