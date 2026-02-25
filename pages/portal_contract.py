@@ -12,12 +12,12 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
-from services.auth import require_portal_auth, get_portal_user, portal_logout
-from services.portal_service import get_client_by_user_id
+from services.auth import require_portal_auth, get_portal_user
 from services.contract_service import (
-    get_contracts_for_client, get_contract, record_contract_view,
+    get_contracts_for_client, record_contract_view,
     sign_contract, get_contract_download_url,
 )
+from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
 st.set_page_config(
     page_title="My Contract - MCTV Client Portal",
@@ -26,26 +26,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Portal CSS ──────────────────────────────────────────────────────────────
-
+# Signature box CSS (page-specific)
 st.markdown("""
 <style>
-    :root { --navy: #1B1F3B; --gold: #C5A55A; }
-    [data-testid="stSidebar"] { background-color: #1B1F3B; }
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3 { color: white; }
-    [data-testid="stSidebar"] a,
-    [data-testid="stSidebar"] a span,
-    [data-testid="stSidebar"] a p,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] span,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] p { color: white !important; }
-    [data-testid="stSidebar"] a:hover span,
-    [data-testid="stSidebar"] a:hover p { color: #C5A55A !important; }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-
     .signature-box {
         border: 2px solid #C5A55A;
         border-radius: 8px;
@@ -56,45 +39,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# ── Auth Gate ───────────────────────────────────────────────────────────────
-
+inject_portal_css()
 require_portal_auth()
+
 user = get_portal_user()
-
-# ── Sidebar ─────────────────────────────────────────────────────────────────
-
-with st.sidebar:
-    st.markdown("## MCTV Client Portal")
-    st.markdown(f"*{user.get('full_name', '')}*")
-    st.divider()
-    st.markdown("**Navigation**")
-    st.page_link("pages/portal_dashboard.py", label="Dashboard", icon="\U0001F3E0")
-    st.page_link("pages/portal_contract.py", label="My Contract", icon="\U0001F4DD")
-    st.page_link("pages/portal_invoices.py", label="Invoices", icon="\U0001F4B0")
-    st.page_link("pages/portal_creative.py", label="Creative Requests", icon="\U0001F3A8")
-    st.page_link("pages/portal_reports.py", label="Reports", icon="\U0001F4CA")
-    st.page_link("pages/portal_profile.py", label="My Profile", icon="\U0001F464")
-    st.divider()
-    if st.button("Log Out", use_container_width=True):
-        portal_logout()
-        st.switch_page("pages/portal_login.py")
-    st.caption("MCTV Elite Advertising")
-
-
-# ── Load Client & Contracts ─────────────────────────────────────────────────
-
-client = get_client_by_user_id(user.get("user_id", ""))
-if not client:
-    st.warning("Your account is being set up. Please check back soon.")
-    st.stop()
+render_portal_sidebar(user)
+client = load_portal_client(user)
 
 client_id = client.get("id", "")
-contracts = get_contracts_for_client(client_id)
+
+try:
+    contracts = get_contracts_for_client(client_id)
+except Exception:
+    st.error("Unable to load your contracts. Please try again later.")
+    contracts = []
 
 st.markdown("## My Contract")
 st.caption(f"{client.get('business_name', '')} | Advertising Partnership")
-
 st.divider()
 
 if not contracts:
@@ -102,6 +63,7 @@ if not contracts:
         "No contracts on file yet. Your MCTV representative will prepare your "
         "advertising agreement and you'll be able to review and sign it right here."
     )
+    render_portal_footer()
     st.stop()
 
 
@@ -117,7 +79,6 @@ for contract in contracts:
     term = contract.get("term_months", 0)
     markets = contract.get("markets", [])
 
-    # Status styling
     status_display = {
         "draft": ("Preparing", "\u270F\uFE0F"),
         "sent": ("Ready to Sign", "\U0001F4E8"),
@@ -132,7 +93,6 @@ for contract in contracts:
     st.markdown(f"### {status_icon} {title}")
     st.markdown(f"**Status: {status_label}**")
 
-    # Contract details
     det_col1, det_col2, det_col3 = st.columns(3)
 
     with det_col1:
@@ -158,34 +118,39 @@ for contract in contracts:
         st.divider()
         doc_url = contract.get("document_url", "")
 
-        # Check if it's a local file path (starts with drive letter or /)
         is_local_path = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
         local_path = Path(doc_url) if is_local_path else None
 
         if local_path and local_path.exists():
             with open(local_path, "rb") as f:
                 st.download_button(
-                    "\U0001F4E5 Download Contract Document",
+                    "Download Contract Document",
                     data=f.read(),
                     file_name=local_path.name,
                     key=f"dl_contract_{cid}",
                     type="primary",
                 )
         else:
-            # Get a signed download URL from Supabase Storage
-            download_url = get_contract_download_url(cid)
+            try:
+                download_url = get_contract_download_url(cid)
+            except Exception:
+                download_url = None
+
             if download_url:
                 st.link_button(
-                    "\U0001F4E5 Download Contract Document",
+                    "Download Contract Document",
                     url=download_url,
                     type="primary",
                 )
             elif doc_url:
                 st.caption("Contract document is being processed. Please check back shortly.")
 
-    # ── Mark as viewed (if status is 'sent') ────────────────────────
+    # ── Mark as viewed ──────────────────────────────────────────────
     if cstatus == "sent":
-        record_contract_view(cid)
+        try:
+            record_contract_view(cid)
+        except Exception:
+            pass
 
     # ── SIGNATURE SECTION ───────────────────────────────────────────
     if cstatus in ("sent", "viewed"):
@@ -236,28 +201,30 @@ for contract in contracts:
                 st.error("Please check the agreement box to proceed.")
             else:
                 with st.spinner("Recording your signature..."):
-                    result = sign_contract(
-                        contract_id=cid,
-                        signed_by=typed_name,
-                        ip_address="",  # Streamlit doesn't expose client IP easily
-                        user_agent="MCTV Client Portal (Streamlit)",
-                        user_id=user.get("user_id", ""),
-                    )
-                    if result:
-                        st.success("Contract signed successfully! Thank you.")
-                        st.balloons()
-                        st.info(
-                            "Your MCTV team has been notified. You'll receive a "
-                            "confirmation email shortly."
+                    try:
+                        result = sign_contract(
+                            contract_id=cid,
+                            signed_by=typed_name,
+                            ip_address="",
+                            user_agent="MCTV Client Portal (Streamlit)",
+                            user_id=user.get("user_id", ""),
                         )
-                        st.rerun()
-                    else:
-                        st.error(
-                            "Something went wrong recording your signature. "
-                            "Please try again or contact your MCTV representative."
-                        )
+                        if result:
+                            st.success("Contract signed successfully! Thank you.")
+                            st.balloons()
+                            st.info(
+                                "Your MCTV team has been notified. You'll receive a "
+                                "confirmation email shortly."
+                            )
+                            st.rerun()
+                        else:
+                            st.error(
+                                "Something went wrong recording your signature. "
+                                "Please try again or contact your MCTV representative."
+                            )
+                    except Exception as e:
+                        st.error(f"Error signing contract: {e}")
 
-    # ── Already signed ──────────────────────────────────────────────
     elif cstatus in ("signed", "active"):
         st.divider()
         st.success("This contract has been signed and is on file.")
@@ -272,3 +239,5 @@ for contract in contracts:
         st.info("This contract is being prepared by your MCTV representative. You'll be notified when it's ready to sign.")
 
     st.divider()
+
+render_portal_footer()

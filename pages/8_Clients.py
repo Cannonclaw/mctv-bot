@@ -65,7 +65,11 @@ st.caption("Create and manage client accounts. Invite them to the portal so they
 
 # ── Admin summary metrics ───────────────────────────────────────────────────
 
-summary = get_admin_summary()
+try:
+    summary = get_admin_summary()
+except Exception:
+    st.error("Unable to load admin summary.")
+    summary = {}
 
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Total Clients", summary.get("total_clients", 0))

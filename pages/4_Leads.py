@@ -24,7 +24,11 @@ if not check_password():
 st.markdown("## Incoming Leads")
 st.caption("Client intake submissions from the public form. Click a lead to see details and generate a proposal.")
 
-leads = get_all_leads()
+try:
+    leads = get_all_leads()
+except Exception:
+    st.error("Unable to load leads. Please try again later.")
+    leads = []
 
 if not leads:
     st.info("No leads yet. Share your intake form link with prospects to start receiving submissions.")
@@ -126,18 +130,27 @@ for lead in leads:
 
         with action_cols[0]:
             if st.button("Mark Contacted", key=f"contacted_{lead_id}", use_container_width=True):
-                update_lead_status(lead_id, "contacted")
-                st.rerun()
+                try:
+                    update_lead_status(lead_id, "contacted")
+                    st.rerun()
+                except Exception:
+                    st.error("Failed to update status.")
 
         with action_cols[1]:
             if st.button("Proposal Sent", key=f"proposal_{lead_id}", use_container_width=True):
-                update_lead_status(lead_id, "proposal_sent")
-                st.rerun()
+                try:
+                    update_lead_status(lead_id, "proposal_sent")
+                    st.rerun()
+                except Exception:
+                    st.error("Failed to update status.")
 
         with action_cols[2]:
             if st.button("Closed / Won", key=f"closed_{lead_id}", use_container_width=True):
-                update_lead_status(lead_id, "closed")
-                st.rerun()
+                try:
+                    update_lead_status(lead_id, "closed")
+                    st.rerun()
+                except Exception:
+                    st.error("Failed to update status.")
 
         with action_cols[3]:
             st.page_link(

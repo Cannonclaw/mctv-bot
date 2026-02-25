@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
-from services.auth import require_portal_auth, get_portal_user, portal_logout
-from services.portal_service import get_client_by_user_id, update_client
+from services.auth import require_portal_auth, get_portal_user
+from services.portal_service import update_client
 from services.supabase_client import reset_password
+from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
 st.set_page_config(
     page_title="My Profile - MCTV Client Portal",
@@ -22,50 +23,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown("""
-<style>
-    [data-testid="stSidebar"] { background-color: #1B1F3B; }
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3 { color: white; }
-    [data-testid="stSidebar"] a, [data-testid="stSidebar"] a span,
-    [data-testid="stSidebar"] a p,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] span,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] p { color: white !important; }
-    [data-testid="stSidebar"] a:hover span,
-    [data-testid="stSidebar"] a:hover p { color: #C5A55A !important; }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
+inject_portal_css()
 require_portal_auth()
+
 user = get_portal_user()
-
-with st.sidebar:
-    st.markdown("## MCTV Client Portal")
-    st.markdown(f"*{user.get('full_name', '')}*")
-    st.divider()
-    st.markdown("**Navigation**")
-    st.page_link("pages/portal_dashboard.py", label="Dashboard", icon="\U0001F3E0")
-    st.page_link("pages/portal_contract.py", label="My Contract", icon="\U0001F4DD")
-    st.page_link("pages/portal_invoices.py", label="Invoices", icon="\U0001F4B0")
-    st.page_link("pages/portal_creative.py", label="Creative Requests", icon="\U0001F3A8")
-    st.page_link("pages/portal_reports.py", label="Reports", icon="\U0001F4CA")
-    st.page_link("pages/portal_profile.py", label="My Profile", icon="\U0001F464")
-    st.divider()
-    if st.button("Log Out", use_container_width=True):
-        portal_logout()
-        st.switch_page("pages/portal_login.py")
-    st.caption("MCTV Elite Advertising")
-
-# ── Load client ─────────────────────────────────────────────────────────────
-
-client = get_client_by_user_id(user.get("user_id", ""))
-if not client:
-    st.warning("Your account is being set up. Please check back soon.")
-    st.stop()
+render_portal_sidebar(user)
+client = load_portal_client(user)
 
 client_id = client.get("id", "")
 
@@ -100,12 +63,15 @@ with st.form("profile_form"):
             "contact_phone": contact_phone,
             "city": city,
         }
-        result = update_client(client_id, update_data)
-        if result:
-            st.success("Profile updated.")
-            st.rerun()
-        else:
-            st.error("Failed to update profile.")
+        try:
+            result = update_client(client_id, update_data)
+            if result:
+                st.success("Profile updated.")
+                st.rerun()
+            else:
+                st.error("Failed to update profile. Please try again.")
+        except Exception as e:
+            st.error(f"Error updating profile: {e}")
 
 # ── Account Details ─────────────────────────────────────────────────────────
 
@@ -130,15 +96,18 @@ st.divider()
 st.markdown("### Change Password")
 st.caption("We'll send a password reset link to your email address.")
 
-if st.button("Send Password Reset Email", use_container_width=True):
+if st.button("Send Password Reset Email", type="primary", use_container_width=True):
     email = user.get("email", "")
     if email:
         with st.spinner("Sending reset link..."):
-            success = reset_password(email)
-            if success:
-                st.success(f"Password reset link sent to {email}. Check your inbox.")
-            else:
-                st.error("Could not send reset link. Please try again later.")
+            try:
+                success = reset_password(email)
+                if success:
+                    st.success(f"Password reset link sent to {email}. Check your inbox.")
+                else:
+                    st.error("Could not send reset link. Please try again later.")
+            except Exception:
+                st.error("An error occurred. Please try again later.")
     else:
         st.error("No email address on file.")
 
@@ -152,3 +121,5 @@ st.markdown(
     "- **Mary Michael Cannon** — mmc@mctvofms.com | (662) 801-5677\n"
     "- **Swayze Hollingsworth** — swayze@mctvofms.com | (662) 907-0404"
 )
+
+render_portal_footer()

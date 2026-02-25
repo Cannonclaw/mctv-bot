@@ -13,9 +13,10 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import (
     require_portal_auth, get_portal_user, get_portal_role,
-    is_portal_advertiser, is_portal_host, portal_logout,
+    is_portal_advertiser, is_portal_host,
 )
 from services.portal_service import get_client_by_user_id, get_client_dashboard
+from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer
 
 st.set_page_config(
     page_title="Dashboard - MCTV Client Portal",
@@ -24,82 +25,27 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Portal CSS ──────────────────────────────────────────────────────────────
-
-st.markdown("""
-<style>
-    :root { --navy: #1B1F3B; --gold: #C5A55A; }
-
-    [data-testid="stSidebar"] {
-        background-color: #1B1F3B;
-    }
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3 {
-        color: white;
-    }
-    [data-testid="stSidebar"] a,
-    [data-testid="stSidebar"] a span,
-    [data-testid="stSidebar"] a p,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] span,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] p {
-        color: white !important;
-    }
-    [data-testid="stSidebar"] a:hover span,
-    [data-testid="stSidebar"] a:hover p {
-        color: #C5A55A !important;
-    }
-
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
-
-# ── Auth Gate ───────────────────────────────────────────────────────────────
-
+inject_portal_css()
 require_portal_auth()
+
 user = get_portal_user()
 role = get_portal_role()
 
-
-# ── Sidebar ─────────────────────────────────────────────────────────────────
-
-with st.sidebar:
-    st.markdown("## MCTV Client Portal")
-    st.markdown(f"*Welcome, {user.get('full_name', 'there')}*")
-    st.divider()
-
-    st.markdown("**Navigation**")
-    st.page_link("pages/portal_dashboard.py", label="Dashboard", icon="\U0001F3E0")
-    st.page_link("pages/portal_contract.py", label="My Contract", icon="\U0001F4DD")
-    st.page_link("pages/portal_invoices.py", label="Invoices", icon="\U0001F4B0")
-    st.page_link("pages/portal_creative.py", label="Creative Requests", icon="\U0001F3A8")
-    st.page_link("pages/portal_reports.py", label="Reports", icon="\U0001F4CA")
-    st.page_link("pages/portal_profile.py", label="My Profile", icon="\U0001F464")
-
-    st.divider()
-
-    if st.button("Log Out", use_container_width=True):
-        portal_logout()
-        st.switch_page("pages/portal_login.py")
-
-    st.caption("MCTV Elite Advertising")
-    st.caption("www.mctvofms.com")
+render_portal_sidebar(user)
 
 
 # ── Load Dashboard Data ────────────────────────────────────────────────────
+
+is_admin = role in ("admin", "sales_rep")
 
 try:
     client = get_client_by_user_id(user.get("user_id", ""))
 except Exception:
     client = None
 
-is_admin = role in ("admin", "sales_rep")
-
 if not client and not is_admin:
     st.warning("Your account is being set up. Please check back soon or contact your MCTV representative.")
+    render_portal_footer()
     st.stop()
 
 client_id = client.get("id", "") if client else ""
@@ -129,7 +75,6 @@ if is_portal_advertiser():
     m2.metric("Total Screens", dashboard.get("total_screens", 0))
     m3.metric("Pending Invoices", dashboard.get("pending_invoice_count", 0))
 
-    # Next invoice info
     next_inv = dashboard.get("next_invoice")
     if next_inv:
         m4.metric("Next Due", f"${float(next_inv.get('amount', 0)):,.2f}",
@@ -167,8 +112,9 @@ with col1:
         active = [c for c in contracts if c.get("status") in ("signed", "active")]
         if active:
             st.success(f"{len(active)} active contract(s)")
-        st.button("View Contract", use_container_width=True, key="dash_view_contract",
-                  on_click=lambda: st.switch_page("pages/portal_contract.py"))
+        if st.button("View Contract", type="primary", use_container_width=True,
+                     key="dash_view_contract"):
+            st.switch_page("pages/portal_contract.py")
     else:
         st.info("No contracts yet")
 
@@ -183,7 +129,7 @@ with col2:
         st.info(f"{len(pending)} pending invoice(s)")
     else:
         st.success("All caught up")
-    if st.button("View Invoices", use_container_width=True, key="dash_invoices"):
+    if st.button("View Invoices", type="primary", use_container_width=True, key="dash_invoices"):
         st.switch_page("pages/portal_invoices.py")
 
 with col3:
@@ -194,7 +140,7 @@ with col3:
         st.info(f"{len(in_progress)} request(s) in progress")
     else:
         st.caption("No active requests")
-    if st.button("Submit Request", use_container_width=True, key="dash_creative"):
+    if st.button("Submit Request", type="primary", use_container_width=True, key="dash_creative"):
         st.switch_page("pages/portal_creative.py")
 
 with col4:
@@ -205,7 +151,7 @@ with col4:
         st.success(f"Latest: {latest.get('title', 'Report')[:25]}")
     else:
         st.caption("No reports yet")
-    if st.button("View Reports", use_container_width=True, key="dash_reports"):
+    if st.button("View Reports", type="primary", use_container_width=True, key="dash_reports"):
         st.switch_page("pages/portal_reports.py")
 
 
@@ -222,7 +168,6 @@ if activity:
         timestamp = event.get("created_at", "")[:16] if event.get("created_at") else ""
         entity = event.get("entity_type", "")
 
-        # Icon based on entity type
         icon = {
             "contract": "\U0001F4DD",
             "invoice": "\U0001F4B0",
@@ -245,3 +190,5 @@ if cstatus == "onboarding":
         "with your contract details and next steps. In the meantime, feel free to "
         "explore the portal and submit any creative materials you'd like us to work with."
     )
+
+render_portal_footer()

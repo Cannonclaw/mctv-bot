@@ -164,17 +164,56 @@ def main():
             "Generate professional traction and ad performance reports "
             "from NTV360 data. Upload Excel exports or enter data manually."
         )
-        if st.button("Create Report", use_container_width=True):
+        if st.button("Create Report", type="primary", use_container_width=True):
             st.switch_page("pages/2_Reports.py")
 
     with col4:
-        st.markdown("### Settings")
+        st.markdown("### Video Ads")
         st.markdown(
-            "Configure your API key, update pricing, edit team info, "
-            "and manage network data. All changes save instantly."
+            "Create professional video advertisements using AI-powered templates. "
+            "Upload assets and generate broadcast-ready content."
         )
-        if st.button("Open Settings", use_container_width=True):
-            st.switch_page("pages/3_Settings.py")
+        if st.button("Create Video", type="primary", use_container_width=True):
+            st.switch_page("pages/5_Video_Ads.py")
+
+    # Second row of feature cards
+    col5, col6, col7, col8 = st.columns(4)
+
+    with col5:
+        st.markdown("### Client Management")
+        st.markdown(
+            "Manage client accounts, invite them to the portal, "
+            "track status, and assign reps."
+        )
+        if st.button("Manage Clients", type="primary", use_container_width=True):
+            st.switch_page("pages/8_Clients.py")
+
+    with col6:
+        st.markdown("### Contracts")
+        st.markdown(
+            "Create branded contracts, generate PDFs, send for "
+            "e-signature, and track the full lifecycle."
+        )
+        if st.button("View Contracts", type="primary", use_container_width=True):
+            st.switch_page("pages/9_Contracts.py")
+
+    with col7:
+        st.markdown("### Invoices")
+        st.markdown(
+            "Create and send invoices, track payments, run AR aging "
+            "reports, and sync with QuickBooks."
+        )
+        if st.button("View Invoices", type="primary", use_container_width=True):
+            st.switch_page("pages/10_Invoices.py")
+
+    with col8:
+        st.markdown("### SMS Messaging")
+        st.markdown(
+            "Send text messages to clients via Twilio. Use templates, "
+            "manage opt-ins, and view message history."
+        )
+        if st.button("Send Messages", type="primary", use_container_width=True):
+            st.switch_page("pages/12_Messaging.py")
 
     st.divider()
 

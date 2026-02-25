@@ -11,10 +11,10 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
-from services.auth import require_portal_auth, get_portal_user, portal_logout
-from services.portal_service import get_client_by_user_id
+from services.auth import require_portal_auth, get_portal_user
 from services.supabase_client import query_table
 from services.storage_service import get_signed_url, BUCKET_REPORTS
+from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
 st.set_page_config(
     page_title="Reports - MCTV Client Portal",
@@ -23,50 +23,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown("""
-<style>
-    [data-testid="stSidebar"] { background-color: #1B1F3B; }
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3 { color: white; }
-    [data-testid="stSidebar"] a, [data-testid="stSidebar"] a span,
-    [data-testid="stSidebar"] a p,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] span,
-    [data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] p { color: white !important; }
-    [data-testid="stSidebar"] a:hover span,
-    [data-testid="stSidebar"] a:hover p { color: #C5A55A !important; }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
+inject_portal_css()
 require_portal_auth()
+
 user = get_portal_user()
-
-with st.sidebar:
-    st.markdown("## MCTV Client Portal")
-    st.markdown(f"*{user.get('full_name', '')}*")
-    st.divider()
-    st.markdown("**Navigation**")
-    st.page_link("pages/portal_dashboard.py", label="Dashboard", icon="\U0001F3E0")
-    st.page_link("pages/portal_contract.py", label="My Contract", icon="\U0001F4DD")
-    st.page_link("pages/portal_invoices.py", label="Invoices", icon="\U0001F4B0")
-    st.page_link("pages/portal_creative.py", label="Creative Requests", icon="\U0001F3A8")
-    st.page_link("pages/portal_reports.py", label="Reports", icon="\U0001F4CA")
-    st.page_link("pages/portal_profile.py", label="My Profile", icon="\U0001F464")
-    st.divider()
-    if st.button("Log Out", use_container_width=True):
-        portal_logout()
-        st.switch_page("pages/portal_login.py")
-    st.caption("MCTV Elite Advertising")
-
-# ── Load client ─────────────────────────────────────────────────────────────
-
-client = get_client_by_user_id(user.get("user_id", ""))
-if not client:
-    st.warning("Your account is being set up. Please check back soon.")
-    st.stop()
+render_portal_sidebar(user)
+client = load_portal_client(user)
 
 client_id = client.get("id", "")
 
@@ -76,8 +38,12 @@ st.divider()
 
 # ── Fetch reports ───────────────────────────────────────────────────────────
 
-reports = query_table("client_reports", filters={"client_id": client_id},
-                      order="-created_at")
+try:
+    reports = query_table("client_reports", filters={"client_id": client_id},
+                          order="-created_at")
+except Exception:
+    st.error("Unable to load your reports. Please try again later.")
+    reports = []
 
 if not reports:
     st.info(
@@ -85,6 +51,7 @@ if not reports:
         "as your campaign runs. Reports typically include play counts, impressions, "
         "venue breakdowns, and insights."
     )
+    render_portal_footer()
     st.stop()
 
 for report in reports:
@@ -98,7 +65,6 @@ for report in reports:
     created = report.get("created_at", "")[:10] if report.get("created_at") else ""
 
     with st.expander(f"\U0001F4CA **{title}** — {period or created}", expanded=True):
-        # Key metrics
         if plays or impressions or venues:
             mc1, mc2, mc3 = st.columns(3)
             if plays:
@@ -116,7 +82,6 @@ for report in reports:
             st.markdown("**Highlights:**")
             st.text(report.get("highlights"))
 
-        # Download link
         doc_url = report.get("document_url", "")
         if doc_url:
             local_path = Path(doc_url) if doc_url else None
@@ -130,6 +95,16 @@ for report in reports:
                         type="primary",
                     )
             else:
-                url = get_signed_url(BUCKET_REPORTS, doc_url)
+                try:
+                    url = get_signed_url(BUCKET_REPORTS, doc_url)
+                except Exception:
+                    url = None
+
                 if url:
-                    st.markdown(f"[Download Full Report]({url})")
+                    st.link_button(
+                        "Download Full Report",
+                        url=url,
+                        type="primary",
+                    )
+
+render_portal_footer()

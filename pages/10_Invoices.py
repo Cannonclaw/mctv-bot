@@ -43,7 +43,11 @@ st.caption("Create invoices, track payments, send reminders, and monitor account
 
 # ── Summary metrics ─────────────────────────────────────────────────────────
 
-summary = get_invoice_summary()
+try:
+    summary = get_invoice_summary()
+except Exception:
+    st.error("Unable to load invoice summary.")
+    summary = {}
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 c1.metric("Total Invoices", summary.get("total", 0))
@@ -75,7 +79,11 @@ with tab_list:
         )
 
     status_val = status_filter.lower() if status_filter != "All" else None
-    invoices = get_all_invoices(status=status_val)
+    try:
+        invoices = get_all_invoices(status=status_val)
+    except Exception:
+        st.error("Unable to load invoices. Please try again later.")
+        invoices = []
 
     if not invoices:
         st.info("No invoices found. Use the 'Create Invoice' tab to get started.")
@@ -351,7 +359,11 @@ with tab_aging:
     st.markdown("### Accounts Receivable Aging Report")
     st.caption("Outstanding balances broken down by how long they've been due.")
 
-    aging = get_ar_aging()
+    try:
+        aging = get_ar_aging()
+    except Exception:
+        st.error("Unable to load AR aging data.")
+        aging = {}
 
     # Summary bar
     st.markdown(

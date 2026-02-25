@@ -60,7 +60,11 @@ st.caption("Create advertising contracts, generate branded PDFs, send to clients
 
 # ── Summary metrics ─────────────────────────────────────────────────────────
 
-summary = get_contract_summary()
+try:
+    summary = get_contract_summary()
+except Exception:
+    st.error("Unable to load contract summary.")
+    summary = {}
 
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Total Contracts", summary.get("total", 0))
@@ -90,7 +94,11 @@ with tab_list:
         )
 
     status_val = status_filter.lower() if status_filter != "All" else None
-    contracts = get_all_contracts(status=status_val)
+    try:
+        contracts = get_all_contracts(status=status_val)
+    except Exception:
+        st.error("Unable to load contracts. Please try again later.")
+        contracts = []
 
     if not contracts:
         st.info("No contracts found. Use the 'Create New Contract' tab to get started.")
