@@ -272,3 +272,81 @@ MCTV Elite Advertising
 www.mctvofms.com
 """
     return _send_email(client_email, subject, body)
+
+
+# ── SMS Notification Helpers ─────────────────────────────────────────────────
+# These mirror the email notifications above but send a short text instead.
+# They fail silently if Twilio is not configured or the contact hasn't opted in.
+
+def _try_sms(phone: str, template_key: str, variables: dict):
+    """Attempt to send an SMS notification. Fails silently."""
+    if not phone:
+        return
+    try:
+        from services.sms_service import send_template, is_configured
+        if is_configured():
+            send_template(template_key, phone, variables)
+    except Exception as e:
+        print(f"[notify] SMS failed ({template_key}): {e}")
+
+
+def sms_proposal_sent(phone: str, contact_name: str, business_name: str,
+                      rep_name: str = "Mary Michael"):
+    """Text notification when a proposal is sent."""
+    _try_sms(phone, "proposal_sent", {
+        "contact_name": contact_name,
+        "business_name": business_name,
+        "rep_name": rep_name,
+    })
+
+
+def sms_contract_ready(phone: str, contact_name: str, business_name: str,
+                       rep_name: str = "Mary Michael"):
+    """Text notification when a contract is ready to sign."""
+    _try_sms(phone, "contract_ready", {
+        "contact_name": contact_name,
+        "business_name": business_name,
+        "rep_name": rep_name,
+    })
+
+
+def sms_invoice_reminder(phone: str, contact_name: str, invoice_number: str,
+                         amount: str, due_date: str):
+    """Text reminder for an upcoming or overdue invoice."""
+    _try_sms(phone, "invoice_reminder", {
+        "contact_name": contact_name,
+        "invoice_number": invoice_number,
+        "amount": amount,
+        "due_date": due_date,
+    })
+
+
+def sms_welcome_client(phone: str, contact_name: str, business_name: str,
+                       rep_name: str = "Mary Michael"):
+    """Welcome text when a new client is onboarded."""
+    _try_sms(phone, "welcome_new_client", {
+        "contact_name": contact_name,
+        "business_name": business_name,
+        "rep_name": rep_name,
+    })
+
+
+def sms_creative_live(phone: str, contact_name: str, business_name: str,
+                      rep_name: str = "Mary Michael"):
+    """Text notification when a client's ad creative goes live."""
+    _try_sms(phone, "creative_live", {
+        "contact_name": contact_name,
+        "business_name": business_name,
+        "rep_name": rep_name,
+    })
+
+
+def sms_traction_report(phone: str, contact_name: str, total_plays: str,
+                        venue_count: str, rep_name: str = "Mary Michael"):
+    """Text summary when a traction report is generated."""
+    _try_sms(phone, "traction_report", {
+        "contact_name": contact_name,
+        "total_plays": total_plays,
+        "venue_count": venue_count,
+        "rep_name": rep_name,
+    })

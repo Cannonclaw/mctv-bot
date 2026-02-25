@@ -116,6 +116,7 @@ def main():
         st.page_link("pages/9_Contracts.py", label="Contracts", icon="\U0001F4DD")
         st.page_link("pages/10_Invoices.py", label="Invoices", icon="\U0001F4B0")
         st.page_link("pages/11_Creative.py", label="Creative Requests", icon="\U0001F3A8")
+        st.page_link("pages/12_Messaging.py", label="SMS Messaging", icon="\U0001F4F1")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
         st.divider()
