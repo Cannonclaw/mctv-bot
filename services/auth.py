@@ -16,6 +16,27 @@ import os
 from pathlib import Path
 
 
+# ── Portal Access Control ───────────────────────────────────────────────────
+# Only these emails can log into the portal. Add client emails here when ready
+# to open access. This acts as a whitelist on top of Supabase Auth.
+
+def _get_allowed_portal_emails() -> set:
+    """Return the set of emails allowed to access the portal.
+
+    Reads from PORTAL_ALLOWED_EMAILS env var (comma-separated) if set,
+    otherwise defaults to the MCTV team.
+    """
+    env_val = os.environ.get("PORTAL_ALLOWED_EMAILS", "")
+    if env_val.strip():
+        return {e.strip().lower() for e in env_val.split(",") if e.strip()}
+    # Default: team only
+    return {
+        "creed@mctvofms.com",
+        "mmc@mctvofms.com",
+        "swayze@mctvofms.com",
+    }
+
+
 # ── Team Auth (existing pattern — unchanged behavior) ───────────────────────
 
 def check_password() -> bool:
@@ -82,7 +103,13 @@ def portal_login(email: str, password: str) -> dict | None:
 
     Returns user info dict on success, None on failure.
     On success, also sets all necessary session state.
+    Enforces the portal email allowlist.
     """
+    # Check allowlist BEFORE hitting Supabase
+    allowed = _get_allowed_portal_emails()
+    if email.strip().lower() not in allowed:
+        return None
+
     from services.supabase_client import sign_in
 
     result = sign_in(email, password)

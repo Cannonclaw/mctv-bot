@@ -355,3 +355,55 @@ if st.button("Save All Settings", type="primary", use_container_width=True):
         st.success("All settings saved successfully!")
     except Exception as e:
         st.error(f"Error saving settings: {e}")
+
+st.divider()
+
+# ── PORTAL ACCESS CONTROL ────────────────────────────────────────────────────
+st.markdown("### Portal Access Control")
+st.caption("Only these emails can log into the client portal. Add client emails when ready to open access.")
+
+from services.auth import _get_allowed_portal_emails
+
+current_allowed = _get_allowed_portal_emails()
+st.markdown(f"**Currently allowed ({len(current_allowed)}):**")
+for email_addr in sorted(current_allowed):
+    st.text(f"  {email_addr}")
+
+env_val = os.environ.get("PORTAL_ALLOWED_EMAILS", "")
+st.text_input(
+    "PORTAL_ALLOWED_EMAILS",
+    value=env_val if env_val else "creed@mctvofms.com,mmc@mctvofms.com,swayze@mctvofms.com",
+    help="Comma-separated list of emails allowed to access the portal. "
+         "Set this in your .env file or Render dashboard to persist changes.",
+    disabled=True,
+    key="portal_allowed_display",
+)
+st.caption("To add client emails, update PORTAL_ALLOWED_EMAILS in your .env file or Render environment variables.")
+
+st.divider()
+
+# ── ACTION ITEMS ─────────────────────────────────────────────────────────────
+st.markdown("### Action Items")
+st.caption("Manual tasks that need human action. Check off items as you complete them.")
+
+action_items = [
+    ("Register copyright at copyright.gov ($65)", "https://eco.copyright.gov/", "Copyright registration required to file lawsuits + unlocks statutory damages up to $150K"),
+    ("File trademark for 'MCTV Elite Advertising' ($250-$350)", "https://www.uspto.gov/trademarks/apply", "Search first at tmsearch.uspto.gov, then file in Class 035 (Advertising)"),
+    ("1-hour IP attorney consult ($200-$400)", None, "Validate copyright strategy, review ToS, get Mississippi-specific advice"),
+    ("Sign up for Twilio SMS", "https://twilio.com/try-twilio", "Get Account SID, Auth Token, and phone number for SMS messaging"),
+    ("Register A2P 10DLC in Twilio", None, "Required to send business texts to US numbers at scale (1-2 weeks for approval)"),
+    ("Set up bot.mctvofms.com subdomain", None, "CNAME record pointing to Render for custom domain"),
+    ("Publish 5 SEO blog posts to WordPress", None, "Drafts ready in seo/blog_drafts/ — copy-paste into WordPress"),
+    ("Fix GBP services list", None, "Still shows Auto Repair/Business Cards — needs real MCTV services"),
+    ("Get first 5 Google reviews", None, "Zero reviews currently — send review link to existing clients"),
+    ("Save 5 community screen photos", None, "Needed in assets/screens/ for proposal auto-include"),
+    ("Execute NDAs with any future contractors", None, "Required before sharing codebase access"),
+]
+
+for i, (task, link, help_text) in enumerate(action_items):
+    col_task, col_link = st.columns([4, 1])
+    with col_task:
+        st.checkbox(task, key=f"action_{i}", help=help_text)
+    with col_link:
+        if link:
+            st.link_button("Open", link, use_container_width=True)
