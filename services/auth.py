@@ -29,6 +29,10 @@ import streamlit as st
 import os
 import time
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure .env is loaded — auth.py may be imported before app.py's load_dotenv runs
+load_dotenv(Path(__file__).parent.parent / ".env", override=False)
 
 
 # ── Login Rate Limiting ────────────────────────────────────────────────────
