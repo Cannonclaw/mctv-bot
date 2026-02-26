@@ -69,7 +69,7 @@ def render_portal_sidebar(user: dict):
 
         if st.button("Log Out", width='stretch'):
             portal_logout()
-            st.switch_page("pages/portal_login.py")
+            st.switch_page("app.py")
 
         config = load_config()
         company = config.get("company", {})

@@ -1,7 +1,13 @@
 # Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
 # Proprietary and confidential. Unauthorized copying, distribution,
 # or modification of this file is strictly prohibited.
-"""MCTV Elite Advertising Bot - Main Streamlit Application."""
+"""MCTV Elite Advertising Bot - Main Streamlit Application.
+
+Single entry point with a unified landing page offering three login paths:
+1. Team Member — shared password for internal tools
+2. Host Venue — Supabase email/password or magic link for venue partners
+3. Advertiser — Supabase email/password or magic link for advertisers
+"""
 
 import streamlit as st
 import sys
@@ -80,11 +86,183 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ── Password Gate ────────────────────────────────────────────────────────────
-from services.auth import check_password
-if not check_password():
-    st.stop()
+# ── Imports ─────────────────────────────────────────────────────────────────
 
+from services.auth import (
+    check_team_auth, render_team_login_form, team_logout,
+    check_portal_auth, check_password,
+    portal_magic_link_callback, render_portal_login_form,
+)
+
+LOGO_PATH = Path(__file__).parent / "assets" / "branding" / "mctv_logo.png"
+
+
+# ── Landing Page (unauthenticated) ──────────────────────────────────────────
+
+LANDING_CSS = """
+<style>
+    .block-container { max-width: 900px; margin: 0 auto; }
+    [data-testid="stSidebar"] { display: none !important; }
+</style>
+"""
+
+CARD_TEMPLATE = """
+<div style="background:#1B1F3B; border-radius:12px; padding:1.8rem 1.2rem;
+            text-align:center; min-height:200px; display:flex; flex-direction:column;
+            justify-content:center; align-items:center;">
+    <p style="font-size:2.2rem; margin:0; line-height:1;">{icon}</p>
+    <h3 style="color:white; margin:0.6rem 0 0.3rem; font-size:1.25rem;">{title}</h3>
+    <p style="color:#C5A55A; font-size:0.88rem; margin:0; line-height:1.4;">{desc}</p>
+</div>
+"""
+
+
+def _render_logo():
+    """Render the centered MCTV logo."""
+    if LOGO_PATH.exists():
+        col_l, col_c, col_r = st.columns([1, 2, 1])
+        with col_c:
+            st.image(str(LOGO_PATH), width='stretch')
+
+    st.markdown(
+        '<div style="text-align:center; padding:0 0 1rem;">'
+        '<p style="color:#C5A55A; font-size:1.1rem; margin:0;">Indoor Digital Billboard Network</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_login_cards():
+    """Render the 3 login option cards."""
+    _render_logo()
+
+    col1, col2, col3 = st.columns(3, gap="medium")
+
+    with col1:
+        st.markdown(CARD_TEMPLATE.format(
+            icon="\U0001F527", title="Team Member",
+            desc="Internal tools, proposals,<br>reports &amp; client management"
+        ), unsafe_allow_html=True)
+        if st.button("Team Login", type="primary", width='stretch', key="btn_team"):
+            st.session_state["login_mode"] = "team"
+            st.rerun()
+
+    with col2:
+        st.markdown(CARD_TEMPLATE.format(
+            icon="\U0001F3E2", title="Host Venue",
+            desc="Manage your screens,<br>view reports &amp; submit content"
+        ), unsafe_allow_html=True)
+        if st.button("Host Login", type="primary", width='stretch', key="btn_host"):
+            st.session_state["login_mode"] = "portal_host"
+            st.rerun()
+
+    with col3:
+        st.markdown(CARD_TEMPLATE.format(
+            icon="\U0001F4CA", title="Advertiser",
+            desc="View your campaigns,<br>contracts &amp; invoices"
+        ), unsafe_allow_html=True)
+        if st.button("Advertiser Login", type="primary", width='stretch', key="btn_adv"):
+            st.session_state["login_mode"] = "portal_advertiser"
+            st.rerun()
+
+    # Footer
+    st.markdown(
+        '<div style="text-align:center; color:#888; font-size:0.85rem; padding:2rem 0 0;">'
+        '<p>MCTV Elite Advertising | Oxford | Starkville | Tupelo</p>'
+        '<p>www.mctvofms.com | &copy; 2026 MCTV Digital, Inc.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_team_login():
+    """Render the team password login with a back button."""
+    _render_logo()
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        render_team_login_form()
+
+        st.divider()
+        if st.button("\u2190 Back to Login Options", width='stretch', key="back_team"):
+            st.session_state["login_mode"] = None
+            st.rerun()
+
+
+def _render_portal_login(mode: str):
+    """Render the Supabase portal login form with role-appropriate context."""
+    is_host = mode == "portal_host"
+
+    _render_logo()
+
+    title = "Host Venue Login" if is_host else "Advertiser Login"
+    subtitle = ("Manage your screens, content & reports" if is_host
+                else "View your contracts, invoices & campaign performance")
+
+    st.markdown(
+        f'<div style="text-align:center; padding:0 0 0.5rem;">'
+        f'<h2 style="color:#1B1F3B; margin:0;">{title}</h2>'
+        f'<p style="color:#C5A55A; margin:0.3rem 0 0;">{subtitle}</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        render_portal_login_form(context_title=title, context_subtitle=subtitle)
+
+        st.divider()
+        if st.button("\u2190 Back to Login Options", width='stretch', key="back_portal"):
+            st.session_state["login_mode"] = None
+            st.session_state.pop("show_reset_form", None)
+            st.session_state.pop("use_magic_link", None)
+            st.rerun()
+
+
+def render_landing_page():
+    """Render the unified landing page with 3 login options."""
+    st.markdown(LANDING_CSS, unsafe_allow_html=True)
+
+    # Handle magic link / recovery callbacks (redirected from portal_login.py)
+    _token_hash = st.query_params.get("token_hash", "")
+    _auth_type = st.query_params.get("type", "")
+
+    if _token_hash and _auth_type in ("magiclink", "recovery"):
+        st.query_params.clear()
+
+        if _auth_type == "recovery":
+            with st.spinner("Verifying reset link..."):
+                result = portal_magic_link_callback(_token_hash, otp_type="recovery")
+            if result:
+                st.session_state["_recovery_mode"] = True
+                st.session_state["_recovery_access_token"] = result.get("access_token", "")
+                st.session_state["login_mode"] = "portal_advertiser"
+                st.rerun()
+            else:
+                st.error("This reset link has expired or is invalid. Please request a new one.")
+                st.stop()
+        else:
+            with st.spinner("Signing you in..."):
+                result = portal_magic_link_callback(_token_hash, otp_type="magiclink")
+            if result:
+                st.success(f"Welcome, {result.get('full_name', 'there')}!")
+                st.switch_page("pages/portal_dashboard.py")
+            else:
+                st.error("This magic link has expired or your email is not authorized.")
+                st.stop()
+
+    # Dispatch based on login_mode
+    login_mode = st.session_state.get("login_mode")
+
+    if login_mode == "team":
+        _render_team_login()
+    elif login_mode in ("portal_host", "portal_advertiser"):
+        _render_portal_login(login_mode)
+    else:
+        _render_login_cards()
+
+
+# ── Team Dashboard (authenticated) ─────────────────────────────────────────
 
 def main():
     # Sidebar
@@ -126,10 +304,14 @@ def main():
         st.page_link("pages/portal_login.py", label="Client Portal", icon="\U0001F310")
 
         st.divider()
+        if st.button("Log Out", width='stretch', key="team_logout_btn"):
+            team_logout()
+            st.rerun()
+
         st.caption("MCTV Elite Advertising")
         st.caption("Oxford | Starkville | Tupelo")
         st.caption("www.mctvofms.com")
-        st.caption("© 2026 MCTV Digital, Inc.")
+        st.caption("\u00A9 2026 MCTV Digital, Inc.")
 
     # Main content - Home page
     st.markdown('<p class="main-header">MCTV Elite Advertising Bot</p>', unsafe_allow_html=True)
@@ -254,5 +436,11 @@ def main():
         st.info("No files generated yet. Create your first proposal or report above!")
 
 
-if __name__ == "__main__":
+# ── Auth Routing ────────────────────────────────────────────────────────────
+
+if check_team_auth():
     main()
+elif check_portal_auth():
+    st.switch_page("pages/portal_dashboard.py")
+else:
+    render_landing_page()

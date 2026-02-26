@@ -51,19 +51,48 @@ def _get_allowed_portal_emails() -> set:
     }
 
 
-# ── Team Auth (existing pattern — unchanged behavior) ───────────────────────
+# ── Team Auth ───────────────────────────────────────────────────────────────
+
+def check_team_auth() -> bool:
+    """Check if a team user is authenticated. No UI rendering."""
+    return bool(st.session_state.get("authenticated"))
+
+
+def render_team_login_form():
+    """Render the team password login form (no branding — caller handles that)."""
+    st.markdown("#### Team Member Login")
+    st.caption("Enter the shared team password to access internal tools.")
+
+    password = st.text_input("Password", type="password", key="login_password")
+
+    if st.button("Log In", type="primary", width='stretch'):
+        correct = os.environ.get("APP_PASSWORD", "mctv2026")
+        if password == correct:
+            st.session_state["authenticated"] = True
+            st.session_state["auth_mode"] = "team"
+            st.rerun()
+        else:
+            st.error("Incorrect password. Please try again.")
+
+    st.caption("Contact Creed if you need access.")
+
+
+def team_logout():
+    """Clear team session state."""
+    st.session_state["authenticated"] = False
+    st.session_state["auth_mode"] = None
+    st.session_state.pop("login_mode", None)
+
 
 def check_password() -> bool:
-    """Display a login gate if the user is not yet authenticated.
+    """Legacy wrapper — keeps existing team page calls working unchanged.
 
-    Returns True if authenticated, False otherwise.
-    Call st.stop() after this returns False to prevent page content from rendering.
+    Shows login form if not authenticated, returns True/False.
     """
-    # Already logged in this session
-    if st.session_state.get("authenticated"):
+    if check_team_auth():
         return True
 
-    # MCTV Logo
+    # Show branding + login form for pages that call check_password() directly
     logo_path = Path(__file__).parent.parent / "assets" / "branding" / "mctv_logo.png"
     if logo_path.exists():
         col_l, col_c, col_r = st.columns([1, 2, 1])
@@ -71,29 +100,15 @@ def check_password() -> bool:
             st.image(str(logo_path), width='stretch')
 
     st.markdown(
-        """
-        <div style="text-align: center; padding: 0.5rem 0 1rem 0;">
-            <p style="color: #C5A55A; font-size: 1.1rem; margin: 0;">Indoor Digital Billboard Network</p>
-        </div>
-        """,
+        '<div style="text-align: center; padding: 0.5rem 0 1rem 0;">'
+        '<p style="color: #C5A55A; font-size: 1.1rem; margin: 0;">Indoor Digital Billboard Network</p>'
+        '</div>',
         unsafe_allow_html=True,
     )
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("#### Team Login")
-        password = st.text_input("Password", type="password", key="login_password")
-
-        if st.button("Log In", type="primary", width='stretch'):
-            correct = os.environ.get("APP_PASSWORD", "mctv2026")
-            if password == correct:
-                st.session_state["authenticated"] = True
-                st.session_state["auth_mode"] = "team"
-                st.rerun()
-            else:
-                st.error("Incorrect password. Please try again.")
-
-        st.caption("Contact Creed if you need access.")
+        render_team_login_form()
 
     return False
 
@@ -207,6 +222,7 @@ def portal_logout():
             del st.session_state[key]
 
     st.session_state["auth_mode"] = None
+    st.session_state.pop("login_mode", None)
 
 
 def get_portal_user() -> dict:
@@ -242,12 +258,131 @@ def is_portal_host() -> bool:
 
 
 def require_portal_auth():
-    """Redirect to portal login if not authenticated.
+    """Redirect to landing page if not authenticated.
 
     Call this at the top of portal pages. If not authenticated,
     displays a message and stops page rendering.
     """
     if not check_portal_auth():
         st.warning("Please log in to access the client portal.")
-        st.page_link("pages/portal_login.py", label="Go to Login", icon="\U0001F512")
+        st.page_link("app.py", label="Go to Login", icon="\U0001F512")
         st.stop()
+
+
+# ── Shared Portal Login Form ───────────────────────────────────────────────
+
+def render_portal_login_form(context_title: str = "Client Portal",
+                             context_subtitle: str = "View your contracts, invoices, and campaign performance"):
+    """Render the Supabase email/password + magic link login form.
+
+    Used by both app.py landing page and portal_login.py callback page.
+    """
+    from services.supabase_client import is_configured, reset_password
+
+    if not is_configured():
+        st.error("The client portal is not yet available. Please contact MCTV for access.")
+        return
+
+    # Recovery mode: Set New Password form
+    if st.session_state.get("_recovery_mode"):
+        from services.supabase_client import update_user_password
+
+        st.markdown("#### Set New Password")
+        st.info("Your identity has been verified. Enter a new password below.")
+
+        new_pw = st.text_input("New Password", type="password", key="recovery_new_pw")
+        confirm_pw = st.text_input("Confirm Password", type="password", key="recovery_confirm_pw")
+
+        if st.button("Update Password", type="primary", width='stretch'):
+            if not new_pw or not confirm_pw:
+                st.error("Please fill in both fields.")
+            elif new_pw != confirm_pw:
+                st.error("Passwords do not match.")
+            elif len(new_pw) < 6:
+                st.error("Password must be at least 6 characters.")
+            else:
+                token = st.session_state.get("_recovery_access_token", "")
+                with st.spinner("Updating password..."):
+                    success = update_user_password(token, new_pw)
+                if success:
+                    st.session_state.pop("_recovery_mode", None)
+                    st.session_state.pop("_recovery_access_token", None)
+                    st.success("Password updated! You can now log in with your new password.")
+                    portal_logout()
+                    st.rerun()
+                else:
+                    st.error("Failed to update password. The link may have expired.")
+
+        if st.button("Cancel", width='stretch'):
+            st.session_state.pop("_recovery_mode", None)
+            st.session_state.pop("_recovery_access_token", None)
+            portal_logout()
+            st.rerun()
+        return
+
+    # Password reset request form
+    if st.session_state.get("show_reset_form"):
+        st.markdown("#### Reset Password")
+        reset_email = st.text_input("Email Address", key="reset_email",
+                                    placeholder="your@email.com")
+
+        if st.button("Send Reset Link", type="primary", width='stretch'):
+            if reset_email:
+                with st.spinner("Sending reset link..."):
+                    success = reset_password(reset_email)
+                    if success:
+                        st.success("Password reset link sent! Check your email.")
+                    else:
+                        st.error("Could not send reset link. Please check your email address.")
+            else:
+                st.error("Please enter your email address.")
+
+        if st.button("Back to Login", width='stretch'):
+            st.session_state["show_reset_form"] = False
+            st.rerun()
+        return
+
+    # Main login form (password + magic link toggle)
+    st.markdown("#### Log In")
+
+    use_magic_link = st.toggle("Use email link instead of password",
+                               key="use_magic_link",
+                               help="We'll send a sign-in link to your email.")
+
+    email = st.text_input("Email", key="portal_login_email",
+                          placeholder="your@email.com")
+
+    if use_magic_link:
+        if st.button("Send Sign-In Link", type="primary", width='stretch'):
+            if not email:
+                st.error("Please enter your email address.")
+            else:
+                with st.spinner("Sending sign-in link..."):
+                    success = send_portal_magic_link(email)
+                if success:
+                    st.success("Sign-in link sent! Check your email.")
+                    st.info("Didn't get the email? Check your spam folder.")
+                else:
+                    st.error("Could not send sign-in link. Contact your MCTV representative.")
+    else:
+        password = st.text_input("Password", type="password",
+                                 key="portal_login_password")
+
+        if st.button("Log In", type="primary", width='stretch'):
+            if not email or not password:
+                st.error("Please enter both email and password.")
+            else:
+                with st.spinner("Signing in..."):
+                    result = portal_login(email, password)
+                    if result:
+                        st.success(f"Welcome, {result.get('full_name', 'there')}!")
+                        st.switch_page("pages/portal_dashboard.py")
+                    else:
+                        st.error("Invalid email or password. Please try again.")
+
+    if st.button("Forgot Password?", width='stretch'):
+        st.session_state["show_reset_form"] = True
+        st.rerun()
+
+    st.divider()
+    st.caption("Don't have an account? Contact your MCTV representative to get set up.")
