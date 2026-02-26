@@ -5,10 +5,24 @@
 
 Supports two parallel auth paths:
 1. Team login: Shared password (APP_PASSWORD) for internal tools
-2. Portal login: Supabase Auth (email/password) for client portal
+2. Portal login: Supabase Auth (email/password OR magic link) for client portal
 
 Both modes use st.session_state to track auth state. The two paths
 never interfere — a team login doesn't affect portal auth and vice versa.
+
+Magic link (passwordless) flow:
+1. User enters email on portal_login page and clicks "Send Magic Link"
+2. Supabase sends an email with a link containing ?token_hash=xxx&type=magiclink
+3. User clicks the link, which redirects back to portal_login with those query params
+4. portal_login detects the params and calls portal_magic_link_callback()
+5. This exchanges the token_hash for a session via supabase_client.verify_otp()
+6. On success, session state is set and user is redirected to the dashboard
+
+Password reset flow:
+1. User clicks "Forgot Password?" on portal_login (or "Change Password" on profile)
+2. Supabase sends a reset link with ?token_hash=xxx&type=recovery
+3. User clicks it, redirects to portal_login which detects type=recovery
+4. The token is exchanged for a session, and the user sees a "Set New Password" form
 """
 
 import streamlit as st
@@ -54,7 +68,7 @@ def check_password() -> bool:
     if logo_path.exists():
         col_l, col_c, col_r = st.columns([1, 2, 1])
         with col_c:
-            st.image(str(logo_path), use_container_width=True)
+            st.image(str(logo_path), width='stretch')
 
     st.markdown(
         """
@@ -70,7 +84,7 @@ def check_password() -> bool:
         st.markdown("#### Team Login")
         password = st.text_input("Password", type="password", key="login_password")
 
-        if st.button("Log In", type="primary", use_container_width=True):
+        if st.button("Log In", type="primary", width='stretch'):
             correct = os.environ.get("APP_PASSWORD", "mctv2026")
             if password == correct:
                 st.session_state["authenticated"] = True
@@ -98,8 +112,23 @@ def check_portal_auth() -> bool:
     )
 
 
+def _set_portal_session(result: dict):
+    """Set all portal session state from a successful auth result.
+
+    Shared by portal_login (password) and portal_magic_link_callback (OTP).
+    """
+    st.session_state["portal_authenticated"] = True
+    st.session_state["auth_mode"] = "portal"
+    st.session_state["portal_user_id"] = result.get("user_id", "")
+    st.session_state["portal_email"] = result.get("email", "")
+    st.session_state["portal_full_name"] = result.get("full_name", "")
+    st.session_state["portal_role"] = result.get("role", "advertiser")
+    st.session_state["portal_access_token"] = result.get("access_token", "")
+    st.session_state["portal_refresh_token"] = result.get("refresh_token", "")
+
+
 def portal_login(email: str, password: str) -> dict | None:
-    """Authenticate a portal user via Supabase.
+    """Authenticate a portal user via Supabase email/password.
 
     Returns user info dict on success, None on failure.
     On success, also sets all necessary session state.
@@ -116,16 +145,51 @@ def portal_login(email: str, password: str) -> dict | None:
     if not result:
         return None
 
-    # Set portal session state
-    st.session_state["portal_authenticated"] = True
-    st.session_state["auth_mode"] = "portal"
-    st.session_state["portal_user_id"] = result.get("user_id", "")
-    st.session_state["portal_email"] = result.get("email", "")
-    st.session_state["portal_full_name"] = result.get("full_name", "")
-    st.session_state["portal_role"] = result.get("role", "advertiser")
-    st.session_state["portal_access_token"] = result.get("access_token", "")
-    st.session_state["portal_refresh_token"] = result.get("refresh_token", "")
+    _set_portal_session(result)
+    return result
 
+
+def send_portal_magic_link(email: str) -> bool:
+    """Send a magic link email to the given portal user.
+
+    Checks the allowlist before sending. Returns True if the email was sent.
+    """
+    allowed = _get_allowed_portal_emails()
+    if email.strip().lower() not in allowed:
+        return False
+
+    from services.supabase_client import send_magic_link
+    return send_magic_link(email)
+
+
+def portal_magic_link_callback(token_hash: str, otp_type: str = "magiclink") -> dict | None:
+    """Handle the magic link or recovery callback from Supabase.
+
+    Called when portal_login detects ?token_hash=xxx&type=magiclink (or recovery)
+    in the URL query params. Exchanges the token for a session and sets state.
+
+    Args:
+        token_hash: The token_hash from the redirect URL query params.
+        otp_type: "magiclink" for magic links, "recovery" for password resets.
+
+    Returns user info dict on success, None on failure.
+    """
+    from services.supabase_client import verify_otp
+
+    result = verify_otp(token_hash, otp_type)
+    if not result:
+        return None
+
+    # Check allowlist
+    email = result.get("email", "")
+    allowed = _get_allowed_portal_emails()
+    if email.strip().lower() not in allowed:
+        # User authenticated but is not on the allowlist — sign them out
+        from services.supabase_client import sign_out
+        sign_out(result.get("access_token", ""))
+        return None
+
+    _set_portal_session(result)
     return result
 
 

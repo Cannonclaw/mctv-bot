@@ -50,6 +50,10 @@ class AdvertiserReportGenerator:
 
     def generate(self, data: TractionReportInput, progress_callback=None) -> Path:
         """Generate a complete advertiser traction report."""
+        if not data.venue_records:
+            logger.warning("No venue records provided for %s — generating skeleton report.",
+                           data.advertiser_name)
+
         total_steps = self._count_steps(data)
         current_step = 0
 
@@ -208,13 +212,21 @@ class AdvertiserReportGenerator:
         categories = self._build_category_breakdown(data)
         num_categories = len(categories) if categories else 0
 
-        # Top venue
+        # Top venue — guard against empty venue_records to avoid
+        # ValueError from max() on an empty sequence
         top_venue_name = ""
         top_venue_plays = 0
         if data.venue_records:
             top = max(data.venue_records, key=lambda v: v.total_plays)
             top_venue_name = top.host_name
             top_venue_plays = top.total_plays
+        else:
+            self.docx.add_body_text(
+                doc,
+                "No venue performance data is available for this reporting period. "
+                "Please upload an NTV360 Excel report to populate campaign metrics."
+            )
+            return
 
         # Avg plays per venue
         avg_plays = data.total_plays // len(data.venue_records) if data.venue_records else 0

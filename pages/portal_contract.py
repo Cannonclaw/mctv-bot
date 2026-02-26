@@ -194,7 +194,7 @@ for contract in contracts:
         )
 
         if st.button("I Agree & Sign", key=f"sign_btn_{cid}", type="primary",
-                      use_container_width=True, disabled=not (typed_name and agree)):
+                      width='stretch', disabled=not (typed_name and agree)):
             if not typed_name:
                 st.error("Please type your full name to sign.")
             elif not agree:

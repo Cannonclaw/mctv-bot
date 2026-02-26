@@ -4,8 +4,10 @@
 """Configuration loader and manager."""
 
 import json
+import logging
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 
 CONFIG_DIR = Path(__file__).parent.parent / "config"
 CONFIG_PATH = CONFIG_DIR / "config.json"
@@ -13,7 +15,10 @@ PROMPTS_PATH = CONFIG_DIR / "prompts.json"
 
 
 def load_config() -> dict:
-    """Load the master config.json."""
+    """Load the master config.json. Returns empty dict if file is missing."""
+    if not CONFIG_PATH.exists():
+        logger.warning("Config file not found: %s — returning empty dict", CONFIG_PATH)
+        return {}
     with open(CONFIG_PATH, encoding="utf-8") as f:
         return json.load(f)
 
@@ -25,7 +30,10 @@ def save_config(config: dict) -> None:
 
 
 def load_prompts() -> dict:
-    """Load the prompt templates from prompts.json."""
+    """Load the prompt templates from prompts.json. Returns empty dict if file is missing."""
+    if not PROMPTS_PATH.exists():
+        logger.warning("Prompts file not found: %s — returning empty dict", PROMPTS_PATH)
+        return {}
     with open(PROMPTS_PATH, encoding="utf-8") as f:
         return json.load(f)
 
@@ -49,6 +57,38 @@ def get_market_names(config: dict, active_only: bool = True) -> list:
     if active_only:
         return [k for k, v in markets.items() if v["status"] == "active"]
     return list(markets.keys())
+
+
+def get_team_first_names(config: dict) -> list:
+    """Return list of team member first/display names for dropdowns.
+
+    Derives a short display name from each full team member name:
+      'T. Creed Cannon' -> 'Creed'  (skips initials like 'T.')
+      'Mary Michael Cannon' -> 'Mary Michael'
+      'Swayze Hollingsworth' -> 'Swayze'
+    """
+    names = []
+    for m in config.get("team", []):
+        parts = m["name"].split()
+        # Drop leading initials like "T."
+        while parts and parts[0].endswith("."):
+            parts = parts[1:]
+        # Last part is surname; everything before it is the display name
+        if len(parts) > 1:
+            names.append(" ".join(parts[:-1]))
+        elif parts:
+            names.append(parts[0])
+    return names
+
+
+def get_hours_per_day(config: dict) -> int:
+    """Return operating hours per day from config (default 12)."""
+    return config.get("network", {}).get("hours_per_day", 12)
+
+
+def get_days_per_month(config: dict) -> int:
+    """Return operating days per month from config (default 30)."""
+    return config.get("network", {}).get("days_per_month", 30)
 
 
 def get_pricing_tier(config: dict, index: int) -> dict:

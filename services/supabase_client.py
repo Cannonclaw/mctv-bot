@@ -11,6 +11,7 @@ import os
 import json
 import urllib.request
 import urllib.error
+import urllib.parse
 from functools import lru_cache
 
 
@@ -217,8 +218,20 @@ def sign_out(access_token: str) -> bool:
         return False
 
 
-def reset_password(email: str) -> bool:
-    """Send a password reset email via REST API."""
+def send_magic_link(email: str) -> bool:
+    """Send a magic link (passwordless OTP) email via Supabase Auth REST API.
+
+    Magic link flow:
+    1. This function sends an email with a login link to the user.
+    2. The email contains a link like: {redirect_url}?token_hash=xxx&type=magiclink
+    3. When the user clicks it, Supabase redirects to our portal_login page
+       with query params that we exchange for a session via verify_otp().
+
+    The redirect_to URL must be listed in Supabase Dashboard > Auth > URL Configuration
+    under "Redirect URLs" (e.g., https://mctv-bot.onrender.com/portal_login).
+
+    Returns True if the email was sent successfully.
+    """
     url, anon_key, service_key = _get_url_and_keys()
     if not url:
         return False
@@ -231,6 +244,183 @@ def reset_password(email: str) -> bool:
         portal_url = os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
         body = json.dumps({
             "email": email,
+        }).encode("utf-8")
+        # POST /auth/v1/magiclink sends a magic link email.
+        # Supabase will use the Site URL from dashboard settings for the redirect.
+        req = urllib.request.Request(
+            f"{url}/auth/v1/magiclink",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Content-Type": "application/json",
+            },
+        )
+        urllib.request.urlopen(req, timeout=15)
+        return True
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[supabase_client] Magic link failed ({e.code}): {body[:200]}")
+        return False
+    except Exception as e:
+        print(f"[supabase_client] Magic link failed: {e}")
+        return False
+
+
+def verify_otp(token_hash: str, otp_type: str = "magiclink") -> dict | None:
+    """Exchange a magic link or recovery token_hash for a full session.
+
+    After the user clicks a magic link or password reset link, Supabase redirects
+    back to our app with ?token_hash=xxx&type=magiclink (or type=recovery).
+    This function exchanges that token_hash for access/refresh tokens.
+
+    Args:
+        token_hash: The token_hash from the URL query params.
+        otp_type: Either "magiclink" or "recovery" (from the 'type' query param).
+
+    Returns:
+        dict with user_id, email, full_name, role, access_token, refresh_token
+        on success; None on failure.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url:
+        return None
+
+    api_key = anon_key or service_key
+    if not api_key:
+        return None
+
+    try:
+        body = json.dumps({
+            "token_hash": token_hash,
+            "type": otp_type,
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/verify",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Content-Type": "application/json",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+        user = result.get("user", {})
+        meta = user.get("user_metadata", {})
+
+        role = meta.get("role", "advertiser")
+        full_name = meta.get("full_name", user.get("email", ""))
+
+        # Try to fetch from profiles table for up-to-date info
+        try:
+            profiles = query_table("profiles", select="role,full_name,company_name",
+                                   filters={"id": user.get("id", "")}, limit=1)
+            if profiles and len(profiles) > 0:
+                p = profiles[0]
+                role = p.get("role", role)
+                full_name = p.get("full_name", full_name)
+        except Exception:
+            pass
+
+        return {
+            "user_id": str(user.get("id", "")),
+            "email": user.get("email", ""),
+            "full_name": full_name,
+            "role": role,
+            "access_token": result.get("access_token", ""),
+            "refresh_token": result.get("refresh_token", ""),
+        }
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"[supabase_client] OTP verify failed ({e.code}): {body[:200]}")
+        return None
+    except Exception as e:
+        print(f"[supabase_client] OTP verify failed: {e}")
+        return None
+
+
+def get_user_by_token(access_token: str) -> dict | None:
+    """Fetch the current user from an access token via Supabase Auth REST API.
+
+    Used to validate and extract user info from an existing access token
+    (e.g., after a magic link redirect that includes an access_token fragment).
+
+    Returns dict with user info on success, None on failure.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url or not access_token:
+        return None
+
+    api_key = anon_key or service_key
+    if not api_key:
+        return None
+
+    try:
+        req = urllib.request.Request(
+            f"{url}/auth/v1/user",
+            headers={
+                "apikey": api_key,
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            user = json.loads(resp.read().decode("utf-8"))
+
+        meta = user.get("user_metadata", {})
+        role = meta.get("role", "advertiser")
+        full_name = meta.get("full_name", user.get("email", ""))
+
+        # Try profiles table
+        try:
+            profiles = query_table("profiles", select="role,full_name,company_name",
+                                   filters={"id": user.get("id", "")}, limit=1)
+            if profiles and len(profiles) > 0:
+                p = profiles[0]
+                role = p.get("role", role)
+                full_name = p.get("full_name", full_name)
+        except Exception:
+            pass
+
+        return {
+            "user_id": str(user.get("id", "")),
+            "email": user.get("email", ""),
+            "full_name": full_name,
+            "role": role,
+        }
+    except Exception as e:
+        print(f"[supabase_client] Get user by token failed: {e}")
+        return None
+
+
+def reset_password(email: str) -> bool:
+    """Send a password reset email via Supabase Auth REST API.
+
+    Password reset flow:
+    1. This function sends an email with a reset link.
+    2. The link redirects to portal_login with ?token_hash=xxx&type=recovery.
+    3. portal_login detects the 'recovery' type and calls verify_otp() to
+       exchange the token, which logs the user in and lets them set a new password.
+
+    The redirect URL must be listed in Supabase Dashboard > Auth > URL Configuration.
+
+    Returns True if the email was sent successfully.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url:
+        return False
+
+    api_key = anon_key or service_key
+    if not api_key:
+        return False
+
+    try:
+        portal_url = os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
+        body = json.dumps({
+            "email": email,
+            # redirect_to tells Supabase where to send the user after they click
+            # the reset link. Supabase appends ?token_hash=xxx&type=recovery.
             "redirect_to": f"{portal_url}/portal_login",
         }).encode("utf-8")
         req = urllib.request.Request(
@@ -245,6 +435,46 @@ def reset_password(email: str) -> bool:
         return True
     except Exception as e:
         print(f"[supabase_client] Password reset failed: {e}")
+        return False
+
+
+def update_user_password(access_token: str, new_password: str) -> bool:
+    """Update the authenticated user's password via Supabase Auth REST API.
+
+    Called after a password recovery flow: the user clicks the reset link,
+    verify_otp() exchanges it for a session, and then this function lets
+    them set a new password using their access_token.
+
+    Returns True on success.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url or not access_token:
+        return False
+
+    api_key = anon_key or service_key
+    if not api_key:
+        return False
+
+    try:
+        body = json.dumps({"password": new_password}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/user",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            method="PUT",
+        )
+        urllib.request.urlopen(req, timeout=15)
+        return True
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")
+        print(f"[supabase_client] Password update failed ({e.code}): {err_body[:200]}")
+        return False
+    except Exception as e:
+        print(f"[supabase_client] Password update failed: {e}")
         return False
 
 
@@ -309,7 +539,7 @@ def query_table(table: str, select: str = "*", filters: dict | None = None,
 
     if filters:
         for col, val in filters.items():
-            endpoint += f"&{col}=eq.{val}"
+            endpoint += f"&{col}=eq.{urllib.parse.quote(str(val), safe='')}"
 
     if order:
         if order.startswith("-"):
@@ -335,7 +565,7 @@ def insert_row(table: str, data: dict, use_service_key: bool = True) -> dict | N
 def update_row(table: str, row_id: str, data: dict,
                id_column: str = "id", use_service_key: bool = True) -> dict | None:
     """Update a row by ID. Returns the updated row or None."""
-    result = _rest_request("PATCH", f"{table}?{id_column}=eq.{row_id}",
+    result = _rest_request("PATCH", f"{table}?{id_column}=eq.{urllib.parse.quote(str(row_id), safe='')}",
                            data=data, use_service_key=use_service_key)
     if result and len(result) > 0:
         return result[0]
@@ -345,6 +575,6 @@ def update_row(table: str, row_id: str, data: dict,
 def delete_row(table: str, row_id: str, id_column: str = "id",
                use_service_key: bool = True) -> bool:
     """Delete a row by ID. Returns True on success."""
-    result = _rest_request("DELETE", f"{table}?{id_column}=eq.{row_id}",
+    result = _rest_request("DELETE", f"{table}?{id_column}=eq.{urllib.parse.quote(str(row_id), safe='')}",
                            use_service_key=use_service_key)
     return result is not None

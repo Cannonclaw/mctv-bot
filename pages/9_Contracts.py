@@ -75,6 +75,10 @@ c5.metric("Active MRR", f"${summary.get('active_mrr', 0):,.2f}")
 
 st.divider()
 
+# ── Search ─────────────────────────────────────────────────────────────────
+contract_search = st.text_input("🔍 Search contracts...", key="contract_search",
+                                placeholder="Search by client name, contract title, or status")
+
 # ── Tabs ────────────────────────────────────────────────────────────────────
 
 tab_list, tab_create = st.tabs(["All Contracts", "Create New Contract"])
@@ -100,6 +104,24 @@ with tab_list:
         st.error("Unable to load contracts. Please try again later.")
         contracts = []
 
+    # Build client name cache for search filtering
+    _client_cache = {}
+    for _con in contracts:
+        _cid = _con.get("client_id", "")
+        if _cid and _cid not in _client_cache:
+            _cl = get_client(_cid)
+            _client_cache[_cid] = _cl.get("business_name", "Unknown Client") if _cl else "Unknown Client"
+
+    # Apply search filter
+    if contract_search:
+        _q = contract_search.strip().lower()
+        contracts = [
+            c for c in contracts
+            if _q in (c.get("title", "") or "").lower()
+            or _q in (c.get("status", "") or "").lower()
+            or _q in _client_cache.get(c.get("client_id", ""), "Unknown Client").lower()
+        ]
+
     if not contracts:
         st.info("No contracts found. Use the 'Create New Contract' tab to get started.")
     else:
@@ -116,9 +138,8 @@ with tab_list:
             term = contract.get("term_months", 0)
             has_doc = bool(contract.get("document_url"))
 
-            # Get client name
-            client = get_client(client_id) if client_id else None
-            client_name = client.get("business_name", "Unknown Client") if client else "Unknown Client"
+            # Get client name (use cache)
+            client_name = _client_cache.get(client_id, "Unknown Client")
 
             # Status styling
             status_emoji = {
@@ -183,7 +204,7 @@ with tab_list:
                     if cstatus == "draft":
                         gen_label = "Regenerate Doc" if has_doc else "Generate Doc"
                         if st.button(gen_label, key=f"gen_{cid}",
-                                     use_container_width=True, type="primary"):
+                                     width='stretch', type="primary"):
                             with st.spinner("Generating contract document..."):
                                 result = generate_contract_document(cid, config)
                                 if result:
@@ -196,7 +217,7 @@ with tab_list:
                     # Send to client
                     if cstatus in ("draft", "sent") and has_doc:
                         if st.button("Send to Client", key=f"send_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             with st.spinner("Sending contract..."):
                                 result = send_contract(cid)
                                 if result:
@@ -206,14 +227,14 @@ with tab_list:
                                     st.error("Failed to send contract.")
                     elif cstatus == "draft" and not has_doc:
                         st.button("Send to Client", key=f"send_{cid}",
-                                  use_container_width=True, disabled=True,
+                                  width='stretch', disabled=True,
                                   help="Generate the document first")
 
                 with action_cols[2]:
                     # Activate (signed contracts only)
                     if cstatus == "signed":
                         if st.button("Activate", key=f"activate_{cid}",
-                                     use_container_width=True, type="primary"):
+                                     width='stretch', type="primary"):
                             result = activate_contract(cid)
                             if result:
                                 st.success("Contract activated.")
@@ -234,14 +255,14 @@ with tab_list:
                                 file_name=local_pdf.name,
                                 mime="application/pdf",
                                 key=f"dl_pdf_{cid}",
-                                use_container_width=True,
+                                width='stretch',
                             )
                     elif has_doc and not (local_docx and local_docx.exists()):
                         # Try Supabase Storage signed URL
                         url = get_contract_download_url(cid)
                         if url:
                             st.link_button("\U0001F4C4 Download", url=url,
-                                           use_container_width=True)
+                                           width='stretch')
 
                 with action_cols[4]:
                     # DOCX download (always available if doc exists)
@@ -253,18 +274,18 @@ with tab_list:
                                 file_name=local_docx.name,
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key=f"dl_docx_{cid}",
-                                use_container_width=True,
+                                width='stretch',
                             )
 
                 with action_cols[5]:
                     # Cancel / Delete
                     if cstatus in ("draft", "sent", "viewed"):
                         if st.button("Cancel", key=f"cancel_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             st.session_state[f"confirm_cancel_{cid}"] = True
                     elif cstatus == "cancelled":
                         if st.button("Delete", key=f"delete_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             st.session_state[f"confirm_delete_contract_{cid}"] = True
 
                 # Cancel confirmation
@@ -274,14 +295,14 @@ with tab_list:
                     with cc1:
                         cancel_reason = st.text_input("Reason (optional)", key=f"cancel_reason_{cid}")
                         if st.button("Yes, Cancel Contract", key=f"yes_cancel_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             cancel_contract(cid, reason=cancel_reason)
                             st.success("Contract cancelled.")
                             del st.session_state[f"confirm_cancel_{cid}"]
                             st.rerun()
                     with cc2:
                         if st.button("Keep Contract", key=f"no_cancel_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"confirm_cancel_{cid}"]
                             st.rerun()
 
@@ -291,14 +312,14 @@ with tab_list:
                     dc1, dc2 = st.columns(2)
                     with dc1:
                         if st.button("Yes, Delete", key=f"yes_del_contract_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             delete_contract(cid)
                             st.success("Contract deleted.")
                             del st.session_state[f"confirm_delete_contract_{cid}"]
                             st.rerun()
                     with dc2:
                         if st.button("Cancel", key=f"no_del_contract_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"confirm_delete_contract_{cid}"]
                             st.rerun()
 
@@ -397,7 +418,7 @@ with tab_create:
         term_col1, term_col2, term_col3 = st.columns(3)
 
         with term_col1:
-            term_months = st.selectbox("Term (months)", [6, 12, 3, 1], index=0)
+            term_months = st.selectbox("Term (months)", [1, 3, 6, 12], index=2)
 
         with term_col2:
             start_date = st.date_input(
@@ -425,7 +446,7 @@ with tab_create:
             )
 
         submitted = st.form_submit_button("Create Contract", type="primary",
-                                          use_container_width=True)
+                                          width='stretch')
 
         if submitted:
             if not selected_client_id:

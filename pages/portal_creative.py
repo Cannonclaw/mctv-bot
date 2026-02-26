@@ -134,7 +134,7 @@ with tab_new:
         )
 
         submitted = st.form_submit_button("Submit Request", type="primary",
-                                          use_container_width=True)
+                                          width='stretch')
 
         if submitted:
             if not req_title:

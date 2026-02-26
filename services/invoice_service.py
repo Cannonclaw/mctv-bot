@@ -4,14 +4,18 @@
 """Invoice lifecycle service.
 
 Handles invoice CRUD, status transitions, AR aging, payment recording,
-and overdue detection. Integrates with notification_service for emails.
+partial payments, and overdue detection.  Integrates with notification_service
+for emails and SMS reminders.
 """
 
+import json
 from datetime import datetime, date, timedelta
 
 from services.supabase_client import query_table, insert_row, update_row, delete_row
 from services.portal_service import get_client, log_activity
-from services.notification_service import notify_invoice_sent, notify_invoice_overdue
+from services.notification_service import (
+    notify_invoice_sent, notify_invoice_overdue, sms_invoice_reminder,
+)
 
 
 # ── Invoice Number Generator ────────────────────────────────────────────────
@@ -274,6 +278,227 @@ def mark_overdue(invoice_id: str) -> dict | None:
     return updated
 
 
+# ── Payment Reminders ──────────────────────────────────────────────────────
+
+def get_overdue_invoices() -> list[dict]:
+    """Return all invoices with status 'sent' or 'overdue' whose due_date < today."""
+    today_str = date.today().isoformat()
+    overdue = []
+
+    for status in ("sent", "viewed", "overdue"):
+        invoices = get_all_invoices(status=status)
+        for inv in invoices:
+            due = inv.get("due_date", "")
+            if due and due < today_str:
+                overdue.append(inv)
+
+    return overdue
+
+
+def send_payment_reminder(invoice_id: str) -> bool:
+    """Send a payment reminder email (and SMS) for a single invoice.
+
+    - Loads the invoice and associated client
+    - Sends a reminder via notification_service
+    - Logs the reminder in the invoice notes
+    Returns True on success, False on failure.
+    """
+    invoice = get_invoice(invoice_id)
+    if not invoice:
+        return False
+
+    client = get_client(invoice.get("client_id", ""))
+    if not client:
+        return False
+
+    inv_num = invoice.get("invoice_number", "")
+    amount = float(invoice.get("amount", 0))
+    amount_paid = float(invoice.get("amount_paid", 0))
+    balance = amount - amount_paid
+    due_date = invoice.get("due_date", "")
+
+    # Email reminder
+    notify_invoice_overdue(
+        client_email=client.get("contact_email", ""),
+        client_name=client.get("contact_name", ""),
+        invoice_number=inv_num,
+        amount=balance,
+        due_date=due_date,
+    )
+
+    # SMS reminder (fails silently if Twilio not configured)
+    sms_invoice_reminder(
+        phone=client.get("contact_phone", ""),
+        contact_name=client.get("contact_name", ""),
+        invoice_number=inv_num,
+        amount=f"${balance:,.2f}",
+        due_date=due_date,
+    )
+
+    # Log the reminder in notes
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    existing_notes = invoice.get("notes", "") or ""
+    reminder_note = f"[Reminder sent {now_str}]"
+    updated_notes = f"{existing_notes}\n{reminder_note}".strip()
+
+    update_invoice(invoice_id, {
+        "notes": updated_notes,
+        "last_reminder_sent": now_str,
+    })
+
+    log_activity(
+        client_id=client.get("id", ""),
+        action=f"Payment reminder sent for {inv_num} (${balance:,.2f})",
+        entity_type="invoice",
+        entity_id=invoice_id,
+    )
+
+    return True
+
+
+def send_bulk_reminders() -> dict:
+    """Send payment reminders to all overdue invoices.
+
+    Returns dict with 'sent' count, 'failed' count, and 'invoices' list.
+    """
+    overdue = get_overdue_invoices()
+    results = {"total_overdue": len(overdue), "sent": 0, "failed": 0, "invoices": []}
+
+    for inv in overdue:
+        iid = inv.get("id", "")
+        success = send_payment_reminder(iid)
+        if success:
+            results["sent"] += 1
+            results["invoices"].append(inv.get("invoice_number", ""))
+        else:
+            results["failed"] += 1
+
+    return results
+
+
+# ── Partial Payments ───────────────────────────────────────────────────────
+
+def _get_payments(invoice: dict) -> list[dict]:
+    """Extract the payments list from invoice metadata.
+
+    Payments are stored as a JSON-encoded list in the 'payments' field,
+    or as a JSON string in the 'notes' metadata.  Prefers the dedicated field.
+    """
+    raw = invoice.get("payments")
+    if raw:
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        if isinstance(raw, list):
+            return raw
+    return []
+
+
+def get_payment_history(invoice_id: str) -> list[dict]:
+    """Return the list of partial payments recorded on an invoice."""
+    invoice = get_invoice(invoice_id)
+    if not invoice:
+        return []
+    return _get_payments(invoice)
+
+
+def get_balance_due(invoice: dict) -> float:
+    """Calculate the remaining balance on an invoice."""
+    amount = float(invoice.get("amount", 0))
+    amount_paid = float(invoice.get("amount_paid", 0))
+    return max(amount - amount_paid, 0.0)
+
+
+def record_partial_payment(
+    invoice_id: str,
+    amount: float,
+    payment_date: str = "",
+    method: str = "Check",
+    reference: str = "",
+) -> dict | None:
+    """Record a partial (or full) payment on an invoice.
+
+    Args:
+        invoice_id: Invoice to record payment against
+        amount: Payment amount
+        payment_date: Date of payment (YYYY-MM-DD), defaults to today
+        method: Payment method (Check, Cash, Card, ACH, Other)
+        reference: Check number, transaction ID, or other reference
+
+    Returns:
+        Updated invoice dict, or None on failure.
+    """
+    invoice = get_invoice(invoice_id)
+    if not invoice:
+        return None
+
+    if not payment_date:
+        payment_date = date.today().isoformat()
+
+    inv_amount = float(invoice.get("amount", 0))
+    prev_paid = float(invoice.get("amount_paid", 0))
+    new_total_paid = prev_paid + amount
+
+    # Build payment record
+    payment_record = {
+        "amount": amount,
+        "date": payment_date,
+        "method": method,
+        "reference": reference,
+        "recorded_at": datetime.now().isoformat(),
+    }
+
+    # Append to payments list
+    existing_payments = _get_payments(invoice)
+    existing_payments.append(payment_record)
+
+    # Determine new status
+    if new_total_paid >= inv_amount:
+        new_status = "paid"
+        paid_date = payment_date
+    else:
+        new_status = invoice.get("status", "sent")
+        paid_date = None
+
+    update_data = {
+        "amount_paid": round(new_total_paid, 2),
+        "payments": json.dumps(existing_payments),
+    }
+
+    if new_status == "paid":
+        update_data["status"] = "paid"
+        update_data["paid_date"] = paid_date
+
+    updated = update_invoice(invoice_id, update_data)
+
+    if updated:
+        inv_num = invoice.get("invoice_number", "")
+        balance = max(inv_amount - new_total_paid, 0)
+        action_text = (
+            f"Payment ${amount:,.2f} ({method}) recorded on {inv_num}. "
+            f"Balance: ${balance:,.2f}"
+        )
+        if new_status == "paid":
+            action_text += " — PAID IN FULL"
+
+        log_activity(
+            client_id=invoice.get("client_id", ""),
+            action=action_text,
+            entity_type="invoice",
+            entity_id=invoice_id,
+            details={
+                "payment_amount": amount,
+                "method": method,
+                "reference": reference,
+                "new_balance": balance,
+            },
+        )
+
+    return updated
+
+
 # ── Batch Operations ────────────────────────────────────────────────────────
 
 def check_and_mark_overdue() -> int:
@@ -413,7 +638,10 @@ def get_ar_aging() -> dict:
 # ── Summary Stats ───────────────────────────────────────────────────────────
 
 def get_invoice_summary() -> dict:
-    """Get high-level invoice stats for the admin dashboard."""
+    """Get high-level invoice stats for the admin dashboard.
+
+    Accounts for partial payments when computing collected / outstanding totals.
+    """
     all_invoices = get_all_invoices()
 
     draft = [i for i in all_invoices if i.get("status") == "draft"]
@@ -424,9 +652,24 @@ def get_invoice_summary() -> dict:
 
     total_billed = sum(float(i.get("amount", 0)) for i in all_invoices
                        if i.get("status") != "void")
-    total_collected = sum(float(i.get("amount", 0)) for i in paid)
-    total_outstanding = sum(float(i.get("amount", 0)) for i in sent + overdue)
-    total_overdue = sum(float(i.get("amount", 0)) for i in overdue)
+
+    # Collected = amount_paid across ALL non-void invoices (includes partial payments)
+    total_collected = sum(float(i.get("amount_paid", 0) or i.get("amount", 0))
+                         for i in paid)
+    # Add partial payments on still-outstanding invoices
+    total_collected += sum(float(i.get("amount_paid", 0))
+                          for i in sent + overdue
+                          if float(i.get("amount_paid", 0)) > 0)
+
+    # Outstanding = amount minus amount_paid for sent + overdue invoices
+    total_outstanding = sum(
+        float(i.get("amount", 0)) - float(i.get("amount_paid", 0))
+        for i in sent + overdue
+    )
+    total_overdue = sum(
+        float(i.get("amount", 0)) - float(i.get("amount_paid", 0))
+        for i in overdue
+    )
 
     return {
         "total": len(all_invoices),

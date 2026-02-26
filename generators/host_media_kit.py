@@ -7,6 +7,7 @@ from generators.base_proposal import BaseProposal
 from services.config_service import (
     get_team_member, get_all_tiers,
     get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+    get_hours_per_day, get_days_per_month,
 )
 
 
@@ -124,8 +125,8 @@ class HostMediaKitProposal(BaseProposal):
         free_outside = data.free_outside_screens
 
         # Calculate monthly ad plays
-        hours_per_day = 12  # typical operating hours
-        days_per_month = 30
+        hours_per_day = get_hours_per_day(self.config)
+        days_per_month = get_days_per_month(self.config)
         inside_monthly = inside_plays * hours_per_day * days_per_month * data.proposed_screen_count
         outside_monthly = outside_plays * hours_per_day * days_per_month * free_outside
         total_monthly = inside_monthly + outside_monthly

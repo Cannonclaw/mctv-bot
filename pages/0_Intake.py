@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.leads_service import save_lead, send_notification_email
+from services.config_service import load_config, get_market_names
 
 st.set_page_config(
     page_title="Advertise With MCTV",
@@ -146,9 +147,8 @@ with col1:
 with col2:
     contact_phone = st.text_input("Phone Number *", placeholder="(555) 555-5555")
     industry = st.text_input("Industry *", placeholder="Restaurant, Salon, Law Firm, etc.")
-    city = st.selectbox("City", [
-        "Oxford", "Starkville", "Tupelo", "Columbus", "West Point", "Other"
-    ])
+    _cfg = load_config()
+    city = st.selectbox("City", get_market_names(_cfg, active_only=False) + ["Other"])
 
 if city == "Other":
     city = st.text_input("Your City", placeholder="City, State")
@@ -211,7 +211,7 @@ st.divider()
 
 # ── SUBMIT ───────────────────────────────────────────────────────────────────
 
-if st.button("Submit", type="primary", use_container_width=True):
+if st.button("Submit", type="primary", width='stretch'):
     # Validate required fields
     missing = []
     if not business_name:
@@ -228,6 +228,11 @@ if st.button("Submit", type="primary", use_container_width=True):
     if missing:
         st.error(f"Please fill in: {', '.join(missing)}")
     else:
+        # Warn if phone doesn't look valid (non-blocking)
+        import re
+        phone_digits = re.sub(r'\D', '', contact_phone)
+        if contact_phone and len(phone_digits) < 10:
+            st.warning("Please enter a valid phone number (at least 10 digits)")
         # Save the logo to a permanent location if uploaded
         logo_filename = None
         if client_logo:
@@ -258,16 +263,6 @@ if st.button("Submit", type="primary", use_container_width=True):
         # Save and notify
         lead_id = save_lead(lead)
         email_ok = send_notification_email(lead)
-
-        # Debug: show email status (remove after confirming it works)
-        if not email_ok:
-            import os
-            host = os.environ.get("SMTP_HOST", "(not set)")
-            port = os.environ.get("SMTP_PORT", "(not set)")
-            user = os.environ.get("SMTP_USER", "(not set)")
-            has_pass = "Yes" if os.environ.get("SMTP_PASS") else "No"
-            st.warning(f"Lead saved but email failed. SMTP_HOST={host}, PORT={port}, USER={user}, PASS set={has_pass}")
-            import time; time.sleep(5)
 
         st.session_state["intake_submitted"] = True
         st.rerun()

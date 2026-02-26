@@ -348,6 +348,15 @@ def _api_request(method: str, endpoint: str, data: dict | None = None,
         return None
 
 
+def _escape_qb_value(value: str) -> str:
+    """Escape single quotes in a value for QuickBooks query syntax.
+
+    QuickBooks uses SQL-like queries where single quotes delimit strings.
+    A name like O'Malley must become O\\'Malley to avoid breaking the query.
+    """
+    return value.replace("'", "\\'")
+
+
 def _query(entity: str, where: str = "", max_results: int = 1000) -> list[dict]:
     """Run a QuickBooks query (SQL-like syntax).
 
@@ -376,7 +385,7 @@ def _query(entity: str, where: str = "", max_results: int = 1000) -> list[dict]:
 
 def find_qb_customer(display_name: str) -> dict | None:
     """Find a QuickBooks customer by display name."""
-    customers = _query("Customer", f"DisplayName = '{display_name}'")
+    customers = _query("Customer", f"DisplayName = '{_escape_qb_value(display_name)}'")
     return customers[0] if customers else None
 
 
@@ -533,13 +542,13 @@ def get_qb_invoice(invoice_id: str) -> dict | None:
 
 def find_qb_invoice(doc_number: str) -> dict | None:
     """Find a QB invoice by DocNumber (our invoice_number)."""
-    invoices = _query("Invoice", f"DocNumber = '{doc_number}'")
+    invoices = _query("Invoice", f"DocNumber = '{_escape_qb_value(doc_number)}'")
     return invoices[0] if invoices else None
 
 
 def get_all_qb_invoices(since_date: str = "") -> list[dict]:
     """Get invoices from QuickBooks, optionally since a date."""
-    where = f"TxnDate >= '{since_date}'" if since_date else ""
+    where = f"TxnDate >= '{_escape_qb_value(since_date)}'" if since_date else ""
     return _query("Invoice", where)
 
 
@@ -547,7 +556,7 @@ def get_all_qb_invoices(since_date: str = "") -> list[dict]:
 
 def get_qb_payments(since_date: str = "") -> list[dict]:
     """Get payments from QuickBooks, optionally since a date."""
-    where = f"TxnDate >= '{since_date}'" if since_date else ""
+    where = f"TxnDate >= '{_escape_qb_value(since_date)}'" if since_date else ""
     return _query("Payment", where)
 
 

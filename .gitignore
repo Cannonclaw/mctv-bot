@@ -18,3 +18,4 @@ output/contracts/*
 !output/contracts/.gitkeep
 .claude/
 TRADE_SECRETS.md
+docs/NTV360_BUSINESS_CASE.md

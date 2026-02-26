@@ -87,7 +87,7 @@ def _show_share_with_client(report_path, data: TractionReportInput):
     with share_col2:
         st.markdown("")  # spacer
         if selected_label != "-- Select a client --":
-            if st.button("Share Report", type="primary", use_container_width=True,
+            if st.button("Share Report", type="primary", width='stretch',
                          key="share_report_btn"):
                 selected_client = client_options.get(selected_label)
                 if selected_client:
@@ -202,7 +202,7 @@ def _generate_report(data: TractionReportInput, output_format: str = "DOCX"):
                     file_name=report_path.name,
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     type="primary" if output_format == "DOCX" else "secondary",
-                    use_container_width=True,
+                    width='stretch',
                     key="dl_docx",
                 )
 
@@ -218,7 +218,7 @@ def _generate_report(data: TractionReportInput, output_format: str = "DOCX"):
                         file_name=pdf_path.name,
                         mime="application/pdf",
                         type="primary",
-                        use_container_width=True,
+                        width='stretch',
                         key="dl_pdf",
                     )
             else:
@@ -236,7 +236,7 @@ def _generate_report(data: TractionReportInput, output_format: str = "DOCX"):
                             file_name=report_path.name,
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             type="secondary",
-                            use_container_width=True,
+                            width='stretch',
                             key="dl_docx_fallback",
                         )
 
@@ -440,7 +440,7 @@ with tab_upload:
                     help="Enter the advertiser's monthly ad spend to calculate CPM (Cost Per Thousand Impressions) by venue. Leave at $0 to skip CPM.",
                 )
 
-            if st.button("Generate Report", type="primary", use_container_width=True):
+            if st.button("Generate Report", type="primary", width='stretch'):
                 if not advertiser_name:
                     st.error("Please enter the advertiser/venue name.")
                 else:
@@ -518,7 +518,7 @@ with tab_manual:
                     total_plays=vplays,
                 ))
 
-    if st.button("Generate Report", type="primary", use_container_width=True, key="manual_gen"):
+    if st.button("Generate Report", type="primary", width='stretch', key="manual_gen"):
         if not name:
             st.error("Please enter the advertiser/venue name.")
         elif not venue_records:

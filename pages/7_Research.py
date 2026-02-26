@@ -136,7 +136,7 @@ st.divider()
 if st.button(
     "\U0001F50D Generate Research Brief",
     type="primary",
-    use_container_width=True,
+    width='stretch',
 ):
     if not business_name or not industry:
         st.error("Please fill in at least Business Name and Industry.")
@@ -261,7 +261,7 @@ if st.button(
                                         caption=img.get(
                                             "alt", img["filename"]
                                         )[:30],
-                                        use_container_width=True,
+                                        width='stretch',
                                     )
                                 except Exception:
                                     st.caption(
@@ -296,14 +296,14 @@ if st.button(
                         data=full_export,
                         file_name=f"MCTV_Research_{safe_name}_{date_str}.txt",
                         mime="text/plain",
-                        use_container_width=True,
+                        width='stretch',
                     )
 
                 # Use in Proposal
                 with exp_col2:
                     if st.button(
                         "Use in Proposal \u2192",
-                        use_container_width=True,
+                        width='stretch',
                         help="Pre-fill the proposal form with this research data",
                     ):
                         st.session_state["prefill_proposal"] = {
@@ -340,7 +340,7 @@ if st.button(
                         data=research_json,
                         file_name=f"MCTV_Research_{safe_name}_{date_str}.json",
                         mime="application/json",
-                        use_container_width=True,
+                        width='stretch',
                     )
 
             except Exception as e:

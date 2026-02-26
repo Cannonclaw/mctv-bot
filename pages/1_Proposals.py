@@ -165,7 +165,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
                 data=f.read(),
                 file_name=proposal_path.name,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True,
+                width='stretch',
             )
 
         if pdf_path:
@@ -176,7 +176,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
                     file_name=pdf_path.name,
                     mime="application/pdf",
                     type="primary",
-                    use_container_width=True,
+                    width='stretch',
                 )
             email_col = cols[2]
         else:
@@ -191,7 +191,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
                 data=email_content,
                 file_name=email_path.name,
                 mime="text/plain",
-                use_container_width=True,
+                width='stretch',
             )
 
             with st.expander("Preview Cover Email"):
@@ -298,7 +298,7 @@ if st.session_state.get("scraped_images"):
         default_placement = _cat_to_default.get(category, "Skip")
         default_idx = _PLACEMENT_OPTIONS.index(default_placement)
         with img_cols[i % 4]:
-            st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], use_container_width=True)
+            st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], width='stretch')
             st.selectbox("Placement", _PLACEMENT_OPTIONS, index=default_idx,
                          key=f"scrape_slot_{i}")
 
@@ -372,7 +372,7 @@ page2_photos = st.file_uploader(
 if page2_photos:
     cols = st.columns(min(len(page2_photos), 4))
     for i, photo in enumerate(page2_photos):
-        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+        cols[i % 4].image(photo, caption=photo.name, width='stretch')
     if len(page2_photos) > 4:
         st.warning(f"Page 2 supports up to 4 photos. Only the first 4 of {len(page2_photos)} will be used.")
 
@@ -386,7 +386,7 @@ page4_photos = st.file_uploader(
 if page4_photos:
     cols = st.columns(min(len(page4_photos), 4))
     for i, photo in enumerate(page4_photos):
-        cols[i % 4].image(photo, caption=photo.name, use_container_width=True)
+        cols[i % 4].image(photo, caption=photo.name, width='stretch')
     if len(page4_photos) > 6:
         st.warning(f"Page 4 supports up to 6 photos. Only the first 6 of {len(page4_photos)} will be used.")
 
@@ -446,7 +446,7 @@ if proposal_type == "Elite Advertiser":
         height=100,
     )
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name or not industry:
             st.error("Please fill in all required fields (marked with *).")
         else:
@@ -493,7 +493,7 @@ elif proposal_type == "Host Media Kit":
 
     additional_notes = st.text_area("Additional Notes", height=80)
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not venue_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:
@@ -553,7 +553,7 @@ elif proposal_type == "Multi-Brand Bundle":
 
     additional_notes = st.text_area("Additional Notes", height=80)
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not owner_name or not businesses[0].name:
             st.error("Please fill in the owner name and at least the first business.")
         else:
@@ -601,7 +601,7 @@ elif proposal_type == "Venue Partner / Revenue Share":
     sales_rep = st.selectbox("Sales Rep", team_names, index=0)
     additional_notes = st.text_area("Additional Notes", height=80)
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not venue_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:
@@ -653,7 +653,7 @@ elif proposal_type == "Category Exclusivity":
     sales_rep = st.selectbox("Sales Rep", team_names)
     additional_notes = st.text_area("Additional Notes", height=80)
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name or not exclusive_category:
             st.error("Please fill in all required fields.")
         else:
@@ -700,7 +700,7 @@ elif proposal_type == "Renewal / Upgrade":
     sales_rep = st.selectbox("Sales Rep", team_names, index=1)
     additional_notes = st.text_area("Additional Notes", height=80)
 
-    if st.button("Generate Proposal", type="primary", use_container_width=True):
+    if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name:
             st.error("Please fill in all required fields.")
         else:

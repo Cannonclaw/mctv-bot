@@ -146,7 +146,7 @@ def main():
             "Create polished advertising proposals tailored to each client. "
             "6 types including Elite Advertiser, Host Media Kit, and more."
         )
-        if st.button("Create Proposal", type="primary", use_container_width=True):
+        if st.button("Create Proposal", type="primary", width='stretch'):
             st.switch_page("pages/1_Proposals.py")
 
     with col2:
@@ -155,7 +155,7 @@ def main():
             "Research a prospect before your sales call. Get competitive intel, "
             "talking points, and objection responses in seconds."
         )
-        if st.button("Research Prospect", type="primary", use_container_width=True):
+        if st.button("Research Prospect", type="primary", width='stretch'):
             st.switch_page("pages/7_Research.py")
 
     with col3:
@@ -164,7 +164,7 @@ def main():
             "Generate professional traction and ad performance reports "
             "from NTV360 data. Upload Excel exports or enter data manually."
         )
-        if st.button("Create Report", type="primary", use_container_width=True):
+        if st.button("Create Report", type="primary", width='stretch'):
             st.switch_page("pages/2_Reports.py")
 
     with col4:
@@ -173,7 +173,7 @@ def main():
             "Create professional video advertisements using AI-powered templates. "
             "Upload assets and generate broadcast-ready content."
         )
-        if st.button("Create Video", type="primary", use_container_width=True):
+        if st.button("Create Video", type="primary", width='stretch'):
             st.switch_page("pages/5_Video_Ads.py")
 
     # Second row of feature cards
@@ -185,7 +185,7 @@ def main():
             "Manage client accounts, invite them to the portal, "
             "track status, and assign reps."
         )
-        if st.button("Manage Clients", type="primary", use_container_width=True):
+        if st.button("Manage Clients", type="primary", width='stretch'):
             st.switch_page("pages/8_Clients.py")
 
     with col6:
@@ -194,7 +194,7 @@ def main():
             "Create branded contracts, generate PDFs, send for "
             "e-signature, and track the full lifecycle."
         )
-        if st.button("View Contracts", type="primary", use_container_width=True):
+        if st.button("View Contracts", type="primary", width='stretch'):
             st.switch_page("pages/9_Contracts.py")
 
     with col7:
@@ -203,7 +203,7 @@ def main():
             "Create and send invoices, track payments, run AR aging "
             "reports, and sync with QuickBooks."
         )
-        if st.button("View Invoices", type="primary", use_container_width=True):
+        if st.button("View Invoices", type="primary", width='stretch'):
             st.switch_page("pages/10_Invoices.py")
 
     with col8:
@@ -212,7 +212,7 @@ def main():
             "Send text messages to clients via Twilio. Use templates, "
             "manage opt-ins, and view message history."
         )
-        if st.button("Send Messages", type="primary", use_container_width=True):
+        if st.button("Send Messages", type="primary", width='stretch'):
             st.switch_page("pages/12_Messaging.py")
 
     st.divider()

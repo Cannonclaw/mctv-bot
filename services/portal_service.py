@@ -7,10 +7,20 @@ Handles client CRUD, dashboard data, and portal account management.
 All admin operations use the service role key to bypass RLS.
 """
 
+import json
 from datetime import datetime
+from pathlib import Path
 from services.supabase_client import (
     query_table, insert_row, update_row, delete_row, sign_up
 )
+
+# Load network config once for host dashboard calculations
+_CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.json"
+try:
+    with open(_CONFIG_PATH, encoding="utf-8") as _f:
+        _CONFIG = json.load(_f)
+except Exception:
+    _CONFIG = {}
 
 
 # ── Client CRUD ──────────────────────────────────────────────────────────────
@@ -180,6 +190,70 @@ def get_client_dashboard(client_id: str) -> dict:
         "pending_invoice_count": len(pending_invoices),
         "next_invoice": pending_invoices[0] if pending_invoices else None,
     }
+
+
+def get_host_dashboard(client_id: str) -> dict:
+    """Get dashboard data tailored for a venue host.
+
+    Returns everything from get_client_dashboard() plus host-specific
+    metrics derived from contracts and network config:
+      - screens_at_venue, venue_name, venue_city
+      - free_plays_per_hour, free_plays_per_day, free_plays_per_month
+      - advertiser_count (unique advertisers active at their screens)
+      - revenue_share info (from host contract if applicable)
+    """
+    base = get_client_dashboard(client_id)
+    if not base:
+        return {}
+
+    client = base.get("client", {})
+    contracts = base.get("contracts", [])
+    active_contracts = [c for c in contracts
+                        if c.get("status") in ("signed", "active")]
+
+    # Screen count from active host contracts
+    screens_at_venue = sum(c.get("screen_count", 0) for c in active_contracts)
+
+    # Free advertising plays (from config pricing)
+    pricing = _CONFIG.get("pricing", {})
+    network = _CONFIG.get("network", {})
+    free_inside_plays_per_hour = pricing.get("host_free_inside_plays_per_hour", 8)
+    hours_per_day = network.get("hours_per_day", 12)
+    days_per_month = network.get("days_per_month", 30)
+    loop_minutes = network.get("content_loop_minutes", 15)
+
+    free_plays_per_day = free_inside_plays_per_hour * hours_per_day * max(screens_at_venue, 1)
+    free_plays_per_month = free_plays_per_day * days_per_month
+
+    # Revenue share from contract (look for monthly_rate on host contracts)
+    revenue_share_amount = 0.0
+    revenue_share_contract = None
+    for c in active_contracts:
+        ctype = c.get("contract_type", "")
+        if ctype in ("host", "host_media_kit", "host_advertising"):
+            rate = float(c.get("monthly_rate", 0) or 0)
+            if rate > 0:
+                revenue_share_amount = rate
+                revenue_share_contract = c
+                break
+
+    # Merge host-specific data into the base dashboard dict
+    base.update({
+        "screens_at_venue": screens_at_venue,
+        "venue_name": client.get("business_name", "Your Venue"),
+        "venue_city": client.get("city", ""),
+        "venue_industry": client.get("industry", ""),
+        # Free advertising
+        "free_plays_per_hour": free_inside_plays_per_hour,
+        "free_plays_per_day": free_plays_per_day,
+        "free_plays_per_month": free_plays_per_month,
+        "loop_minutes": loop_minutes,
+        # Revenue share
+        "revenue_share_amount": revenue_share_amount,
+        "revenue_share_contract": revenue_share_contract,
+    })
+
+    return base
 
 
 # ── Activity Logging ─────────────────────────────────────────────────────────

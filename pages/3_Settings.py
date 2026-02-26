@@ -248,7 +248,7 @@ with tab_integrations:
                 st.text(f"Realm ID: {qb_status.get('realm_id', '')}")
 
             with qb_col2:
-                if st.button("\U0001F50C Disconnect QuickBooks", use_container_width=True):
+                if st.button("\U0001F50C Disconnect QuickBooks", width='stretch'):
                     disconnect()
                     st.info("QuickBooks disconnected.")
                     st.rerun()
@@ -259,7 +259,7 @@ with tab_integrations:
 
             with sync_col1:
                 if st.button("\U0001F465 Sync All Clients \u2192 QB",
-                             use_container_width=True, key="qb_sync_clients"):
+                             width='stretch', key="qb_sync_clients"):
                     with st.spinner("Syncing clients to QuickBooks..."):
                         result = sync_all_clients()
                         st.success(
@@ -269,7 +269,7 @@ with tab_integrations:
 
             with sync_col2:
                 if st.button("\U0001F4B0 Check QB Payments",
-                             use_container_width=True, key="qb_sync_payments"):
+                             width='stretch', key="qb_sync_payments"):
                     with st.spinner("Checking QuickBooks for payments..."):
                         result = sync_unpaid_invoices()
                         st.success(
@@ -278,7 +278,7 @@ with tab_integrations:
                         )
 
             with sync_col3:
-                if st.button("\U0001F4CA Company Info", use_container_width=True,
+                if st.button("\U0001F4CA Company Info", width='stretch',
                              key="qb_company_info"):
                     info = get_company_info()
                     if info:
@@ -314,7 +314,7 @@ with tab_integrations:
                 key="qb_callback_url",
             )
 
-            if st.button("\u2705 Connect", type="primary", use_container_width=True, key="qb_connect_btn"):
+            if st.button("\u2705 Connect", type="primary", width='stretch', key="qb_connect_btn"):
                 if callback_url:
                     try:
                         from urllib.parse import urlparse, parse_qs
@@ -344,7 +344,7 @@ with tab_integrations:
                 st.link_button(
                     "\U0001F517 Connect QuickBooks (Direct)",
                     url=auth_url,
-                    use_container_width=True,
+                    width='stretch',
                 )
 
     except ImportError as e:
@@ -404,7 +404,7 @@ with tab_admin:
             st.checkbox(task, key=f"action_{i}", help=help_text)
         with col_link:
             if link:
-                st.link_button("Open", link, use_container_width=True)
+                st.link_button("Open", link, width='stretch')
 
 
 # ── Save All Settings ───────────────────────────────────────────────────────
@@ -412,7 +412,7 @@ with tab_admin:
 st.divider()
 st.caption("Saves changes from General, Network, and Pricing tabs.")
 
-if st.button("Save All Settings", type="primary", use_container_width=True):
+if st.button("Save All Settings", type="primary", width='stretch'):
     config["company"]["name"] = company_name
     config["company"]["tagline"] = tagline
     config["company"]["website"] = website

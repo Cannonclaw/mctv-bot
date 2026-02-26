@@ -9,6 +9,7 @@ stays consistent without duplicating 50+ lines of boilerplate.
 
 import streamlit as st
 from services.auth import portal_logout
+from services.config_service import load_config
 
 
 # ── Portal CSS ──────────────────────────────────────────────────────────────
@@ -66,12 +67,14 @@ def render_portal_sidebar(user: dict):
 
         st.divider()
 
-        if st.button("Log Out", use_container_width=True):
+        if st.button("Log Out", width='stretch'):
             portal_logout()
             st.switch_page("pages/portal_login.py")
 
-        st.caption("MCTV Elite Advertising")
-        st.caption("www.mctvofms.com")
+        config = load_config()
+        company = config.get("company", {})
+        st.caption(company.get("name", "MCTV Elite Advertising"))
+        st.caption(company.get("website", "www.mctvofms.com"))
         st.page_link("pages/portal_terms.py", label="Terms of Service", icon="\U0001F4CB")
 
 
@@ -79,12 +82,26 @@ def render_portal_sidebar(user: dict):
 
 def render_portal_footer():
     """Render a consistent footer at the bottom of portal pages."""
+    config = load_config()
+    company = config.get("company", {})
+    markets = config.get("markets", {})
+
+    company_name = company.get("name", "MCTV Elite Advertising")
+    legal_name = company.get("legal_name", "MCTV Digital")
+
+    # Build market list from active markets in config
+    active_markets = [
+        name for name, info in markets.items()
+        if info.get("status") == "active"
+    ]
+    market_str = " | ".join(active_markets) if active_markets else "Oxford | Starkville | Tupelo"
+
     st.divider()
     st.markdown(
-        """
+        f"""
         <div style="text-align: center; color: #888; font-size: 0.8rem; padding: 0.5rem 0;">
-            <p>MCTV Elite Advertising | Oxford | Starkville | Tupelo</p>
-            <p>&copy; 2026 MCTV Digital, Inc. All rights reserved.</p>
+            <p>{company_name} | {market_str}</p>
+            <p>&copy; 2026 {legal_name}, Inc. All rights reserved.</p>
         </div>
         """,
         unsafe_allow_html=True,

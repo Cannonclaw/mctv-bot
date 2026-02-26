@@ -7,6 +7,7 @@ from generators.base_proposal import BaseProposal
 from services.config_service import (
     get_team_member, get_all_tiers,
     get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
+    get_hours_per_day, get_days_per_month,
 )
 
 
@@ -210,8 +211,8 @@ class CategoryExclusivityProposal(BaseProposal):
 
             cost_per_screen = data.monthly_rate / total_screens if total_screens else 0
             plays_per_hour = self.config["network"]["plays_per_hour"]
-            hours_per_day = 12
-            days_per_month = 30
+            hours_per_day = get_hours_per_day(self.config)
+            days_per_month = get_days_per_month(self.config)
             monthly_plays = plays_per_hour * hours_per_day * days_per_month * total_screens
 
             # CPM for exclusivity package

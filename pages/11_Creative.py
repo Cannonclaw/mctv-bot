@@ -194,7 +194,7 @@ for req in requests:
             )
             if changes_made:
                 if st.button("Save Changes", key=f"save_{rid}", type="primary",
-                             use_container_width=True):
+                             width='stretch'):
                     update_data = {
                         "status": new_status,
                         "assigned_to": new_assigned,
@@ -236,7 +236,7 @@ for req in requests:
             height=80,
         )
         if notes_val != (req.get("internal_notes") or ""):
-            if st.button("Save Notes", key=f"save_notes_{rid}", use_container_width=True):
+            if st.button("Save Notes", key=f"save_notes_{rid}", width='stretch'):
                 update_row("creative_requests", rid, {"internal_notes": notes_val})
                 st.success("Notes saved.")
                 st.rerun()

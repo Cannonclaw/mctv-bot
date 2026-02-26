@@ -154,7 +154,7 @@ if st.button("🔄 Load Templates") or st.session_state["creatomate_templates"] 
 
     # ── Generate Button ───────────────────────────────────────────────────────
 
-    if st.button("🎬 Generate Video Ad", type="primary", use_container_width=True):
+    if st.button("🎬 Generate Video Ad", type="primary", width='stretch'):
         if not business_name or not industry:
             st.error("Please fill in at least Business Name and Industry.")
         else:
@@ -237,7 +237,7 @@ if st.button("🔄 Load Templates") or st.session_state["creatomate_templates"] 
                                 file_name=f"MCTV_Ad_{business_name.replace(' ', '_')}.{output_format}",
                                 mime=f"video/{output_format}" if output_format == "mp4" else "image/gif",
                                 type="primary",
-                                use_container_width=True,
+                                width='stretch',
                             )
                     except Exception as dl_err:
                         st.warning(f"Could not save locally: {dl_err}")

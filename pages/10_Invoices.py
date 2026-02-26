@@ -19,7 +19,10 @@ from services.invoice_service import (
     delete_invoice, send_invoice, mark_paid, void_invoice,
     mark_overdue, check_and_mark_overdue, generate_monthly_invoices,
     get_ar_aging, get_invoice_summary,
+    get_overdue_invoices, send_bulk_reminders,
+    record_partial_payment, get_payment_history, get_balance_due,
 )
+import json
 from services.portal_service import get_all_clients, get_client
 from services.contract_service import get_contracts_for_client
 
@@ -59,6 +62,10 @@ c6.metric("Collected", f"${summary.get('total_collected', 0):,.2f}")
 
 st.divider()
 
+# ── Search ─────────────────────────────────────────────────────────────────
+invoice_search = st.text_input("🔍 Search invoices...", key="invoice_search",
+                               placeholder="Search by invoice number, client name, or status")
+
 # ── Tabs ────────────────────────────────────────────────────────────────────
 
 tab_list, tab_create, tab_aging, tab_tools = st.tabs([
@@ -85,6 +92,24 @@ with tab_list:
         st.error("Unable to load invoices. Please try again later.")
         invoices = []
 
+    # Build client name cache for search filtering
+    _inv_client_cache = {}
+    for _inv in invoices:
+        _cid = _inv.get("client_id", "")
+        if _cid and _cid not in _inv_client_cache:
+            _cl = get_client(_cid)
+            _inv_client_cache[_cid] = _cl.get("business_name", "Unknown") if _cl else "Unknown"
+
+    # Apply search filter
+    if invoice_search:
+        _q = invoice_search.strip().lower()
+        invoices = [
+            i for i in invoices
+            if _q in (i.get("invoice_number", "") or "").lower()
+            or _q in (i.get("status", "") or "").lower()
+            or _q in _inv_client_cache.get(i.get("client_id", ""), "Unknown").lower()
+        ]
+
     if not invoices:
         st.info("No invoices found. Use the 'Create Invoice' tab to get started.")
     else:
@@ -100,9 +125,8 @@ with tab_list:
             paid_date = inv.get("paid_date", "")
             client_id = inv.get("client_id", "")
 
-            # Get client name
-            client = get_client(client_id) if client_id else None
-            client_name = client.get("business_name", "Unknown") if client else "Unknown"
+            # Get client name (use cache)
+            client_name = _inv_client_cache.get(client_id, "Unknown")
 
             # Status emoji
             status_emoji = {
@@ -119,12 +143,19 @@ with tab_list:
                 f"${amount:,.2f} | Due: {due_date} | {istatus.title()}",
                 expanded=False,
             ):
+                # ── Balance / partial payment info ─────────────────
+                amount_paid = float(inv.get("amount_paid", 0))
+                balance_due = max(amount - amount_paid, 0.0)
+
                 det1, det2 = st.columns(2)
                 with det1:
                     st.markdown("**Invoice Details**")
                     st.text(f"Invoice #: {inv_num}")
                     st.text(f"Client: {client_name}")
                     st.text(f"Amount: ${amount:,.2f}")
+                    if amount_paid > 0:
+                        st.text(f"Paid: ${amount_paid:,.2f}")
+                        st.text(f"Balance Due: ${balance_due:,.2f}")
                     st.text(f"Description: {inv.get('description', '')}")
                 with det2:
                     st.markdown("**Dates & Status**")
@@ -137,6 +168,33 @@ with tab_list:
                     period_end = inv.get("period_end", "")
                     if period_start:
                         st.text(f"Period: {period_start} to {period_end}")
+                    last_reminder = inv.get("last_reminder_sent", "")
+                    if last_reminder:
+                        st.text(f"Last Reminder: {last_reminder}")
+
+                # ── Payment History ────────────────────────────────
+                payments_raw = inv.get("payments")
+                payments_list = []
+                if payments_raw:
+                    if isinstance(payments_raw, str):
+                        try:
+                            payments_list = json.loads(payments_raw)
+                        except (json.JSONDecodeError, TypeError):
+                            payments_list = []
+                    elif isinstance(payments_raw, list):
+                        payments_list = payments_raw
+
+                if payments_list:
+                    st.markdown("**Payment History**")
+                    for pidx, pmt in enumerate(payments_list, 1):
+                        pmt_amt = float(pmt.get("amount", 0))
+                        pmt_date = pmt.get("date", "")
+                        pmt_method = pmt.get("method", "")
+                        pmt_ref = pmt.get("reference", "")
+                        ref_str = f" (Ref: {pmt_ref})" if pmt_ref else ""
+                        st.caption(
+                            f"  {pidx}. ${pmt_amt:,.2f} — {pmt_method} on {pmt_date}{ref_str}"
+                        )
 
                 if inv.get("notes"):
                     st.caption(f"Notes: {inv.get('notes')}")
@@ -144,12 +202,12 @@ with tab_list:
                 st.divider()
 
                 # ── Action buttons ──────────────────────────────────
-                act1, act2, act3, act4, act5 = st.columns(5)
+                act1, act2, act3, act4, act5, act6 = st.columns(6)
 
                 with act1:
                     if istatus == "draft":
                         if st.button("Send Invoice", key=f"send_inv_{iid}",
-                                     type="primary", use_container_width=True):
+                                     type="primary", width='stretch'):
                             result = send_invoice(iid)
                             if result:
                                 st.success("Invoice sent. Client notified.")
@@ -160,28 +218,34 @@ with tab_list:
                 with act2:
                     if istatus in ("sent", "viewed", "overdue"):
                         if st.button("Mark Paid", key=f"pay_inv_{iid}",
-                                     type="primary", use_container_width=True):
+                                     type="primary", width='stretch'):
                             st.session_state[f"show_pay_{iid}"] = True
 
                 with act3:
+                    if istatus in ("sent", "viewed", "overdue"):
+                        if st.button("Record Payment", key=f"partial_inv_{iid}",
+                                     width='stretch'):
+                            st.session_state[f"show_partial_{iid}"] = True
+
+                with act4:
                     if istatus in ("sent", "viewed"):
                         if st.button("Mark Overdue", key=f"overdue_inv_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             result = mark_overdue(iid)
                             if result:
                                 st.success("Marked overdue. Reminder sent.")
                                 st.rerun()
 
-                with act4:
+                with act5:
                     if istatus in ("draft", "sent", "viewed", "overdue"):
                         if st.button("Void", key=f"void_inv_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             st.session_state[f"confirm_void_{iid}"] = True
 
-                with act5:
+                with act6:
                     if istatus in ("draft", "void"):
                         if st.button("Delete", key=f"del_inv_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             st.session_state[f"confirm_del_inv_{iid}"] = True
 
                 # ── Mark paid form ──────────────────────────────────
@@ -193,15 +257,73 @@ with tab_list:
                                                  key=f"pay_date_{iid}")
                     with pay_col2:
                         if st.button("Confirm Payment", key=f"confirm_pay_{iid}",
-                                     type="primary", use_container_width=True):
+                                     type="primary", width='stretch'):
                             result = mark_paid(iid, pay_date.isoformat())
                             if result:
                                 st.success(f"Invoice {inv_num} marked as paid.")
                                 del st.session_state[f"show_pay_{iid}"]
                                 st.rerun()
                         if st.button("Cancel", key=f"cancel_pay_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"show_pay_{iid}"]
+                            st.rerun()
+
+                # ── Record partial payment form ─────────────────────
+                if st.session_state.get(f"show_partial_{iid}"):
+                    st.markdown("---")
+                    st.markdown("**Record a Payment**")
+                    max_balance = max(amount - amount_paid, 0.01)
+                    pp1, pp2 = st.columns(2)
+                    with pp1:
+                        partial_amount = st.number_input(
+                            "Payment Amount ($)", min_value=0.01,
+                            max_value=max_balance, value=min(max_balance, max_balance),
+                            step=50.0, key=f"partial_amt_{iid}",
+                        )
+                        partial_date = st.date_input(
+                            "Payment Date", value=date.today(),
+                            key=f"partial_date_{iid}",
+                        )
+                    with pp2:
+                        partial_method = st.selectbox(
+                            "Payment Method",
+                            ["Check", "Cash", "Card", "ACH", "Other"],
+                            key=f"partial_method_{iid}",
+                        )
+                        partial_ref = st.text_input(
+                            "Reference / Note (optional)",
+                            placeholder="Check #, transaction ID, etc.",
+                            key=f"partial_ref_{iid}",
+                        )
+
+                    pp_btn1, pp_btn2 = st.columns(2)
+                    with pp_btn1:
+                        if st.button("Submit Payment", key=f"submit_partial_{iid}",
+                                     type="primary", width='stretch'):
+                            result = record_partial_payment(
+                                invoice_id=iid,
+                                amount=partial_amount,
+                                payment_date=partial_date.isoformat(),
+                                method=partial_method,
+                                reference=partial_ref,
+                            )
+                            if result:
+                                new_bal = max(amount - amount_paid - partial_amount, 0)
+                                if new_bal <= 0:
+                                    st.success(f"Payment recorded. Invoice {inv_num} is now PAID IN FULL.")
+                                else:
+                                    st.success(
+                                        f"Payment of ${partial_amount:,.2f} recorded. "
+                                        f"Remaining balance: ${new_bal:,.2f}"
+                                    )
+                                del st.session_state[f"show_partial_{iid}"]
+                                st.rerun()
+                            else:
+                                st.error("Failed to record payment.")
+                    with pp_btn2:
+                        if st.button("Cancel", key=f"cancel_partial_{iid}",
+                                     width='stretch'):
+                            del st.session_state[f"show_partial_{iid}"]
                             st.rerun()
 
                 # ── Void confirmation ───────────────────────────────
@@ -211,14 +333,14 @@ with tab_list:
                     with vc1:
                         void_reason = st.text_input("Reason", key=f"void_reason_{iid}")
                         if st.button("Yes, Void", key=f"yes_void_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             void_invoice(iid, reason=void_reason)
                             st.success("Invoice voided.")
                             del st.session_state[f"confirm_void_{iid}"]
                             st.rerun()
                     with vc2:
                         if st.button("Cancel", key=f"no_void_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"confirm_void_{iid}"]
                             st.rerun()
 
@@ -228,13 +350,13 @@ with tab_list:
                     dc1, dc2 = st.columns(2)
                     with dc1:
                         if st.button("Yes, Delete", key=f"yes_del_inv_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             delete_invoice(iid)
                             del st.session_state[f"confirm_del_inv_{iid}"]
                             st.rerun()
                     with dc2:
                         if st.button("Cancel", key=f"no_del_inv_{iid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"confirm_del_inv_{iid}"]
                             st.rerun()
 
@@ -312,7 +434,7 @@ with tab_create:
                              placeholder="Notes (not visible to client)")
 
         submitted = st.form_submit_button("Create Invoice", type="primary",
-                                          use_container_width=True)
+                                          width='stretch')
 
         if submitted:
             if not selected_client_id:
@@ -389,7 +511,7 @@ with tab_aging:
 
         if count > 0:
             with st.expander(f"{emoji} **{label}** — {count} invoice(s) | ${total:,.2f}",
-                             expanded=(key in ("past_60", "past_90", "past_90_plus"))):
+                             expanded=True):
                 for inv in bucket.get("invoices", []):
                     client = get_client(inv.get("client_id", ""))
                     cname = client.get("business_name", "Unknown") if client else "Unknown"
@@ -409,7 +531,7 @@ with tab_tools:
     st.markdown("#### Check for Overdue Invoices")
     st.caption("Scan all sent invoices and automatically mark past-due ones as overdue. Sends reminder emails.")
 
-    if st.button("Run Overdue Check", type="primary", use_container_width=True,
+    if st.button("Run Overdue Check", type="primary", width='stretch',
                  key="run_overdue_check"):
         with st.spinner("Scanning invoices..."):
             count = check_and_mark_overdue()
@@ -420,13 +542,52 @@ with tab_tools:
 
     st.divider()
 
+    # ── Send Payment Reminders ────────────────────────────────────
+    st.markdown("#### Send Payment Reminders")
+    st.caption("Send email and SMS reminders to all clients with overdue invoices.")
+
+    try:
+        overdue_list = get_overdue_invoices()
+        overdue_count = len(overdue_list)
+    except Exception:
+        overdue_list = []
+        overdue_count = 0
+
+    if overdue_count > 0:
+        overdue_total = sum(
+            float(i.get("amount", 0)) - float(i.get("amount_paid", 0))
+            for i in overdue_list
+        )
+        st.markdown(
+            f"**{overdue_count} overdue invoice(s)** totaling "
+            f"**${overdue_total:,.2f}** in outstanding balances."
+        )
+
+        if st.button("Send Reminders to All Overdue", type="primary",
+                     width='stretch', key="send_bulk_reminders"):
+            with st.spinner(f"Sending reminders to {overdue_count} client(s)..."):
+                results = send_bulk_reminders()
+                if results["sent"] > 0:
+                    st.success(
+                        f"Sent {results['sent']} reminder(s) successfully. "
+                        f"Failed: {results['failed']}"
+                    )
+                    for inv_num in results["invoices"]:
+                        st.caption(f"  Reminder sent for {inv_num}")
+                else:
+                    st.warning("No reminders could be sent. Check SMTP configuration.")
+    else:
+        st.info("No overdue invoices found. All payments are current.")
+
+    st.divider()
+
     st.markdown("#### Generate Monthly Invoices")
     st.caption(
         "Automatically create draft invoices for all active contracts. "
         "One invoice per contract for the current billing period."
     )
 
-    if st.button("Generate Monthly Invoices", use_container_width=True,
+    if st.button("Generate Monthly Invoices", width='stretch',
                  key="gen_monthly"):
         with st.spinner("Generating invoices for active contracts..."):
             created = generate_monthly_invoices()
@@ -461,7 +622,7 @@ with tab_tools:
                     "auto-mark them as paid in the portal."
                 )
                 if st.button("\U0001F4B0 Sync Payments from QuickBooks",
-                             type="primary", use_container_width=True,
+                             type="primary", width='stretch',
                              key="batch_qb_payments"):
                     with st.spinner("Checking QuickBooks for payments..."):
                         result = qb_sync_unpaid()
@@ -483,7 +644,7 @@ with tab_tools:
                     "Creates customers automatically if needed."
                 )
                 if st.button("\U0001F4E4 Push Invoices to QuickBooks",
-                             use_container_width=True, key="batch_qb_push"):
+                             width='stretch', key="batch_qb_push"):
                     with st.spinner("Syncing invoices to QuickBooks..."):
                         all_invs = get_all_invoices()
                         pushed = 0

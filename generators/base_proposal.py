@@ -127,8 +127,9 @@ class BaseProposal(ABC):
             )
             if email_prompt:
                 email_content = self.claude.generate_email(email_prompt)
-                email_filename = f"MCTV_Email_{safe_name}_{date_str}.txt"
-                email_path = self.docx.save_email(email_content, email_filename)
+                if email_content:
+                    email_filename = f"MCTV_Email_{safe_name}_{date_str}.txt"
+                    email_path = self.docx.save_email(email_content, email_filename)
 
         return proposal_path, email_path
 

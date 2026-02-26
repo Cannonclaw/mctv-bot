@@ -143,7 +143,15 @@ class MultiBrandBundleProposal(BaseProposal):
 
             if prompt:
                 spotlight_content = self.claude.generate_section(prompt)
-                self.docx.add_bullet_list(doc, spotlight_content)
+                if spotlight_content:
+                    self.docx.add_bullet_list(doc, spotlight_content)
+                else:
+                    self.docx.add_body_text(
+                        doc,
+                        f"{biz.name} is a {biz.industry or 'local'} business in "
+                        f"{biz.city or 'your area'} that will benefit from MCTV "
+                        f"network exposure."
+                    )
             else:
                 self.docx.add_body_text(
                     doc,
@@ -206,7 +214,8 @@ class MultiBrandBundleProposal(BaseProposal):
             self.docx.add_metrics_banner(doc, metrics)
 
             if bundle_cpm > 0:
-                per_brand_cpm = calculate_cpm(per_brand, total_impressions)
+                per_brand_impressions = total_impressions / num_businesses
+                per_brand_cpm = calculate_cpm(per_brand, per_brand_impressions)
                 self.docx.add_callout_box(
                     doc,
                     f"Bundle CPM: ${bundle_cpm:.2f} per 1,000 impressions across "

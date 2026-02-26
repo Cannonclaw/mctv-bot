@@ -7,6 +7,8 @@ Uses Supabase REST API (cloud database) when configured, falls back to local
 JSON files for local development.
 """
 
+import csv
+import io
 import json
 import smtplib
 import os
@@ -124,6 +126,24 @@ def update_lead_status(lead_id: str, status: str):
             json.dump(data, f, indent=2)
 
 
+# ── Update lead (arbitrary fields) ──────────────────────────────────────────
+
+def update_lead(lead_id: str, updates: dict):
+    """Update arbitrary fields on a lead record (e.g., follow-up date/note)."""
+    result = _sb_request("PATCH", f"leads?id=eq.{lead_id}", updates)
+    if result is not None:
+        return
+
+    # Fallback: local JSON
+    filepath = LEADS_DIR / f"{lead_id}.json"
+    if filepath.exists():
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.update(updates)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+
 # ── Delete lead ──────────────────────────────────────────────────────────────
 
 def delete_lead(lead_id: str):
@@ -136,6 +156,110 @@ def delete_lead(lead_id: str):
     filepath = LEADS_DIR / f"{lead_id}.json"
     if filepath.exists():
         filepath.unlink()
+
+
+# ── Lead Scoring ─────────────────────────────────────────────────────────
+
+# High-value industries that tend to convert better for indoor digital advertising
+HIGH_VALUE_INDUSTRIES = {
+    "medical", "dental", "healthcare", "restaurant", "bar", "fitness", "gym",
+    "salon", "barbershop", "real estate", "insurance", "attorney", "law",
+    "chiropractic", "veterinary", "spa", "med spa",
+}
+
+# Active markets with established screen presence
+ACTIVE_MARKETS = {"oxford", "starkville", "tupelo"}
+
+
+def calculate_lead_score(lead: dict) -> int:
+    """Calculate a lead score (0-100) based on available intake data.
+
+    Scoring breakdown:
+      - Interest level:  up to 40 pts
+      - Has phone:       10 pts
+      - Has email:       10 pts
+      - Industry match:  5-15 pts
+      - Active market:   5-15 pts
+      - Has goals/msg:   10 pts
+    """
+    score = 0
+
+    # Interest level (max 40)
+    interest = (lead.get("interest_level") or "").lower()
+    if "ready" in interest:
+        score += 40
+    elif "very" in interest:
+        score += 30
+    elif "interested" in interest:
+        score += 20
+    elif "curious" in interest:
+        score += 10
+
+    # Contact completeness
+    if lead.get("contact_phone", "").strip():
+        score += 10
+    if lead.get("contact_email", "").strip():
+        score += 10
+
+    # Industry value
+    industry = (lead.get("industry") or "").lower()
+    if any(kw in industry for kw in HIGH_VALUE_INDUSTRIES):
+        score += 15
+    elif industry:
+        score += 5
+
+    # Market proximity
+    city = (lead.get("city") or "").lower().strip()
+    if city in ACTIVE_MARKETS:
+        score += 15
+    elif city:
+        score += 5
+
+    # Has goals / message
+    if (lead.get("goals") or "").strip() or (lead.get("additional_notes") or "").strip():
+        score += 10
+
+    return min(score, 100)
+
+
+def get_score_label(score: int) -> tuple[str, str]:
+    """Return (label, color) for a lead score badge.
+
+    Returns:
+        ('Hot', 'green') | ('Warm', 'orange') | ('Cold', 'gray')
+    """
+    if score >= 70:
+        return "Hot", "green"
+    elif score >= 40:
+        return "Warm", "orange"
+    return "Cold", "gray"
+
+
+# ── Bulk Operations ──────────────────────────────────────────────────────
+
+def bulk_update_status(lead_ids: list[str], status: str):
+    """Update status for multiple leads at once."""
+    for lid in lead_ids:
+        update_lead_status(lid, status)
+
+
+def export_leads_csv(leads: list[dict]) -> str:
+    """Export a list of lead dicts to a CSV string."""
+    if not leads:
+        return ""
+
+    fieldnames = [
+        "business_name", "contact_name", "contact_email", "contact_phone",
+        "city", "industry", "interest_level", "how_heard", "goals",
+        "additional_notes", "status", "submitted_at",
+    ]
+
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fieldnames, extrasaction="ignore")
+    writer.writeheader()
+    for lead in leads:
+        writer.writerow(lead)
+    return buf.getvalue()
 
 
 # ── Email notification ───────────────────────────────────────────────────────

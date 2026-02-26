@@ -155,7 +155,7 @@ for sample in SAMPLE_INDUSTRIES:
                 file_name=sample["file"],
                 mime="application/pdf",
                 key=f"sample_{sample['file']}",
-                use_container_width=True,
+                width='stretch',
             )
         st.divider()
 
@@ -206,7 +206,7 @@ with col_b:
         "Get Your Free Proposal",
         intake_url,
         type="primary",
-        use_container_width=True,
+        width='stretch',
     )
 
 

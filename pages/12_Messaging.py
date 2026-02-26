@@ -17,6 +17,7 @@ from services.sms_service import (
     format_phone, set_consent, check_consent, get_all_consent,
     get_message_history,
 )
+from services.config_service import load_config, get_team_first_names
 
 st.set_page_config(page_title="Messaging - MCTV Bot", page_icon="\U0001F4F1", layout="wide")
 
@@ -131,7 +132,13 @@ with tab_compose:
     segments = (char_count // 160) + 1 if char_count > 0 else 0
     st.caption(f"{char_count} characters ({segments} SMS segment{'s' if segments != 1 else ''})")
 
-    if st.button("Send Message", type="primary", use_container_width=True,
+    # Warn if phone doesn't look valid (non-blocking)
+    import re
+    _phone_digits = re.sub(r'\D', '', phone_input) if phone_input else ""
+    if phone_input and len(_phone_digits) < 10:
+        st.warning("Please enter a valid phone number (at least 10 digits)")
+
+    if st.button("Send Message", type="primary", width='stretch',
                  disabled=not (formatted and message)):
         with st.spinner("Sending..."):
             result = send_sms(formatted, message)
@@ -197,7 +204,9 @@ with tab_templates:
             # Pre-fill common variables
             default = ""
             if var == "rep_name":
-                default = "Mary Michael"
+                _msg_cfg = load_config()
+                _msg_team = get_team_first_names(_msg_cfg)
+                default = _msg_team[0] if _msg_team else ""
             elif var == "contact_name" and contacts and tmpl_phone:
                 match = next((c for c in contacts if c["phone"] == tmpl_phone), None)
                 default = match["name"] if match else ""
@@ -222,7 +231,7 @@ with tab_templates:
             preview = ""
 
         all_filled = all(variables.values())
-        if st.button("Send Template", type="primary", use_container_width=True,
+        if st.button("Send Template", type="primary", width='stretch',
                      disabled=not (tmpl_formatted and all_filled)):
             with st.spinner("Sending..."):
                 result = send_template(template_key, tmpl_phone, variables)
@@ -252,7 +261,7 @@ with tab_consent:
         with consent_col3:
             consent_action = st.selectbox("Action", ["Opt In", "Opt Out"])
 
-        if st.form_submit_button("Save Consent", type="primary", use_container_width=True):
+        if st.form_submit_button("Save Consent", type="primary", width='stretch'):
             formatted_consent = format_phone(consent_phone)
             if formatted_consent:
                 opted_in = consent_action == "Opt In"
@@ -277,13 +286,13 @@ with tab_consent:
 
         if unconsented:
             st.caption(f"{len(unconsented)} contacts without consent on file")
-            for c in unconsented[:20]:
+            for i, c in enumerate(unconsented[:20]):
                 btn_col1, btn_col2 = st.columns([4, 1])
                 with btn_col1:
                     st.text(f"{c['label']} — {c['phone']}")
                 with btn_col2:
-                    if st.button("Opt In", key=f"bulk_optin_{c['phone']}",
-                                 use_container_width=True):
+                    if st.button("Opt In", key=f"bulk_optin_{i}_{c['phone']}",
+                                 width='stretch'):
                         set_consent(format_phone(c["phone"]), True, c["name"])
                         st.rerun()
         else:

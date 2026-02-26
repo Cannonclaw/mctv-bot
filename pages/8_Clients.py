@@ -20,6 +20,7 @@ from services.portal_service import (
     invite_client_to_portal, get_admin_summary, log_activity,
 )
 from services.notification_service import notify_portal_account_created
+from services.config_service import load_config, get_team_first_names, get_market_names
 
 st.set_page_config(page_title="Clients - MCTV Bot", page_icon="\U0001F465", layout="wide")
 
@@ -58,6 +59,10 @@ if not is_configured():
     st.stop()
 
 
+_cfg = load_config()
+_team_names = get_team_first_names(_cfg)
+_city_options = get_market_names(_cfg, active_only=False) + ["Other"]
+
 # ── Page header ─────────────────────────────────────────────────────────────
 
 st.markdown("## Client Management")
@@ -79,6 +84,10 @@ c4.metric("Overdue Invoices", summary.get("overdue_invoices", 0))
 c5.metric("Monthly Revenue", f"${summary.get('monthly_recurring_revenue', 0):,.2f}")
 
 st.divider()
+
+# ── Search ─────────────────────────────────────────────────────────────────
+client_search = st.text_input("🔍 Search clients...", key="client_search",
+                              placeholder="Search by business name, contact, email, or city")
 
 # ── Tabs: Client List / Add Client ──────────────────────────────────────────
 
@@ -114,6 +123,17 @@ with tab_list:
     if type_filter != "All":
         type_val = type_filter.lower()
         clients = [c for c in clients if c.get("client_type") == type_val]
+
+    # Apply search filter
+    if client_search:
+        _q = client_search.strip().lower()
+        clients = [
+            c for c in clients
+            if _q in (c.get("business_name", "") or "").lower()
+            or _q in (c.get("contact_name", "") or "").lower()
+            or _q in (c.get("contact_email", "") or "").lower()
+            or _q in (c.get("city", "") or "").lower()
+        ]
 
     if not clients:
         st.info("No clients found. Use the 'Add New Client' tab or convert a lead from the Leads page.")
@@ -182,28 +202,35 @@ with tab_list:
                         key=f"status_{cid}",
                     )
                     if new_status != cstatus:
-                        if st.button("Update Status", key=f"update_status_{cid}", use_container_width=True):
-                            update_client(cid, {"status": new_status})
-                            log_activity(cid, f"Status changed to {new_status}",
-                                         entity_type="client", entity_id=cid)
-                            st.success(f"Status updated to {new_status}")
-                            st.rerun()
+                        if st.button("Update Status", key=f"update_status_{cid}", width='stretch'):
+                            try:
+                                update_client(cid, {"status": new_status})
+                                log_activity(cid, f"Status changed to {new_status}",
+                                             entity_type="client", entity_id=cid)
+                                st.success(f"Client status updated to '{new_status.title()}'")
+                                st.rerun()
+                            except Exception:
+                                st.error("Failed to update client status")
 
                 # Assign rep
                 with action_cols[1]:
+                    _rep_options = [""] + _team_names
                     new_rep = st.selectbox(
                         "Assign Rep",
-                        ["", "Creed", "Mary Michael", "Swayze"],
-                        index=["", "Creed", "Mary Michael", "Swayze"].index(rep) if rep in ["", "Creed", "Mary Michael", "Swayze"] else 0,
+                        _rep_options,
+                        index=_rep_options.index(rep) if rep in _rep_options else 0,
                         key=f"rep_{cid}",
                     )
                     if new_rep != rep:
-                        if st.button("Assign", key=f"assign_rep_{cid}", use_container_width=True):
-                            update_client(cid, {"assigned_rep": new_rep})
-                            log_activity(cid, f"Assigned rep: {new_rep}",
-                                         entity_type="client", entity_id=cid)
-                            st.success(f"Rep updated to {new_rep}")
-                            st.rerun()
+                        if st.button("Assign", key=f"assign_rep_{cid}", width='stretch'):
+                            try:
+                                update_client(cid, {"assigned_rep": new_rep})
+                                log_activity(cid, f"Assigned rep: {new_rep}",
+                                             entity_type="client", entity_id=cid)
+                                st.success(f"Assigned rep updated to '{new_rep or 'Unassigned'}'")
+                                st.rerun()
+                            except Exception:
+                                st.error("Failed to update assigned rep")
 
                 # Invite to portal
                 with action_cols[2]:
@@ -211,17 +238,17 @@ with tab_list:
                         st.success("Portal active")
                     else:
                         if st.button("Invite to Portal", key=f"invite_{cid}",
-                                     use_container_width=True, type="primary"):
+                                     width='stretch', type="primary"):
                             st.session_state[f"show_invite_{cid}"] = True
 
                 # Edit client info
                 with action_cols[3]:
-                    if st.button("Edit Client", key=f"edit_btn_{cid}", use_container_width=True):
+                    if st.button("Edit Client", key=f"edit_btn_{cid}", width='stretch'):
                         st.session_state[f"show_edit_{cid}"] = not st.session_state.get(f"show_edit_{cid}", False)
 
                 # Delete
                 with action_cols[4]:
-                    if st.button("Delete", key=f"delete_{cid}", use_container_width=True):
+                    if st.button("Delete", key=f"delete_{cid}", width='stretch'):
                         st.session_state[f"confirm_delete_{cid}"] = True
 
                 # ── Invite form (shown when clicked) ────────────────────
@@ -241,7 +268,7 @@ with tab_list:
                     inv_btn_col1, inv_btn_col2 = st.columns(2)
                     with inv_btn_col1:
                         if st.button("Send Invite", key=f"send_invite_{cid}", type="primary",
-                                     use_container_width=True):
+                                     width='stretch'):
                             with st.spinner("Creating portal account..."):
                                 result = invite_client_to_portal(
                                     client_id=cid,
@@ -267,7 +294,7 @@ with tab_list:
                                     st.error("Failed to create portal account. Check the logs for details.")
 
                     with inv_btn_col2:
-                        if st.button("Cancel", key=f"cancel_invite_{cid}", use_container_width=True):
+                        if st.button("Cancel", key=f"cancel_invite_{cid}", width='stretch'):
                             del st.session_state[f"show_invite_{cid}"]
                             st.rerun()
 
@@ -301,13 +328,11 @@ with tab_list:
                             "Industry",
                             value=client.get("industry", ""),
                             key=f"edit_industry_{cid}")
-                        city_options = ["Oxford", "Starkville", "Tupelo", "Columbus",
-                                        "West Point", "Other"]
                         current_city = client.get("city", "")
                         edit_city = st.selectbox(
                             "City",
-                            city_options,
-                            index=city_options.index(current_city) if current_city in city_options else 0,
+                            _city_options,
+                            index=_city_options.index(current_city) if current_city in _city_options else 0,
                             key=f"edit_city_{cid}")
 
                     edit_notes = st.text_area(
@@ -320,7 +345,7 @@ with tab_list:
                     edit_btn1, edit_btn2 = st.columns(2)
                     with edit_btn1:
                         if st.button("Save Changes", key=f"save_edit_{cid}",
-                                     type="primary", use_container_width=True):
+                                     type="primary", width='stretch'):
                             changes = {}
                             if edit_bname != bname:
                                 changes["business_name"] = edit_bname
@@ -352,7 +377,7 @@ with tab_list:
 
                     with edit_btn2:
                         if st.button("Cancel", key=f"cancel_edit_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             st.session_state[f"show_edit_{cid}"] = False
                             st.rerun()
 
@@ -362,14 +387,14 @@ with tab_list:
                     dc1, dc2 = st.columns(2)
                     with dc1:
                         if st.button("Yes, Delete", key=f"yes_delete_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             delete_client(cid)
                             st.success(f"Deleted {bname}")
                             del st.session_state[f"confirm_delete_{cid}"]
                             st.rerun()
                     with dc2:
                         if st.button("Cancel", key=f"no_delete_{cid}",
-                                     use_container_width=True):
+                                     width='stretch'):
                             del st.session_state[f"confirm_delete_{cid}"]
                             st.rerun()
 
@@ -392,12 +417,12 @@ with tab_add:
         with fc2:
             new_ctype = st.selectbox("Client Type *", ["Advertiser", "Host"])
             new_industry = st.text_input("Industry", placeholder="Restaurant")
-            new_city = st.selectbox("City", ["Oxford", "Starkville", "Tupelo", "Columbus", "West Point", "Other"])
-            new_rep = st.selectbox("Assigned Rep", ["", "Creed", "Mary Michael", "Swayze"])
+            new_city = st.selectbox("City", _city_options)
+            new_rep = st.selectbox("Assigned Rep", [""] + _team_names)
 
         new_notes = st.text_area("Notes", placeholder="Any additional notes about this client...", height=80)
 
-        submitted = st.form_submit_button("Create Client", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Create Client", type="primary", width='stretch')
 
         if submitted:
             if not new_bname or not new_cname or not new_cemail:

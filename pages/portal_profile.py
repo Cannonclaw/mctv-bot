@@ -15,6 +15,7 @@ from services.auth import require_portal_auth, get_portal_user
 from services.portal_service import update_client
 from services.supabase_client import reset_password
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
+from services.config_service import load_config
 
 st.set_page_config(
     page_title="My Profile - MCTV Client Portal",
@@ -57,7 +58,7 @@ with st.form("profile_form"):
         city = st.text_input("City",
                              value=client.get("city", ""))
 
-    if st.form_submit_button("Save Changes", type="primary", use_container_width=True):
+    if st.form_submit_button("Save Changes", type="primary", width='stretch'):
         update_data = {
             "contact_name": contact_name,
             "contact_phone": contact_phone,
@@ -94,16 +95,23 @@ with ac2:
 
 st.divider()
 st.markdown("### Change Password")
-st.caption("We'll send a password reset link to your email address.")
+st.caption(
+    "We'll send a password reset link to your email. "
+    "Click the link in the email to set a new password."
+)
 
-if st.button("Send Password Reset Email", type="primary", use_container_width=True):
+if st.button("Send Password Reset Email", type="primary", width='stretch'):
     email = user.get("email", "")
     if email:
         with st.spinner("Sending reset link..."):
             try:
                 success = reset_password(email)
                 if success:
-                    st.success(f"Password reset link sent to {email}. Check your inbox.")
+                    st.success(
+                        f"Password reset link sent to **{email}**. "
+                        "Check your inbox (and spam folder). "
+                        "Click the link to set a new password."
+                    )
                 else:
                     st.error("Could not send reset link. Please try again later.")
             except Exception:
@@ -115,11 +123,19 @@ if st.button("Send Password Reset Email", type="primary", use_container_width=Tr
 
 st.divider()
 st.markdown("### Need Help?")
-st.markdown(
-    "Contact your MCTV representative directly, or reach us at:\n"
-    "- **Creed Cannon** — creed@mctvofms.com | (601) 201-8202\n"
-    "- **Mary Michael Cannon** — mmc@mctvofms.com | (662) 801-5677\n"
-    "- **Swayze Hollingsworth** — swayze@mctvofms.com | (662) 907-0404"
-)
+
+config = load_config()
+team = config.get("team", [])
+
+if team:
+    lines = ["Contact your MCTV representative directly, or reach us at:"]
+    for member in team:
+        name = member.get("name", "")
+        email = member.get("email", "")
+        phone = member.get("phone", "")
+        lines.append(f"- **{name}** — {email} | {phone}")
+    st.markdown("\n".join(lines))
+else:
+    st.markdown("Contact your MCTV representative for assistance.")
 
 render_portal_footer()
