@@ -225,17 +225,17 @@ def get_host_dashboard(client_id: str) -> dict:
     free_plays_per_day = free_inside_plays_per_hour * hours_per_day * max(screens_at_venue, 1)
     free_plays_per_month = free_plays_per_day * days_per_month
 
-    # Revenue share from contract (look for monthly_rate on host contracts)
+    # Revenue share from contracts — aggregate across all active host contracts
     revenue_share_amount = 0.0
-    revenue_share_contract = None
+    revenue_share_contracts = []
     for c in active_contracts:
         ctype = c.get("contract_type", "")
         if ctype in ("host", "host_media_kit", "host_advertising"):
             rate = float(c.get("monthly_rate", 0) or 0)
             if rate > 0:
-                revenue_share_amount = rate
-                revenue_share_contract = c
-                break
+                revenue_share_amount += rate
+                revenue_share_contracts.append(c)
+    revenue_share_contract = revenue_share_contracts[0] if revenue_share_contracts else None
 
     # Merge host-specific data into the base dashboard dict
     base.update({
@@ -248,9 +248,10 @@ def get_host_dashboard(client_id: str) -> dict:
         "free_plays_per_day": free_plays_per_day,
         "free_plays_per_month": free_plays_per_month,
         "loop_minutes": loop_minutes,
-        # Revenue share
+        # Revenue share (aggregated across all host contracts)
         "revenue_share_amount": revenue_share_amount,
         "revenue_share_contract": revenue_share_contract,
+        "revenue_share_contracts": revenue_share_contracts,
     })
 
     return base

@@ -644,6 +644,80 @@ CREATE INDEX IF NOT EXISTS idx_sms_log_sent_at ON sms_log(sent_at);
 
 
 -- ============================================================================
+-- STORAGE BUCKET RLS POLICIES
+-- Supabase Storage uses storage.objects table. Paths are:
+--   {bucket}/{client_id}/filename.ext
+-- Team can read/write all; portal users can only read their own files.
+-- ============================================================================
+
+-- contracts bucket
+CREATE POLICY "contracts_team_all"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'contracts' AND is_team_member(auth.uid()))
+  WITH CHECK (bucket_id = 'contracts' AND is_team_member(auth.uid()));
+
+CREATE POLICY "contracts_own_read"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'contracts'
+    AND (storage.foldername(name))[1] = (
+      SELECT id::text FROM clients WHERE user_id = auth.uid()
+    )
+  );
+
+-- reports bucket
+CREATE POLICY "reports_team_all"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'reports' AND is_team_member(auth.uid()))
+  WITH CHECK (bucket_id = 'reports' AND is_team_member(auth.uid()));
+
+CREATE POLICY "reports_own_read"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'reports'
+    AND (storage.foldername(name))[1] = (
+      SELECT id::text FROM clients WHERE user_id = auth.uid()
+    )
+  );
+
+-- creative-uploads bucket (portal users can upload AND read their own)
+CREATE POLICY "creative_uploads_team_all"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'creative-uploads' AND is_team_member(auth.uid()))
+  WITH CHECK (bucket_id = 'creative-uploads' AND is_team_member(auth.uid()));
+
+CREATE POLICY "creative_uploads_own_all"
+  ON storage.objects FOR ALL
+  USING (
+    bucket_id = 'creative-uploads'
+    AND (storage.foldername(name))[1] = (
+      SELECT id::text FROM clients WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'creative-uploads'
+    AND (storage.foldername(name))[1] = (
+      SELECT id::text FROM clients WHERE user_id = auth.uid()
+    )
+  );
+
+-- creative-deliveries bucket (portal users can read; team can write)
+CREATE POLICY "creative_deliveries_team_all"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'creative-deliveries' AND is_team_member(auth.uid()))
+  WITH CHECK (bucket_id = 'creative-deliveries' AND is_team_member(auth.uid()));
+
+CREATE POLICY "creative_deliveries_own_read"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'creative-deliveries'
+    AND (storage.foldername(name))[1] = (
+      SELECT id::text FROM clients WHERE user_id = auth.uid()
+    )
+  );
+
+
+-- ============================================================================
 -- VERIFICATION QUERY
 -- Run this after applying the above to confirm all tables have RLS enabled
 -- and the expected number of policies.

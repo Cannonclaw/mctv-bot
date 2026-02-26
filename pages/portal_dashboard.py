@@ -274,12 +274,23 @@ def _render_host_dashboard(dash: dict, status: str):
     if rev_share > 0 and rev_contract:
         st.markdown("### Revenue Share")
 
+        rev_contracts = dash.get("revenue_share_contracts", [])
+
         rs1, rs2, rs3 = st.columns(3)
-        rs1.metric("Monthly Amount", f"${rev_share:,.2f}")
-        rs2.metric("Contract Term", f"{rev_contract.get('term_months', 0)} months")
+        rs1.metric("Monthly Total", f"${rev_share:,.2f}")
+        rs2.metric("Active Agreements", len(rev_contracts))
 
         end_date = rev_contract.get("end_date", "")
         rs3.metric("Renews / Ends", end_date if end_date else "Auto-Renew")
+
+        # Show per-contract breakdown if multiple
+        if len(rev_contracts) > 1:
+            with st.expander("Revenue breakdown by contract"):
+                for rc in rev_contracts:
+                    rate = float(rc.get("monthly_rate", 0) or 0)
+                    ctype = rc.get("contract_type", "host").replace("_", " ").title()
+                    term = rc.get("term_months", 0)
+                    st.markdown(f"- **{ctype}** — ${rate:,.2f}/mo ({term}-month term)")
 
         if st.button("View Contract Details", type="primary", key="host_view_rev_contract"):
             st.switch_page("pages/portal_contract.py")

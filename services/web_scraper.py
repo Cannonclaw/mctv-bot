@@ -396,12 +396,17 @@ def classify_image(img_url: str, alt_text: str = "", file_size: int = 0) -> str:
         return "logo"
 
     # Ad/promo detection
-    ad_signals = [
-        "ad", "banner", "promo", "promotion", "campaign",
-        "advertisement", "flyer", "deal", "offer", "coupon",
-        "special", "sale",
+    # Short words use word-boundary regex to avoid false positives
+    # (e.g., "ad" in "upload"/"download", "sale" in "wholesale")
+    ad_exact = ["ad", "sale", "deal", "offer"]
+    for signal in ad_exact:
+        if re.search(r'\b' + signal + r'\b', combined):
+            return "ad_example"
+    ad_substr = [
+        "banner", "promo", "promotion", "campaign",
+        "advertisement", "flyer", "coupon", "special",
     ]
-    for signal in ad_signals:
+    for signal in ad_substr:
         if signal in combined:
             return "ad_example"
 

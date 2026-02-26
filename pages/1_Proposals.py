@@ -287,10 +287,28 @@ if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
 if st.session_state.get("scraped_images"):
     st.markdown("**Scraped images — select which to include:**")
     st.caption("Images default to *Skip*. Select a placement for each photo you want to use.")
-    # Placement options: Skip (default for non-logo), Logo, or a proposal page
     _PLACEMENT_OPTIONS = ["Skip", "Client Logo", "The Opportunity (page 2)", "Market Coverage (page 4)"]
-    # Only logos auto-select; everything else defaults to Skip
     _cat_to_default = {"logo": "Client Logo"}
+    _cat_badge = {
+        "logo": "🏷️ Logo",
+        "ad_example": "📢 Ad/Promo",
+        "product": "📷 Photo",
+    }
+
+    # Bulk action buttons
+    bulk_cols = st.columns(4)
+    if bulk_cols[0].button("All → Page 2", key="bulk_pg2"):
+        for i in range(len(st.session_state["scraped_images"])):
+            st.session_state[f"scrape_slot_{i}"] = "The Opportunity (page 2)"
+        st.rerun()
+    if bulk_cols[1].button("All → Page 4", key="bulk_pg4"):
+        for i in range(len(st.session_state["scraped_images"])):
+            st.session_state[f"scrape_slot_{i}"] = "Market Coverage (page 4)"
+        st.rerun()
+    if bulk_cols[2].button("Skip All", key="bulk_skip"):
+        for i in range(len(st.session_state["scraped_images"])):
+            st.session_state[f"scrape_slot_{i}"] = "Skip"
+        st.rerun()
 
     img_cols = st.columns(4)
     for i, img_info in enumerate(st.session_state["scraped_images"]):
@@ -299,6 +317,8 @@ if st.session_state.get("scraped_images"):
         default_idx = _PLACEMENT_OPTIONS.index(default_placement)
         with img_cols[i % 4]:
             st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], width='stretch')
+            badge = _cat_badge.get(category, "📷 Photo")
+            st.caption(f"{badge} · `{img_info['filename'][:25]}`")
             st.selectbox("Placement", _PLACEMENT_OPTIONS, index=default_idx,
                          key=f"scrape_slot_{i}")
 
