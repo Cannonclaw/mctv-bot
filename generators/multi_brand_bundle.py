@@ -8,6 +8,8 @@ Good Earth / Hayden) who qualify for the Buy 2 Get 1 Free bundle deal.
 Each brand gets its own spotlight section with a dedicated Claude call.
 """
 
+import re
+
 from generators.base_proposal import BaseProposal
 from services.config_service import (
     get_team_member, get_all_tiers,
@@ -37,6 +39,9 @@ class MultiBrandBundleProposal(BaseProposal):
             ("_bundle_pricing", "Bundle Pricing"),
             ("_market_coverage", "Your Market Coverage"),
             ("bundle_value", "Bundle Value"),
+            ("_competitive", "How MCTV Compares"),
+            ("why_mctv", "Why MCTV"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Let's Get Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -77,7 +82,13 @@ class MultiBrandBundleProposal(BaseProposal):
         elif section_key == "_market_coverage":
             self._build_market_coverage(doc, data)
         elif section_key == "bundle_value":
-            self._build_bundle_value(doc, content)
+            self._build_bundle_value(doc, data, content)
+        elif section_key == "_competitive":
+            self._build_competitive(doc, data)
+        elif section_key == "why_mctv":
+            self._build_why_mctv(doc, content)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -95,7 +106,6 @@ class MultiBrandBundleProposal(BaseProposal):
 
         # Claude returns: 1 paragraph then 3 dash-bullet reasons
         # Split on the first dash to separate paragraph from bullets
-        import re
         parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
         if len(parts) == 2:
             self.docx.add_body_text(doc, parts[0].strip())
@@ -122,7 +132,7 @@ class MultiBrandBundleProposal(BaseProposal):
         skips the Claude call, but we make individual Claude calls here
         for each business in the bundle.
         """
-        self.docx.add_section_header(doc, "Your Brands")
+        self.docx.add_section_header(doc, "Your Brands", new_page=True)
         variables = self.get_prompt_variables(data)
 
         for idx, biz in enumerate(data.businesses):
@@ -260,7 +270,7 @@ class MultiBrandBundleProposal(BaseProposal):
 
     def _build_market_coverage(self, doc, data):
         """Config-driven market coverage overview."""
-        self.docx.add_section_header(doc, "Your Market Coverage")
+        self.docx.add_section_header(doc, "Your Market Coverage", new_page=True)
 
         # Collect unique cities from all businesses
         cities = list({biz.city for biz in data.businesses if biz.city})
@@ -302,18 +312,112 @@ class MultiBrandBundleProposal(BaseProposal):
         )
         self.docx.add_callout_box(doc, venue_text)
 
-    # -- BUNDLE VALUE (bullet-style rendering) --
+    # -- BUNDLE VALUE (accent cards + metrics banner) --
 
-    def _build_bundle_value(self, doc, content):
-        """Claude-generated bundle value proposition."""
-        self.docx.add_section_header(doc, "The Bundle Advantage")
-        self.docx.add_bullet_list(doc, content)
+    def _build_bundle_value(self, doc, data, content):
+        """Claude-generated bundle value proposition with accent cards."""
+        self.docx.add_section_header(doc, "The Bundle Advantage", new_page=True)
+
+        pricing = self.config["pricing"]
+        bundle_deal = pricing["bundle_deal"]
+        num_businesses = len(data.businesses)
+        network = self.config["network"]
+
+        # Calculate monthly savings (lowest tier rate = the free brand)
+        total_screens = int(network["total_screens"])
+        if data.custom_monthly_rate and data.custom_monthly_rate > 0:
+            per_brand = data.custom_monthly_rate / num_businesses if num_businesses else 0
+            monthly_savings = f"${per_brand:,.0f}"
+        else:
+            tiers = get_all_tiers(self.config)
+            lowest_rate = min(t["monthly_rate"] for t in tiers) if tiers else 0
+            monthly_savings = f"${lowest_rate:,.0f}"
+
+        self.docx.add_metrics_banner(doc, {
+            bundle_deal: "Bundle Deal",
+            f"{num_businesses}": "Brands in\nYour Bundle",
+            f"{total_screens}": "Total Screens",
+            f"{monthly_savings}/mo": "Monthly Savings\n(Free Brand)",
+        })
+
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if match:
+                self.docx.add_accent_card(doc, match.group(1).strip(), match.group(2).strip())
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
+
+    # -- COMPETITIVE COMPARISON (MCTV vs other media channels) --
+
+    def _build_competitive(self, doc, data):
+        self.docx.add_section_header(doc, "How MCTV Compares")
+
+        self.docx.add_body_text(
+            doc,
+            "Local businesses have more advertising options than ever. "
+            "Here is how MCTV stacks up against the alternatives."
+        )
+
+        total_screens = int(self.config["network"]["total_screens"])
+
+        if data.custom_monthly_rate and data.custom_monthly_rate > 0:
+            rate = data.custom_monthly_rate
+            screens = total_screens
+        else:
+            tiers = get_all_tiers(self.config)
+            mid = tiers[len(tiers) // 2] if tiers else tiers[0]
+            rate = mid["monthly_rate"]
+            screens = mid["screens"]
+
+        impressions = get_tier_impressions(self.config, screens)
+        self.docx.add_competitive_comparison(doc, rate, screens, impressions)
+        self.docx.add_roi_projection(
+            doc, rate, screens, impressions,
+            business_name=data.owner_name + "'s businesses",
+        )
+
+    # -- WHY MCTV (accent cards) --
+
+    def _build_why_mctv(self, doc, content):
+        self.docx.add_section_header(doc, "Why MCTV", new_page=True)
+
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if match:
+                self.docx.add_accent_card(doc, match.group(1).strip(), match.group(2).strip())
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
+
+    # -- SOCIAL PROOF (network stats + venue categories) --
+
+    def _build_social_proof(self, doc):
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
 
     # -- GETTING STARTED (compact callout contact card) --
 
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with contact card."""
-        self.docx.add_section_header(doc, "Let's Get Started")
+        self.docx.add_section_header(doc, "Let's Get Started", new_page=True)
         self.docx.add_body_text(doc, content)
 
         rep = get_team_member(self.config, data.sales_rep)

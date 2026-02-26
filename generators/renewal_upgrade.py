@@ -32,6 +32,8 @@ class RenewalUpgradeProposal(BaseProposal):
             ("_results_table", "Performance Data"),
             ("upgrade_pitch", "The Next Level"),
             ("_upgrade_pricing", "Upgrade Pricing"),
+            ("_competitive", "How MCTV Compares"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Let's Keep Growing"),
             ("_team", "Meet Your Team"),
         ]
@@ -80,6 +82,10 @@ class RenewalUpgradeProposal(BaseProposal):
             self._build_upgrade_pitch(doc, content)
         elif section_key == "_upgrade_pricing":
             self._build_upgrade_pricing(doc, data)
+        elif section_key == "_competitive":
+            self._build_competitive(doc, data)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -93,8 +99,6 @@ class RenewalUpgradeProposal(BaseProposal):
         """Claude-generated results summary with performance metrics banner."""
         self.docx.add_section_header(doc, "Your Results So Far")
 
-        # Claude returns: 1 paragraph then dash-bullet highlights
-        # Split on the first dash to separate paragraph from bullets
         parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
         if len(parts) == 2:
             self.docx.add_body_text(doc, parts[0].strip())
@@ -104,19 +108,11 @@ class RenewalUpgradeProposal(BaseProposal):
         else:
             self.docx.add_body_text(doc, content)
 
-        # Format impressions for the banner
-        if data.total_impressions >= 1_000_000:
-            impressions_display = f"{data.total_impressions / 1_000_000:.1f}M+"
-        elif data.total_impressions >= 1_000:
-            impressions_display = f"{data.total_impressions / 1_000:.0f}K+"
-        else:
-            impressions_display = f"{data.total_impressions:,.0f}"
-
         self.docx.add_metrics_banner(doc, {
-            f"{data.months_as_client}": "Months as\nMCTV Partner",
-            f"{data.total_plays:,}": "Total Ad Plays\nDelivered",
-            f"{data.total_venues}": "Venues Playing\nYour Ads",
-            impressions_display: "Estimated\nImpressions",
+            f"{data.total_plays:,}": "Total Ad\nPlays",
+            str(data.total_venues): "Active\nVenues",
+            f"{data.total_impressions:,.0f}": "Total\nImpressions",
+            f"{data.months_as_client}": "Months as\nPartner",
         })
 
     def _build_results_table(self, doc, data):
@@ -124,7 +120,7 @@ class RenewalUpgradeProposal(BaseProposal):
         if not data.traction_data:
             return
 
-        self.docx.add_section_header(doc, "Performance Data")
+        self.docx.add_section_header(doc, "Performance Data", new_page=True)
 
         # Monthly breakdown
         monthly_data = data.traction_data.get("months", [])
@@ -156,9 +152,20 @@ class RenewalUpgradeProposal(BaseProposal):
             self.docx.add_data_table(doc, headers, rows)
 
     def _build_upgrade_pitch(self, doc, content):
-        """Claude-generated upgrade pitch rendered as bullet list."""
-        self.docx.add_section_header(doc, "The Next Level")
-        self.docx.add_bullet_list(doc, content)
+        """Claude-generated upgrade pitch rendered as accent cards."""
+        self.docx.add_section_header(doc, "The Next Level", new_page=True)
+
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if match:
+                self.docx.add_accent_card(doc, match.group(1).strip(), match.group(2).strip())
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
 
     def _build_upgrade_pricing(self, doc, data):
         """Config-driven pricing showing current tier vs. upgrade tier."""
@@ -269,9 +276,50 @@ class RenewalUpgradeProposal(BaseProposal):
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
 
+    def _build_competitive(self, doc, data):
+        """MCTV vs other media channels — uses suggested upgrade tier."""
+        self.docx.add_section_header(doc, "How MCTV Compares")
+
+        self.docx.add_body_text(
+            doc,
+            "Local businesses have more advertising options than ever. "
+            "Here is how MCTV stacks up against the alternatives."
+        )
+
+        tiers = get_all_tiers(self.config)
+        suggested_tier_data = None
+        for tier in tiers:
+            if tier["name"].lower() == data.suggested_upgrade_tier.lower():
+                suggested_tier_data = tier
+                break
+
+        if suggested_tier_data:
+            rate = suggested_tier_data["monthly_rate"]
+            screens = suggested_tier_data["screens"]
+        else:
+            rate = tiers[1]["monthly_rate"] if len(tiers) > 1 else tiers[0]["monthly_rate"]
+            screens = tiers[1]["screens"] if len(tiers) > 1 else tiers[0]["screens"]
+
+        impressions = get_tier_impressions(self.config, screens)
+        self.docx.add_competitive_comparison(doc, rate, screens, impressions)
+
+    def _build_social_proof(self, doc):
+        """Network trust section with social proof and venue categories."""
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
+
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with compact contact callout."""
-        self.docx.add_section_header(doc, "Let's Keep Growing")
+        self.docx.add_section_header(doc, "Let's Keep Growing", new_page=True)
 
         if content:
             self.docx.add_body_text(doc, content)

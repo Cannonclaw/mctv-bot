@@ -33,7 +33,9 @@ class EliteAdvertiserProposal(BaseProposal):
             ("whats_included", "What's Included"),
             ("market_coverage", "Your Market Coverage"),
             ("_pricing", "Partnership Pricing"),
+            ("_competitive", "How MCTV Compares"),
             ("why_choose_mctv", "Why MCTV"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Getting Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -71,8 +73,12 @@ class EliteAdvertiserProposal(BaseProposal):
             self._build_market_coverage(doc, data, content)
         elif section_key == "_pricing":
             self._build_pricing(doc, data)
+        elif section_key == "_competitive":
+            self._build_competitive(doc, data)
         elif section_key == "why_choose_mctv":
             self._build_why_choose_mctv(doc, content)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc, data)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -216,6 +222,51 @@ class EliteAdvertiserProposal(BaseProposal):
         # Contract terms
         self.docx.add_sub_header(doc, "PARTNERSHIP TERMS")
         self.docx.add_contract_terms(doc, self.config)
+
+    # ── COMPETITIVE COMPARISON (MCTV vs other media channels) ──
+
+    def _build_competitive(self, doc, data):
+        self.docx.add_section_header(doc, "How MCTV Compares")
+
+        self.docx.add_body_text(
+            doc,
+            "Local businesses have more advertising options than ever. "
+            "Here is how MCTV stacks up against the alternatives."
+        )
+
+        # Get rate and impressions for ROI projection
+        if data.custom_pricing:
+            rate = data.custom_monthly_rate
+            screens = data.custom_screen_count
+        else:
+            tier = get_pricing_tier(self.config, data.recommended_tier)
+            rate = tier["monthly_rate"]
+            screens = tier["screens"]
+
+        impressions = get_tier_impressions(self.config, screens)
+        self.docx.add_competitive_comparison(doc, rate, screens, impressions)
+
+        # ROI projection callout
+        self.docx.add_roi_projection(
+            doc, rate, screens, impressions,
+            business_name=data.business_name,
+        )
+
+    # ── SOCIAL PROOF (network stats + trust points) ──
+
+    def _build_social_proof(self, doc, data):
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        # Venue category grid
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
 
     # ── WHY MCTV (accent cards — each selling point is its own card) ──
 

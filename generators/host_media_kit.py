@@ -32,6 +32,7 @@ class HostMediaKitProposal(BaseProposal):
             ("_host_package", "Your Free Host Package"),
             ("_addon_pricing", "Add-On Advertising Packages"),
             ("_network_locations", "MCTV Network Locations"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Let's Get Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -72,6 +73,8 @@ class HostMediaKitProposal(BaseProposal):
             self._build_addon_pricing(doc, data)
         elif section_key == "_network_locations":
             self._build_network_locations(doc)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc, data)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -106,18 +109,40 @@ class HostMediaKitProposal(BaseProposal):
             f"{network['plays_per_hour']}x/Hour": "Ad Plays\nEvery Hour",
         })
 
-    # ── HOST BENEFITS (gold bullets with bold navy titles) ──
+        # Host-specific benefits banner
+        pricing = self.config["pricing"]
+        free_outside = pricing.get("host_free_outside_screens", 10)
+        self.docx.add_metrics_banner(doc, {
+            "$0 Cost": "Zero Out-of-Pocket\nExpense",
+            f"{pricing['host_free_inside_plays_per_hour']}x/Hour": "In-Store Ad Plays\nOn Every Screen",
+            f"{free_outside}": "Free Screens\nNetwork-Wide",
+            "Free": "Content Creation\n& Management",
+        })
+
+    # ── HOST BENEFITS (selling point cards) ──
 
     def _build_host_benefits(self, doc, content):
-        """Host Benefits section — bullet list with bold navy titles."""
         self.docx.add_section_header(doc, "Host Benefits")
-        self.docx.add_bullet_list(doc, content)
+
+        import re
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            clean = line.lstrip('- ').strip()
+            if not clean:
+                continue
+            match = re.match(r'^(.+?)(?::|--)\s+(.+)$', clean)
+            if match:
+                self.docx.add_selling_point(doc, match.group(1).strip(), match.group(2).strip())
+            elif clean:
+                self.docx.add_selling_point(doc, clean, "")
 
     # ── YOUR FREE HOST PACKAGE (sub-headers + metrics + callout) ──
 
     def _build_host_package(self, doc, data):
         """Config-driven free host package breakdown."""
-        self.docx.add_section_header(doc, "Your Free Host Package")
+        self.docx.add_section_header(doc, "Your Free Host Package", new_page=True)
 
         pricing = self.config["pricing"]
         inside_plays = pricing["host_free_inside_plays_per_hour"]
@@ -233,19 +258,28 @@ class HostMediaKitProposal(BaseProposal):
                 self.docx.add_sub_header(doc, f"{market_name.upper()} \u2014 COMING SOON")
                 self.docx.add_body_text(doc, description)
 
-        # Compact venue list as a callout box instead of a grid
-        venue_text = (
-            "Your ads play in: Restaurants & Bars  |  Barbershops & Salons  |  "
-            "Medical & Dental  |  Gyms & Fitness  |  Auto & Service Shops  |  "
-            "Retail & Boutiques  |  Professional Offices  |  Community Venues"
-        )
-        self.docx.add_callout_box(doc, venue_text)
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
+
+    # ── SOCIAL PROOF (network stats + venue categories) ──
+
+    def _build_social_proof(self, doc, data):
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
 
     # ── GETTING STARTED (content + compact contact callout) ──
 
     def _build_getting_started(self, doc, data, content):
-        """Getting Started section with compact contact callout."""
-        self.docx.add_section_header(doc, "Let's Get Started")
+        self.docx.add_section_header(doc, "Let's Get Started", new_page=True)
         self.docx.add_body_text(doc, content)
 
         rep = get_team_member(self.config, data.sales_rep)

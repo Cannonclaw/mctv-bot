@@ -5,7 +5,7 @@
 
 from generators.base_proposal import BaseProposal
 from services.config_service import (
-    get_team_member, get_all_tiers,
+    get_team_member, get_pricing_tier, get_all_tiers,
     get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
     get_hours_per_day, get_days_per_month,
 )
@@ -31,7 +31,9 @@ class CategoryExclusivityProposal(BaseProposal):
             ("exclusivity_value", "The Value of Exclusivity"),
             ("_market_coverage", "Your Exclusive Markets"),
             ("_pricing", "Exclusivity Pricing"),
+            ("_competitive", "How MCTV Compares"),
             ("_why_mctv", "Why MCTV"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Let's Get Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -78,8 +80,12 @@ class CategoryExclusivityProposal(BaseProposal):
             self._build_market_coverage(doc, data)
         elif section_key == "_pricing":
             self._build_pricing(doc, data)
+        elif section_key == "_competitive":
+            self._build_competitive(doc, data)
         elif section_key == "_why_mctv":
             self._build_why_mctv(doc, data)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -93,42 +99,53 @@ class CategoryExclusivityProposal(BaseProposal):
         """The Opportunity section with exclusivity-focused metrics."""
         self.docx.add_section_header(doc, "The Opportunity")
 
-        # Claude returns: 1 paragraph then 3 dash-bullet reasons
-        # Split on the first dash to separate paragraph from bullets
         import re
         parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
         if len(parts) == 2:
-            # Opening paragraph
             self.docx.add_body_text(doc, parts[0].strip())
-            # Reconstruct bullets with clean "- " prefix and put in callout box
             bullets = re.split(r'\n\s*-\s*', parts[1])
-            clean_bullets = "\n".join(f"- {b.strip()}" for b in bullets if b.strip())
-            self.docx.add_callout_box(doc, clean_bullets)
+            for bullet in bullets:
+                bullet = bullet.strip()
+                if not bullet:
+                    continue
+                match = re.match(r'^(.+?)(?::|--)\s+(.+)$', bullet)
+                if match:
+                    self.docx.add_selling_point(doc, match.group(1).strip(), match.group(2).strip())
+                else:
+                    self.docx.add_selling_point(doc, bullet, "")
         else:
             self.docx.add_body_text(doc, content)
 
-        # Count total screens in selected markets
-        total_exclusive_screens = 0
-        for market_name in data.selected_markets:
-            market = self.config["markets"].get(market_name, {})
-            total_exclusive_screens += market.get("screens", 0)
-
         network = self.config["network"]
         self.docx.add_metrics_banner(doc, {
-            f"{total_exclusive_screens}": "Screens Where\nYou're Exclusive",
-            "0": f"Competing\n{data.exclusive_category} Ads",
-            network["monthly_impressions"]: "Network-Wide\nMonthly Impressions",
-            f"{network['plays_per_hour']}x/Hour": "Your Ad Plays\nEvery Day",
+            network["total_screens"]: "Screens\nExclusively Yours",
+            network["monthly_impressions"]: "Monthly\nImpressions",
+            f"{network['avg_dwell_time_minutes']}+ Min": "Avg. Dwell\nTime",
+            "100%": "Category\nOwnership",
         })
 
     def _build_exclusivity_value(self, doc, content):
         """Claude-generated section on the strategic value of exclusivity."""
-        self.docx.add_section_header(doc, "The Value of Exclusivity")
-        self.docx.add_bullet_list(doc, content)
+        self.docx.add_section_header(doc, "The Value of Exclusivity", new_page=True)
+
+        import re
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            bullet_match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if bullet_match:
+                title = bullet_match.group(1).strip()
+                desc = bullet_match.group(2).strip()
+                self.docx.add_accent_card(doc, title, desc)
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
 
     def _build_market_coverage(self, doc, data):
         """Config-driven display of which markets the client owns exclusively."""
-        self.docx.add_section_header(doc, "Your Exclusive Markets")
+        self.docx.add_section_header(doc, "Your Exclusive Markets", new_page=True)
 
         self.docx.add_body_text(
             doc,
@@ -282,7 +299,7 @@ class CategoryExclusivityProposal(BaseProposal):
 
     def _build_why_mctv(self, doc, data):
         """Config-driven reasons why MCTV is the right platform."""
-        self.docx.add_section_header(doc, "Why MCTV")
+        self.docx.add_section_header(doc, "Why MCTV", new_page=True)
 
         network = self.config["network"]
 
@@ -320,11 +337,50 @@ class CategoryExclusivityProposal(BaseProposal):
         ]
 
         for title, description in reasons:
-            self.docx.add_bullet_point(doc, title, description)
+            self.docx.add_selling_point(doc, title, description)
+
+    def _build_competitive(self, doc, data):
+        self.docx.add_section_header(doc, "How MCTV Compares")
+
+        self.docx.add_body_text(
+            doc,
+            "Local businesses have more advertising options than ever. "
+            "Here is how MCTV stacks up against the alternatives."
+        )
+
+        total_screens = 0
+        for market_name in data.selected_markets:
+            market = self.config["markets"].get(market_name, {})
+            total_screens += market.get("screens", 0)
+
+        if data.monthly_rate and data.monthly_rate > 0:
+            rate = data.monthly_rate
+            screens = total_screens
+        else:
+            tier = get_pricing_tier(self.config, data.base_tier)
+            rate = tier["monthly_rate"]
+            screens = tier["screens"]
+
+        impressions = get_tier_impressions(self.config, screens)
+        self.docx.add_competitive_comparison(doc, rate, screens, impressions)
+        self.docx.add_roi_projection(doc, rate, screens, impressions, business_name=data.business_name)
+
+    def _build_social_proof(self, doc):
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
 
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with compact contact callout."""
-        self.docx.add_section_header(doc, "Let's Get Started")
+        self.docx.add_section_header(doc, "Let's Get Started", new_page=True)
 
         if content:
             self.docx.add_body_text(doc, content)

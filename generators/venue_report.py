@@ -18,12 +18,11 @@ from datetime import datetime
 from collections import defaultdict
 
 from services.claude_service import ClaudeService
-from services.docx_service import DocxService, NAVY, GOLD, GRAY, DARK_TEXT
+from services.docx_service import DocxService
 from services.config_service import get_team_member
+from services.chart_service import generate_all_charts
 from models.report_data import TractionReportInput, VenueRecord
 
-from docx.shared import Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +79,11 @@ class VenueReportGenerator:
         if progress_callback:
             progress_callback("Creating document", current_step, total_steps)
 
-        # --- Step 2: Title and subtitle ---
-        self._add_title_block(doc, data)
+        # --- Step 2: Cover page (shared design) ---
+        self._add_cover_page(doc, data)
         current_step += 1
         if progress_callback:
-            progress_callback("Adding report header", current_step, total_steps)
+            progress_callback("Building cover page", current_step, total_steps)
 
         # --- Step 3: Summary metrics banner ---
         advertiser_records = self._get_advertiser_records(data)
@@ -99,14 +98,26 @@ class VenueReportGenerator:
         if progress_callback:
             progress_callback("Building advertiser breakdown", current_step, total_steps)
 
-        # --- Step 5: AI insights (if requested) ---
+        # --- Step 5: Performance Analytics charts ---
+        current_step += 1
+        if progress_callback:
+            progress_callback("Generating performance charts", current_step, total_steps)
+        self._add_analytics_page(doc, data)
+
+        # --- Step 6: AI insights (if requested) ---
         if data.include_insights:
             current_step += 1
             if progress_callback:
                 progress_callback("Generating AI insights", current_step, total_steps)
             self._add_insights_section(doc, data, advertiser_records)
 
-        # --- Step 6: Footer ---
+        # --- Step 7: Team section ---
+        self._add_team_section(doc, data)
+        current_step += 1
+        if progress_callback:
+            progress_callback("Adding team section", current_step, total_steps)
+
+        # --- Step 8: Footer ---
         self.docx.add_footer(doc)
         current_step += 1
         if progress_callback:
@@ -130,65 +141,22 @@ class VenueReportGenerator:
     # Document sections
     # ------------------------------------------------------------------
 
-    def _add_title_block(self, doc, data: TractionReportInput):
-        """Add the report title, venue name, and reporting period."""
-        venue_name = data.advertiser_name
-
-        # MCTV branding header
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("MCTV ELITE ADVERTISING")
-        run.font.size = Pt(12)
-        run.font.color.rgb = GOLD
-        run.font.bold = True
-        run.font.name = "Calibri"
-
-        # Spacer
-        doc.add_paragraph()
-
-        # Venue name
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(venue_name)
-        run.font.size = Pt(28)
-        run.font.color.rgb = NAVY
-        run.font.bold = True
-        run.font.name = "Calibri"
-
-        # Report type subtitle
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("Venue Partner Traction Report")
-        run.font.size = Pt(16)
-        run.font.color.rgb = NAVY
-        run.font.bold = False
-        run.font.name = "Calibri"
-
-        # Reporting period
-        doc.add_paragraph()
-        if data.campaign_period:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = p.add_run(f"Reporting Period: {data.campaign_period}")
-            run.font.size = Pt(11)
-            run.font.color.rgb = GRAY
-            run.font.name = "Calibri"
-
-        # Report generation date
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"Generated {datetime.now().strftime('%B %d, %Y')}")
-        run.font.size = Pt(10)
-        run.font.color.rgb = GRAY
-        run.font.italic = True
-
-        # Divider
-        doc.add_paragraph()
+    def _add_cover_page(self, doc, data: TractionReportInput):
+        rep = get_team_member(self.config, data.sales_rep)
+        self.docx.preparer_name = rep["name"]
+        self.docx.add_cover_page(
+            doc,
+            title="VENUE PARTNER\nTRACTION REPORT",
+            subtitle="Indoor Digital Billboard Performance",
+            prepared_for=data.advertiser_name,
+            prepared_by=rep,
+            date=data.campaign_period or datetime.now().strftime("%B %Y"),
+        )
 
     def _add_summary_metrics(self, doc, data: TractionReportInput,
                              advertiser_records: list):
         """Add the large summary metrics banner."""
-        self.docx.add_section_header(doc, "Your Venue at a Glance")
+        self.docx.add_section_header(doc, "Your Venue at a Glance", new_page=True)
 
         # Count unique advertisers from the venue records
         unique_advertisers = self._count_unique_advertisers(data)
@@ -208,7 +176,7 @@ class VenueReportGenerator:
     def _add_advertiser_table(self, doc, data: TractionReportInput,
                               advertiser_records: list):
         """Add the per-advertiser breakdown table for this venue."""
-        self.docx.add_section_header(doc, "Advertiser Activity at Your Venue")
+        self.docx.add_section_header(doc, "Advertiser Activity at Your Venue", new_page=True)
 
         venue_name = data.advertiser_name
 
@@ -262,6 +230,28 @@ class VenueReportGenerator:
         except Exception as e:
             logger.error("Failed to generate venue AI insights: %s", e)
             self._add_insights_fallback(doc, data)
+
+    def _add_analytics_page(self, doc, data: TractionReportInput):
+        chart_paths = generate_all_charts(data)
+        if not chart_paths:
+            return
+
+        self.docx.add_section_header(doc, "Performance Analytics", new_page=True)
+        self.docx.add_photos_grid(doc, chart_paths, cols=2, max_width=3.8)
+
+        import os
+        for path in chart_paths:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+
+    def _add_team_section(self, doc, data: TractionReportInput):
+        closing = (
+            f"Thank you for hosting MCTV screens at {data.advertiser_name}. "
+            f"Your venue plays an important role in our network."
+        )
+        self.docx.add_team_section(doc, closing_text=closing, dark_mode=True, new_page=True)
 
     def _add_insights_fallback(self, doc, data: TractionReportInput):
         """Add a static fallback when AI insights are unavailable."""
@@ -374,10 +364,11 @@ class VenueReportGenerator:
 
     def _count_steps(self, data: TractionReportInput) -> int:
         """Count total generation steps for progress reporting."""
-        steps = 4  # create doc, title, metrics, advertiser table
+        steps = 4  # create doc, cover page, metrics, advertiser table
+        steps += 1  # charts page
         if data.include_insights:
             steps += 1
-        steps += 1  # footer
+        steps += 2  # team section + footer
         return steps
 
     @staticmethod

@@ -103,7 +103,7 @@ class DocxService:
         # Set default font
         style = doc.styles["Normal"]
         font = style.font
-        font.name = "Calibri"
+        font.name = "Arial"
         font.size = Pt(11)
         font.color.rgb = self.c["text"]
 
@@ -199,7 +199,7 @@ class DocxService:
             run.font.size = Pt(16)
             run.font.color.rgb = self.c["accent"]
             run.font.bold = True
-            run.font.name = "Calibri"
+            run.font.name = "Arial"
 
         # "Prepared for" label
         p = cell.add_paragraph()
@@ -209,7 +209,7 @@ class DocxService:
         run.font.size = Pt(11)
         run.font.color.rgb = self.c["white"]
         run.font.italic = True
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Client name (big, white, bold)
         p = cell.add_paragraph()
@@ -219,7 +219,7 @@ class DocxService:
         run.font.size = Pt(24)
         run.font.color.rgb = self.c["white"]
         run.font.bold = True
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Client logo (if provided)
         if client_logo_path:
@@ -250,7 +250,7 @@ class DocxService:
         run.font.size = Pt(28)
         run.font.color.rgb = self.c["accent"]
         run.font.bold = True
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Gold accent line
         accent = cell.add_paragraph()
@@ -268,7 +268,7 @@ class DocxService:
         run = p.add_run(date)
         run.font.size = Pt(12)
         run.font.color.rgb = self.c["white"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Prepared by (rep info)
         p = cell.add_paragraph()
@@ -278,7 +278,7 @@ class DocxService:
         run.font.size = Pt(10)
         run.font.bold = True
         run.font.color.rgb = self.c["accent"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -286,7 +286,7 @@ class DocxService:
         run = p.add_run(f"{prepared_by['email']}  |  {prepared_by['phone']}")
         run.font.size = Pt(9)
         run.font.color.rgb = self.c["white"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Website
         p = cell.add_paragraph()
@@ -295,7 +295,7 @@ class DocxService:
         run = p.add_run("www.mctvofms.com")
         run.font.size = Pt(9)
         run.font.color.rgb = self.c["accent"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Add a section break (new page) to restore normal margins for
         # subsequent content pages.  This avoids the blank-page problem
@@ -352,7 +352,7 @@ class DocxService:
         run.font.size = Pt(16)
         run.font.color.rgb = self.c["white"]
         run.font.bold = True
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         self._remove_table_borders(header_table)
 
@@ -438,7 +438,7 @@ class DocxService:
         run = p.add_run(text)
         run.font.size = Pt(10)
         run.font.color.rgb = self.c["text"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
     def add_selling_point(self, doc: Document, title: str, body: str):
         """Add a selling point with colored square bullet, bold title, and body text.
@@ -460,7 +460,7 @@ class DocxService:
         title_run.font.size = Pt(11)
         title_run.font.bold = True
         title_run.font.color.rgb = self.c["primary"]
-        title_run.font.name = "Calibri"
+        title_run.font.name = "Arial"
 
         # Body text (if provided)
         if body:
@@ -471,7 +471,7 @@ class DocxService:
             run2 = p2.add_run(body)
             run2.font.size = Pt(10)
             run2.font.color.rgb = self.c["text"]
-            run2.font.name = "Calibri"
+            run2.font.name = "Arial"
 
     def add_accent_card(self, doc: Document, title: str, body: str):
         """Add a styled card with thick accent left border, light background,
@@ -521,7 +521,7 @@ class DocxService:
         run.font.size = Pt(11)
         run.font.bold = True
         run.font.color.rgb = self.c["primary"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
         # Body text in text color
         p2 = cell.add_paragraph()
@@ -530,7 +530,7 @@ class DocxService:
         run2 = p2.add_run(body)
         run2.font.size = Pt(10)
         run2.font.color.rgb = self.c["text"]
-        run2.font.name = "Calibri"
+        run2.font.name = "Arial"
 
     def add_body_text(self, doc: Document, text: str):
         """Add body paragraphs with proper spacing.
@@ -568,7 +568,7 @@ class DocxService:
                 run.font.size = Pt(10.5)
                 run.font.bold = True
                 run.font.color.rgb = self.c["primary"]
-                run.font.name = "Calibri"
+                run.font.name = "Arial"
 
                 # Body text below the title
                 if rest:
@@ -577,14 +577,14 @@ class DocxService:
                     run = p.add_run(rest)
                     run.font.size = Pt(10.5)
                     run.font.color.rgb = self.c["text"]
-                    run.font.name = "Calibri"
+                    run.font.name = "Arial"
             else:
                 p = doc.add_paragraph()
                 p.space_after = Pt(4)
                 run = p.add_run(para_text)
                 run.font.size = Pt(10.5)
                 run.font.color.rgb = self.c["text"]
-                run.font.name = "Calibri"
+                run.font.name = "Arial"
 
     def add_bullet_point(self, doc: Document, title: str, description: str):
         """Add a bullet point with bold title and description."""
@@ -808,7 +808,7 @@ class DocxService:
                 cap_run.font.size = Pt(8)
                 cap_run.font.italic = True
                 cap_run.font.color.rgb = self.c["gray"]
-                cap_run.font.name = "Calibri"
+                cap_run.font.name = "Arial"
 
         self._remove_table_borders(table)
 
@@ -960,7 +960,7 @@ class DocxService:
                 rec_run.font.size = Pt(7)
                 rec_run.font.bold = True
                 rec_run.font.color.rgb = self.c["accent"]
-                rec_run.font.name = "Calibri"
+                rec_run.font.name = "Arial"
 
         # Add thin gray borders for structure
         self._set_table_borders(table, color="D0D0D0", sz=4)
@@ -1228,7 +1228,7 @@ class DocxService:
                 run.font.size = Pt(12)
                 run.font.italic = True
                 run.font.color.rgb = self.c["accent"]
-                run.font.name = "Calibri"
+                run.font.name = "Arial"
 
             # Logo — use white-on-transparent for dark mode (seamless on navy bg),
             # fall back to scheme cover logo, then generic logo as last resort.
@@ -1254,7 +1254,7 @@ class DocxService:
             run = p.add_run("www.mctvofms.com")
             run.font.size = Pt(11)
             run.font.color.rgb = self.c["accent"]
-            run.font.name = "Calibri"
+            run.font.name = "Arial"
 
         else:
             # Light mode: regular paragraphs (proposal closing)
@@ -1267,7 +1267,7 @@ class DocxService:
                 run.font.size = Pt(12)
                 run.font.italic = True
                 run.font.color.rgb = self.c["accent"]
-                run.font.name = "Calibri"
+                run.font.name = "Arial"
 
             # MCTV logo + website
             logo_name = "mctv_logo.png"
@@ -1287,7 +1287,7 @@ class DocxService:
             run = p.add_run("www.mctvofms.com")
             run.font.size = Pt(10)
             run.font.color.rgb = self.c["primary"]
-        run.font.name = "Calibri"
+        run.font.name = "Arial"
 
     def add_venue_categories(self, doc: Document):
         """Add the 'Where Your Ads Play' venue category grid — ultra-compact 2-row format."""
@@ -1340,31 +1340,31 @@ class DocxService:
             run_brand = p.add_run("MCTV Elite Advertising")
             run_brand.font.size = Pt(8)
             run_brand.font.color.rgb = self.c["accent"]
-            run_brand.font.name = "Calibri"
+            run_brand.font.name = "Arial"
 
             # Separator
             sep1 = p.add_run("   |   ")
             sep1.font.size = Pt(8)
             sep1.font.color.rgb = self.c["gray"]
-            sep1.font.name = "Calibri"
+            sep1.font.name = "Arial"
 
             # Footer text in gray
             run_text = p.add_run(footer_text)
             run_text.font.size = Pt(8)
             run_text.font.color.rgb = self.c["gray"]
-            run_text.font.name = "Calibri"
+            run_text.font.name = "Arial"
 
             # Separator
             sep2 = p.add_run("   |   ")
             sep2.font.size = Pt(8)
             sep2.font.color.rgb = self.c["gray"]
-            sep2.font.name = "Calibri"
+            sep2.font.name = "Arial"
 
             # "Page " label in gray
             run_label = p.add_run("Page ")
             run_label.font.size = Pt(8)
             run_label.font.color.rgb = self.c["gray"]
-            run_label.font.name = "Calibri"
+            run_label.font.name = "Arial"
 
             # PAGE field code
             run_fld1 = p.add_run()
@@ -1376,10 +1376,122 @@ class DocxService:
             run_fld2._element.append(instr)
             run_fld2.font.size = Pt(8)
             run_fld2.font.color.rgb = self.c["gray"]
-            run_fld2.font.name = "Calibri"
+            run_fld2.font.name = "Arial"
             run_fld3 = p.add_run()
             fld_end = run_fld3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
             run_fld3._element.append(fld_end)
+
+    def add_competitive_comparison(self, doc: Document, monthly_rate: float,
+                                    screen_count: int, monthly_impressions: float = 0):
+        """Add a competitive comparison table: MCTV vs other media channels."""
+        benchmarks = self.config.get("industry_benchmarks", {}).get("media_comparison", [])
+        if not benchmarks:
+            return
+
+        self.add_sub_header(doc, "HOW MCTV COMPARES")
+
+        # Calculate MCTV's actual CPM if we have impression data
+        mctv_cpm_str = "$1 - $3"
+        if monthly_impressions > 0 and monthly_rate > 0:
+            cpm = (monthly_rate / monthly_impressions) * 1000
+            mctv_cpm_str = f"${cpm:.2f}"
+
+        headers = ["Medium", "Monthly Cost", "Est. CPM", "Targeting", "Skippable"]
+        rows = []
+        for b in benchmarks:
+            if b["medium"] == "MCTV Indoor":
+                rows.append([
+                    b["medium"],
+                    f"${monthly_rate:,.0f}/mo" if monthly_rate else b["monthly_cost"],
+                    mctv_cpm_str,
+                    b["targeting"],
+                    b["skippable"],
+                ])
+            else:
+                rows.append([
+                    b["medium"],
+                    b["monthly_cost"],
+                    b["est_cpm"],
+                    b["targeting"],
+                    b["skippable"],
+                ])
+
+        table = self.add_data_table(doc, headers, rows)
+
+        # Highlight the MCTV row (last row)
+        if table and rows:
+            mctv_row_idx = len(rows)  # +1 for header, but data rows start at 1
+            for cell in table.rows[mctv_row_idx].cells:
+                tc_pr = cell._element.get_or_add_tcPr()
+                shd = tc_pr.makeelement(qn("w:shd"), {
+                    qn("w:fill"): "FFF8E7",
+                    qn("w:val"): "clear",
+                })
+                tc_pr.append(shd)
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = True
+
+    def add_roi_projection(self, doc: Document, monthly_rate: float,
+                           screen_count: int, monthly_impressions: float = 0,
+                           business_name: str = ""):
+        """Add an ROI projection callout showing cost efficiency metrics."""
+        if monthly_rate <= 0:
+            return
+
+        self.add_sub_header(doc, "YOUR INVESTMENT AT A GLANCE")
+
+        # Calculate key metrics
+        daily_cost = monthly_rate / 30
+        cost_per_screen = monthly_rate / screen_count if screen_count > 0 else 0
+        plays_per_day = screen_count * 4 * 12  # 4 plays/hr * 12 hrs/day
+
+        lines = []
+        lines.append(f"Monthly Investment: ${monthly_rate:,.0f}")
+        lines.append(f"Daily Cost: ${daily_cost:,.2f} ({screen_count} screens working for you every day)")
+        lines.append(f"Cost per Screen: ${cost_per_screen:,.2f}/mo")
+        lines.append(f"Daily Ad Plays: {plays_per_day:,} across your network")
+
+        if monthly_impressions > 0:
+            cpm = (monthly_rate / monthly_impressions) * 1000
+            impressions_per_dollar = monthly_impressions / monthly_rate
+            lines.append(f"CPM: ${cpm:.2f} (cost per 1,000 impressions)")
+            lines.append(f"Every $1 spent = {impressions_per_dollar:,.0f} impressions")
+
+        # Context line
+        lines.append("")
+        lines.append(
+            f"For less than the cost of a single radio spot, "
+            f"{business_name or 'your business'} gets all-day visibility on "
+            f"{screen_count} screens across the venues where your customers "
+            f"already spend their time."
+        )
+
+        self.add_callout_box(doc, "\n".join(lines))
+
+    def add_social_proof_section(self, doc: Document):
+        """Add a social proof / network credibility section."""
+        proof = self.config.get("social_proof", {})
+        if not proof:
+            return
+
+        # Stats banner
+        stats = proof.get("stats", [])
+        if stats:
+            metrics = {}
+            for s in stats:
+                metrics[s["value"]] = s["label"]
+            self.add_metrics_banner(doc, metrics)
+
+        # Trust points as selling points
+        trust = proof.get("trust_points", [])
+        for point in trust:
+            # Split into title + body at the first natural break
+            if " — " in point:
+                title, body = point.split(" — ", 1)
+            else:
+                # Use the whole thing as a title-style point
+                self.add_selling_point(doc, point, "")
 
     def save_proposal(self, doc: Document, filename: str, also_pdf: bool = True) -> Path:
         """Save a proposal document and optionally convert to PDF. Returns docx path."""

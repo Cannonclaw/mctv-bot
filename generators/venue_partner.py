@@ -8,6 +8,8 @@ where MCTV installs screens at no cost and shares advertising revenue with
 the venue owner.
 """
 
+import re
+
 from generators.base_proposal import BaseProposal
 from services.config_service import (
     get_team_member,
@@ -36,6 +38,7 @@ class VenuePartnerProposal(BaseProposal):
             ("revenue_model", "Revenue Model"),
             ("_revenue_projection", "Revenue Projections"),
             ("_partnership_terms", "Partnership Terms"),
+            ("_social_proof", "The MCTV Network"),
             ("getting_started", "Let's Get Started"),
             ("_team", "Meet Your Team"),
         ]
@@ -78,6 +81,8 @@ class VenuePartnerProposal(BaseProposal):
             self._build_revenue_projection(doc, data)
         elif section_key == "_partnership_terms":
             self._build_partnership_terms(doc, data)
+        elif section_key == "_social_proof":
+            self._build_social_proof(doc)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -89,9 +94,6 @@ class VenuePartnerProposal(BaseProposal):
         """The Opportunity section with venue-specific metrics."""
         self.docx.add_section_header(doc, "The Opportunity")
 
-        # Claude returns: 1 paragraph then dash-bullet reasons
-        # Split on the first dash to separate paragraph from bullets
-        import re
         parts = re.split(r'\n\s*-\s*', content, maxsplit=1)
         if len(parts) == 2:
             self.docx.add_body_text(doc, parts[0].strip())
@@ -101,27 +103,48 @@ class VenuePartnerProposal(BaseProposal):
         else:
             self.docx.add_body_text(doc, content)
 
-        metrics = {
+        self.docx.add_metrics_banner(doc, {
             f"{data.proposed_screen_count}": "Screens\nInstalled",
-            f"{data.estimated_monthly_traffic:,}" if data.estimated_monthly_traffic else "High": "Est. Monthly\nVisitors",
-            f"{data.revenue_split_pct}%": "Your Revenue\nShare",
-            "$0": "Your Cost\nto Participate",
-        }
-        self.docx.add_metrics_banner(doc, metrics)
+            f"{data.estimated_monthly_traffic:,}": "Monthly\nVisitors",
+            f"{data.revenue_split_pct:.0f}%": "Revenue\nShare",
+            "$0": "Cost to\nYou",
+        })
 
-    # ── WHAT MCTV PROVIDES (gold-bullet rendering) ──
+    # ── WHAT MCTV PROVIDES (accent cards — each benefit is its own card) ──
 
     def _build_what_mctv_provides(self, doc, content):
         """Claude-generated section describing what MCTV provides."""
         self.docx.add_section_header(doc, "What MCTV Provides")
-        self.docx.add_bullet_list(doc, content)
 
-    # ── REVENUE MODEL (gold-bullet rendering) ──
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if match:
+                self.docx.add_accent_card(doc, match.group(1).strip(), match.group(2).strip())
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
+
+    # ── REVENUE MODEL (selling points — bold title + description) ──
 
     def _build_revenue_model(self, doc, content):
         """Claude-generated revenue model explanation."""
         self.docx.add_section_header(doc, "Revenue Model")
-        self.docx.add_bullet_list(doc, content)
+
+        for line in content.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = re.match(r'^-\s+(.+?)(?::|--)\s+(.+)$', line)
+            if match:
+                self.docx.add_selling_point(doc, match.group(1).strip(), match.group(2).strip())
+            else:
+                clean = line.lstrip('- ').strip()
+                if clean:
+                    self.docx.add_body_text(doc, clean)
 
     # ── REVENUE PROJECTIONS (own page: table + rate assumptions callout) ──
 
@@ -227,13 +250,28 @@ class VenuePartnerProposal(BaseProposal):
         ]
 
         for title, description in terms_items:
-            self.docx.add_bullet_point(doc, title, description)
+            self.docx.add_selling_point(doc, title, description)
+
+    # ── SOCIAL PROOF (network stats + venue categories) ──
+
+    def _build_social_proof(self, doc):
+        self.docx.add_section_header(doc, "The MCTV Network", new_page=True)
+
+        proof = self.config.get("social_proof", {})
+        headline = proof.get("headline", "")
+        if headline:
+            self.docx.add_body_text(doc, headline)
+
+        self.docx.add_social_proof_section(doc)
+
+        self.docx.add_sub_header(doc, "WHERE YOUR ADS PLAY")
+        self.docx.add_venue_categories(doc)
 
     # ── GETTING STARTED (content + compact contact callout) ──
 
     def _build_getting_started(self, doc, data, content):
         """Getting Started section with contact card."""
-        self.docx.add_section_header(doc, "Let's Get Started")
+        self.docx.add_section_header(doc, "Let's Get Started", new_page=True)
 
         # If Claude generated content, use it; otherwise provide a default
         if content:
