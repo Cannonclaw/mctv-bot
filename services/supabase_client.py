@@ -438,6 +438,42 @@ def reset_password(email: str) -> bool:
         return False
 
 
+def refresh_session(refresh_token: str) -> dict | None:
+    """Refresh an expired access token using a refresh token.
+
+    Returns dict with new access_token and refresh_token on success, None on failure.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url or not refresh_token:
+        return None
+
+    api_key = anon_key or service_key
+    if not api_key:
+        return None
+
+    try:
+        body = json.dumps({"refresh_token": refresh_token}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/auth/v1/token?grant_type=refresh_token",
+            data=body,
+            headers={
+                "apikey": api_key,
+                "Content-Type": "application/json",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+        return {
+            "access_token": result.get("access_token", ""),
+            "refresh_token": result.get("refresh_token", ""),
+        }
+    except Exception as e:
+        print(f"[supabase_client] Token refresh failed: {e}")
+        return None
+
+
 def update_user_password(access_token: str, new_password: str) -> bool:
     """Update the authenticated user's password via Supabase Auth REST API.
 

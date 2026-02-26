@@ -157,8 +157,17 @@ with tab_new:
                             request_id = result.get("id", "")
 
                             file_count = 0
+                            failed_files = []
+                            max_file_size = 20 * 1024 * 1024  # 20 MB
+
                             for uploaded_file in (uploaded_files or []):
                                 file_bytes = uploaded_file.read()
+
+                                # Server-side file size validation
+                                if len(file_bytes) > max_file_size:
+                                    failed_files.append(f"{uploaded_file.name} (exceeds 20MB)")
+                                    continue
+
                                 storage_path = f"{client_id}/{request_id}/{uploaded_file.name}"
 
                                 uploaded = upload_file(
@@ -178,20 +187,29 @@ with tab_new:
                                         "uploaded_by": user.get("user_id", ""),
                                     })
                                     file_count += 1
+                                else:
+                                    failed_files.append(f"{uploaded_file.name} (upload failed)")
 
-                            notify_creative_submitted(
-                                business_name=bname,
-                                request_title=req_title,
-                                request_type=req_type,
-                            )
+                            try:
+                                notify_creative_submitted(
+                                    business_name=bname,
+                                    request_title=req_title,
+                                    request_type=req_type,
+                                )
+                            except Exception as notify_err:
+                                print(f"[portal_creative] Notification error (non-blocking): {notify_err}")
 
                             file_msg = f" with {file_count} file(s)" if file_count else ""
                             st.success(f"Request submitted{file_msg}! Our team will get started on this.")
+
+                            if failed_files:
+                                st.warning(f"Some files could not be uploaded: {', '.join(failed_files)}")
+
                             st.balloons()
-                            st.rerun()
                         else:
                             st.error("Failed to submit request. Please try again.")
                     except Exception as e:
-                        st.error(f"Error submitting request: {e}")
+                        print(f"[portal_creative] Submit error: {e}")
+                        st.error("Something went wrong. Please try again or contact MCTV.")
 
 render_portal_footer()

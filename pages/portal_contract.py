@@ -74,7 +74,10 @@ for contract in contracts:
     title = contract.get("title", "Contract")
     cstatus = contract.get("status", "draft")
     tier = contract.get("tier_name", "")
-    rate = float(contract.get("monthly_rate", 0))
+    try:
+        rate = float(contract.get("monthly_rate", 0))
+    except (TypeError, ValueError):
+        rate = 0.0
     screens = contract.get("screen_count", 0)
     term = contract.get("term_months", 0)
     markets = contract.get("markets", [])
@@ -121,6 +124,16 @@ for contract in contracts:
         is_local_path = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
         local_path = Path(doc_url) if is_local_path else None
 
+        # Path traversal protection: ensure local path resolves inside output/
+        if local_path:
+            try:
+                resolved = local_path.resolve()
+                output_root = Path(__file__).parent.parent / "output"
+                if not str(resolved).startswith(str(output_root.resolve())):
+                    local_path = None
+            except Exception:
+                local_path = None
+
         if local_path and local_path.exists():
             with open(local_path, "rb") as f:
                 st.download_button(
@@ -132,7 +145,7 @@ for contract in contracts:
                 )
         else:
             try:
-                download_url = get_contract_download_url(cid)
+                download_url = get_contract_download_url(cid, client_id=client_id)
             except Exception:
                 download_url = None
 
@@ -148,7 +161,7 @@ for contract in contracts:
     # ── Mark as viewed ──────────────────────────────────────────────
     if cstatus == "sent":
         try:
-            record_contract_view(cid)
+            record_contract_view(cid, client_id=client_id)
         except Exception:
             pass
 
@@ -188,28 +201,69 @@ for contract in contracts:
             st.markdown(f"**Date:** {datetime.now().strftime('%B %d, %Y')}")
             st.markdown(f"**Signing as:** {user.get('full_name', '')}")
 
+        # Name validation warning
+        user_full_name = user.get("full_name", "").strip()
+        name_mismatch = (typed_name and user_full_name
+                         and typed_name.strip().lower() != user_full_name.lower())
+        if name_mismatch:
+            st.warning(
+                f"The name you typed does not match your account name "
+                f"(**{user_full_name}**). Please ensure you are typing your full legal name."
+            )
+
         agree = st.checkbox(
             "I have read the full contract and agree to all terms and conditions",
             key=f"sign_agree_{cid}",
         )
 
-        if st.button("I Agree & Sign", key=f"sign_btn_{cid}", type="primary",
-                      width='stretch', disabled=not (typed_name and agree)):
-            if not typed_name:
-                st.error("Please type your full name to sign.")
-            elif not agree:
-                st.error("Please check the agreement box to proceed.")
-            else:
+        # Two-step confirmation
+        confirm_key = f"sign_confirmed_{cid}"
+        if st.session_state.get(confirm_key):
+            st.info("Click **Confirm Signature** below to finalize. This is legally binding.")
+
+        if not st.session_state.get(confirm_key):
+            if st.button("I Agree & Sign", key=f"sign_btn_{cid}", type="primary",
+                          width='stretch', disabled=not (typed_name and agree)):
+                if not typed_name:
+                    st.error("Please type your full name to sign.")
+                elif not agree:
+                    st.error("Please check the agreement box to proceed.")
+                else:
+                    st.session_state[confirm_key] = True
+                    st.rerun()
+        else:
+            col_confirm, col_cancel = st.columns(2)
+            with col_confirm:
+                do_sign = st.button("Confirm Signature", key=f"confirm_sign_{cid}",
+                                    type="primary", width='stretch')
+            with col_cancel:
+                if st.button("Cancel", key=f"cancel_sign_{cid}", width='stretch'):
+                    st.session_state[confirm_key] = False
+                    st.rerun()
+
+            if do_sign:
                 with st.spinner("Recording your signature..."):
                     try:
+                        # Capture client IP from request headers
+                        client_ip = ""
+                        try:
+                            headers = st.context.headers
+                            client_ip = (headers.get("X-Forwarded-For", "").split(",")[0].strip()
+                                         or headers.get("X-Real-Ip", "")
+                                         or headers.get("Remote-Addr", ""))
+                        except Exception:
+                            pass
+
                         result = sign_contract(
                             contract_id=cid,
                             signed_by=typed_name,
-                            ip_address="",
+                            ip_address=client_ip,
                             user_agent="MCTV Client Portal (Streamlit)",
                             user_id=user.get("user_id", ""),
+                            client_id=client_id,
                         )
                         if result:
+                            st.session_state[confirm_key] = False
                             st.success("Contract signed successfully! Thank you.")
                             st.balloons()
                             st.info(
@@ -218,12 +272,15 @@ for contract in contracts:
                             )
                             st.rerun()
                         else:
+                            st.session_state[confirm_key] = False
                             st.error(
                                 "Something went wrong recording your signature. "
                                 "Please try again or contact your MCTV representative."
                             )
                     except Exception as e:
-                        st.error(f"Error signing contract: {e}")
+                        st.session_state[confirm_key] = False
+                        print(f"[portal_contract] Sign error: {e}")
+                        st.error("Something went wrong. Please try again or contact MCTV.")
 
     elif cstatus in ("signed", "active"):
         st.divider()

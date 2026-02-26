@@ -85,6 +85,17 @@ for report in reports:
         doc_url = report.get("document_url", "")
         if doc_url:
             local_path = Path(doc_url) if doc_url else None
+
+            # Path traversal protection: ensure local path resolves inside output/
+            if local_path:
+                try:
+                    resolved = local_path.resolve()
+                    output_root = Path(__file__).parent.parent / "output"
+                    if not str(resolved).startswith(str(output_root.resolve())):
+                        local_path = None
+                except Exception:
+                    local_path = None
+
             if local_path and local_path.exists():
                 with open(local_path, "rb") as f:
                     st.download_button(

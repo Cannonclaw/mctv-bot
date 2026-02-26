@@ -288,10 +288,19 @@ def send_contract(contract_id: str) -> dict | None:
     return updated
 
 
-def record_contract_view(contract_id: str) -> dict | None:
-    """Mark that the client viewed the contract."""
+def record_contract_view(contract_id: str, client_id: str = "") -> dict | None:
+    """Mark that the client viewed the contract.
+
+    Args:
+        contract_id: Contract to mark as viewed.
+        client_id: If provided, verifies the contract belongs to this client.
+    """
     contract = get_contract(contract_id)
     if not contract:
+        return None
+
+    if client_id and contract.get("client_id") != client_id:
+        print(f"[contract_service] Ownership check failed: contract {contract_id} does not belong to client {client_id}")
         return None
 
     if contract.get("status") == "sent":
@@ -308,6 +317,7 @@ def sign_contract(
     ip_address: str = "",
     user_agent: str = "",
     user_id: str = "",
+    client_id: str = "",
 ) -> dict | None:
     """Record a contract signature (click-to-sign).
 
@@ -317,12 +327,17 @@ def sign_contract(
         ip_address: Signer's IP address
         user_agent: Signer's browser user agent
         user_id: Signer's portal user ID
+        client_id: If provided, verifies the contract belongs to this client.
 
     Returns:
         Updated contract dict or None.
     """
     contract = get_contract(contract_id)
     if not contract:
+        return None
+
+    if client_id and contract.get("client_id") != client_id:
+        print(f"[contract_service] Ownership check failed: contract {contract_id} does not belong to client {client_id}")
         return None
 
     if contract.get("status") not in ("sent", "viewed"):
@@ -407,13 +422,23 @@ def cancel_contract(contract_id: str, reason: str = "") -> dict | None:
 
 # ── Document Access ─────────────────────────────────────────────────────────
 
-def get_contract_download_url(contract_id: str, expires_in: int = 3600) -> str | None:
+def get_contract_download_url(contract_id: str, expires_in: int = 3600,
+                              client_id: str = "") -> str | None:
     """Get a temporary download URL for a contract document.
+
+    Args:
+        contract_id: Contract to get the download URL for.
+        expires_in: URL expiry in seconds (default: 1 hour).
+        client_id: If provided, verifies the contract belongs to this client.
 
     Returns a signed URL (expires in 1 hour by default), or None.
     """
     contract = get_contract(contract_id)
     if not contract:
+        return None
+
+    if client_id and contract.get("client_id") != client_id:
+        print(f"[contract_service] Ownership check failed: contract {contract_id} does not belong to client {client_id}")
         return None
 
     doc_url = contract.get("document_url", "")

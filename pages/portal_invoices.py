@@ -52,7 +52,13 @@ if not invoices:
 overdue = [i for i in invoices if i.get("status") == "overdue"]
 pending = [i for i in invoices if i.get("status") in ("sent", "viewed")]
 paid = [i for i in invoices if i.get("status") == "paid"]
-total_owed = sum(float(i.get("amount", 0)) for i in overdue + pending)
+def _safe_float(val, default=0.0):
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
+total_owed = sum(_safe_float(i.get("amount", 0)) for i in overdue + pending)
 
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Pending", len(pending))
@@ -64,7 +70,7 @@ st.divider()
 
 for inv in invoices:
     inv_num = inv.get("invoice_number", "")
-    amount = float(inv.get("amount", 0))
+    amount = _safe_float(inv.get("amount", 0))
     status = inv.get("status", "draft")
     due_date = inv.get("due_date", "")
     issued = inv.get("issued_date", "")

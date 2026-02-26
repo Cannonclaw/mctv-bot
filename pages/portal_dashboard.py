@@ -40,13 +40,20 @@ render_portal_sidebar(user)
 
 is_admin = role in ("admin", "sales_rep")
 
+_data_load_error = False
+
 try:
     client = get_client_by_user_id(user.get("user_id", ""))
-except Exception:
+except Exception as e:
+    print(f"[portal_dashboard] Failed to load client: {e}")
     client = None
+    _data_load_error = True
 
 if not client and not is_admin:
-    st.warning("Your account is being set up. Please check back soon or contact your MCTV representative.")
+    if _data_load_error:
+        st.error("We're having trouble loading your account. Please try refreshing the page.")
+    else:
+        st.warning("Your account is being set up. Please check back soon or contact your MCTV representative.")
     render_portal_footer()
     st.stop()
 
@@ -59,8 +66,13 @@ try:
         dashboard = get_host_dashboard(client_id) if client_id else {}
     else:
         dashboard = get_client_dashboard(client_id) if client_id else {}
-except Exception:
+except Exception as e:
+    print(f"[portal_dashboard] Failed to load dashboard data: {e}")
     dashboard = {}
+    _data_load_error = True
+
+if _data_load_error and dashboard == {}:
+    st.warning("Some data could not be loaded. You may see incomplete information below.")
 
 bname = client.get("business_name", "MCTV Admin") if client else "MCTV Admin"
 cstatus = client.get("status", "active") if client else "active"

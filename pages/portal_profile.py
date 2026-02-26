@@ -59,20 +59,27 @@ with st.form("profile_form"):
                              value=client.get("city", ""))
 
     if st.form_submit_button("Save Changes", type="primary", width='stretch'):
-        update_data = {
-            "contact_name": contact_name,
-            "contact_phone": contact_phone,
-            "city": city,
-        }
-        try:
-            result = update_client(client_id, update_data)
-            if result:
-                st.success("Profile updated.")
-                st.rerun()
-            else:
-                st.error("Failed to update profile. Please try again.")
-        except Exception as e:
-            st.error(f"Error updating profile: {e}")
+        # Field validation
+        if not contact_name or not contact_name.strip():
+            st.error("Contact name cannot be empty.")
+        elif contact_phone and not all(c in "0123456789+()-. " for c in contact_phone):
+            st.error("Phone number contains invalid characters.")
+        else:
+            update_data = {
+                "contact_name": contact_name.strip(),
+                "contact_phone": contact_phone.strip(),
+                "city": city.strip(),
+            }
+            try:
+                result = update_client(client_id, update_data)
+                if result:
+                    st.success("Profile updated.")
+                    st.rerun()
+                else:
+                    st.error("Failed to update profile. Please try again.")
+            except Exception as e:
+                print(f"[portal_profile] Update error: {e}")
+                st.error("Something went wrong. Please try again or contact MCTV.")
 
 # ── Account Details ─────────────────────────────────────────────────────────
 

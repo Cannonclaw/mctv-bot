@@ -27,7 +27,43 @@ Password reset flow:
 
 import streamlit as st
 import os
+import time
 from pathlib import Path
+
+
+# ── Login Rate Limiting ────────────────────────────────────────────────────
+_LOGIN_MAX_ATTEMPTS = 5
+_LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
+
+
+def _check_rate_limit(key: str) -> bool:
+    """Return True if the login attempt is allowed, False if locked out."""
+    attempts = st.session_state.get(f"_login_attempts_{key}", 0)
+    lockout_until = st.session_state.get(f"_login_lockout_{key}", 0)
+
+    if lockout_until and time.time() < lockout_until:
+        return False
+
+    if lockout_until and time.time() >= lockout_until:
+        st.session_state[f"_login_attempts_{key}"] = 0
+        st.session_state[f"_login_lockout_{key}"] = 0
+
+    return True
+
+
+def _record_failed_login(key: str):
+    """Record a failed login attempt and lock out if threshold reached."""
+    attempts = st.session_state.get(f"_login_attempts_{key}", 0) + 1
+    st.session_state[f"_login_attempts_{key}"] = attempts
+
+    if attempts >= _LOGIN_MAX_ATTEMPTS:
+        st.session_state[f"_login_lockout_{key}"] = time.time() + _LOGIN_LOCKOUT_SECONDS
+
+
+def _reset_login_attempts(key: str):
+    """Reset login attempt counter after successful login."""
+    st.session_state.pop(f"_login_attempts_{key}", None)
+    st.session_state.pop(f"_login_lockout_{key}", None)
 
 
 # ── Portal Access Control ───────────────────────────────────────────────────
@@ -66,13 +102,20 @@ def render_team_login_form():
     password = st.text_input("Password", type="password", key="login_password")
 
     if st.button("Log In", type="primary", width='stretch'):
-        correct = os.environ.get("APP_PASSWORD", "mctv2026")
-        if password == correct:
-            st.session_state["authenticated"] = True
-            st.session_state["auth_mode"] = "team"
-            st.rerun()
+        if not _check_rate_limit("team"):
+            st.error("Too many failed attempts. Please wait 5 minutes before trying again.")
         else:
-            st.error("Incorrect password. Please try again.")
+            correct = os.environ.get("APP_PASSWORD")
+            if not correct:
+                st.error("Team login is not configured. Contact an administrator.")
+            elif password == correct:
+                _reset_login_attempts("team")
+                st.session_state["authenticated"] = True
+                st.session_state["auth_mode"] = "team"
+                st.rerun()
+            else:
+                _record_failed_login("team")
+                st.error("Incorrect password. Please try again.")
 
     st.caption("Contact Creed if you need access.")
 
@@ -119,12 +162,41 @@ def check_portal_auth() -> bool:
     """Check if a portal user is authenticated via Supabase Auth.
 
     Returns True if the user has an active portal session, False otherwise.
+    Attempts to refresh the session if the token is nearing expiry.
     Does NOT display a login form — use portal_login page for that.
     """
-    return bool(
-        st.session_state.get("portal_authenticated")
-        and st.session_state.get("portal_user_id")
-    )
+    if not (st.session_state.get("portal_authenticated")
+            and st.session_state.get("portal_user_id")):
+        return False
+
+    # Attempt token refresh if we have a refresh token
+    _try_refresh_token()
+    return True
+
+
+def _try_refresh_token():
+    """Silently refresh the Supabase access token if possible.
+
+    Called on each auth check to keep the session alive.
+    """
+    refresh_token = st.session_state.get("portal_refresh_token", "")
+    if not refresh_token:
+        return
+
+    # Only refresh once per 45 minutes (tokens last ~60 min)
+    last_refresh = st.session_state.get("_last_token_refresh", 0)
+    if time.time() - last_refresh < 2700:
+        return
+
+    try:
+        from services.supabase_client import refresh_session
+        result = refresh_session(refresh_token)
+        if result:
+            st.session_state["portal_access_token"] = result.get("access_token", "")
+            st.session_state["portal_refresh_token"] = result.get("refresh_token", refresh_token)
+            st.session_state["_last_token_refresh"] = time.time()
+    except Exception as e:
+        print(f"[auth] Token refresh failed (non-blocking): {e}")
 
 
 def _set_portal_session(result: dict):
@@ -328,12 +400,17 @@ def render_portal_login_form(context_title: str = "Client Portal",
 
         if st.button("Send Reset Link", type="primary", width='stretch'):
             if reset_email:
-                with st.spinner("Sending reset link..."):
-                    success = reset_password(reset_email)
-                    if success:
-                        st.success("Password reset link sent! Check your email.")
-                    else:
-                        st.error("Could not send reset link. Please check your email address.")
+                # Check allowlist before sending reset email
+                allowed = _get_allowed_portal_emails()
+                if reset_email.strip().lower() not in allowed:
+                    st.error("Could not send reset link. Please check your email address.")
+                else:
+                    with st.spinner("Sending reset link..."):
+                        success = reset_password(reset_email)
+                        if success:
+                            st.success("Password reset link sent! Check your email.")
+                        else:
+                            st.error("Could not send reset link. Please check your email address.")
             else:
                 st.error("Please enter your email address.")
 
@@ -369,15 +446,19 @@ def render_portal_login_form(context_title: str = "Client Portal",
                                  key="portal_login_password")
 
         if st.button("Log In", type="primary", width='stretch'):
-            if not email or not password:
+            if not _check_rate_limit("portal"):
+                st.error("Too many failed attempts. Please wait 5 minutes before trying again.")
+            elif not email or not password:
                 st.error("Please enter both email and password.")
             else:
                 with st.spinner("Signing in..."):
                     result = portal_login(email, password)
                     if result:
+                        _reset_login_attempts("portal")
                         st.success(f"Welcome, {result.get('full_name', 'there')}!")
                         st.switch_page("pages/portal_dashboard.py")
                     else:
+                        _record_failed_login("portal")
                         st.error("Invalid email or password. Please try again.")
 
     if st.button("Forgot Password?", width='stretch'):
