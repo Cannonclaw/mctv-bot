@@ -83,6 +83,8 @@ def create_contract(
     auto_renew: bool = True,
     markets: list[str] | None = None,
     created_by: str = "",
+    exclusive_category: str = "",
+    bundle_brands: list[str] | None = None,
 ) -> dict | None:
     """Create a new contract record (draft status).
 
@@ -117,6 +119,10 @@ def create_contract(
         data["markets"] = markets
     if created_by:
         data["created_by"] = created_by
+    if exclusive_category:
+        data["exclusive_category"] = exclusive_category
+    if bundle_brands:
+        data["bundle_brands"] = bundle_brands
 
     result = insert_row("contracts", data)
 
@@ -207,6 +213,8 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         auto_renew=contract.get("auto_renew", True),
         prepared_by=contract.get("created_by", ""),
         notes="",
+        exclusive_category=contract.get("exclusive_category", ""),
+        bundle_brands=contract.get("bundle_brands", []),
     )
 
     print(f"[contract_service] DOCX generated: {docx_path}")

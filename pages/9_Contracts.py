@@ -358,8 +358,13 @@ with tab_create:
         with fc1:
             contract_type = st.selectbox(
                 "Contract Type *",
-                ["Advertiser", "Host", "Host Advertising"],
-                help="**Host Advertising** = hosts who pay a discounted rate for extra screens beyond their free allotment",
+                ["Advertiser", "Host", "Host Advertising",
+                 "Category Exclusivity", "Bundle"],
+                help=(
+                    "**Host Advertising** = hosts who pay for extra screens  |  "
+                    "**Category Exclusivity** = no competitor ads on their screens  |  "
+                    "**Bundle** = multiple brands under one contract"
+                ),
             )
         with fc2:
             title = st.text_input(
@@ -381,6 +386,26 @@ with tab_create:
                 min_value=0, max_value=50, value=10, step=5,
                 help="10% = host pays 90% of the normal advertiser rate for extra screens",
             )
+
+        # Category Exclusivity fields
+        exclusive_category = ""
+        if contract_type == "Category Exclusivity":
+            exclusive_category = st.text_input(
+                "Exclusive Category *",
+                placeholder="e.g., Real Estate, Dental, Auto Repair",
+                help="The business category this advertiser will own exclusively on their screens",
+            )
+
+        # Bundle fields
+        bundle_brands = []
+        if contract_type == "Bundle":
+            brands_input = st.text_area(
+                "Brand Names (one per line) *",
+                placeholder="Brand 1\nBrand 2\nBrand 3",
+                help="List each brand or business location in the bundle",
+            )
+            if brands_input:
+                bundle_brands = [b.strip() for b in brands_input.strip().split("\n") if b.strip()]
 
         # Tier / package selection
         st.markdown("**Package Details**")
@@ -451,6 +476,10 @@ with tab_create:
         if submitted:
             if not selected_client_id:
                 st.error("Please select a client.")
+            elif contract_type == "Category Exclusivity" and not exclusive_category:
+                st.error("Please enter the exclusive business category.")
+            elif contract_type == "Bundle" and not bundle_brands:
+                st.error("Please enter at least one brand name for the bundle.")
             else:
                 # Calculate end date
                 start_str = start_date.strftime("%Y-%m-%d")
@@ -478,6 +507,8 @@ with tab_create:
                         auto_renew=auto_renew,
                         markets=selected_markets,
                         created_by=created_by,
+                        exclusive_category=exclusive_category,
+                        bundle_brands=bundle_brands,
                     )
 
                     if result:

@@ -5,16 +5,25 @@
 
 Produces professional MCTV advertising contracts as Word documents
 with optional PDF conversion. Reuses DocxService for consistent branding.
+
+Supports 5 contract types:
+  - advertiser: Standard advertising partnership
+  - host: Venue hosting agreement ($0 cost)
+  - host_advertising: Host venue buying additional paid screens
+  - category_exclusivity: Category-exclusive advertising agreement
+  - bundle: Multi-brand bundle advertising agreement
 """
 
+import re
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from docx import Document
-from docx.shared import Inches, Pt, RGBColor, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.oxml.ns import qn
 
 from services.docx_service import DocxService
+from services.config_service import get_tier_impressions, calculate_cpm
 
 
 # ── Config ──────────────────────────────────────────────────────────────────
@@ -272,6 +281,236 @@ HOST_ADVERTISING_CLAUSES = [
 ]
 
 
+CATEGORY_EXCLUSIVITY_CLAUSES = [
+    {
+        "title": "1. Exclusive Advertising Rights",
+        "body": (
+            "MCTV Elite Advertising ('MCTV') grants the Advertiser exclusive "
+            "advertising rights within their designated business category across "
+            "the specified market(s) and screen count. For the duration of this "
+            "agreement, MCTV will not display advertising from any direct competitor "
+            "within the same business category on the screens covered by this contract."
+        ),
+    },
+    {
+        "title": "2. Category Definition and Scope",
+        "body": (
+            "The exclusive business category is defined in the Partnership Details "
+            "section above. MCTV and the Advertiser will agree on a clear category "
+            "definition at the time of signing. If a borderline case arises (e.g., a "
+            "business that partially overlaps the exclusive category), MCTV will "
+            "consult the Advertiser before accepting that content for display. "
+            "Exclusivity applies only to the screens and markets specified in this "
+            "agreement."
+        ),
+    },
+    {
+        "title": "3. Premium Pricing and Value",
+        "body": (
+            "The monthly rate for this agreement reflects a premium for category "
+            "exclusivity. This premium ensures the Advertiser is the only business "
+            "in their category reaching audiences on the covered screens. The premium "
+            "is calculated as a percentage above the standard advertising rate and is "
+            "detailed in the Partnership Details section."
+        ),
+    },
+    {
+        "title": "4. Content Ownership",
+        "body": (
+            "All creative content produced by MCTV for this partnership remains the "
+            "property of the Advertiser. The Advertiser may use any content created by "
+            "MCTV on social media, websites, print, or any other medium at no additional "
+            "cost. MCTV retains a non-exclusive right to display the content on the "
+            "MCTV network for the duration of this agreement."
+        ),
+    },
+    {
+        "title": "5. Term and Renewal",
+        "body": (
+            "This agreement begins on the Start Date specified above and continues "
+            "for the agreed term. Exclusivity rights are tied to the contract term. "
+            "Unless either party provides written notice of non-renewal at least 30 "
+            "days before the end of the current term, this agreement will automatically "
+            "renew for successive periods of equal length at the then-current rate. "
+            "Upon renewal, exclusivity rights continue uninterrupted."
+        ),
+    },
+    {
+        "title": "6. Payment Terms",
+        "body": (
+            "Invoices are issued monthly on the first business day of each month. "
+            "Payment is due within 30 days of the invoice date. MCTV reserves the "
+            "right to suspend ad display for accounts more than 45 days past due. "
+            "If ad display is suspended due to non-payment, exclusivity protection "
+            "will also be suspended until the account is current. A late fee of 1.5% "
+            "per month may be applied to overdue balances."
+        ),
+    },
+    {
+        "title": "7. Content Guidelines",
+        "body": (
+            "All content must comply with applicable local, state, and federal laws. "
+            "MCTV reserves the right to refuse or remove content that is offensive, "
+            "misleading, or inappropriate for the venue environments in which screens "
+            "are placed. The Advertiser will be notified promptly if any content is "
+            "declined and given the opportunity to submit revised creative."
+        ),
+    },
+    {
+        "title": "8. Exclusivity Breach Remedy",
+        "body": (
+            "If MCTV inadvertently displays competitor content on the covered screens, "
+            "MCTV will remove the competing content within 24 hours of notification and "
+            "credit the Advertiser a pro-rated amount for the days the competing content "
+            "was displayed. The Advertiser agrees to notify MCTV promptly upon discovery "
+            "of any potential breach."
+        ),
+    },
+    {
+        "title": "9. Cancellation",
+        "body": (
+            "Either party may cancel this agreement with 60 days written notice. "
+            "If the Advertiser cancels before the end of the agreed term, any prepay "
+            "bonuses or discounts already applied will be prorated and billed. "
+            "Upon cancellation, exclusivity rights end on the effective cancellation "
+            "date and MCTV may accept new advertisers in the previously exclusive "
+            "category."
+        ),
+    },
+    {
+        "title": "10. Liability Limitation",
+        "body": (
+            "MCTV's total liability under this agreement shall not exceed the total "
+            "fees paid by the Advertiser in the 12 months preceding the claim. "
+            "MCTV shall not be liable for incidental, consequential, or indirect "
+            "damages. MCTV makes no guarantee of specific business results from "
+            "advertising display."
+        ),
+    },
+    {
+        "title": "11. Governing Law",
+        "body": (
+            "This agreement shall be governed by and construed in accordance with "
+            "the laws of the State of Mississippi. Any disputes arising under this "
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
+        ),
+    },
+]
+
+
+BUNDLE_CLAUSES = [
+    {
+        "title": "1. Multi-Brand Bundle Agreement",
+        "body": (
+            "This agreement covers advertising for multiple brands or business "
+            "locations ('Bundle') owned or operated by the same entity. Each brand "
+            "included in this Bundle is listed in the Partnership Details section "
+            "above. All brands share a single contract and billing relationship "
+            "with MCTV Elite Advertising ('MCTV')."
+        ),
+    },
+    {
+        "title": "2. Bundle Pricing and Savings",
+        "body": (
+            "The monthly rate for this agreement reflects the multi-brand bundle "
+            "discount. By consolidating multiple brands under a single contract, "
+            "the Advertiser receives a reduced per-brand rate compared to individual "
+            "contracts. The specific brands, screen allocations, and combined rate "
+            "are detailed in the Partnership Details section."
+        ),
+    },
+    {
+        "title": "3. Adding and Removing Brands",
+        "body": (
+            "The Advertiser may request to add additional brands to this Bundle at "
+            "any time. Additional brands will be added at the current bundle rate and "
+            "the monthly total will be adjusted accordingly. Removing a brand from the "
+            "Bundle requires 30 days written notice. If removing a brand reduces the "
+            "Bundle below the minimum qualifying size, the remaining brands will revert "
+            "to standard individual pricing."
+        ),
+    },
+    {
+        "title": "4. Content Ownership",
+        "body": (
+            "All creative content produced by MCTV for each brand in this Bundle "
+            "remains the property of the respective brand owner. Each brand may use "
+            "its MCTV-created content on social media, websites, print, or any other "
+            "medium at no additional cost. MCTV retains a non-exclusive right to "
+            "display the content on the MCTV network for the duration of this agreement."
+        ),
+    },
+    {
+        "title": "5. Term and Renewal",
+        "body": (
+            "This agreement begins on the Start Date specified above and continues "
+            "for the agreed term. Unless either party provides written notice of "
+            "non-renewal at least 30 days before the end of the current term, this "
+            "agreement will automatically renew for successive periods of equal length "
+            "at the then-current bundle rate."
+        ),
+    },
+    {
+        "title": "6. Payment Terms",
+        "body": (
+            "A single consolidated invoice is issued monthly on the first business "
+            "day of each month covering all brands in the Bundle. Payment is due "
+            "within 30 days of the invoice date. MCTV reserves the right to suspend "
+            "ad display for all brands in the Bundle for accounts more than 45 days "
+            "past due. A late fee of 1.5% per month may be applied to overdue balances."
+        ),
+    },
+    {
+        "title": "7. Content Guidelines",
+        "body": (
+            "All content for each brand must comply with applicable local, state, and "
+            "federal laws. MCTV reserves the right to refuse or remove content that is "
+            "offensive, misleading, or inappropriate for the venue environments in which "
+            "screens are placed. The Advertiser will be notified promptly if any content "
+            "is declined and given the opportunity to submit revised creative."
+        ),
+    },
+    {
+        "title": "8. Cancellation",
+        "body": (
+            "Either party may cancel this agreement with 60 days written notice. "
+            "Cancellation applies to all brands in the Bundle. If the Advertiser "
+            "wishes to continue advertising for individual brands after cancellation, "
+            "new individual contracts must be established at standard rates. Any prepay "
+            "bonuses or discounts already applied will be prorated and billed."
+        ),
+    },
+    {
+        "title": "9. Liability Limitation",
+        "body": (
+            "MCTV's total liability under this agreement shall not exceed the total "
+            "fees paid by the Advertiser in the 12 months preceding the claim. "
+            "MCTV shall not be liable for incidental, consequential, or indirect "
+            "damages. MCTV makes no guarantee of specific business results from "
+            "advertising display."
+        ),
+    },
+    {
+        "title": "10. Governing Law",
+        "body": (
+            "This agreement shall be governed by and construed in accordance with "
+            "the laws of the State of Mississippi. Any disputes arising under this "
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
+        ),
+    },
+]
+
+
+# Map contract types to their clause sets
+_CLAUSE_MAP = {
+    "advertiser": STANDARD_CLAUSES,
+    "host": HOST_CLAUSES,
+    "host_advertising": HOST_ADVERTISING_CLAUSES,
+    "category_exclusivity": CATEGORY_EXCLUSIVITY_CLAUSES,
+    "bundle": BUNDLE_CLAUSES,
+}
+
+
 # ── Contract Generator ──────────────────────────────────────────────────────
 
 def _format_date(iso_date: str) -> str:
@@ -287,6 +526,24 @@ def _format_date(iso_date: str) -> str:
 
 class ContractGenerator:
     """Generate branded MCTV contract documents."""
+
+    # Human-readable labels for each contract type
+    CONTRACT_LABELS = {
+        "advertiser": "Advertising Partnership Agreement",
+        "host": "Venue Hosting Agreement",
+        "host_advertising": "Host Advertising Agreement",
+        "category_exclusivity": "Category Exclusivity Agreement",
+        "bundle": "Multi-Brand Bundle Agreement",
+    }
+
+    # Party labels for signature blocks
+    PARTY_LABELS = {
+        "advertiser": "Advertiser",
+        "host": "Venue Host",
+        "host_advertising": "Host Advertiser",
+        "category_exclusivity": "Exclusive Advertiser",
+        "bundle": "Bundle Advertiser",
+    }
 
     def __init__(self, config: dict | None = None):
         self.config = config or _load_config()
@@ -306,13 +563,18 @@ class ContractGenerator:
         auto_renew: bool = True,
         prepared_by: str = "",
         notes: str = "",
+        # Category exclusivity fields
+        exclusive_category: str = "",
+        # Bundle fields
+        bundle_brands: list[str] | None = None,
     ) -> tuple[Path, Path | None, bytes]:
         """Generate a contract document.
 
         Args:
             client_name: Contact person name
             business_name: Business/venue name
-            contract_type: "advertiser" or "host"
+            contract_type: "advertiser", "host", "host_advertising",
+                           "category_exclusivity", or "bundle"
             tier_name: Tier label (e.g., "20 Screens")
             screen_count: Number of screens
             monthly_rate: Monthly fee
@@ -322,6 +584,8 @@ class ContractGenerator:
             auto_renew: Whether contract auto-renews
             prepared_by: Sales rep name
             notes: Additional notes/terms
+            exclusive_category: Business category for exclusivity contracts
+            bundle_brands: List of brand names for bundle contracts
 
         Returns:
             Tuple of (docx_path, pdf_path or None, docx_bytes).
@@ -346,12 +610,7 @@ class ContractGenerator:
         doc = self.docx_service.create_document()
 
         # Cover page
-        contract_labels = {
-            "advertiser": "Advertising Partnership Agreement",
-            "host": "Venue Hosting Agreement",
-            "host_advertising": "Host Advertising Agreement",
-        }
-        contract_label = contract_labels.get(contract_type, "Partnership Agreement")
+        contract_label = self.CONTRACT_LABELS.get(contract_type, "Partnership Agreement")
         self.docx_service.add_cover_page(
             doc,
             title=contract_label,
@@ -360,9 +619,6 @@ class ContractGenerator:
             prepared_by=rep_info,
             date=datetime.now().strftime("%B %d, %Y"),
         )
-
-        # Note: add_cover_page() already ends with a section break (new page),
-        # so no additional page break is needed here.
 
         # ── Partnership Details section ─────────────────────────────
         self.docx_service.add_section_header(doc, "Partnership Details")
@@ -373,56 +629,54 @@ class ContractGenerator:
                 monthly_rate, term_months, markets, start_date, end_date,
                 auto_renew,
             )
-        elif contract_type == "advertiser":
+        elif contract_type == "host":
+            self._add_host_details(
+                doc, business_name, client_name, screen_count, term_months,
+                markets, start_date, end_date,
+            )
+        elif contract_type == "category_exclusivity":
+            self._add_exclusivity_details(
+                doc, business_name, client_name, tier_name, screen_count,
+                monthly_rate, term_months, markets, start_date, end_date,
+                auto_renew, exclusive_category,
+            )
+        elif contract_type == "bundle":
+            self._add_bundle_details(
+                doc, business_name, client_name, tier_name, screen_count,
+                monthly_rate, term_months, markets, start_date, end_date,
+                auto_renew, bundle_brands or [],
+            )
+        else:
             self._add_advertiser_details(
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
                 auto_renew,
-            )
-        else:
-            self._add_host_details(
-                doc, business_name, client_name, screen_count, term_months,
-                markets, start_date, end_date,
             )
 
         if notes:
             self.docx_service.add_body_text(doc, "")
             self.docx_service.add_callout_box(doc, f"Additional Notes: {notes}")
 
+        # ── Value Recap section (paid contracts only) ────────────────
+        if contract_type != "host":
+            self._add_value_recap(
+                doc, contract_type, monthly_rate, screen_count, term_months,
+                business_name,
+            )
+
         # ── Terms & Conditions section ──────────────────────────────
         self.docx_service.add_section_header(doc, "Terms & Conditions", new_page=True)
 
-        if contract_type == "host_advertising":
-            clauses = HOST_ADVERTISING_CLAUSES
-        elif contract_type == "advertiser":
-            clauses = STANDARD_CLAUSES
-        else:
-            clauses = HOST_CLAUSES
-
+        clauses = _CLAUSE_MAP.get(contract_type, STANDARD_CLAUSES)
         for clause in clauses:
-            self.docx_service.add_sub_header(doc, clause["title"])
-            self.docx_service.add_body_text(doc, clause["body"])
-            self.docx_service.add_body_text(doc, "")  # spacer
-
-        # ── Prepay bonuses (advertiser / host advertising) ────────────
-        if contract_type in ("advertiser", "host_advertising"):
-            pricing = self.config.get("pricing", {})
-            contract_terms = pricing.get("contract_terms", {})
-            bonus_6 = contract_terms.get("prepay_6mo_bonus", "")
-            bonus_12 = contract_terms.get("prepay_12mo_bonus", "")
-
-            if bonus_6 or bonus_12:
-                self.docx_service.add_section_divider(doc)
-                self.docx_service.add_sub_header(doc, "Prepayment Bonuses")
-                if bonus_6:
-                    self.docx_service.add_bullet_point(doc, "6-Month Prepay", bonus_6)
-                if bonus_12:
-                    self.docx_service.add_bullet_point(doc, "12-Month Prepay", bonus_12)
-                self.docx_service.add_body_text(doc, "")
+            self.docx_service.add_accent_card(doc, clause["title"], clause["body"])
 
         # ── Signature section ───────────────────────────────────────
         self.docx_service.add_section_header(doc, "Agreement & Signature", new_page=True)
         self._add_signature_section(doc, business_name, client_name, contract_type)
+
+        # ── Footer ──────────────────────────────────────────────────
+        self.docx_service.add_footer(doc, "Partnership Agreement")
 
         # ── Save ────────────────────────────────────────────────────
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -441,6 +695,73 @@ class ContractGenerator:
         pdf_path = self.docx_service._convert_to_pdf(docx_path)
 
         return docx_path, pdf_path, docx_bytes
+
+    # ------------------------------------------------------------------
+    # Value Recap — metrics banner + prepay callout between details & T&C
+    # ------------------------------------------------------------------
+
+    def _add_value_recap(self, doc, contract_type, monthly_rate, screen_count,
+                         term_months, business_name):
+        """Add a 'What You're Getting' value recap with metrics and prepay."""
+        self.docx_service.add_section_header(
+            doc, "What You're Getting", new_page=True,
+        )
+
+        # Calculate key metrics
+        network = self.config.get("network", {})
+        plays_per_hour = network.get("plays_per_hour", 4)
+        hours_per_day = network.get("hours_per_day", 12)
+        days_per_month = network.get("days_per_month", 30)
+        daily_plays = screen_count * plays_per_hour * hours_per_day
+        monthly_plays = daily_plays * days_per_month
+        impressions = get_tier_impressions(self.config, screen_count)
+        cpm = calculate_cpm(monthly_rate, impressions)
+        daily_cost = monthly_rate / 30 if monthly_rate > 0 else 0
+
+        # Metrics banner
+        metrics = {}
+        metrics[f"{screen_count}"] = "Screens\nWorking for You"
+        metrics[f"{monthly_plays:,}"] = "Ad Plays\nPer Month"
+        if cpm > 0:
+            metrics[f"${cpm:.2f}"] = "Your CPM\n(Cost per 1K)"
+        metrics[f"${daily_cost:.2f}"] = "Daily\nInvestment"
+
+        self.docx_service.add_metrics_banner(doc, metrics)
+
+        # ROI context line
+        self.docx_service.add_body_text(
+            doc,
+            f"For ${daily_cost:.2f} a day, {business_name} gets {daily_plays:,} "
+            f"ad plays across {screen_count} screens in the venues where your "
+            f"customers already spend their time \u2014 restaurants, gyms, offices, "
+            f"barbershops, and more. Every play is unskippable, full-screen, and "
+            f"right at eye level."
+        )
+
+        # Prepay bonuses callout (prominent, before legal terms)
+        if contract_type in ("advertiser", "host_advertising",
+                             "category_exclusivity", "bundle"):
+            pricing = self.config.get("pricing", {})
+            contract_terms = pricing.get("contract_terms", {})
+            bonus_6 = contract_terms.get("prepay_6mo_bonus", "")
+            bonus_12 = contract_terms.get("prepay_12mo_bonus", "")
+
+            if bonus_6 or bonus_12:
+                lines = ["PREPAYMENT BONUSES"]
+                if bonus_6:
+                    lines.append(f"\u25A0  6-Month Prepay: {bonus_6}")
+                if bonus_12:
+                    lines.append(f"\u25A0  12-Month Prepay: {bonus_12}")
+                lines.append("")
+                lines.append(
+                    "Pay upfront and get free months added to your contract. "
+                    "Ask your rep about prepay options."
+                )
+                self.docx_service.add_callout_box(doc, "\n".join(lines))
+
+    # ------------------------------------------------------------------
+    # Partnership Details builders
+    # ------------------------------------------------------------------
 
     def _get_rep_info(self, rep_name: str) -> dict:
         """Get rep info from config, or return default."""
@@ -530,7 +851,6 @@ class ContractGenerator:
         discount_str = "N/A"
         standard_rate_str = ""
         if "Host Discount" in tier_name:
-            import re
             match = re.search(r"(\d+)%", tier_name)
             if match:
                 pct = int(match.group(1))
@@ -568,16 +888,104 @@ class ContractGenerator:
             rows=details,
         )
 
+    def _add_exclusivity_details(self, doc, business_name, client_name,
+                                  tier_name, screen_count, monthly_rate,
+                                  term_months, markets, start_date, end_date,
+                                  auto_renew, exclusive_category):
+        """Add the category exclusivity partnership details table."""
+        total_value = monthly_rate * term_months
+
+        details = [
+            ("Exclusive Advertiser", business_name),
+            ("Contact", client_name),
+            ("Exclusive Category", exclusive_category or "To be defined at signing"),
+            ("Package", tier_name),
+            ("Screen Count", str(screen_count)),
+            ("Monthly Rate (incl. exclusivity premium)", f"${monthly_rate:,.2f}"),
+            ("Term", f"{term_months} months"),
+            ("Total Contract Value", f"${total_value:,.2f}"),
+            ("Market(s)", ", ".join(markets)),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
+            ("Auto-Renew", "Yes" if auto_renew else "No"),
+            ("Exclusivity Scope", f"No competing {exclusive_category or 'category'} ads on your screens"),
+            ("Content Creation", "Included at no additional cost"),
+            ("Plays per Hour", "4 per screen"),
+        ]
+
+        self.docx_service.add_data_table(
+            doc,
+            headers=["Detail", "Value"],
+            rows=details,
+        )
+
+    def _add_bundle_details(self, doc, business_name, client_name,
+                             tier_name, screen_count, monthly_rate,
+                             term_months, markets, start_date, end_date,
+                             auto_renew, bundle_brands):
+        """Add the multi-brand bundle partnership details table."""
+        total_value = monthly_rate * term_months
+        brand_count = len(bundle_brands) if bundle_brands else 1
+        per_brand = monthly_rate / brand_count if brand_count > 0 else monthly_rate
+
+        details = [
+            ("Bundle Owner", business_name),
+            ("Contact", client_name),
+            ("Brands in Bundle", str(brand_count)),
+        ]
+
+        # List each brand
+        if bundle_brands:
+            for i, brand in enumerate(bundle_brands, 1):
+                details.append((f"Brand {i}", brand))
+
+        details += [
+            ("Package", tier_name),
+            ("Total Screen Count", str(screen_count)),
+            ("Combined Monthly Rate", f"${monthly_rate:,.2f}"),
+            ("Per-Brand Rate", f"${per_brand:,.2f}/mo"),
+            ("Term", f"{term_months} months"),
+            ("Total Contract Value", f"${total_value:,.2f}"),
+            ("Market(s)", ", ".join(markets)),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
+            ("Auto-Renew", "Yes" if auto_renew else "No"),
+            ("Content Creation", f"Included for all {brand_count} brands"),
+            ("Plays per Hour", "4 per screen per brand"),
+        ]
+
+        self.docx_service.add_data_table(
+            doc,
+            headers=["Detail", "Value"],
+            rows=details,
+        )
+
+    # ------------------------------------------------------------------
+    # Signature section — two-column layout with e-sign notice above
+    # ------------------------------------------------------------------
+
     def _add_signature_section(self, doc, business_name, client_name,
                                 contract_type):
-        """Add the signature and agreement block."""
-        party_labels = {
-            "advertiser": "Advertiser",
-            "host": "Venue Host",
-            "host_advertising": "Host Advertiser",
-        }
-        party_label = party_labels.get(contract_type, "Advertiser")
+        """Add the signature and agreement block.
 
+        Layout: e-sign notice callout → agreement text → two-column
+        signature table (client left, MCTV right).
+        """
+        party_label = self.PARTY_LABELS.get(contract_type, "Advertiser")
+
+        # E-signature notice — prominent, above signatures
+        self.docx_service.add_callout_box(
+            doc,
+            "ELECTRONIC SIGNATURE NOTICE\n\n"
+            "This contract may be signed electronically through the MCTV Client "
+            "Portal. Electronic signatures made through the portal (typed name + "
+            "'I Agree' confirmation) are legally equivalent to handwritten "
+            "signatures under the Mississippi Uniform Electronic Transactions Act."
+        )
+
+        self.docx_service.add_body_text(doc, "")
+
+        # Agreement text
         agreement_text = (
             f"By signing below, {client_name} on behalf of {business_name} "
             f"('{party_label}') agrees to the terms and conditions outlined in this "
@@ -586,41 +994,78 @@ class ContractGenerator:
         self.docx_service.add_body_text(doc, agreement_text)
         self.docx_service.add_body_text(doc, "")
 
-        # Signature lines with spacing
-        self.docx_service.add_callout_box(
-            doc,
-            f"{party_label} Signature\n\n"
-            f"Signed By: ________________________________\n\n"
-            f"Printed Name: ________________________________\n\n"
-            f"Title: ________________________________\n\n"
-            f"Date: ________________________________"
+        # Two-column signature table
+        table = doc.add_table(rows=1, cols=2)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        self.docx_service._clear_table_borders(table)
+
+        # Left column — client signature
+        left_cell = table.rows[0].cells[0]
+        self._format_signature_cell(left_cell, party_label, client_name)
+
+        # Right column — MCTV signature
+        right_cell = table.rows[0].cells[1]
+        self._format_signature_cell(right_cell, "MCTV Elite Advertising", "")
+
+    def _format_signature_cell(self, cell, party_name, prefill_name):
+        """Format a single signature cell with accent border and fields."""
+        tc_pr = cell._element.get_or_add_tcPr()
+
+        # Light background
+        shd = tc_pr.makeelement(qn("w:shd"), {
+            qn("w:fill"): self.docx_service.c["light_hex"],
+            qn("w:val"): "clear",
+        })
+        tc_pr.append(shd)
+
+        # Cell padding
+        cell_margin = tc_pr.makeelement(qn("w:tcMar"), {})
+        for side, val in (("top", "200"), ("bottom", "200"),
+                          ("left", "240"), ("right", "200")):
+            m = cell_margin.makeelement(qn(f"w:{side}"), {
+                qn("w:w"): val, qn("w:type"): "dxa",
+            })
+            cell_margin.append(m)
+        tc_pr.append(cell_margin)
+
+        # Accent left border
+        self.docx_service._set_cell_borders(
+            cell,
+            left_color=self.docx_service.c["accent_hex"],
+            left_sz=36,
+            other_color="D0D0D0",
+            other_sz=2,
         )
 
-        self.docx_service.add_body_text(doc, "")
+        # Party name header
+        p = cell.paragraphs[0]
+        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_after = Pt(12)
+        run = p.add_run(party_name)
+        run.font.size = Pt(12)
+        run.font.bold = True
+        run.font.color.rgb = self.docx_service.c["primary"]
+        run.font.name = "Arial"
 
-        self.docx_service.add_callout_box(
-            doc,
-            "MCTV Elite Advertising\n\n"
-            "Signed By: ________________________________\n\n"
-            "Printed Name: ________________________________\n\n"
-            "Title: ________________________________\n\n"
-            "Date: ________________________________"
-        )
+        # Signature fields
+        fields = [
+            ("Signed By", prefill_name),
+            ("Printed Name", prefill_name),
+            ("Title", ""),
+            ("Date", ""),
+        ]
+        for label, prefill in fields:
+            fp = cell.add_paragraph()
+            fp.paragraph_format.space_before = Pt(6)
+            fp.paragraph_format.space_after = Pt(2)
 
-        self.docx_service.add_body_text(doc, "")
-        self.docx_service.add_section_divider(doc)
+            label_run = fp.add_run(f"{label}: ")
+            label_run.font.size = Pt(9)
+            label_run.font.bold = True
+            label_run.font.color.rgb = self.docx_service.c["text"]
+            label_run.font.name = "Arial"
 
-        # Electronic signature notice
-        e_sign_notice = (
-            "ELECTRONIC SIGNATURE NOTICE: This contract may also be signed "
-            "electronically through the MCTV Client Portal. Electronic signatures "
-            "made through the portal (typed name + 'I Agree' confirmation) are "
-            "legally equivalent to handwritten signatures under the Mississippi "
-            "Uniform Electronic Transactions Act."
-        )
-
-        para = doc.add_paragraph()
-        run = para.add_run(e_sign_notice)
-        run.font.size = Pt(9)
-        run.font.color.rgb = RGBColor(0x80, 0x80, 0x80)
-        run.italic = True
+            line_run = fp.add_run(prefill if prefill else "________________________________")
+            line_run.font.size = Pt(9)
+            line_run.font.color.rgb = self.docx_service.c["text"]
+            line_run.font.name = "Arial"
