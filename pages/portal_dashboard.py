@@ -19,6 +19,7 @@ from services.portal_service import (
     get_client_by_user_id, get_client_dashboard, get_host_dashboard,
 )
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer
+from services.pwa import inject_install_banner
 
 st.set_page_config(
     page_title="Dashboard - MCTV Client Portal",
@@ -28,6 +29,7 @@ st.set_page_config(
 )
 
 inject_portal_css()
+inject_install_banner()
 require_portal_auth()
 
 user = get_portal_user()

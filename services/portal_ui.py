@@ -10,6 +10,7 @@ stays consistent without duplicating 50+ lines of boilerplate.
 import streamlit as st
 from services.auth import portal_logout
 from services.config_service import load_config
+from services.pwa import inject_pwa, inject_install_banner
 
 
 # ── Portal CSS ──────────────────────────────────────────────────────────────
@@ -40,8 +41,9 @@ PORTAL_CSS = """
 
 
 def inject_portal_css():
-    """Inject the portal-wide CSS. Call once at the top of each portal page."""
+    """Inject the portal-wide CSS + PWA support. Call once at the top of each portal page."""
     st.markdown(PORTAL_CSS, unsafe_allow_html=True)
+    inject_pwa()
 
 
 # ── Portal Sidebar ──────────────────────────────────────────────────────────

@@ -9,7 +9,23 @@ Single entry point with a unified landing page offering three login paths:
 3. Advertiser — Supabase email/password or magic link for advertisers
 """
 
+import mimetypes
+# Fix 1: Windows maps .js → text/plain in the registry. Starlette's
+# FileResponse calls mimetypes.guess_type() so we fix it globally.
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("application/javascript", ".mjs")
+
 import streamlit as st
+
+# Fix 2: Streamlit's static file handler explicitly forces text/plain for
+# any extension not in its safe list.  We patch both the base module AND
+# the Starlette routes module (each has its own copy after `from` import).
+import streamlit.web.server.app_static_file_handler as _asfh
+import streamlit.web.server.starlette.starlette_routes as _star_routes
+
+_JS_EXTS = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js",)
+_asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
+_star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -28,6 +44,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# PWA support (manifest, service worker, mobile CSS)
+from services.pwa import inject_pwa, inject_install_banner
+inject_pwa()
+inject_install_banner()
 
 # Custom CSS for MCTV branding
 st.markdown("""
