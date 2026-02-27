@@ -273,6 +273,7 @@ def send_notification_email(lead_data: dict):
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
+    smtp_from = os.environ.get("SMTP_FROM", smtp_user)
     notify_emails = os.environ.get("NOTIFY_EMAILS", "creed@mctvofms.com,mmc@mctvofms.com,swayze@mctvofms.com")
 
     if not smtp_host or not smtp_user:
@@ -309,7 +310,7 @@ Log in to the MCTV Bot to view all leads and generate a proposal.
 """
 
         msg = MIMEMultipart()
-        msg["From"] = smtp_user
+        msg["From"] = f"MCTV Portal <{smtp_from}>"
         msg["To"] = notify_emails
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
@@ -318,12 +319,12 @@ Log in to the MCTV Bot to view all leads and generate a proposal.
         if smtp_port == 465:
             with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, notify_emails.split(","), msg.as_string())
+                server.sendmail(smtp_from, notify_emails.split(","), msg.as_string())
         else:
             with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, notify_emails.split(","), msg.as_string())
+                server.sendmail(smtp_from, notify_emails.split(","), msg.as_string())
 
         return True
 

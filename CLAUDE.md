@@ -70,7 +70,7 @@ services/                       # Business logic and integrations
   portal_ui.py                  # Portal UI components (shared sidebar, cards)
   contract_service.py           # Contract lifecycle (draft→sent→viewed→signed→active)
   invoice_service.py            # Invoice CRUD and payment tracking
-  notification_service.py       # Email notifications (SMTP)
+  notification_service.py       # Email notifications (Microsoft 365 SMTP, shared mailbox)
   sms_service.py                # Twilio SMS integration
   storage_service.py            # Supabase Storage file uploads
   dashboard_service.py          # Dashboard data aggregation
@@ -203,7 +203,8 @@ Portal access restricted to team emails only (configurable allowlist in `auth.py
   - `SUPABASE_URL`, `SUPABASE_KEY` — Database
   - `CREATOMATE_API_KEY` — Video generation
   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` — SMS
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — Email notifications
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` — Email notifications (Microsoft 365, shared mailbox)
+  - `NOTIFY_EMAILS` — Comma-separated team notification recipients
 
 ## Key Dependencies
 ```
@@ -223,3 +224,4 @@ twilio>=9.0.0
 - `output/` directory is gitignored — all generated documents are ephemeral
 - Pricing tiers: $350/mo (10 screens), $500/mo (20), $800/mo (40), $1,300/mo (75+)
 - CPM calculations use `get_tier_impressions()` which pro-rates from 1.9M monthly network impressions
+- Email sends from `portal@mctvofms.com` (shared mailbox) but authenticates as `creed@mctvofms.com` via Microsoft 365 SMTP. Three files have SMTP code: `notification_service.py`, `leads_service.py`, `briefing_service.py` — all use `SMTP_FROM` for the sender address

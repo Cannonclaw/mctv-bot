@@ -18,12 +18,13 @@ from email.mime.multipart import MIMEMultipart
 
 
 def _get_smtp_config() -> tuple:
-    """Return SMTP config from environment. Returns (host, port, user, pass) or Nones."""
+    """Return SMTP config from environment. Returns (host, port, user, pass, from_addr)."""
     host = os.environ.get("SMTP_HOST", "")
     port = int(os.environ.get("SMTP_PORT", "587"))
     user = os.environ.get("SMTP_USER", "")
     password = os.environ.get("SMTP_PASS", "")
-    return host, port, user, password
+    from_addr = os.environ.get("SMTP_FROM", user)  # Separate From address (e.g., shared mailbox)
+    return host, port, user, password, from_addr
 
 
 def _get_portal_url() -> str:
@@ -40,15 +41,20 @@ def _get_team_emails() -> str:
 
 
 def _send_email(to_emails: str, subject: str, body: str) -> bool:
-    """Send an email via SMTP. Returns True on success, False on failure."""
-    host, port, user, password = _get_smtp_config()
+    """Send an email via SMTP. Returns True on success, False on failure.
+
+    Authenticates with SMTP_USER but sends from SMTP_FROM (if set).
+    This supports Microsoft 365 shared mailboxes where you authenticate
+    as creed@mctvofms.com but send from portal@mctvofms.com.
+    """
+    host, port, user, password, from_addr = _get_smtp_config()
     if not host or not user:
         print(f"[notify] SMTP not configured — skipping: {subject}")
         return False
 
     try:
         msg = MIMEMultipart()
-        msg["From"] = user
+        msg["From"] = f"MCTV Portal <{from_addr}>"
         msg["To"] = to_emails
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
@@ -58,12 +64,12 @@ def _send_email(to_emails: str, subject: str, body: str) -> bool:
         if port == 465:
             with smtplib.SMTP_SSL(host, port) as server:
                 server.login(user, password)
-                server.sendmail(user, recipients, msg.as_string())
+                server.sendmail(from_addr, recipients, msg.as_string())
         else:
             with smtplib.SMTP(host, port) as server:
                 server.starttls()
                 server.login(user, password)
-                server.sendmail(user, recipients, msg.as_string())
+                server.sendmail(from_addr, recipients, msg.as_string())
 
         return True
     except Exception as e:

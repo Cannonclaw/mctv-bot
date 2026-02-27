@@ -1,11 +1,11 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live on Render — CPM + SMS Messaging Deployed
+## Current Status: Live on Render — PWA + Test Client Deployed
 
-**Last deploy:** 2026-02-24 — `4a37c90` pushed to GitHub, Render auto-deploying
+**Last deploy:** 2026-02-26 — `e4d4bf1` pushed to GitHub, Render auto-deploying
 **URL:** https://mctv-bot.onrender.com
 **Branch:** main (auto-deploys on push)
-**Latest commit:** `4a37c90` — SMS Messaging: Twilio integration with compose, templates, opt-in, history
+**Latest commit:** `e4d4bf1` — PWA support: service worker, manifest, mobile CSS, install banner
 
 ---
 
@@ -60,6 +60,10 @@
 - [x] SMS Messaging dashboard (compose, quick templates, opt-in management, message history)
 - [x] Twilio SMS integration (send_sms, send_template, 8 built-in templates, consent enforcement)
 - [x] SMS notification hooks (proposal sent, contract ready, invoice reminder, welcome, creative live, traction report)
+- [x] Progressive Web App (PWA) — service worker, manifest, mobile CSS, install banner
+- [x] Mobile-responsive Streamlit overrides (48px touch targets, stacked columns, iOS zoom fix)
+- [x] Install banner (native beforeinstallprompt + manual iOS/Android instructions)
+- [x] Test client setup script (Oxford Coffee Co. — full portal QA data)
 
 ## What Needs Attention
 
@@ -102,11 +106,37 @@
   - [ ] Verify RLS policies work (client A can't see client B's data)
   - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
 - [ ] **Twilio SMS activation** — Dashboard built, needs: sign up at twilio.com, get SID/token/phone, add to Render env vars, register A2P 10DLC (1-2 weeks approval)
-- [ ] **Host portal dashboard** — currently same layout as advertiser. Future: venue screen status, traffic stats, free ad slot management
+- [ ] **PWA scope expansion** — SW scope limited to `/app/static/` (Streamlit constraint). Add `Service-Worker-Allowed: /` header via Render or reverse proxy to enable Chrome install prompt
 
 ---
 
 ## Changelog
+
+### 2026-02-26 — PWA Support + Test Client (`e4d4bf1`)
+
+Progressive Web App layer enabling "Add to Home Screen" on mobile devices, with mobile-responsive CSS and offline-capable service worker.
+
+#### New Files
+- **`services/pwa.py`** — PWA injection helper: `inject_pwa()` (manifest link, meta tags, SW registration, mobile CSS), `inject_install_banner()` (dismissible "Add to Home Screen" banner). Handles iOS Safari, Chrome/Edge, and Android browsers.
+- **`static/manifest.json`** — Web app manifest: MCTV branding (navy #1B2A4A), 8 icon sizes (72-512px), display standalone, 3 shortcuts (Contracts, Invoices, Creative Requests).
+- **`static/service-worker.js`** — Cache-first for static assets (icons, fonts, images), network-first with cache fallback for data/pages, offline fallback to cached home page. Pre-caches critical assets on install.
+- **`static/icons/icon-{72,96,128,144,152,192,384,512}x{size}.png`** — Generated from `mctv_logo_on_navy.png` using Pillow. Navy background with centered logo at 75% size.
+- **`scripts/setup_test_client.py`** — Portal QA test data generator. Creates "Oxford Coffee Co." with: 1 client, 1 Supabase Auth user (`test@mctvofms.com` / `MCTVtest2026!`), 2 contracts (1 awaiting signature, 1 active), 3 invoices (pending, paid, overdue), 2 creative requests, 1 traction report, 6 activity log entries.
+
+#### Modified Files
+- **`app.py`** — Added `mimetypes.add_type()` fix for Windows `.js` → `text/plain` registry issue. Patched `SAFE_APP_STATIC_FILE_EXTENSIONS` in both `app_static_file_handler` and `starlette_routes` modules to serve `.js` as `application/javascript`. Added `inject_pwa()` and `inject_install_banner()` calls.
+- **`services/portal_ui.py`** — Added `inject_pwa()` call inside `inject_portal_css()` so all portal pages automatically get PWA support.
+- **`pages/portal_dashboard.py`** — Added `inject_install_banner()` for mobile install prompt.
+- **`.streamlit/config.toml`** — Added `enableStaticServing = true` to serve PWA files from `static/` directory at `/app/static/`.
+
+#### Technical Notes
+- Streamlit intentionally forces `Content-Type: text/plain` for `.js` files via `SAFE_APP_STATIC_FILE_EXTENSIONS` allowlist — required dual patch (base module + Starlette routes copy)
+- Windows registry maps `.js` to `text/plain` — `mimetypes.add_type()` fix needed for `FileResponse` fallback
+- `components.html()` runs in iframe — SW registration uses `window.parent.navigator.serviceWorker` with try/catch fallback
+- SW scope limited to `/app/static/` (Streamlit's static serving path). Root scope requires `Service-Worker-Allowed: /` header (future: Render custom headers or reverse proxy)
+- Install banner detects iOS (Share → Add to Home Screen) vs Android (Menu → Install App) and provides manual instructions
+
+---
 
 ### 2026-02-24 — SMS Messaging System (`4a37c90`)
 

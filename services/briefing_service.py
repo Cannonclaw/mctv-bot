@@ -788,6 +788,7 @@ def _send_html_email(
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER", "")
     smtp_pass = os.getenv("SMTP_PASS", "")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user)
 
     if not smtp_host or not smtp_user:
         logger.warning("SMTP not configured -- skipping briefing email")
@@ -795,7 +796,7 @@ def _send_html_email(
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["From"] = smtp_user
+        msg["From"] = f"MCTV Portal <{smtp_from}>"
         msg["To"] = ", ".join(to_emails)
         msg["Subject"] = subject
 
@@ -811,12 +812,12 @@ def _send_html_email(
         if smtp_port == 465:
             with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, to_emails, msg.as_string())
+                server.sendmail(smtp_from, to_emails, msg.as_string())
         else:
             with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, to_emails, msg.as_string())
+                server.sendmail(smtp_from, to_emails, msg.as_string())
 
         logger.info("Briefing email sent to %s", ", ".join(to_emails))
         return True
