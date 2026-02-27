@@ -42,7 +42,7 @@ except Exception:
 
 if not leads:
     st.info("No leads yet. Share your intake form link with prospects to start receiving submissions.")
-    st.code("https://mctv-bot.onrender.com/Intake", language=None)
+    st.code("https://bot.mctvofms.com/Intake", language=None)
     st.stop()
 
 # ── Compute scores for all leads ────────────────────────────────────────────

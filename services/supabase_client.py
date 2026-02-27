@@ -228,7 +228,7 @@ def send_magic_link(email: str) -> bool:
        with query params that we exchange for a session via verify_otp().
 
     The redirect_to URL must be listed in Supabase Dashboard > Auth > URL Configuration
-    under "Redirect URLs" (e.g., https://mctv-bot.onrender.com/portal_login).
+    under "Redirect URLs" (e.g., https://bot.mctvofms.com/portal_login).
 
     Returns True if the email was sent successfully.
     """
@@ -241,7 +241,7 @@ def send_magic_link(email: str) -> bool:
         return False
 
     try:
-        portal_url = os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
+        portal_url = os.environ.get("PORTAL_URL", "https://bot.mctvofms.com")
         body = json.dumps({
             "email": email,
         }).encode("utf-8")
@@ -416,7 +416,7 @@ def reset_password(email: str) -> bool:
         return False
 
     try:
-        portal_url = os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
+        portal_url = os.environ.get("PORTAL_URL", "https://bot.mctvofms.com")
         body = json.dumps({
             "email": email,
             # redirect_to tells Supabase where to send the user after they click

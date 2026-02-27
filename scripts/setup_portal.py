@@ -154,7 +154,7 @@ def save_to_env(service_key):
     if "SUPABASE_URL" not in existing:
         additions.append(f"SUPABASE_URL={SUPABASE_URL}")
     if "PORTAL_URL" not in existing:
-        additions.append("PORTAL_URL=https://mctv-bot.onrender.com")
+        additions.append("PORTAL_URL=https://bot.mctvofms.com")
 
     if additions:
         with open(env_path, "a", encoding="utf-8") as f:
@@ -302,12 +302,12 @@ def main():
     print()
     print("  🔑  Don't forget to set on Render:")
     print(f"      SUPABASE_SERVICE_KEY = (the key you just pasted)")
-    print(f"      PORTAL_URL = https://mctv-bot.onrender.com")
+    print(f"      PORTAL_URL = https://bot.mctvofms.com")
     print()
     print("  📋  If SQL didn't auto-run, paste it in the SQL editor:")
     print(f"      https://supabase.com/dashboard/project/{PROJECT_ID}/sql/new")
     print()
-    print("  🚀  Then go to: https://mctv-bot.onrender.com/portal_login")
+    print("  🚀  Then go to: https://bot.mctvofms.com/portal_login")
     print()
 
 

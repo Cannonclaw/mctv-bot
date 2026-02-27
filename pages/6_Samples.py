@@ -37,13 +37,13 @@ st.markdown("""
 <meta name="description" content="See what an MCTV advertising proposal looks like. Download sample proposals for restaurants, salons, gyms, and auto shops. Indoor digital billboard advertising across North Mississippi.">
 <meta name="keywords" content="MCTV sample proposals, indoor billboard advertising examples, digital billboard proposal, North Mississippi advertising, Oxford MS, Starkville MS, Tupelo MS">
 <meta name="author" content="MCTV Elite Advertising">
-<link rel="canonical" href="https://mctv-bot.onrender.com/Samples">
+<link rel="canonical" href="https://bot.mctvofms.com/Samples">
 
 <!-- Open Graph Tags -->
 <meta property="og:title" content="Sample Proposals | MCTV Elite Advertising">
 <meta property="og:description" content="Download sample advertising proposals for restaurants, salons, gyms, and auto shops. See how MCTV's 125+ indoor digital billboard screens can grow your business.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://mctv-bot.onrender.com/Samples">
+<meta property="og:url" content="https://bot.mctvofms.com/Samples">
 <meta property="og:site_name" content="MCTV Elite Advertising">
 
 <!-- Twitter Card -->
@@ -58,7 +58,7 @@ st.markdown("""
     "@type": "WebPage",
     "name": "MCTV Sample Advertising Proposals",
     "description": "Download sample indoor digital billboard advertising proposals for restaurants, salons, gyms, and auto shops across North Mississippi.",
-    "url": "https://mctv-bot.onrender.com/Samples",
+    "url": "https://bot.mctvofms.com/Samples",
     "publisher": {
         "@type": "Organization",
         "name": "MCTV Elite Advertising",
@@ -199,7 +199,7 @@ st.markdown(
 )
 
 # Link to intake form
-intake_url = "https://mctv-bot.onrender.com/Intake"
+intake_url = "https://bot.mctvofms.com/Intake"
 col_a, col_b, col_c = st.columns([1, 2, 1])
 with col_b:
     st.link_button(

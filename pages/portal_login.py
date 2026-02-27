@@ -11,8 +11,8 @@ This page handles Supabase auth redirects that arrive with query params:
 Normal visits (no callback) are redirected to app.py.
 
 Supabase Dashboard requirements (Auth > URL Configuration):
-- Site URL: https://mctv-bot.onrender.com
-- Redirect URLs: https://mctv-bot.onrender.com/portal_login
+- Site URL: https://bot.mctvofms.com
+- Redirect URLs: https://bot.mctvofms.com/portal_login
   (also add http://localhost:8501/portal_login for local dev)
 """
 

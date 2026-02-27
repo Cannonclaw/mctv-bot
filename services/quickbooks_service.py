@@ -36,7 +36,7 @@ QB_WEBHOOK_VERIFIER = os.environ.get("QB_WEBHOOK_VERIFIER", "")
 # Redirect URI — Intuit sends the user back here after OAuth authorization.
 # This MUST match what's registered in the Intuit Developer Portal exactly.
 # For local dev:  http://localhost:8501/Settings
-# For production: https://mctv-bot.onrender.com/Settings
+# For production: https://bot.mctvofms.com/Settings
 QB_REDIRECT_URI = os.environ.get("QB_REDIRECT_URI", "http://localhost:8501/Settings")
 
 # API base URLs

@@ -29,7 +29,7 @@ def _get_smtp_config() -> tuple:
 
 def _get_portal_url() -> str:
     """Get the portal base URL."""
-    return os.environ.get("PORTAL_URL", "https://mctv-bot.onrender.com")
+    return os.environ.get("PORTAL_URL", "https://bot.mctvofms.com")
 
 
 def _get_team_emails() -> str:
@@ -94,7 +94,7 @@ Your account has been created for {business_name}. You can now log in to:
 - Submit photos and graphics for your ads
 - View your campaign performance reports
 
-LOG IN HERE: {portal_url}/portal/portal_login
+LOG IN HERE: {portal_url}/portal_login
 
 Your login credentials:
   Email: {client_email}
@@ -125,7 +125,7 @@ Your advertising contract is ready for review!
 Contract: {contract_title}
 
 You can review the full contract and sign it electronically in your MCTV portal:
-{portal_url}/portal/portal_contract
+{portal_url}/portal_contract
 
 If you have any questions about the terms, just reply to this email or call your MCTV representative.
 
@@ -171,7 +171,7 @@ Amount: ${amount:.2f}
 Due Date: {due_date}
 
 View your invoice details in your MCTV portal:
-{portal_url}/portal/portal_invoices
+{portal_url}/portal_invoices
 
 If you have any questions about this invoice, please contact your MCTV representative.
 
@@ -251,7 +251,7 @@ New Status: {new_status.replace('_', ' ').title()}
 
     body += f"""
 View details in your MCTV portal:
-{portal_url}/portal/portal_creative
+{portal_url}/portal_creative
 
 Best,
 MCTV Elite Advertising
@@ -274,7 +274,7 @@ A new performance report is available in your MCTV portal:
 Report: {report_title}
 
 View your campaign results, impressions, and insights:
-{portal_url}/portal/portal_reports
+{portal_url}/portal_reports
 
 Best,
 MCTV Elite Advertising

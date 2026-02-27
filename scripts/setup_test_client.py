@@ -344,7 +344,7 @@ def main():
     print("  IMPORTANT: Make sure 'test@mctvofms.com' is in your")
     print("  PORTAL_ALLOWED_EMAILS in .env (or it defaults to team-only).")
     print()
-    print("  To test, go to: https://mctv-bot.onrender.com")
+    print("  To test, go to: https://bot.mctvofms.com")
     print("  Select 'Client Portal' and log in with the credentials above.")
     print("=" * 60)
 

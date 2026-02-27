@@ -37,13 +37,13 @@ st.markdown("""
 <meta name="description" content="Get your brand in front of thousands. MCTV Elite Advertising places your ads on 125+ indoor digital billboard screens across Oxford, Starkville, and Tupelo, Mississippi. Request your free custom proposal.">
 <meta name="keywords" content="indoor digital billboard advertising, MCTV, North Mississippi, Oxford MS, Starkville MS, Tupelo MS, local advertising, digital signage">
 <meta name="author" content="MCTV Elite Advertising">
-<link rel="canonical" href="https://mctv-bot.onrender.com/Intake">
+<link rel="canonical" href="https://bot.mctvofms.com/Intake">
 
 <!-- Open Graph Tags -->
 <meta property="og:title" content="Advertise With MCTV | Indoor Digital Billboards in North Mississippi">
 <meta property="og:description" content="125+ indoor digital billboard screens across Oxford, Starkville, and Tupelo. 1.9M+ monthly impressions. Request your free custom advertising proposal.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://mctv-bot.onrender.com/Intake">
+<meta property="og:url" content="https://bot.mctvofms.com/Intake">
 <meta property="og:site_name" content="MCTV Elite Advertising">
 
 <!-- Twitter Card -->
