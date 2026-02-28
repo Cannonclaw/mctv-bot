@@ -104,7 +104,7 @@
 - [ ] **GA4 MCP** — needs Google Cloud service account setup (guide in doc)
 - [ ] Custom Creatomate template (currently using demo "Search Field Simple")
 - [ ] Save 5 community screen photos to assets/screens/
-- [ ] Test all 4 color schemes with real PDF generation
+- [x] **Color scheme test suite** — 7/7 tests pass: consistency, logos, differentiation, 4 scheme x full proposal generation (2026-02-27)
 - [ ] **NEVER make pricing publicly available** — no rates/tiers on any public page
 - [x] **Client Portal — pre-launch checklist:**
   - [x] Run `scripts/setup_portal_schema.sql` against Supabase project (8 tables + RLS + indexes — all verified working 2026-02-24)
@@ -126,9 +126,12 @@
 
 ## Changelog
 
-### 2026-02-27 — A2P Registration + SEO Content + Legal Pages + PWA Scope + Photo Handling Phases 2-3
+### 2026-02-27 — A2P Registration + SEO Content + Legal Pages + PWA Scope + Photo Handling Phases 2-3 + Color Scheme Tests
 
-Major compliance, content, infrastructure, and photo handling day.
+Major compliance, content, infrastructure, photo handling, and QA day.
+
+#### Color Scheme Test Suite
+- **`scripts/test_color_schemes.py`** — Automated test: generates full proposals (cover, headers, cards, tables, banners, pricing, competitive, ROI, social proof, team, footer) in all 4 color schemes (Original, Light & Airy, Dark & Sophisticated, Peaceful Pastels). 7 checks: color consistency (11 keys), logo assets (4 scheme PNGs), color differentiation (unique hex in XML), plus 4 generation tests (~1.2MB each). All pass.
 
 #### Photo Handling Phases 2-3
 - **Phase 3A: Enhanced classifier** — `classify_image()` rewritten: 7 categories (logo, product, venue, team, food, promo, skip) with confidence scores (0.0-1.0) and alt_category. Multi-signal scoring: URL keywords, alt text NLP, path depth, file size heuristics, page position.
