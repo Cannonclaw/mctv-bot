@@ -359,6 +359,7 @@ def main():
         st.page_link("pages/10_Invoices.py", label="Invoices", icon="\U0001F4B0")
         st.page_link("pages/11_Creative.py", label="Creative Requests", icon="\U0001F3A8")
         st.page_link("pages/12_Messaging.py", label="SMS Messaging", icon="\U0001F4F1")
+        st.page_link("pages/13_Briefing.py", label="Daily Briefing", icon="\U0001F4CB")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
         st.divider()
@@ -377,6 +378,36 @@ def main():
     # Main content - Home page
     st.markdown('<p class="main-header">MCTV Elite Advertising Bot</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Generate proposals and traction reports in seconds</p>', unsafe_allow_html=True)
+
+    # ── Quick-glance alert bar ────────────────────────────────────────────
+    try:
+        from services.briefing_service import generate_briefing as _gen_briefing
+        if "home_alerts" not in st.session_state:
+            _brief = _gen_briefing()
+            st.session_state.home_alerts = _brief.get("alerts", [])
+            st.session_state.home_summary = _brief.get("executive_summary", {})
+
+        _alerts = st.session_state.get("home_alerts", [])
+        _summary = st.session_state.get("home_summary", {})
+
+        if _alerts or _summary:
+            # KPI row
+            _k1, _k2, _k3, _k4, _k5 = st.columns(5)
+            _k1.metric("MRR", f"${_summary.get('monthly_recurring_revenue', 0):,.0f}")
+            _k2.metric("Active Clients", _summary.get("active_clients", 0))
+            _k3.metric("Pending Sig", _summary.get("contracts_awaiting_signature", 0))
+            _k4.metric("Overdue AR", f"${_summary.get('overdue_amount', 0):,.0f}")
+            _k5.metric("Hot Leads", _summary.get("hot_leads", 0))
+
+            # Show top 3 alerts
+            if _alerts:
+                for _a in _alerts[:3]:
+                    st.warning(_a)
+                if len(_alerts) > 3:
+                    if st.button(f"View all {len(_alerts)} alerts \u2192", key="goto_briefing"):
+                        st.switch_page("pages/13_Briefing.py")
+    except Exception:
+        pass  # Graceful fallback if briefing service unavailable
 
     st.divider()
 
