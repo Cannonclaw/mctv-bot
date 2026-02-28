@@ -95,57 +95,20 @@ def _show_share_with_client(report_path, data: TractionReportInput):
 
 
 def _do_share_report(report_path, data: TractionReportInput, client: dict):
-    """Upload report to storage and create a client_reports record."""
-    client_id = client.get("id", "")
+    """Upload report to storage, create client_reports record, and notify client.
+
+    Uses the headless report_service for the actual upload + DB insert,
+    keeping this function as a thin Streamlit wrapper.
+    """
+    from services.report_service import share_report, notify_client_report
+
     bname = client.get("business_name", "")
 
     with st.spinner("Sharing report with client portal..."):
-        # Upload to Supabase Storage
-        storage_path = f"{client_id}/{report_path.name}"
-        uploaded = upload_from_path(BUCKET_REPORTS, storage_path, str(report_path))
-
-        # Determine report title
-        title = f"{bname} Traction Report"
-        if hasattr(data, "campaign_period") and data.campaign_period:
-            title += f" - {data.campaign_period}"
-        elif hasattr(data, "report_period") and data.report_period:
-            title += f" - {data.report_period}"
-
-        # Get totals from data
-        total_plays = None
-        total_impressions = None
-        total_venues = None
-        if hasattr(data, "venue_records") and data.venue_records:
-            total_venues = len(data.venue_records)
-            total_plays = sum(v.total_plays for v in data.venue_records if hasattr(v, "total_plays"))
-
-        # Create client_reports record
-        report_data = {
-            "client_id": client_id,
-            "report_type": data.report_type if hasattr(data, "report_type") else "advertiser",
-            "title": title,
-            "document_url": storage_path if uploaded else str(report_path),
-        }
-        if hasattr(data, "campaign_period"):
-            report_data["campaign_period"] = data.campaign_period
-        elif hasattr(data, "report_period"):
-            report_data["campaign_period"] = data.report_period
-        if total_plays:
-            report_data["total_plays"] = total_plays
-        if total_impressions:
-            report_data["total_impressions"] = total_impressions
-        if total_venues:
-            report_data["total_venues"] = total_venues
-
-        result = insert_row("client_reports", report_data)
-
+        result = share_report(report_path, data, client)
         if result:
-            # Notify client
-            notify_report_shared(
-                client_email=client.get("contact_email", ""),
-                client_name=client.get("contact_name", ""),
-                report_title=title,
-            )
+            title = result.get("title", f"{bname} Traction Report")
+            notify_client_report(client, title)
             st.success(f"Report shared with **{bname}**. They've been notified by email.")
         else:
             st.error("Failed to share report. Check logs for details.")

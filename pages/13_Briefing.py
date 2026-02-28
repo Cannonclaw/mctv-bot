@@ -553,6 +553,110 @@ with col_right:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 3B: LEAD SOURCE ATTRIBUTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+attribution = briefing.get("attribution", {})
+funnel = attribution.get("funnel", {})
+
+if funnel:
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("### Lead Source Attribution")
+    st.caption("Full funnel: how leads find MCTV and convert to revenue")
+
+    # ── Conversion Funnel Table ──────────────────────────────────────────────
+    attr_left, attr_right = st.columns([3, 2])
+
+    with attr_left:
+        st.markdown("**Conversion Funnel**")
+
+        funnel_rows = []
+        for source, data in sorted(
+            funnel.items(),
+            key=lambda x: x[1].get("revenue", 0),
+            reverse=True,
+        ):
+            funnel_rows.append({
+                "Source": source,
+                "Leads": data.get("leads", 0),
+                "Clients": data.get("clients", 0),
+                "Contracts": data.get("contracts", 0),
+                "Revenue": f"${data.get('revenue', 0):,.0f}",
+                "Conv %": f"{data.get('conversion_rate', 0):.1f}%",
+            })
+
+        if funnel_rows:
+            st.dataframe(
+                pd.DataFrame(funnel_rows),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    with attr_right:
+        st.markdown("**Revenue by Source**")
+
+        revenue_by_source = attribution.get("revenue_by_source", {})
+        if revenue_by_source:
+            rev_df = pd.DataFrame(
+                [{"Source": src, "Revenue": amt} for src, amt in revenue_by_source.items()]
+            )
+            st.bar_chart(rev_df.set_index("Source"), horizontal=True)
+        else:
+            st.info("No revenue data by source yet.")
+
+    # ── Rep Performance + Time to Close ──────────────────────────────────────
+    rep_col, ttc_col = st.columns([3, 2])
+
+    with rep_col:
+        reps = attribution.get("rep_performance", [])
+        if reps:
+            st.markdown("**Sales Rep Performance**")
+            rep_rows = []
+            for r in reps:
+                rep_rows.append({
+                    "Rep": r.get("rep", "Unknown"),
+                    "Leads": r.get("leads", 0),
+                    "Clients": r.get("clients", 0),
+                    "Contracts": r.get("contracts", 0),
+                    "Revenue": f"${r.get('revenue', 0):,.0f}",
+                    "Avg Deal": f"${r.get('avg_deal_size', 0):,.0f}",
+                })
+            st.dataframe(
+                pd.DataFrame(rep_rows),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    with ttc_col:
+        ttc = attribution.get("time_to_close", {})
+        if ttc:
+            st.markdown("**Avg Days to Close**")
+            for source, days in sorted(ttc.items(), key=lambda x: x[1]):
+                speed = "fast" if days <= 14 else "medium" if days <= 30 else "slow"
+                icon = {
+                    "fast": "\u26a1",
+                    "medium": "\u23f3",
+                    "slow": "\U0001f422",
+                }.get(speed, "")
+                st.markdown(f"{icon} **{source}**: {days:.0f} days")
+
+        # Top source callout
+        top = attribution.get("top_source", "N/A")
+        totals = attribution.get("totals", {})
+        if top != "N/A" and totals.get("revenue", 0) > 0:
+            st.markdown("---")
+            st.markdown(
+                f'<div class="alert-card alert-info">'
+                f'<strong>Top Source:</strong> {top}<br>'
+                f'{totals.get("leads", 0)} leads \u2192 '
+                f'{totals.get("clients", 0)} clients \u2192 '
+                f'${totals.get("revenue", 0):,.0f} revenue'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 4: RECENT ACTIVITY
 # ═══════════════════════════════════════════════════════════════════════════════
 

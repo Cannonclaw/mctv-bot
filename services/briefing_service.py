@@ -369,6 +369,16 @@ def generate_briefing() -> dict:
         "recent_count": recent_sms_count,
     }
 
+    # ── Lead source attribution ──────────────────────────────────────
+    attribution = {}
+    try:
+        from services.attribution_service import get_attribution_data
+        attribution = get_attribution_data() or {}
+    except Exception as e:
+        logger.error("Briefing: failed to load attribution: %s", e)
+
+    briefing["attribution"] = attribution
+
     return briefing
 
 
@@ -658,6 +668,39 @@ def format_briefing_email(briefing: dict, config: dict) -> tuple[str, str]:
         html_parts.append("  </div>\n")
 
     html_parts.append("</td></tr>\n")
+
+    # ── Lead Attribution ─────────────────────────────────────────────
+    attribution = briefing.get("attribution", {})
+    funnel = attribution.get("funnel", {})
+    if funnel:
+        html_parts.append(f"""
+<tr><td style="padding:0 30px 20px;">
+  <h2 style="margin:0 0 10px;font-size:16px;color:{navy};">Lead Attribution</h2>
+  <table width="100%" cellpadding="6" cellspacing="0"
+         style="border:1px solid #E5E7EB;border-radius:6px;font-size:12px;">
+  <tr style="background:{light_bg};">
+    <td style="font-weight:bold;">Source</td>
+    <td style="font-weight:bold;">Leads</td>
+    <td style="font-weight:bold;">Clients</td>
+    <td style="font-weight:bold;">Revenue</td>
+    <td style="font-weight:bold;">Conv %</td>
+  </tr>
+""")
+        for source, data in sorted(
+            funnel.items(), key=lambda x: x[1].get("revenue", 0), reverse=True,
+        )[:5]:
+            rev = data.get("revenue", 0)
+            rev_style = f"color:{green};font-weight:bold;" if rev > 0 else ""
+            html_parts.append(
+                f'  <tr style="border-bottom:1px solid #F3F4F6;">'
+                f'<td>{source}</td>'
+                f'<td>{data.get("leads", 0)}</td>'
+                f'<td>{data.get("clients", 0)}</td>'
+                f'<td style="{rev_style}">${rev:,.0f}</td>'
+                f'<td>{data.get("conversion_rate", 0):.0f}%</td>'
+                f'</tr>\n'
+            )
+        html_parts.append("  </table>\n</td></tr>\n")
 
     # ── Recent Activity ─────────────────────────────────────────────────
     if activity:

@@ -467,6 +467,66 @@ def sms_traction_report(phone: str, contact_name: str, total_plays: str,
     })
 
 
+# ── Monthly Report Summary ──────────────────────────────────────────────────
+
+def notify_monthly_reports_summary(results: list[dict], period: str) -> bool:
+    """Send the MCTV team a consolidated summary of monthly report generation.
+
+    Args:
+        results: List of result dicts from generate_and_share_report(), each
+                 with keys: success, client_name, email_sent, sms_sent,
+                 skipped (optional), error (optional).
+        period:  Report period label, e.g. "January 2026".
+
+    Returns:
+        True if email was sent successfully.
+    """
+    generated = [r for r in results if r.get("success") and not r.get("skipped")]
+    skipped = [r for r in results if r.get("skipped")]
+    failed = [r for r in results if not r.get("success")]
+
+    lines = [
+        f"MONTHLY TRACTION REPORTS — {period}",
+        "=" * 50,
+        "",
+        f"Generated: {len(generated)}  |  Skipped: {len(skipped)}  |  Failed: {len(failed)}",
+        "",
+    ]
+
+    if generated:
+        lines.append("GENERATED:")
+        for r in generated:
+            email_flag = "email" if r.get("email_sent") else ""
+            sms_flag = "sms" if r.get("sms_sent") else ""
+            notified = " + ".join(filter(None, [email_flag, sms_flag])) or "no notification"
+            lines.append(f"  {r.get('client_name', 'Unknown')} — {notified}")
+        lines.append("")
+
+    if skipped:
+        lines.append("SKIPPED (already sent this month):")
+        for r in skipped:
+            lines.append(f"  {r.get('client_name', 'Unknown')}")
+        lines.append("")
+
+    if failed:
+        lines.append("FAILED:")
+        for r in failed:
+            lines.append(
+                f"  {r.get('client_name', 'Unknown')} — {r.get('error', 'Unknown error')}"
+            )
+        lines.append("")
+
+    lines.append("Log in to the MCTV Bot to review reports and client portal.")
+
+    subject = (
+        f"Monthly Reports: {len(generated)} generated for {period}"
+        if generated
+        else f"Monthly Reports: {period} — nothing to generate"
+    )
+    body = "\n".join(lines)
+    return _send_email(_get_team_emails(), subject, body)
+
+
 def sms_contract_expiring(phone: str, contact_name: str, business_name: str,
                            days_remaining: int, rep_name: str = "Mary Michael"):
     """Text notification when a contract is approaching expiration."""
