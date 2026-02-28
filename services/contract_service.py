@@ -7,7 +7,7 @@ Handles contract CRUD, status transitions, document generation,
 storage upload, and signature recording.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from pathlib import Path
 
 from services.supabase_client import query_table, insert_row, update_row, delete_row
@@ -489,6 +489,16 @@ def get_contract_summary() -> dict:
         if c.get("status") in ("signed", "active")
     )
 
+    # Expiring soon count (active contracts within 90 days of end)
+    expiring_soon = 0
+    now = datetime.now()
+    for c in active:
+        end = _calc_end_date(c)
+        if end:
+            days_left = (end - now.date()).days
+            if 0 <= days_left <= 90:
+                expiring_soon += 1
+
     return {
         "total": len(all_contracts),
         "draft": len(draft),
@@ -499,4 +509,222 @@ def get_contract_summary() -> dict:
         "cancelled": len(cancelled),
         "awaiting_signature": len(awaiting_signature),
         "active_mrr": total_active_mrr,
+        "expiring_soon": expiring_soon,
     }
+
+
+# ── End-Date Helpers ─────────────────────────────────────────────────────
+
+def _calc_end_date(contract: dict) -> date | None:
+    """Calculate a contract's end date from start_date + term_months.
+
+    Falls back to the stored end_date field if start_date/term_months
+    are missing.  Returns None when nothing is available.
+    """
+    # Prefer explicit end_date if stored
+    end_str = contract.get("end_date")
+    if end_str:
+        try:
+            return datetime.strptime(str(end_str)[:10], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            pass
+
+    # Calculate from start + term
+    start_str = contract.get("start_date")
+    term = contract.get("term_months")
+    if start_str and term:
+        try:
+            start = datetime.strptime(str(start_str)[:10], "%Y-%m-%d").date()
+            return start + timedelta(days=int(term) * 30)
+        except (ValueError, TypeError):
+            pass
+
+    return None
+
+
+def _days_remaining(contract: dict) -> int | None:
+    """Days remaining until contract expiry.  Negative = already past due."""
+    end = _calc_end_date(contract)
+    if end is None:
+        return None
+    return (end - date.today()).days
+
+
+# ── Expiration Queries ────────────────────────────────────────────────────
+
+def get_expiring_contracts(days: int = 90) -> list[dict]:
+    """Get active contracts expiring within *days* from today.
+
+    Each returned dict is the full contract plus injected keys:
+        ``end_date_calc``  (str YYYY-MM-DD)
+        ``days_remaining`` (int)
+    Sorted by days_remaining ascending (most urgent first).
+    """
+    active = get_all_contracts(status="active")
+    results = []
+    for c in active:
+        dr = _days_remaining(c)
+        if dr is not None and 0 <= dr <= days:
+            c["end_date_calc"] = str(_calc_end_date(c))
+            c["days_remaining"] = dr
+            results.append(c)
+    results.sort(key=lambda x: x["days_remaining"])
+    return results
+
+
+def get_expired_contracts() -> list[dict]:
+    """Get active contracts whose end date has already passed.
+
+    These need a status transition to 'expired'.
+    """
+    active = get_all_contracts(status="active")
+    results = []
+    for c in active:
+        dr = _days_remaining(c)
+        if dr is not None and dr < 0:
+            c["end_date_calc"] = str(_calc_end_date(c))
+            c["days_remaining"] = dr
+            results.append(c)
+    return results
+
+
+# ── Status Transitions ────────────────────────────────────────────────────
+
+def expire_contract(contract_id: str) -> dict | None:
+    """Transition an active contract to 'expired' status."""
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+    if contract.get("status") != "active":
+        print(f"[contract_service] Can only expire 'active' contracts, got: {contract.get('status')}")
+        return None
+
+    updated = update_contract(contract_id, {"status": "expired"})
+    log_activity(
+        client_id=contract.get("client_id", ""),
+        action="Contract expired (auto)",
+        entity_type="contract",
+        entity_id=contract_id,
+        details={"end_date": str(_calc_end_date(contract))},
+    )
+    return updated
+
+
+def check_and_expire_contracts() -> list[dict]:
+    """Find all active contracts past their end date and expire them.
+
+    Returns the list of contracts that were transitioned to 'expired'.
+    """
+    past_due = get_expired_contracts()
+    expired = []
+    for c in past_due:
+        result = expire_contract(c["id"])
+        if result:
+            expired.append(result)
+    if expired:
+        print(f"[contract_service] Auto-expired {len(expired)} contract(s)")
+    return expired
+
+
+# ── Contract Renewal ──────────────────────────────────────────────────────
+
+def renew_contract(
+    contract_id: str,
+    new_term_months: int | None = None,
+    new_start_date: str | None = None,
+) -> dict | None:
+    """Clone an expiring/expired contract into a new draft with fresh dates.
+
+    Copies: client_id, contract_type, tier_name, screen_count, monthly_rate,
+    markets, auto_renew. Sets new start_date + term_months, status='draft'.
+
+    Args:
+        contract_id: The contract to renew.
+        new_term_months: Term for the renewal (defaults to original term).
+        new_start_date: Start date for renewal (defaults to day after old end).
+
+    Returns:
+        The newly-created draft contract dict, or None on failure.
+    """
+    original = get_contract(contract_id)
+    if not original:
+        print(f"[contract_service] Cannot renew — contract {contract_id} not found")
+        return None
+
+    # Calculate start date for renewal
+    if not new_start_date:
+        end = _calc_end_date(original)
+        if end:
+            new_start_date = str(end + timedelta(days=1))
+        else:
+            new_start_date = date.today().isoformat()
+
+    term = new_term_months or original.get("term_months", 6)
+
+    # Build renewal title
+    client = get_client(original.get("client_id", ""))
+    bname = client.get("business_name", "Client") if client else "Client"
+    type_label = original.get("contract_type", "advertiser").replace("_", " ").title()
+    title = f"MCTV {type_label} Renewal - {bname}"
+
+    new_contract = create_contract(
+        client_id=original.get("client_id", ""),
+        contract_type=original.get("contract_type", "advertiser"),
+        title=title,
+        tier_name=original.get("tier_name", ""),
+        screen_count=original.get("screen_count", 10),
+        monthly_rate=float(original.get("monthly_rate", 350)),
+        term_months=term,
+        start_date=new_start_date,
+        auto_renew=original.get("auto_renew", True),
+        markets=original.get("markets"),
+        created_by="Auto-Renewal",
+        exclusive_category=original.get("exclusive_category", ""),
+        bundle_brands=original.get("bundle_brands"),
+    )
+
+    if new_contract:
+        log_activity(
+            client_id=original.get("client_id", ""),
+            action="Contract renewed",
+            entity_type="contract",
+            entity_id=new_contract.get("id", ""),
+            details={
+                "original_contract_id": contract_id,
+                "new_start_date": new_start_date,
+                "term_months": term,
+            },
+        )
+        print(f"[contract_service] Renewed contract {contract_id} -> {new_contract.get('id')}")
+
+    return new_contract
+
+
+# ── Alert Tracking (contract_alerts_log) ──────────────────────────────────
+
+def _alert_already_sent(contract_id: str, alert_type: str, channel: str) -> bool:
+    """Check if an alert of this type has already been sent for a contract."""
+    try:
+        rows = query_table("contract_alerts_log", filters={
+            "contract_id": contract_id,
+            "alert_type": alert_type,
+            "channel": channel,
+        })
+        return bool(rows)
+    except Exception:
+        # Table may not exist yet — treat as "not sent"
+        return False
+
+
+def _log_alert_sent(contract_id: str, alert_type: str, sent_to: str,
+                    channel: str) -> None:
+    """Record that an alert was sent so we don't duplicate it."""
+    try:
+        insert_row("contract_alerts_log", {
+            "contract_id": contract_id,
+            "alert_type": alert_type,
+            "sent_to": sent_to,
+            "channel": channel,
+        })
+    except Exception as e:
+        print(f"[contract_service] Failed to log alert: {e}")

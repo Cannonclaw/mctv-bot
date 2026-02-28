@@ -19,7 +19,8 @@ from services.contract_service import (
     create_contract, get_all_contracts, get_contract, update_contract,
     delete_contract, generate_contract_document, send_contract,
     activate_contract, cancel_contract, get_contract_summary,
-    get_contract_download_url,
+    get_contract_download_url, get_expiring_contracts, renew_contract,
+    _days_remaining,
 )
 from services.portal_service import get_all_clients, get_client
 
@@ -66,12 +67,15 @@ except Exception:
     st.error("Unable to load contract summary.")
     summary = {}
 
-c1, c2, c3, c4, c5 = st.columns(5)
+c1, c2, c3, c4, c5, c6 = st.columns(6)
 c1.metric("Total Contracts", summary.get("total", 0))
 c2.metric("Drafts", summary.get("draft", 0))
 c3.metric("Awaiting Signature", summary.get("awaiting_signature", 0))
 c4.metric("Active", summary.get("active", 0))
 c5.metric("Active MRR", f"${summary.get('active_mrr', 0):,.2f}")
+_exp_count = summary.get("expiring_soon", 0)
+c6.metric("Expiring Soon", _exp_count, delta=f"-{_exp_count}" if _exp_count else None,
+          delta_color="inverse" if _exp_count else "off")
 
 st.divider()
 
@@ -81,7 +85,11 @@ contract_search = st.text_input("🔍 Search contracts...", key="contract_search
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
 
-tab_list, tab_create = st.tabs(["All Contracts", "Create New Contract"])
+tab_list, tab_expiring, tab_create = st.tabs([
+    "All Contracts",
+    f"Expiring Soon ({_exp_count})" if _exp_count else "Expiring Soon",
+    "Create New Contract",
+])
 
 
 # ── TAB: All Contracts ──────────────────────────────────────────────────────
@@ -157,9 +165,20 @@ with tab_list:
             if contract.get("signed_by"):
                 signed_badge = f" (signed by {contract.get('signed_by')})"
 
+            # Expiration badge for active contracts
+            exp_badge = ""
+            if cstatus == "active":
+                _dr = _days_remaining(contract)
+                if _dr is not None and 0 <= _dr <= 30:
+                    exp_badge = f" \U0001F534 **{_dr}d left**"
+                elif _dr is not None and 30 < _dr <= 60:
+                    exp_badge = f" \U0001F7E1 {_dr}d left"
+                elif _dr is not None and 60 < _dr <= 90:
+                    exp_badge = f" \U0001F7E0 {_dr}d left"
+
             with st.expander(
                 f"{status_emoji} **{title}** — {client_name} | "
-                f"${rate:,.2f}/mo | {screens} screens | {cstatus.title()}{doc_badge}",
+                f"${rate:,.2f}/mo | {screens} screens | {cstatus.title()}{exp_badge}{doc_badge}",
                 expanded=False,
             ):
                 # Contract details
@@ -278,7 +297,7 @@ with tab_list:
                             )
 
                 with action_cols[5]:
-                    # Cancel / Delete
+                    # Cancel / Delete / Renew
                     if cstatus in ("draft", "sent", "viewed"):
                         if st.button("Cancel", key=f"cancel_{cid}",
                                      width='stretch'):
@@ -287,6 +306,19 @@ with tab_list:
                         if st.button("Delete", key=f"delete_{cid}",
                                      width='stretch'):
                             st.session_state[f"confirm_delete_contract_{cid}"] = True
+                    elif cstatus in ("active", "expired"):
+                        if st.button("\U0001F504 Renew", key=f"renew_{cid}",
+                                     width='stretch', type="primary"):
+                            with st.spinner("Creating renewal contract..."):
+                                renewed = renew_contract(cid)
+                                if renewed:
+                                    st.success(
+                                        f"Renewal draft created! Go to **All Contracts** "
+                                        f"to find the new draft."
+                                    )
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to create renewal. Check logs.")
 
                 # Cancel confirmation
                 if st.session_state.get(f"confirm_cancel_{cid}"):
@@ -322,6 +354,105 @@ with tab_list:
                                      width='stretch'):
                             del st.session_state[f"confirm_delete_contract_{cid}"]
                             st.rerun()
+
+
+# ── TAB: Expiring Soon ─────────────────────────────────────────────────────
+
+with tab_expiring:
+    st.markdown("### Contracts Expiring Soon")
+    st.caption("Active contracts approaching their end date, grouped by urgency. Renew with one click.")
+
+    try:
+        expiring = get_expiring_contracts(90)
+    except Exception:
+        st.error("Unable to load expiring contracts.")
+        expiring = []
+
+    if not expiring:
+        st.info("No active contracts are expiring within the next 90 days.")
+    else:
+        # Build client cache for expiring contracts
+        _exp_client_cache = {}
+        for _ec in expiring:
+            _ecid = _ec.get("client_id", "")
+            if _ecid and _ecid not in _exp_client_cache:
+                _ecl = get_client(_ecid)
+                _exp_client_cache[_ecid] = _ecl if _ecl else {}
+
+        # Group by bucket
+        bucket_30 = [c for c in expiring if c.get("days_remaining", 999) <= 30]
+        bucket_60 = [c for c in expiring if 30 < c.get("days_remaining", 999) <= 60]
+        bucket_90 = [c for c in expiring if 60 < c.get("days_remaining", 999) <= 90]
+
+        # MRR at risk summary
+        total_at_risk = sum(float(c.get("monthly_rate", 0)) for c in expiring)
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Total Expiring", len(expiring))
+        r2.metric("Within 30 Days", len(bucket_30))
+        r3.metric("Within 60 Days", len(bucket_60))
+        r4.metric("MRR at Risk", f"${total_at_risk:,.0f}")
+
+        st.divider()
+
+        for bucket_label, bucket_data, bucket_color in [
+            ("\U0001F534 Critical — Within 30 Days", bucket_30, "red"),
+            ("\U0001F7E1 Warning — 31-60 Days", bucket_60, "orange"),
+            ("\U0001F7E0 Watch — 61-90 Days", bucket_90, "blue"),
+        ]:
+            if not bucket_data:
+                continue
+
+            mrr = sum(float(c.get("monthly_rate", 0)) for c in bucket_data)
+            st.markdown(f"#### {bucket_label} ({len(bucket_data)} contracts, ${mrr:,.0f}/mo)")
+
+            for ec in bucket_data:
+                ec_id = ec.get("id", "")
+                ec_title = ec.get("title", "Untitled")
+                ec_rate = float(ec.get("monthly_rate", 0))
+                ec_days = ec.get("days_remaining", 0)
+                ec_end = ec.get("end_date_calc", "TBD")
+                ec_auto = ec.get("auto_renew", False)
+                ec_client = _exp_client_cache.get(ec.get("client_id", ""), {})
+                ec_bname = ec_client.get("business_name", "Unknown Client")
+
+                with st.expander(
+                    f"**{ec_title}** — {ec_bname} | ${ec_rate:,.0f}/mo | "
+                    f"**{ec_days} days left** | Ends {ec_end} | "
+                    f"{'Auto-renew' if ec_auto else 'Manual'}",
+                    expanded=(ec_days <= 30),
+                ):
+                    ec1, ec2 = st.columns(2)
+                    with ec1:
+                        st.text(f"Client: {ec_bname}")
+                        st.text(f"Contact: {ec_client.get('contact_name', 'N/A')}")
+                        st.text(f"Email: {ec_client.get('contact_email', 'N/A')}")
+                        st.text(f"Phone: {ec_client.get('contact_phone', 'N/A')}")
+                    with ec2:
+                        st.text(f"Monthly Rate: ${ec_rate:,.2f}")
+                        st.text(f"Term: {ec.get('term_months', 0)} months")
+                        st.text(f"End Date: {ec_end}")
+                        st.text(f"Auto-Renew: {'Yes' if ec_auto else 'No'}")
+
+                    renew_col, spacer = st.columns([1, 2])
+                    with renew_col:
+                        if st.button(
+                            "\U0001F504 Create Renewal Draft",
+                            key=f"exp_renew_{ec_id}",
+                            type="primary",
+                            use_container_width=True,
+                        ):
+                            with st.spinner("Creating renewal..."):
+                                renewed = renew_contract(ec_id)
+                                if renewed:
+                                    st.success(
+                                        f"Renewal draft created for **{ec_bname}**! "
+                                        f"Check the **All Contracts** tab."
+                                    )
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to create renewal.")
+
+            st.divider()
 
 
 # ── TAB: Create New Contract ────────────────────────────────────────────────

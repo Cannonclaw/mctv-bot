@@ -357,6 +357,15 @@ TEMPLATES = {
         ),
         "variables": ["contact_name", "venue_name", "rep_name"],
     },
+    "contract_expiring": {
+        "name": "Contract Expiring",
+        "body": (
+            "Hi {contact_name}, your MCTV advertising contract for {business_name} "
+            "expires in {days_remaining} days. Contact us to discuss renewal options. "
+            "\u2014{rep_name}, MCTV"
+        ),
+        "variables": ["contact_name", "business_name", "days_remaining", "rep_name"],
+    },
     "custom": {
         "name": "Custom Message",
         "body": "{message}",

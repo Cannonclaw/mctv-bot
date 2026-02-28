@@ -283,6 +283,112 @@ www.mctvofms.com
     return _send_email(client_email, subject, body)
 
 
+# ── Contract Expiration Alerts ───────────────────────────────────────────────
+
+def notify_contract_expiring_team(contracts_by_bucket: dict) -> bool:
+    """Send the MCTV team a summary of contracts expiring in 30/60/90 days.
+
+    Args:
+        contracts_by_bucket: dict with keys "30", "60", "90", each a list
+            of dicts with ``title``, ``client_name``, ``days_remaining``,
+            ``monthly_rate``.
+    """
+    lines = ["CONTRACT EXPIRATION ALERT", "=" * 40, ""]
+
+    total_mrr = 0.0
+    for bucket in ("30", "60", "90"):
+        items = contracts_by_bucket.get(bucket, [])
+        if not items:
+            continue
+        mrr = sum(float(c.get("monthly_rate", 0)) for c in items)
+        total_mrr += mrr
+        lines.append(f"--- Expiring within {bucket} days ({len(items)} contracts, ${mrr:,.0f}/mo) ---")
+        for c in items:
+            lines.append(
+                f"  {c.get('client_name', 'Unknown')} — {c.get('title', 'N/A')} "
+                f"| ${float(c.get('monthly_rate', 0)):,.0f}/mo | {c.get('days_remaining', '?')} days left"
+            )
+        lines.append("")
+
+    if total_mrr == 0:
+        return True  # Nothing to report
+
+    lines.append(f"Total MRR at risk: ${total_mrr:,.0f}/mo")
+    lines.append("")
+    lines.append("Log in to the MCTV Bot Contracts page to review and renew.")
+
+    subject = f"Contract Alert: ${total_mrr:,.0f}/mo at risk of expiration"
+    body = "\n".join(lines)
+    return _send_email(_get_team_emails(), subject, body)
+
+
+def notify_contract_expiring_client(client_email: str, client_name: str,
+                                     contract_title: str, days_remaining: int,
+                                     auto_renew: bool) -> bool:
+    """Notify a client that their MCTV contract is approaching expiration."""
+    portal_url = _get_portal_url()
+
+    if auto_renew:
+        renewal_msg = (
+            "Your contract is set to auto-renew, so no action is needed on your part. "
+            "If you'd like to make changes or have questions, just reach out to your MCTV representative."
+        )
+    else:
+        renewal_msg = (
+            "Please contact your MCTV representative to discuss renewal options. "
+            "We'd love to keep your business on MCTV screens!"
+        )
+
+    subject = f"Your MCTV Contract Expires in {days_remaining} Days"
+    body = f"""Hi {client_name},
+
+This is a friendly heads-up that your MCTV advertising contract is approaching its expiration date:
+
+Contract: {contract_title}
+Expires In: {days_remaining} days
+
+{renewal_msg}
+
+View your contract details in your MCTV portal:
+{portal_url}/portal_contract
+
+Best,
+MCTV Elite Advertising
+www.mctvofms.com
+"""
+    return _send_email(client_email, subject, body)
+
+
+def notify_contract_expired_team(contracts: list) -> bool:
+    """Notify the MCTV team about contracts that just expired today.
+
+    Args:
+        contracts: list of dicts with ``title``, ``client_name``,
+            ``monthly_rate``, ``end_date_calc``.
+    """
+    if not contracts:
+        return True
+
+    mrr_lost = sum(float(c.get("monthly_rate", 0)) for c in contracts)
+
+    lines = ["CONTRACTS EXPIRED TODAY", "=" * 40, ""]
+
+    for c in contracts:
+        lines.append(
+            f"  {c.get('client_name', 'Unknown')} — {c.get('title', 'N/A')} "
+            f"| ${float(c.get('monthly_rate', 0)):,.0f}/mo | ended {c.get('end_date_calc', 'N/A')}"
+        )
+
+    lines.append("")
+    lines.append(f"MRR impact: -${mrr_lost:,.0f}/mo")
+    lines.append("")
+    lines.append("Log in to the MCTV Bot to review and initiate renewals.")
+
+    subject = f"Expired: {len(contracts)} contract(s) — -${mrr_lost:,.0f}/mo"
+    body = "\n".join(lines)
+    return _send_email(_get_team_emails(), subject, body)
+
+
 # ── SMS Notification Helpers ─────────────────────────────────────────────────
 # These mirror the email notifications above but send a short text instead.
 # They fail silently if Twilio is not configured or the contact hasn't opted in.
@@ -357,5 +463,16 @@ def sms_traction_report(phone: str, contact_name: str, total_plays: str,
         "contact_name": contact_name,
         "total_plays": total_plays,
         "venue_count": venue_count,
+        "rep_name": rep_name,
+    })
+
+
+def sms_contract_expiring(phone: str, contact_name: str, business_name: str,
+                           days_remaining: int, rep_name: str = "Mary Michael"):
+    """Text notification when a contract is approaching expiration."""
+    _try_sms(phone, "contract_expiring", {
+        "contact_name": contact_name,
+        "business_name": business_name,
+        "days_remaining": str(days_remaining),
         "rep_name": rep_name,
     })
