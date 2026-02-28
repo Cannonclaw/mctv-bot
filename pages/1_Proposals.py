@@ -71,7 +71,7 @@ def _save_uploaded_files(uploaded_files) -> list[str]:
 
 def _generate_proposal(generator_class, data, client_logo_path=None,
                        page2_photo_paths=None, page4_photo_paths=None,
-                       color_scheme="original"):
+                       page4_captions=None, color_scheme="original"):
     """Run the proposal generation pipeline with progress UI.
 
     Args:
@@ -80,6 +80,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
         client_logo_path: Path to the client logo image.
         page2_photo_paths: Photos for The Opportunity (page 2), max 4.
         page4_photo_paths: Photos for Market Coverage (page 4), max 6.
+        page4_captions: Optional captions for page 4 photos (same order).
         color_scheme: Color scheme key.
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -102,6 +103,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
     docx_svc.client_logo_path = client_logo_path
     docx_svc.page2_photo_paths = (page2_photo_paths or [])[:4]   # cap at 4
     docx_svc.page4_photo_paths = (page4_photo_paths or [])[:6]   # cap at 6
+    docx_svc.page4_captions = (page4_captions or [])[:6]         # match page4
 
     # Legacy attributes (for backwards compat with other generator types)
     docx_svc.venue_photo_paths = []
@@ -207,6 +209,7 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
         # Clear scraped photo session state so stale paths don't persist
         st.session_state.pop("scraped_page2_paths", None)
         st.session_state.pop("scraped_page4_paths", None)
+        st.session_state.pop("scraped_page4_captions", None)
         st.session_state.pop("scraped_logo_path", None)
         st.session_state.pop("scraped_images", None)
 
@@ -271,13 +274,16 @@ client_website = st.text_input(
     help="Enter the client's website and we'll find their logo and photos automatically.",
 )
 
-if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
+if client_website and st.button("\U0001f50d Scan Website for Images", key="scan_btn"):
     with st.spinner("Scanning website for images..."):
-        from services.web_scraper import scrape_website_images, download_image
+        from services.web_scraper import scrape_website_images, auto_assign_photos, download_image
         images = scrape_website_images(client_website)
         if images:
-            st.success(f"Found {len(images)} images!")
+            # Run auto-assignment engine to set smart defaults
+            images = auto_assign_photos(images)
             st.session_state["scraped_images"] = images
+            auto_count = sum(1 for img in images if img.get("auto_assigned"))
+            st.success(f"Found {len(images)} images! \U0001f916 Auto-assigned {auto_count} to optimal slots.")
         else:
             st.warning("No images found on that website. Try uploading manually below.")
 
@@ -286,13 +292,28 @@ if client_website and st.button("🔍 Scan Website for Images", key="scan_btn"):
 # Exception: logos auto-select if detected with high confidence.
 if st.session_state.get("scraped_images"):
     st.markdown("**Scraped images — select which to include:**")
-    st.caption("Images default to *Skip*. Select a placement for each photo you want to use.")
+    st.caption("Images ranked by quality & relevance. \U0001f916 = auto-assigned to best slot.")
+
+    # Sort images: auto-assigned first, then by confidence (best images at top)
+    _RANK_BONUS = {"logo": 0.20, "venue": 0.15, "product": 0.10, "food": 0.10, "team": 0.05, "promo": -0.20}
+    def _img_rank(img):
+        auto = 1.0 if img.get("auto_assigned") else 0.0
+        conf = img.get("confidence", 0.0)
+        bonus = _RANK_BONUS.get(img.get("category", "product"), 0.0)
+        return -(auto + conf + bonus)
+    st.session_state["scraped_images"] = sorted(
+        st.session_state["scraped_images"], key=_img_rank,
+    )
+
     _PLACEMENT_OPTIONS = ["Skip", "Client Logo", "The Opportunity (page 2)", "Market Coverage (page 4)"]
-    _cat_to_default = {"logo": "Client Logo"}
     _cat_badge = {
-        "logo": "🏷️ Logo",
-        "ad_example": "📢 Ad/Promo",
-        "product": "📷 Photo",
+        "logo": "\U0001f3f7\ufe0f Logo",
+        "product": "\U0001f4f7 Photo",
+        "venue": "\U0001f3e2 Venue",
+        "team": "\U0001f465 Team",
+        "food": "\U0001f37d\ufe0f Food",
+        "promo": "\U0001f4e2 Promo",
+        "ad_example": "\U0001f4e2 Promo",  # legacy compat
     }
 
     # Bulk action buttons
@@ -310,19 +331,89 @@ if st.session_state.get("scraped_images"):
             st.session_state[f"scrape_slot_{i}"] = "Skip"
         st.rerun()
 
+    # ── Photo Counter Bar ───────────────────────────────────────────────
+    _logo_n = 0
+    _pg2_n = 0
+    _pg4_n = 0
+    _skip_n = 0
+    for i in range(len(st.session_state["scraped_images"])):
+        slot = st.session_state.get(f"scrape_slot_{i}", "Skip")
+        if slot == "Client Logo":
+            _logo_n += 1
+        elif slot == "The Opportunity (page 2)":
+            _pg2_n += 1
+        elif slot == "Market Coverage (page 4)":
+            _pg4_n += 1
+        else:
+            _skip_n += 1
+
+    _logo_icon = "\u2705" if _logo_n == 1 else ("\u26a0\ufe0f" if _logo_n > 1 else "\u2014")
+    _pg2_color = "red" if _pg2_n > 4 else ("green" if _pg2_n > 0 else "gray")
+    _pg4_color = "red" if _pg4_n > 6 else ("green" if _pg4_n > 0 else "gray")
+    st.markdown(
+        f"\U0001f3f7\ufe0f **Logo:** {_logo_icon}"
+        f"&emsp;|&emsp;\U0001f4c4 **Page 2:** "
+        f"<span style='color:{_pg2_color}'>{_pg2_n}/4</span>"
+        f"&emsp;|&emsp;\U0001f4f8 **Page 4:** "
+        f"<span style='color:{_pg4_color}'>{_pg4_n}/6</span>"
+        f"&emsp;|&emsp;\u23ed\ufe0f **Skipped:** {_skip_n}",
+        unsafe_allow_html=True,
+    )
+    if _pg2_n > 4:
+        st.warning(f"Page 2 supports max **4** photos. {_pg2_n - 4} extra will auto-overflow to Page 4 on download.")
+    if _pg4_n > 6:
+        st.warning(f"Page 4 supports max **6** photos. {_pg4_n - 6} extra will be excluded on download.")
+    if _logo_n > 1:
+        st.warning("Multiple images assigned to Logo. Only the first will be used.")
+
     img_cols = st.columns(4)
     for i, img_info in enumerate(st.session_state["scraped_images"]):
         category = img_info.get("category", "product")
-        default_placement = _cat_to_default.get(category, "Skip")
-        default_idx = _PLACEMENT_OPTIONS.index(default_placement)
+        # Use auto-assignment default if available, else Skip
+        default_placement = img_info.get("default_placement", "Skip")
+        default_idx = _PLACEMENT_OPTIONS.index(default_placement) if default_placement in _PLACEMENT_OPTIONS else 0
         with img_cols[i % 4]:
             st.image(img_info["url"], caption=img_info.get("alt", img_info["filename"])[:30], width='stretch')
-            badge = _cat_badge.get(category, "📷 Photo")
-            st.caption(f"{badge} · `{img_info['filename'][:25]}`")
+            badge = _cat_badge.get(category, "\U0001f4f7 Photo")
+            conf = img_info.get("confidence", 0)
+            conf_pct = f"{int(conf * 100)}%" if conf else ""
+            auto_tag = " \U0001f916" if img_info.get("auto_assigned") else ""
+            st.caption(f"{badge} {conf_pct}{auto_tag} · `{img_info['filename'][:25]}`")
             st.selectbox("Placement", _PLACEMENT_OPTIONS, index=default_idx,
                          key=f"scrape_slot_{i}")
+            st.text_input("Caption", key=f"scrape_caption_{i}",
+                          max_chars=60, placeholder="Caption (page 4 only)",
+                          label_visibility="collapsed")
 
-    if st.button("📥 Download Selected Images"):
+    # ── Photo Order Preview ───────────────────────────────────────────
+    with st.expander("Preview photo order by page"):
+        _order_pg2 = []
+        _order_pg4 = []
+        _order_logo = []
+        for i, img_info in enumerate(st.session_state["scraped_images"]):
+            slot = st.session_state.get(f"scrape_slot_{i}", "Skip")
+            name = img_info.get("filename", f"image_{i}")[:25]
+            if slot == "Client Logo":
+                _order_logo.append(name)
+            elif slot == "The Opportunity (page 2)":
+                _order_pg2.append(name)
+            elif slot == "Market Coverage (page 4)":
+                _order_pg4.append(name)
+        if _order_logo:
+            st.markdown(f"**Logo:** {_order_logo[0]}")
+        if _order_pg2:
+            st.markdown("**Page 2 (The Opportunity):** " + " \u2192 ".join(
+                f"{n+1}. `{f}`" for n, f in enumerate(_order_pg2)
+            ))
+        if _order_pg4:
+            st.markdown("**Page 4 (Market Coverage):** " + " \u2192 ".join(
+                f"{n+1}. `{f}`" for n, f in enumerate(_order_pg4)
+            ))
+        if not (_order_logo or _order_pg2 or _order_pg4):
+            st.caption("No images assigned yet.")
+        st.caption("*Photos are placed in the order shown. Re-assign placements above to change order.*")
+
+    if st.button("\U0001f4e5 Download Selected Images"):
         from services.web_scraper import download_image
         # Collect user selections
         slot_assignments = {}
@@ -336,15 +427,37 @@ if st.session_state.get("scraped_images"):
         else:
             with st.spinner(f"Downloading {len(slot_assignments)} images..."):
                 routed = {"Client Logo": [], "The Opportunity (page 2)": [], "Market Coverage (page 4)": []}
+                pg4_captions_list = []
                 for url, slot in slot_assignments.items():
                     path = download_image(url)
                     if path:
                         routed[slot].append(path)
+                        if slot == "Market Coverage (page 4)":
+                            # Find matching caption from session state
+                            cap = ""
+                            for j, img_info in enumerate(st.session_state["scraped_images"]):
+                                if img_info["url"] == url:
+                                    cap = st.session_state.get(f"scrape_caption_{j}", "")
+                                    break
+                            pg4_captions_list.append(cap)
+                # Overflow: Page 2 excess → Page 4, Page 4 excess → excluded
+                pg2_list = routed["The Opportunity (page 2)"]
+                pg4_list = routed["Market Coverage (page 4)"]
+                if len(pg2_list) > 4:
+                    overflow = pg2_list[4:]
+                    routed["The Opportunity (page 2)"] = pg2_list[:4]
+                    pg4_list = overflow + pg4_list  # overflow gets priority
+                overflow_excluded = 0
+                if len(pg4_list) > 6:
+                    overflow_excluded = len(pg4_list) - 6
+                    pg4_list = pg4_list[:6]
+                routed["Market Coverage (page 4)"] = pg4_list
                 total = sum(len(v) for v in routed.values())
                 if total:
                     st.session_state["scraped_logo_path"] = routed["Client Logo"][0] if routed["Client Logo"] else None
                     st.session_state["scraped_page2_paths"] = routed["The Opportunity (page 2)"]
                     st.session_state["scraped_page4_paths"] = routed["Market Coverage (page 4)"]
+                    st.session_state["scraped_page4_captions"] = pg4_captions_list
                     summary_parts = []
                     if routed["Client Logo"]:
                         summary_parts.append("1 logo")
@@ -355,12 +468,37 @@ if st.session_state.get("scraped_images"):
                     if pg4:
                         summary_parts.append(f"{pg4} for page 4")
                     st.success(f"Downloaded {total} images: {', '.join(summary_parts)}")
+                    if overflow_excluded > 0:
+                        st.info(f"{overflow_excluded} image(s) excluded due to page limits.")
+                    # Quality badges — show resolution for downloaded images
+                    from services.web_scraper import score_image_quality
+                    all_downloaded = (
+                        routed["Client Logo"]
+                        + routed["The Opportunity (page 2)"]
+                        + routed["Market Coverage (page 4)"]
+                    )
+                    badge_parts = []
+                    low_count = 0
+                    for dl_path in all_downloaded:
+                        q = score_image_quality(dl_path)
+                        fname = Path(dl_path).name[:20]
+                        badge_parts.append(f"`{fname}` {q['quality_label']}")
+                        if q["quality_tier"] == "low":
+                            low_count += 1
+                    if badge_parts:
+                        st.caption("**Resolution:** " + " · ".join(badge_parts))
+                    if low_count:
+                        st.warning(
+                            f"{low_count} image(s) are low resolution and may "
+                            "appear blurry in the proposal."
+                        )
                 else:
                     st.warning("Could not download any images. Try uploading manually.")
 
 scraped_logo_path = st.session_state.get("scraped_logo_path", None)
 scraped_page2_paths = st.session_state.get("scraped_page2_paths", [])
 scraped_page4_paths = st.session_state.get("scraped_page4_paths", [])
+scraped_page4_captions = st.session_state.get("scraped_page4_captions", [])
 
 st.divider()
 
@@ -490,6 +628,7 @@ if proposal_type == "Elite Advertiser":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
 
 
@@ -536,6 +675,7 @@ elif proposal_type == "Host Media Kit":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
 
 
@@ -592,6 +732,7 @@ elif proposal_type == "Multi-Brand Bundle":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
 
 
@@ -647,6 +788,7 @@ elif proposal_type == "Venue Partner / Revenue Share":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
 
 
@@ -696,6 +838,7 @@ elif proposal_type == "Category Exclusivity":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
 
 
@@ -744,4 +887,5 @@ elif proposal_type == "Renewal / Upgrade":
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)

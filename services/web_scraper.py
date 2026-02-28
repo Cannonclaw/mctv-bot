@@ -200,18 +200,20 @@ def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
         og_url = urljoin(url, og_match.group(1))
         found[og_url] = "og:image (social sharing image)"
 
-    # Build results with classification
+    # Build results with enhanced classification
     results = []
     for img_url, alt_text in found.items():
         filename = _get_filename(img_url)
-        category = classify_image(img_url, alt_text)
-        if category == "skip":
+        cls = classify_image(img_url, alt_text)
+        if cls["category"] == "skip":
             continue  # Filter out junk images entirely
         results.append({
             "url": img_url,
             "alt": alt_text,
             "filename": filename,
-            "category": category,  # 'logo', 'ad_example', or 'product'
+            "category": cls["category"],
+            "confidence": cls["confidence"],
+            "alt_category": cls["alt_category"],
         })
         if len(results) >= max_images:
             break
@@ -361,57 +363,263 @@ def _is_valid_image(url: str) -> bool:
     return False
 
 
-def classify_image(img_url: str, alt_text: str = "", file_size: int = 0) -> str:
-    """Classify an image based on URL, alt text, and file size.
+def classify_image(img_url: str, alt_text: str = "", file_size: int = 0,
+                   page_position: str | None = None) -> dict:
+    """Classify an image into one of 7 categories with confidence score.
 
-    Returns one of: 'logo', 'ad_example', 'product', 'skip'
+    Categories: logo, product, venue, team, food, promo, skip
+
+    Returns dict:
+        category   — best-fit category string
+        confidence — float 0.0-1.0 (how sure we are)
+        alt_category — second-best category, or None
     """
     url_lower = img_url.lower()
     alt_lower = (alt_text or "").lower()
     combined = url_lower + " " + alt_lower
+    _SKIP = {"category": "skip", "confidence": 0.95, "alt_category": None}
 
-    # Skip: tiny images, icons, UI elements
+    # ── Hard skip: UI elements, icons, tracking pixels ──────────────────
     skip_signals = [
-        "icon", "button", "menu", "arrow", "chevron", "close",
+        "icon", "button", "arrow", "chevron", "close",
         "hamburger", "spinner", "loading", "placeholder", "spacer",
-        "widget", "avatar", "gravatar", "emoji", "payment",
+        "avatar", "gravatar", "emoji", "payment",
         "visa", "mastercard", "amex", "paypal", "credit-card",
     ]
+    # Note: "menu" removed (conflicts with food menus)
+    # Note: "widget" removed (too broad, catches product descriptions)
     for signal in skip_signals:
         if signal in combined:
-            return "skip"
+            return _SKIP
 
-    # Skip very small files (< 10KB) — likely UI elements
-    if file_size > 0 and file_size < 10000:
-        return "skip"
+    # Very small files are almost always UI chrome
+    if 0 < file_size < 10_000:
+        return {"category": "skip", "confidence": 0.80, "alt_category": None}
 
-    # Logo detection
-    logo_signals = ["logo", "brand", "header-image", "site-logo", "navbar-brand"]
-    for signal in logo_signals:
-        if signal in combined:
-            return "logo"
+    # ── Score each non-skip category ────────────────────────────────────
+    scores = {
+        "logo": 0.0, "venue": 0.0, "team": 0.0,
+        "food": 0.0, "promo": 0.0, "product": 0.10,  # base score
+    }
 
-    # OG image is usually a logo or hero — treat as logo
+    # — Logo signals —
+    logo_kw = ["logo", "brand", "header-image", "site-logo", "navbar-brand"]
+    for kw in logo_kw:
+        if kw in combined:
+            scores["logo"] += 0.40
     if "og:image" in alt_lower:
-        return "logo"
+        scores["logo"] += 0.35
+    # Root-level images more likely logos
+    parsed = urlparse(img_url)
+    path_parts = [p for p in parsed.path.split("/") if p]
+    if len(path_parts) <= 1:
+        scores["logo"] += 0.10
+    # Logos are typically 10-100 KB
+    if 10_000 <= file_size <= 100_000:
+        scores["logo"] += 0.10
 
-    # Ad/promo detection
-    # Short words use word-boundary regex to avoid false positives
-    # (e.g., "ad" in "upload"/"download", "sale" in "wholesale")
-    ad_exact = ["ad", "sale", "deal", "offer"]
-    for signal in ad_exact:
-        if re.search(r'\b' + signal + r'\b', combined):
-            return "ad_example"
-    ad_substr = [
+    # — Venue / location signals —
+    venue_kw = [
+        "interior", "exterior", "office", "building", "store",
+        "storefront", "restaurant", "lobby", "room", "space",
+        "facility", "location", "outside", "inside", "shop",
+        "clinic", "salon", "gym", "studio", "warehouse",
+    ]
+    for kw in venue_kw:
+        if kw in combined:
+            scores["venue"] += 0.35
+
+    # — Team / people signals —
+    team_kw = [
+        "team", "staff", "about", "headshot", "portrait",
+        "employee", "founder", "owner", "ceo", "manager",
+        "our-team", "meet", "people", "crew", "doctor",
+        "chef", "therapist", "instructor",
+    ]
+    for kw in team_kw:
+        if kw in combined:
+            scores["team"] += 0.35
+
+    # — Food / menu signals —
+    food_kw = [
+        "menu", "dish", "food", "plate", "meal", "cuisine",
+        "recipe", "appetizer", "entree", "dessert", "drink",
+        "cocktail", "wine", "beer", "coffee", "breakfast",
+        "lunch", "dinner", "brunch", "pizza", "burger",
+        "sandwich", "salad", "soup", "sushi",
+    ]
+    for kw in food_kw:
+        if kw in combined:
+            scores["food"] += 0.35
+
+    # — Promo / ad signals (word-boundary for short words) —
+    promo_exact = ["ad", "sale", "deal", "offer"]
+    for kw in promo_exact:
+        if re.search(r'\b' + kw + r'\b', combined):
+            scores["promo"] += 0.35
+    promo_substr = [
         "banner", "promo", "promotion", "campaign",
         "advertisement", "flyer", "coupon", "special",
     ]
-    for signal in ad_substr:
-        if signal in combined:
-            return "ad_example"
+    for kw in promo_substr:
+        if kw in combined:
+            scores["promo"] += 0.35
 
-    # Everything else that passes size check is a product/content photo
-    return "product"
+    # — Product / content boost —
+    # Larger images are more likely real content photos
+    if file_size > 100_000:
+        scores["product"] += 0.15
+    # Deep-path images tend to be content, not logos
+    if len(path_parts) >= 3:
+        scores["product"] += 0.10
+
+    # — Page-position boost —
+    if page_position == "header":
+        scores["logo"] += 0.20
+    elif page_position == "content":
+        scores["product"] += 0.10
+
+    # ── Pick winner ─────────────────────────────────────────────────────
+    scores = {k: min(v, 1.0) for k, v in scores.items()}
+    ranked = sorted(scores.items(), key=lambda x: -x[1])
+    best_cat, best_score = ranked[0]
+    alt_cat, alt_score = ranked[1]
+
+    # Very low score → generic product photo
+    if best_score < 0.15:
+        return {"category": "product", "confidence": 0.25, "alt_category": None}
+
+    return {
+        "category": best_cat,
+        "confidence": round(best_score, 2),
+        "alt_category": alt_cat if alt_score > 0.15 else None,
+    }
+
+
+def score_image_quality(file_path: str) -> dict:
+    """Score a downloaded image's quality based on pixel dimensions.
+
+    Returns dict with keys:
+        width, height, megapixels, aspect_ratio, orientation,
+        quality_tier ('hd' | 'good' | 'low'), quality_label
+    """
+    try:
+        from PIL import Image
+        with Image.open(file_path) as img:
+            w, h = img.size
+    except Exception:
+        return {
+            "width": 0, "height": 0, "megapixels": 0.0,
+            "aspect_ratio": 1.0, "orientation": "unknown",
+            "quality_tier": "low", "quality_label": "Unknown",
+        }
+
+    longest = max(w, h)
+    mp = (w * h) / 1_000_000
+    ar = w / h if h > 0 else 1.0
+
+    if ar > 1.2:
+        orientation = "landscape"
+    elif ar < 0.8:
+        orientation = "portrait"
+    else:
+        orientation = "square"
+
+    if longest >= 1000:
+        tier, label = "hd", f"{w}\u00d7{h} HD"
+    elif longest >= 400:
+        tier, label = "good", f"{w}\u00d7{h} OK"
+    else:
+        tier, label = "low", f"{w}\u00d7{h} Low Res \u26a0\ufe0f"
+
+    return {
+        "width": w, "height": h,
+        "megapixels": round(mp, 2),
+        "aspect_ratio": round(ar, 2),
+        "orientation": orientation,
+        "quality_tier": tier,
+        "quality_label": label,
+    }
+
+
+def auto_assign_photos(classified_images: list[dict]) -> list[dict]:
+    """Assign optimal default placements based on classification.
+
+    Takes the list from scrape_website_images() (each dict has url, alt,
+    filename, category, confidence, alt_category) and adds:
+        default_placement — one of the placement option strings
+        auto_assigned     — True if the engine chose a slot (vs. Skip)
+
+    Logic:
+      1. Highest-confidence logo  → Client Logo
+      2. Top 4 remaining by score → The Opportunity (page 2)
+      3. Next 6 by score          → Market Coverage (page 4)
+      4. Rest                     → Skip
+
+    Relevance score = confidence + category_bonus.
+    """
+    if not classified_images:
+        return []
+
+    # Category bonuses bias good content toward page 2
+    _BONUS = {
+        "venue": 0.20, "product": 0.10, "food": 0.10,
+        "team": 0.05, "promo": -0.30, "logo": 0.0, "skip": -1.0,
+    }
+
+    # ── 1. Find best logo ──────────────────────────────────────────────
+    best_logo_idx = None
+    best_logo_conf = 0.0
+    for i, img in enumerate(classified_images):
+        if img.get("category") == "logo":
+            conf = img.get("confidence", 0.5)
+            if conf > best_logo_conf:
+                best_logo_idx = i
+                best_logo_conf = conf
+
+    # ── 2. Rank remaining images by relevance score ────────────────────
+    candidates = []
+    for i, img in enumerate(classified_images):
+        if i == best_logo_idx:
+            continue
+        cat = img.get("category", "product")
+        if cat == "skip":
+            continue
+        conf = img.get("confidence", 0.5)
+        bonus = _BONUS.get(cat, 0.0)
+        candidates.append((i, conf + bonus))
+
+    candidates.sort(key=lambda x: -x[1])
+
+    page2_set = set()
+    page4_set = set()
+    for i, score in candidates:
+        if score < 0.10:
+            break  # too low to auto-assign
+        if len(page2_set) < 4:
+            page2_set.add(i)
+        elif len(page4_set) < 6:
+            page4_set.add(i)
+
+    # ── 3. Build results preserving original order ─────────────────────
+    results = []
+    for i, img in enumerate(classified_images):
+        entry = dict(img)  # shallow copy
+        if i == best_logo_idx and best_logo_conf >= 0.30:
+            entry["default_placement"] = "Client Logo"
+            entry["auto_assigned"] = True
+        elif i in page2_set:
+            entry["default_placement"] = "The Opportunity (page 2)"
+            entry["auto_assigned"] = True
+        elif i in page4_set:
+            entry["default_placement"] = "Market Coverage (page 4)"
+            entry["auto_assigned"] = True
+        else:
+            entry["default_placement"] = "Skip"
+            entry["auto_assigned"] = False
+        results.append(entry)
+
+    return results
 
 
 def _get_filename(url: str) -> str:

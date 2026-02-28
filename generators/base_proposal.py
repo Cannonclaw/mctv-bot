@@ -55,6 +55,10 @@ class BaseProposal(ABC):
         # page4 = Market Coverage (max 6 grid photos)
         page2_photos = getattr(self.docx, "page2_photo_paths", [])
         page4_photos = getattr(self.docx, "page4_photo_paths", [])
+        page4_captions = getattr(self.docx, "page4_captions", [])
+        # Pad captions to match photo count
+        while len(page4_captions) < len(page4_photos):
+            page4_captions.append("")
 
         # Build photo pools keyed by source name (matches PHOTO_DISTRIBUTION)
         photo_pools = {
@@ -62,6 +66,10 @@ class BaseProposal(ABC):
             "page4": list(page4_photos),
             # Legacy "extra" source maps to page2 + page4 combined
             "extra": list(page2_photos) + list(page4_photos),
+        }
+        # Caption pools (parallel to photo pools)
+        caption_pools = {
+            "page4": list(page4_captions),
         }
 
         # Check if this generator defines per-section photo distribution
@@ -102,11 +110,20 @@ class BaseProposal(ABC):
                     count = min(slot.get("max", 2), len(pool))
                     batch = pool[:count]
                     del pool[:count]
+                    # Consume matching captions (if available for this source)
+                    cap_pool = caption_pools.get(source)
+                    captions = None
+                    if cap_pool:
+                        captions = cap_pool[:count]
+                        del cap_pool[:count]
+                        if not any(captions):  # all empty → skip
+                            captions = None
                     title = slot.get("title")
                     grid_cols = slot.get("cols", 2)
                     if title:
                         self.docx.add_photos_grid(doc, batch, title=title,
-                                                  cols=grid_cols)
+                                                  cols=grid_cols,
+                                                  captions=captions)
                     else:
                         self.docx.add_inline_photos(doc, batch, cols=grid_cols)
 

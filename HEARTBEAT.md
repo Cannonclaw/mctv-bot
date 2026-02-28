@@ -1,12 +1,14 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live at bot.mctvofms.com — SMS + Email + Custom Domain
+## Current Status: Live at bot.mctvofms.com — SMS + Email + Custom Domain + A2P Registered
 
-**Last deploy:** 2026-02-26 — `e4d4bf1` pushed to GitHub, Render auto-deploying
+**Last deploy:** 2026-02-27 — `8a09819` pushed to GitHub, Render auto-deploying
 **URL:** https://bot.mctvofms.com (also: https://mctv-bot.onrender.com)
 **Branch:** main (auto-deploys on push)
-**Latest commit:** `e4d4bf1` — PWA support: service worker, manifest, mobile CSS, install banner
+**Latest commit:** Photo handling Phases 2-3: smart classifier, auto-assignment, UI polish
 **Email:** portal@mctvofms.com via Brevo SMTP (authenticated domain, DKIM + DMARC)
+**SMS:** +1 662 707 6766 via Twilio (A2P 10DLC campaign submitted, under review)
+**Legal:** Privacy Policy + Terms of Service live on mctvofms.com
 
 ---
 
@@ -23,8 +25,10 @@
 - [x] Network Dashboard integration (impressions, dwell time, CPM per venue)
 - [x] Client intake form (public-facing, saves to Supabase)
 - [x] Leads dashboard (view/manage submissions)
-- [x] Website image scraper (pulls client photos for proposals)
+- [x] Website image scraper with 7-category AI classifier (logo/venue/team/food/product/promo/skip) + confidence scores
+- [x] Auto-assignment engine (best logo → cover, top 4 → page 2, next 6 → page 4)
 - [x] Photo uploads (venue screens, ad examples, custom images) — up to 4 page-2 photos with responsive layouts
+- [x] Counter bar, overflow handling, quality badges, captions for page 4 grid, photo order preview
 - [x] Default community screen photos (auto-included from assets/screens/)
 - [x] Client logo on cover page (scraped or uploaded)
 - [x] PDF conversion (LibreOffice headless in Docker)
@@ -77,24 +81,24 @@
 - [x] WordPress SEO content generated (9 pages in seo/wordpress_content.md)
 - [x] Keyword map, schema templates, GA4 guide, 5 blog drafts generated
 - [x] **Google Search Console** — verified, sitemap submitted, top 7 pages force-indexed (2026-02-23)
-- [~] **Google Business Profile** — name, phone, category, description, areas updated (2026-02-23). Still need: services list, reviews
+- [x] **Google Business Profile** — name, phone, category, description, areas updated (2026-02-23). Services list updated (2026-02-27). GBP strategy doc created.
 - [x] **Paste WordPress content** — ALL 9 pages updated/created with SEO content (2026-02-23)
 - [x] **RankMath meta tags** — set on all 9 pages (2026-02-23)
 - [x] **City landing pages** — /oxford-advertising/, /starkville-advertising/, /tupelo-advertising/ created (2026-02-23)
 - [x] **FAQ page** — 12 Q&As created (2026-02-23)
 - [x] **Team headshots + team photo** — added to About Us (2026-02-23)
-- [ ] **GA4 setup** — guide ready in seo/ga4_setup_guide.md
+- [x] **GA4 setup** — Measurement ID G-2K1477MDSC installed via Divi Theme Options > Integration > head (2026-02-24)
 - [x] **v21 proposal upgrade** — ALL 14 items complete: Phase 1 bugs (1A-1C), Phase 2 design (2A-2H), Phase 3 polish (3A-3E) (2026-02-23)
 - [x] **Traction Report v2 upgrade** — 15-item Spec B complete (2026-02-23)
 - [x] **V3 fixes** — Proposal photo overhaul, traction report KPI polish, chart sizing (`fb4b743`)
 - [x] **V4 fixes** — Table split, dashboard impressions/CPM, photo system Phase 1 (`75af231`)
-- [ ] **Photo Handling Phases 2-3** — Phase 1 done (4-photo layouts). Phase 2 (scraper preview polish), Phase 3 (smart classification) pending
+- [x] **Photo Handling Phases 2-3** — Phase 1 (4-photo layouts), Phase 2 (counter bar, overflow, captions, quality badges, reorder), Phase 3 (7-category classifier, confidence scores, auto-assignment, quality scoring, image ranking) — all complete (2026-02-27)
 - [ ] **Render deployment** — `75af231` pushed to GitHub but user reported no Render logs. May need manual deploy or webhook check
 - [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
 - [x] **Email notifications** — Brevo SMTP relay, `portal@mctvofms.com`, authenticated domain (DKIM + DMARC), tested and confirmed working (2026-02-26)
 - [x] **Custom domain** — `bot.mctvofms.com` live with SSL (CNAME in SiteGround → Render, auto-provisioned Let's Encrypt cert) (2026-02-26)
 - [x] **Twilio SMS activated** — Phone +1 662 707 6766 (Como, MS), Account SID + Auth Token + Phone Number env vars on Render, rebuild triggered (2026-02-26)
-- [ ] **A2P 10DLC registration** — Required for production business SMS. Twilio trial mode works for testing. Register brand + campaign for full volume.
+- [x] **A2P 10DLC registration** — Brand `MCTV DIGITAL` (BNc9f45da06fe31ae08ab35ecb4cc16b96), Campaign (CMd599db13cd32f14c32805d8c9f836546), Messaging Service MG36a6469a0ceb0af6b05b4dcfdafa50e, Low Volume Mixed $1.50/mo, under review 2-3 weeks (2026-02-27)
 - [x] **Integration test suite** — 42/42 tests passing (28 CRUD + 14 service layer) — 2026-02-24
 - [x] **MCP Servers configured** — Memory (knowledge graph), Google Workspace, Canva Dev — `~/.claude/.mcp.json` (2026-02-24)
 - [ ] **GA4 MCP** — needs Google Cloud service account setup (guide in doc)
@@ -109,14 +113,79 @@
   - [x] Create admin profiles in Supabase Auth + profiles table (3 users: Creed, Mary Michael, Swayze — backfilled 2026-02-24)
   - [x] Commit + push all portal files to GitHub (`88d01cc` — triggers Render deploy)
   - [x] Integration test: 42/42 tests passed (auth, CRUD, updates, queries, service layers — 2026-02-24)
-  - [ ] Verify RLS policies work (client A can't see client B's data)
+  - [x] Verify RLS policies work (client A can't see client B's data) — all 8 tables verified (2026-02-27)
   - [ ] Test email notifications (contract sent, invoice sent, creative status, report shared)
-- [ ] **Twilio SMS activation** — Dashboard built, needs: sign up at twilio.com, get SID/token/phone, add to Render env vars, register A2P 10DLC (1-2 weeks approval)
-- [ ] **PWA scope expansion** — SW scope limited to `/app/static/` (Streamlit constraint). Add `Service-Worker-Allowed: /` header via Render or reverse proxy to enable Chrome install prompt
+- [x] **Twilio SMS activated** — Phone +1 662 707 6766, env vars on Render, A2P 10DLC campaign submitted (2026-02-26/27)
+- [x] **PWA scope expansion** — `Service-Worker-Allowed: /` header via dual monkey-patch (Tornado + Starlette) in app.py, SW registration updated to root scope in pwa.py (commit `8a09819`, 2026-02-27)
+- [x] **Privacy Policy page** — Post ID 7883, `https://mctvofms.com/privacy-policy/`, Fullwidth layout, 12 sections (2026-02-27)
+- [x] **Terms of Service page** — Post ID 7886, `https://mctvofms.com/terms-of-service/`, Fullwidth layout, 15 sections (2026-02-27)
+- [x] **Subscribe text fix** — WPCode snippet #7889 strips injected "don't forget to subscribe" nag via `the_content` filter (2026-02-27)
+- [x] **5 blog posts published** — Rank Math SEO optimized, Post IDs 7872-7880 (2026-02-27)
 
 ---
 
 ## Changelog
+
+### 2026-02-27 — A2P Registration + SEO Content + Legal Pages + PWA Scope + Photo Handling Phases 2-3
+
+Major compliance, content, infrastructure, and photo handling day.
+
+#### Photo Handling Phases 2-3
+- **Phase 3A: Enhanced classifier** — `classify_image()` rewritten: 7 categories (logo, product, venue, team, food, promo, skip) with confidence scores (0.0-1.0) and alt_category. Multi-signal scoring: URL keywords, alt text NLP, path depth, file size heuristics, page position.
+- **Phase 3B: Quality scoring** — New `score_image_quality()` function reads downloaded image dimensions via PIL. Returns width/height/megapixels/aspect_ratio/orientation + quality tier (hd/good/low) with display label.
+- **Phase 3C+3D: Auto-assignment + smart defaults** — New `auto_assign_photos()` ranks images by `confidence + category_bonus` (venue +0.20, product +0.10, food +0.10, team +0.05, promo -0.30). Best logo → Client Logo, top 4 content → Page 2, next 6 → Page 4, rest → Skip. Shows robot badge on auto-assigned images.
+- **Phase 3E: Image ranking** — Grid sorted by composite score (auto-assigned first, then confidence + category bonus). Best images appear at top of scraper preview.
+- **Phase 2A: Counter bar** — Live status bar showing Logo/Page 2/Page 4/Skipped counts with green/red color coding. Updates on every Streamlit rerun.
+- **Phase 2B: Overflow handling** — Warnings when exceeding page limits. On download: Page 2 excess auto-overflows to Page 4, Page 4 excess excluded with info message.
+- **Phase 2C: Captions UI** — Text input (60 char max) per image. Full wiring: session state → download handler → `_generate_proposal()` → `docx_svc.page4_captions` → `base_proposal.py` → `add_photos_grid(captions=...)`. All 6 proposal forms updated.
+- **Phase 2D: Reorder preview** — Expander showing numbered photo order per page (Logo, Page 2, Page 4) before download.
+- **Phase 2E: Quality badges** — After download, shows resolution per image (`1200x800 HD` / `640x480 OK` / `200x150 Low Res`). Warns about low-res images.
+
+#### A2P 10DLC Registration (Twilio)
+- Brand `MCTV DIGITAL` registered (SID: BNc9f45da06fe31ae08ab35ecb4cc16b96)
+- Campaign submitted (SID: CMd599db13cd32f14c32805d8c9f836546) — Low Volume Mixed, $1.50/mo
+- Messaging Service MG36a6469a0ceb0af6b05b4dcfdafa50e created and linked
+- Under review (2-3 weeks for approval)
+
+#### 5 Blog Posts Published to WordPress
+All with Rank Math SEO optimization (focus keyword, SEO title ≤60 chars, custom permalink, meta description 150-160 chars):
+- Post 7872: "What Is Indoor Digital Billboard Advertising?" — keyword: indoor digital billboard advertising Mississippi
+- Post 7874: "5 Reasons Indoor Billboards Beat Social Media for Local Business" — keyword: indoor billboards vs social media advertising
+- Post 7876: "How Oxford Restaurants Are Using Indoor Digital Billboards to Fill Tables" — keyword: restaurant advertising Oxford MS
+- Post 7878: "The Real Cost of Local Advertising in Mississippi" — keyword: local advertising cost Mississippi
+- Post 7880: "Why Your Waiting Room TV Should Be Making You Money" — keyword: digital billboard venue host Mississippi
+
+#### GBP + JSON-LD + SEO Fixes
+- GBP services list updated to real services (Indoor Digital Billboard Advertising, etc.)
+- JSON-LD schemas verified on all pages, FAQ schema fix on homepage
+- GBP strategy doc created (`docs/GBP_STRATEGY.md`) — 2x/week posts, review ask system, photo plan
+
+#### RLS Policy Verification
+- All 8 Supabase tables verified with proper client isolation policies
+- Row-level security confirmed: client A cannot access client B's data
+
+#### PWA Scope Expansion (`8a09819`)
+- **`app.py`** — Dual monkey-patch: Tornado `AppStaticFileHandler.set_extra_headers` + Starlette `create_app_static_serving_routes` to send `Service-Worker-Allowed: /` header when serving `service-worker.js`
+- **`services/pwa.py`** — SW registration updated to explicitly request root scope: `{scope: '/'}`
+- Enables service worker to cache and intercept requests at root level instead of `/app/static/`
+
+#### Privacy Policy Page (WordPress)
+- Post ID 7883, `https://mctvofms.com/privacy-policy/`
+- 12 sections: Information Collection, Use, SMS, Cookies, Sharing, Security, Retention, Rights, Children, Third-Party Links, Changes, Contact
+- Fullwidth Divi layout, no sidebar
+
+#### Terms of Service Page (WordPress)
+- Post ID 7886, `https://mctvofms.com/terms-of-service/`
+- 15 sections: Services, Eligibility, Portal Account, Advertising Contracts (e-signatures, pricing, auto-renewal), Creative Content, SMS, IP, Liability, Disclaimers, Indemnification, Governing Law (Mississippi/Lafayette County), Modifications, Severability, Entire Agreement, Contact
+- Fullwidth Divi layout, no sidebar
+
+#### Subscribe Text Fix (WordPress)
+- WPCode PHP snippet #7889: "Remove Subscribe Text from Content"
+- `str_replace` on `the_content` filter at priority 999
+- Strips injected "Thank you for reading this post, don't forget to subscribe!" nag from all pages
+- Verified removed from both Privacy Policy and Terms of Service pages
+
+---
 
 ### 2026-02-26 — Custom Domain + Professional Email (Infrastructure)
 
