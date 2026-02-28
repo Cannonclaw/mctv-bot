@@ -5,7 +5,7 @@
 **Last deploy:** 2026-02-27 — `8a09819` pushed to GitHub, Render auto-deploying
 **URL:** https://bot.mctvofms.com (also: https://mctv-bot.onrender.com)
 **Branch:** main (auto-deploys on push)
-**Latest commit:** Photo handling Phases 2-3: smart classifier, auto-assignment, UI polish
+**Latest commit:** WordPress integration: sample PDFs, offline generator, Divi embed guide
 **Email:** portal@mctvofms.com via Brevo SMTP (authenticated domain, DKIM + DMARC)
 **SMS:** +1 662 707 6766 via Twilio (A2P 10DLC campaign submitted, under review)
 **Legal:** Privacy Policy + Terms of Service live on mctvofms.com
@@ -94,7 +94,7 @@
 - [x] **V4 fixes** — Table split, dashboard impressions/CPM, photo system Phase 1 (`75af231`)
 - [x] **Photo Handling Phases 2-3** — Phase 1 (4-photo layouts), Phase 2 (counter bar, overflow, captions, quality badges, reorder), Phase 3 (7-category classifier, confidence scores, auto-assignment, quality scoring, image ranking) — all complete (2026-02-27)
 - [ ] **Render deployment** — `75af231` pushed to GitHub but user reported no Render logs. May need manual deploy or webhook check
-- [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
+- [x] **WordPress integration ready** — 4 sample PDFs generated (Restaurant, Salon, Gym, Auto), offline generator script, Divi embed guide with copy-paste HTML/CSS, nav menu instructions (2026-02-27)
 - [x] **Email notifications** — Brevo SMTP relay, `portal@mctvofms.com`, authenticated domain (DKIM + DMARC), tested and confirmed working (2026-02-26)
 - [x] **Custom domain** — `bot.mctvofms.com` live with SSL (CNAME in SiteGround → Render, auto-provisioned Let's Encrypt cert) (2026-02-26)
 - [x] **Twilio SMS activated** — Phone +1 662 707 6766 (Como, MS), Account SID + Auth Token + Phone Number env vars on Render, rebuild triggered (2026-02-26)
@@ -126,9 +126,15 @@
 
 ## Changelog
 
-### 2026-02-27 — A2P Registration + SEO Content + Legal Pages + PWA Scope + Photo Handling Phases 2-3 + Color Scheme Tests
+### 2026-02-27 — A2P Registration + SEO Content + Legal Pages + PWA Scope + Photo Handling Phases 2-3 + Color Scheme Tests + WordPress Integration
 
-Major compliance, content, infrastructure, photo handling, and QA day.
+Major compliance, content, infrastructure, photo handling, QA, and WordPress integration day.
+
+#### WordPress Integration
+- **`scripts/generate_samples_offline.py`** — Self-contained sample proposal generator (no Claude API required). Pre-written content for 4 industries: Restaurant ("Southern Table Kitchen & Bar"), Salon ("Blades & Fades Barbershop"), Gym ("Iron & Oak Fitness"), Auto ("Precision Auto Care"). Pricing sections excluded (never public). Uses DocxService directly with all formatting components.
+- **4 sample PDFs generated** — `assets/samples/MCTV_Sample_{Restaurant,Salon,Gym,Auto}.pdf` (~247KB each). Converted from .docx via docx2pdf + Microsoft Word. Ready for download on the Samples page.
+- **`docs/WORDPRESS_INTEGRATION.md`** — Complete Divi integration guide: iframe embed codes for Intake + Samples pages, responsive CSS (mobile/tablet/desktop), nav menu setup with gold CTA button styling, auto-resize script, SEO/Rank Math instructions, troubleshooting guide, step-by-step checklist.
+- **`.gitignore` updated** — Excludes `.docx` source files from samples (only PDFs deploy to Render).
 
 #### Color Scheme Test Suite
 - **`scripts/test_color_schemes.py`** — Automated test: generates full proposals (cover, headers, cards, tables, banners, pricing, competitive, ROI, social proof, team, footer) in all 4 color schemes (Original, Light & Airy, Dark & Sophisticated, Peaceful Pastels). 7 checks: color consistency (11 keys), logo assets (4 scheme PNGs), color differentiation (unique hex in XML), plus 4 generation tests (~1.2MB each). All pass.

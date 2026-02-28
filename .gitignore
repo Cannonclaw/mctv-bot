@@ -11,3 +11,4 @@ config/qb_tokens.json
 .claude/
 TRADE_SECRETS.md
 docs/NTV360_BUSINESS_CASE.md
+assets/samples/*.docx
