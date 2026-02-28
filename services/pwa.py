@@ -79,7 +79,7 @@ _SW_REGISTRATION_SCRIPT = """
     try { nav = window.parent.navigator; } catch(e) { nav = navigator; }
     if (!('serviceWorker' in nav)) return;
 
-    nav.serviceWorker.register('/app/static/service-worker.js')
+    nav.serviceWorker.register('/app/static/service-worker.js', {scope: '/'})
         .then(function(reg) { console.log('[PWA] Service Worker registered, scope:', reg.scope); })
         .catch(function(err) { console.log('[PWA] SW registration failed:', err.message); });
 })();

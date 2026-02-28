@@ -1,11 +1,12 @@
 # HEARTBEAT.md - Project Status & Changelog
 
-## Current Status: Live on Render — PWA + Test Client Deployed
+## Current Status: Live at bot.mctvofms.com — SMS + Email + Custom Domain
 
 **Last deploy:** 2026-02-26 — `e4d4bf1` pushed to GitHub, Render auto-deploying
-**URL:** https://mctv-bot.onrender.com
+**URL:** https://bot.mctvofms.com (also: https://mctv-bot.onrender.com)
 **Branch:** main (auto-deploys on push)
 **Latest commit:** `e4d4bf1` — PWA support: service worker, manifest, mobile CSS, install banner
+**Email:** portal@mctvofms.com via Brevo SMTP (authenticated domain, DKIM + DMARC)
 
 ---
 
@@ -64,6 +65,9 @@
 - [x] Mobile-responsive Streamlit overrides (48px touch targets, stacked columns, iOS zoom fix)
 - [x] Install banner (native beforeinstallprompt + manual iOS/Android instructions)
 - [x] Test client setup script (Oxford Coffee Co. — full portal QA data)
+- [x] Professional email via Brevo SMTP (`portal@mctvofms.com`, authenticated domain, DKIM + DMARC)
+- [x] Custom domain (`bot.mctvofms.com`, SSL auto-provisioned, CNAME in SiteGround)
+- [x] Email notifications working end-to-end (contract sent, invoice, creative, report sharing)
 
 ## What Needs Attention
 
@@ -87,8 +91,10 @@
 - [ ] **Photo Handling Phases 2-3** — Phase 1 done (4-photo layouts). Phase 2 (scraper preview polish), Phase 3 (smart classification) pending
 - [ ] **Render deployment** — `75af231` pushed to GitHub but user reported no Render logs. May need manual deploy or webhook check
 - [ ] **WordPress integration NOT live yet** — iframe tested, need to publish pages, nav menu, Calendly, sample PDFs, subdomain
-- [ ] Email notifications (SMTP configured but not confirmed working end-to-end)
-- [ ] Custom domain (bot.mctvofms.com CNAME to Render — not yet set up)
+- [x] **Email notifications** — Brevo SMTP relay, `portal@mctvofms.com`, authenticated domain (DKIM + DMARC), tested and confirmed working (2026-02-26)
+- [x] **Custom domain** — `bot.mctvofms.com` live with SSL (CNAME in SiteGround → Render, auto-provisioned Let's Encrypt cert) (2026-02-26)
+- [x] **Twilio SMS activated** — Phone +1 662 707 6766 (Como, MS), Account SID + Auth Token + Phone Number env vars on Render, rebuild triggered (2026-02-26)
+- [ ] **A2P 10DLC registration** — Required for production business SMS. Twilio trial mode works for testing. Register brand + campaign for full volume.
 - [x] **Integration test suite** — 42/42 tests passing (28 CRUD + 14 service layer) — 2026-02-24
 - [x] **MCP Servers configured** — Memory (knowledge graph), Google Workspace, Canva Dev — `~/.claude/.mcp.json` (2026-02-24)
 - [ ] **GA4 MCP** — needs Google Cloud service account setup (guide in doc)
@@ -111,6 +117,30 @@
 ---
 
 ## Changelog
+
+### 2026-02-26 — Custom Domain + Professional Email (Infrastructure)
+
+Professional domain and email infrastructure for the MCTV portal.
+
+#### Custom Domain: `bot.mctvofms.com`
+- **SiteGround DNS** — Added CNAME record: `bot` → `mctv-bot.onrender.com` (TTL 24h)
+- **Render Custom Domains** — Added `bot.mctvofms.com`, DNS verified instantly
+- **SSL** — Auto-provisioned Let's Encrypt certificate, HTTPS working
+- **Result:** Portal accessible at `https://bot.mctvofms.com` with full SSL
+
+#### Professional Email: `portal@mctvofms.com`
+- **Brevo (formerly Sendinblue)** — Free tier SMTP relay (300 emails/day, 5,000/mo)
+- **Domain authentication** — DKIM (2 CNAME records), DMARC (TXT record), domain verification code (TXT record)
+- **SiteGround DNS records added:**
+  - `TXT @` → `brevo-code:7340efc9305ab1dd31be3f9998ef2be8`
+  - `CNAME brevo1._domainkey` → `b1.mctvofms-com.dkim.brevo.com`
+  - `CNAME brevo2._domainkey` → `b2.mctvofms-com.dkim.brevo.com`
+  - `TXT _dmarc` → `v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com`
+- **Render env vars updated:** `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM=portal@mctvofms.com`
+- **notification_service.py** — Dual-port support: STARTTLS on 587, SSL on 465, separate `SMTP_FROM` for sender address
+- **Result:** Test email sent successfully from `portal@mctvofms.com` to `creed@mctvofms.com` via Render Shell
+
+---
 
 ### 2026-02-26 — PWA Support + Test Client (`e4d4bf1`)
 

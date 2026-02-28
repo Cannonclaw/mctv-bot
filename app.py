@@ -26,6 +26,46 @@ import streamlit.web.server.starlette.starlette_routes as _star_routes
 _JS_EXTS = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js",)
 _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
 _star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
+
+# Fix 3: PWA scope expansion — send "Service-Worker-Allowed: /" header.
+# The service worker lives at /app/static/service-worker.js but needs root
+# scope (/) to intercept all navigation requests.  Both Tornado and Starlette
+# handlers must include this header on the service-worker.js response.
+#
+# Tornado handler — patch set_extra_headers():
+_orig_set_extra = _asfh.AppStaticFileHandler.set_extra_headers
+
+def _sw_extra_headers(self, path):
+    _orig_set_extra(self, path)
+    if path.endswith("service-worker.js"):
+        self.set_header("Service-Worker-Allowed", "/")
+
+_asfh.AppStaticFileHandler.set_extra_headers = _sw_extra_headers
+
+# Starlette handler — wrap the static-file route endpoint:
+_orig_starlette_static = _star_routes.create_app_static_serving_routes
+
+def _patched_starlette_static(main_script_path, base_url=None):
+    from starlette.routing import Route as _Route
+    routes = _orig_starlette_static(main_script_path, base_url)
+    patched = []
+    for r in routes:
+        if hasattr(r, "methods") and r.methods and "GET" in r.methods:
+            _orig_ep = r.endpoint
+
+            async def _wrapped(request, _ep=_orig_ep):
+                resp = await _ep(request)
+                if request.path_params.get("path", "").endswith("service-worker.js"):
+                    resp.headers["Service-Worker-Allowed"] = "/"
+                return resp
+
+            patched.append(_Route(r.path, _wrapped, methods=list(r.methods)))
+        else:
+            patched.append(r)
+    return patched
+
+_star_routes.create_app_static_serving_routes = _patched_starlette_static
+
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
