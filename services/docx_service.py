@@ -214,12 +214,23 @@ class DocxService:
         # Client name (big, white, bold)
         p = cell.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.space_after = Pt(4)
+        p.space_after = Pt(2)
         run = p.add_run(prepared_for.upper())
         run.font.size = Pt(24)
         run.font.color.rgb = self.c["white"]
         run.font.bold = True
         run.font.name = "Arial"
+
+        # Business name / subtitle (gold, under client name)
+        if subtitle:
+            p = cell.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.space_after = Pt(4)
+            run = p.add_run(subtitle)
+            run.font.size = Pt(14)
+            run.font.color.rgb = self.c["accent"]
+            run.font.name = "Arial"
+            run.font.italic = True
 
         # Client logo (if provided)
         if client_logo_path:

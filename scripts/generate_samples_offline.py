@@ -387,15 +387,17 @@ def build_sample(config: dict, sample: dict, scheme: str = "original") -> Path:
     )
     docx.add_callout_box(doc, venue_text)
 
-    # ── How MCTV Compares (no pricing, just competitive table) ──
+    # ── How MCTV Compares (generic ranges only — no specific pricing) ──
     docx.add_section_header(doc, "How MCTV Compares")
     docx.add_body_text(
         doc,
         "Local businesses have more advertising options than ever. "
         "Here is how MCTV stacks up against the alternatives."
     )
-    docx.add_competitive_comparison(doc, monthly_rate=500, screen_count=20,
-                                     monthly_impressions=30000)
+    # monthly_rate=0 → uses config range ("$350 - $1,300") instead of a specific price
+    # monthly_impressions=0 → uses generic CPM ("$1 - $3") instead of calculating
+    docx.add_competitive_comparison(doc, monthly_rate=0, screen_count=20,
+                                     monthly_impressions=0)
 
     # ── Why MCTV ──
     docx.add_section_header(doc, "Why MCTV", new_page=True)
