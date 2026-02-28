@@ -527,6 +527,177 @@ def notify_monthly_reports_summary(results: list[dict], period: str) -> bool:
     return _send_email(_get_team_emails(), subject, body)
 
 
+# ── Lead Follow-up Emails ──────────────────────────────────────────────────
+
+def send_lead_welcome_email(lead: dict) -> bool:
+    """Send a warm welcome email to a new lead who submitted the intake form.
+
+    Sent ~24 hours after submission to give the team time to respond first.
+    """
+    email = lead.get("contact_email", "")
+    if not email:
+        return False
+
+    name = lead.get("contact_name", "").split()[0] if lead.get("contact_name") else "there"
+    business = lead.get("business_name", "your business")
+    city = lead.get("city", "North Mississippi")
+    portal_url = _get_portal_url()
+
+    subject = f"Thanks for your interest in MCTV, {name}!"
+    body = f"""Hi {name},
+
+Thank you for reaching out to MCTV Elite Advertising! We received your inquiry about advertising {business} on our indoor digital billboard network.
+
+A few quick facts about MCTV:
+- 125+ screens across Oxford, Starkville, Tupelo, and growing
+- Your ad plays in restaurants, gyms, salons, medical offices, and more
+- Ads cannot be skipped, blocked, or scrolled past
+- Starting at just $350/month
+
+One of our team members will be reaching out shortly to discuss how we can help {business} get in front of more local customers in {city}.
+
+In the meantime, you can learn more at: www.mctvofms.com
+
+Looking forward to chatting!
+
+Best,
+MCTV Elite Advertising
+North Mississippi's Indoor Digital Billboard Network
+www.mctvofms.com
+"""
+    return _send_email(email, subject, body)
+
+
+def send_lead_followup_reminder(leads: list[dict]) -> bool:
+    """Send the MCTV team a summary of leads needing follow-up today.
+
+    Args:
+        leads: List of lead dicts with overdue follow_up_date or
+               high-score leads that haven't been contacted.
+    """
+    if not leads:
+        return True
+
+    lines = [
+        "LEAD FOLLOW-UP REMINDER",
+        "=" * 40,
+        "",
+        f"{len(leads)} lead(s) need attention today:",
+        "",
+    ]
+
+    for lead in leads:
+        bname = lead.get("business_name", "Unknown")
+        contact = lead.get("contact_name", "N/A")
+        status = lead.get("status", "new")
+        score = lead.get("_score", 0)
+        reason = lead.get("_followup_reason", "")
+        phone = lead.get("contact_phone", "")
+        email = lead.get("contact_email", "")
+
+        lines.append(f"  [{status.upper()}] {bname} (Score: {score})")
+        lines.append(f"    Contact: {contact} | Phone: {phone or 'N/A'} | Email: {email or 'N/A'}")
+        if reason:
+            lines.append(f"    Reason: {reason}")
+        note = lead.get("follow_up_note", "")
+        if note:
+            lines.append(f"    Note: {note}")
+        lines.append("")
+
+    lines.append("Log in to the MCTV Bot Leads page to manage follow-ups.")
+
+    subject = f"Lead Follow-up: {len(leads)} lead(s) need attention"
+    body = "\n".join(lines)
+    return _send_email(_get_team_emails(), subject, body)
+
+
+def send_lead_nurture_email(lead: dict, step: int) -> bool:
+    """Send a nurture drip email to a lead based on the sequence step.
+
+    Steps:
+        1: Value proposition (sent 3 days after intake)
+        2: Social proof / case study (sent 7 days after intake)
+        3: Special offer / urgency (sent 14 days after intake)
+    """
+    email = lead.get("contact_email", "")
+    if not email:
+        return False
+
+    name = lead.get("contact_name", "").split()[0] if lead.get("contact_name") else "there"
+    business = lead.get("business_name", "your business")
+    portal_url = _get_portal_url()
+
+    if step == 1:
+        subject = f"How MCTV can help {business} reach more customers"
+        body = f"""Hi {name},
+
+I wanted to follow up on your recent inquiry about MCTV Elite Advertising.
+
+Here's what makes MCTV different from other advertising options:
+
+1. CAPTIVE AUDIENCES — Your ad plays on screens where people are waiting, eating, or relaxing. They can't skip, block, or scroll past it.
+
+2. HYPER-LOCAL TARGETING — Choose exactly which venues match your ideal customer. A gym ad in fitness centers, a restaurant ad in offices at lunchtime.
+
+3. LOWEST CPM IN THE MARKET — At $1-3 CPM, MCTV delivers more impressions per dollar than radio, cable TV, print, or outdoor billboards.
+
+4. REAL ANALYTICS — Our NTV360 dashboard shows exactly how many times your ad played, at which venues, and your total impressions.
+
+Would you like to see a custom proposal for {business}? Just reply to this email or give us a call.
+
+Best,
+MCTV Elite Advertising
+www.mctvofms.com
+"""
+
+    elif step == 2:
+        subject = f"{name}, see how local businesses are growing with MCTV"
+        body = f"""Hi {name},
+
+Local businesses across North Mississippi are using MCTV to stay top-of-mind with their ideal customers.
+
+Here's what our network looks like:
+- 125+ screens in restaurants, gyms, salons, medical offices, and more
+- 1.9M+ monthly impressions across Oxford, Starkville, and Tupelo
+- Average viewer dwell time of 55 minutes per visit
+
+What our partners love most: their ads play automatically, 7 days a week, in venues where their ideal customers already spend time.
+
+We'd love to show you how {business} could fit into the network. Want to see a personalized proposal? It only takes 5 minutes.
+
+Reply to this email or call us anytime.
+
+Best,
+MCTV Elite Advertising
+www.mctvofms.com
+"""
+
+    elif step == 3:
+        subject = f"Quick question about {business}, {name}"
+        body = f"""Hi {name},
+
+I wanted to check in one more time. We put together some ideas for how {business} could benefit from indoor digital billboard advertising.
+
+A few quick reminders:
+- Plans start at just $350/month
+- No long-term commitment required (6-month minimum)
+- We handle all creative design at no extra cost
+- Your ad starts playing within days of signing
+
+If you're interested, I'd love to set up a quick 10-minute call to walk through the options.
+
+If the timing isn't right, no worries at all. We'll be here when you're ready.
+
+Best,
+MCTV Elite Advertising
+www.mctvofms.com
+"""
+    else:
+        return False
+
+    return _send_email(email, subject, body)
+
+
 def sms_contract_expiring(phone: str, contact_name: str, business_name: str,
                            days_remaining: int, rep_name: str = "Mary Michael"):
     """Text notification when a contract is approaching expiration."""

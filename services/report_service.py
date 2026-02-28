@@ -390,13 +390,45 @@ def generate_and_share_report(
         total_impressions = sum(v.monthly_impressions for v in venue_records)
         total_traffic = sum(v.monthly_traffic for v in venue_records)
 
+        # ── Pull NTV360 play data from snapshot (if available) ──────────
+        total_plays = 0
+        try:
+            from services.ntv360_service import get_play_data_for_report
+
+            # Resolve target month from period_label (e.g., "January 2026" -> "2026-01")
+            _period_date = datetime.strptime(period_label, "%B %Y")
+            _target_month = _period_date.strftime("%Y-%m")
+
+            play_data = get_play_data_for_report(_target_month)
+            if play_data and play_data.get("total_plays", 0) > 0:
+                total_plays = play_data["total_plays"]
+                logger.info(
+                    "NTV360 snapshot found for %s: %d plays (%s match)",
+                    _target_month, total_plays,
+                    "exact" if play_data["is_exact_match"] else "fallback",
+                )
+
+                # Enrich venue records with per-venue play counts
+                venue_plays = play_data.get("venue_plays", {})
+                for v in venue_records:
+                    vkey = v.host_name.strip().lower()
+                    if vkey in venue_plays:
+                        v.total_plays = venue_plays[vkey].get("total_plays", 0)
+                        v.total_air_time = venue_plays[vkey].get("total_air_time", "")
+            else:
+                logger.info("No NTV360 snapshot available — total_plays will be 0")
+        except ImportError:
+            logger.debug("ntv360_service not available — skipping play data")
+        except Exception as e:
+            logger.warning("Failed to load NTV360 snapshot: %s", e)
+
         # Build TractionReportInput
         report_data = TractionReportInput(
             advertiser_name=bname,
             report_type="traction",
             campaign_period=period_label,
             venue_records=venue_records,
-            total_plays=0,  # no NTV360 play data in automated mode
+            total_plays=total_plays,
             total_screen_count=len(venue_records),
             total_impressions=total_impressions,
             total_monthly_traffic=total_traffic,

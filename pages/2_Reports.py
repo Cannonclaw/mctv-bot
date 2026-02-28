@@ -417,6 +417,20 @@ with tab_upload:
                     if dashboard_lookup:
                         enrich_report_with_dashboard(report_data, dashboard_lookup)
 
+                    # Save NTV360 play data snapshot for automated reports
+                    try:
+                        from services.ntv360_service import save_snapshot
+                        _filenames = ", ".join(f.name for f in uploaded_files)
+                        save_snapshot(
+                            venue_records=report_data.venue_records,
+                            total_plays=report_data.total_plays,
+                            total_air_time=getattr(report_data, "total_air_time", ""),
+                            uploaded_by=st.session_state.get("team_member", ""),
+                            source_file=_filenames,
+                        )
+                    except Exception as _snap_err:
+                        pass  # Non-critical — don't block report generation
+
                     _generate_report(report_data, output_format=output_format)
 
 

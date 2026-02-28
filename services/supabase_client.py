@@ -598,6 +598,50 @@ def insert_row(table: str, data: dict, use_service_key: bool = True) -> dict | N
     return None
 
 
+def upsert_row(table: str, data: dict, on_conflict: str = "id",
+               use_service_key: bool = True) -> dict | None:
+    """Insert or update a row based on a unique constraint.
+
+    Uses Supabase's UPSERT via Prefer: resolution=merge-duplicates.
+    The ``on_conflict`` column must have a UNIQUE index/constraint.
+
+    Args:
+        table: Table name.
+        data: Row data including the conflict column value.
+        on_conflict: Column name for conflict resolution.
+        use_service_key: Use service key for elevated access.
+
+    Returns:
+        The upserted row dict, or None on failure.
+    """
+    url, anon_key, service_key = _get_url_and_keys()
+    if not url:
+        return None
+
+    key = (service_key if use_service_key and service_key else anon_key)
+    if not key:
+        return None
+
+    full_url = f"{url}/rest/v1/{table}?on_conflict={on_conflict}"
+    body = json.dumps(data).encode("utf-8")
+
+    headers = _rest_headers(key)
+    headers["Prefer"] = "return=representation,resolution=merge-duplicates"
+
+    req = urllib.request.Request(full_url, data=body, headers=headers, method="POST")
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read().decode("utf-8")
+            result = json.loads(raw) if raw else []
+            if result and len(result) > 0:
+                return result[0]
+            return None
+    except Exception as e:
+        print(f"[supabase_client] UPSERT {table} failed: {e}")
+        return None
+
+
 def update_row(table: str, row_id: str, data: dict,
                id_column: str = "id", use_service_key: bool = True) -> dict | None:
     """Update a row by ID. Returns the updated row or None."""

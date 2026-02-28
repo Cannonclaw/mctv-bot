@@ -168,5 +168,47 @@
     "model": "claude-opus-4-6",
     "model_premium": "claude-opus-4-6",
     "tone": "Professional but warm. Mississippi local business feel. Confident without being pushy. Emphasize partnership over salesmanship."
+  },
+  "creatomate": {
+    "template_id": "",
+    "template_name": "MCTV Indoor Ad 1920x1080",
+    "output_format": "mp4",
+    "duration_seconds": 15,
+    "resolution": "1920x1080",
+    "element_map": {
+      "business_name": "Business-Name.text",
+      "industry": "Industry.text",
+      "city": "City.text",
+      "tagline": "Tagline.text",
+      "client_logo": "Client-Logo.source",
+      "background_image": "Background-Image.source",
+      "mctv_logo": "MCTV-Logo.source",
+      "cta_text": "CTA.text",
+      "phone_number": "Phone.text",
+      "website": "Website.text"
+    },
+    "color_schemes": {
+      "original": {
+        "bg_color": "#1B1F3B",
+        "accent_color": "#C5A55A",
+        "text_color": "#FFFFFF"
+      },
+      "light": {
+        "bg_color": "#F5F0E8",
+        "accent_color": "#C5A55A",
+        "text_color": "#1B1F3B"
+      },
+      "dark": {
+        "bg_color": "#0D1117",
+        "accent_color": "#C5A55A",
+        "text_color": "#E6E6E6"
+      },
+      "pastel": {
+        "bg_color": "#E8F0F5",
+        "accent_color": "#7BA7C2",
+        "text_color": "#2C3E50"
+      }
+    },
+    "instructions": "To set up: 1) Design a 1920x1080 template in Creatomate editor. 2) Name text elements to match element_map keys. 3) Copy the template ID and paste it above."
   }
 }
