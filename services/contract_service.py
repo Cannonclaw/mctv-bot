@@ -16,6 +16,7 @@ from services.storage_service import (
 )
 from services.notification_service import (
     notify_contract_ready, notify_contract_signed,
+    sms_contract_ready,
 )
 from services.portal_service import get_client, log_activity
 
@@ -284,6 +285,13 @@ def send_contract(contract_id: str) -> dict | None:
         client_email=client.get("contact_email", ""),
         client_name=client.get("contact_name", ""),
         contract_title=contract.get("title", ""),
+    )
+
+    # Send SMS notification (fails silently if Twilio not configured or no phone)
+    sms_contract_ready(
+        phone=client.get("contact_phone", ""),
+        contact_name=client.get("contact_name", ""),
+        business_name=client.get("business_name", ""),
     )
 
     log_activity(
