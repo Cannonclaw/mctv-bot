@@ -224,15 +224,19 @@ if st.button("Submit", type="primary", width='stretch'):
         missing.append("Phone Number")
     if not industry:
         missing.append("Industry")
+    if how_heard == "Select one...":
+        missing.append("How did you hear about MCTV")
+
+    # Validate phone number format
+    import re
+    phone_digits = re.sub(r'\D', '', contact_phone) if contact_phone else ""
+    phone_invalid = contact_phone and len(phone_digits) < 10
 
     if missing:
         st.error(f"Please fill in: {', '.join(missing)}")
+    elif phone_invalid:
+        st.error("Please enter a valid phone number (at least 10 digits).")
     else:
-        # Warn if phone doesn't look valid (non-blocking)
-        import re
-        phone_digits = re.sub(r'\D', '', contact_phone)
-        if contact_phone and len(phone_digits) < 10:
-            st.warning("Please enter a valid phone number (at least 10 digits)")
         # Save the logo to a permanent location if uploaded
         logo_filename = None
         if client_logo:

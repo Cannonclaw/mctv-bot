@@ -48,7 +48,7 @@ Create a new WordPress page at `/get-started/` or `/advertise/`.
   <iframe
     src="https://bot.mctvofms.com/Intake"
     title="Request Your Free MCTV Advertising Proposal"
-    style="width: 100%; height: 1200px; border: none; border-radius: 8px;"
+    style="width: 100%; height: 1850px; border: none; border-radius: 8px;"
     loading="lazy"
     allow="clipboard-write"
   ></iframe>
@@ -64,13 +64,13 @@ Create a new WordPress page at `/get-started/` or `/advertise/`.
 /* Responsive height adjustments */
 @media (max-width: 768px) {
   .mctv-embed-container iframe {
-    height: 1400px !important;
+    height: 2100px !important;
   }
 }
 
 @media (max-width: 480px) {
   .mctv-embed-container iframe {
-    height: 1600px !important;
+    height: 2400px !important;
   }
 }
 </style>
