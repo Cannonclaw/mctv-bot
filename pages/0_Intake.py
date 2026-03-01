@@ -73,6 +73,37 @@ st.markdown("""
     "knowsAbout": ["Indoor advertising", "Digital billboards", "Local business marketing", "Digital signage"]
 }
 </script>
+
+<!-- Auto-resize: broadcast actual page height to parent iframe (WordPress) -->
+<script>
+(function() {
+    if (window.parent === window) return; // Not in an iframe
+    var lastHeight = 0;
+    function sendHeight() {
+        var body = document.body;
+        var html = document.documentElement;
+        var height = Math.max(
+            body.scrollHeight, body.offsetHeight,
+            html.clientHeight, html.scrollHeight, html.offsetHeight
+        );
+        if (height !== lastHeight) {
+            lastHeight = height;
+            window.parent.postMessage({type: 'streamlit:height', height: height}, '*');
+        }
+    }
+    // Send height on load, resize, and periodically (Streamlit rerenders dynamically)
+    sendHeight();
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    setInterval(sendHeight, 1000);
+    // Also observe DOM mutations for dynamic content changes
+    if (window.MutationObserver) {
+        new MutationObserver(sendHeight).observe(document.body, {
+            childList: true, subtree: true, attributes: true
+        });
+    }
+})();
+</script>
 """, unsafe_allow_html=True)
 
 
