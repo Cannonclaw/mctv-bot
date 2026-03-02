@@ -9,7 +9,17 @@ Single entry point with a unified landing page offering three login paths:
 3. Advertiser — Supabase email/password or magic link for advertisers
 """
 
+import logging
 import mimetypes
+
+# Configure logging so notification_service, contract_service etc. output
+# goes to Render's stdout log stream.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
 # Fix 1: Windows maps .js → text/plain in the registry. Starlette's
 # FileResponse calls mimetypes.guess_type() so we fix it globally.
 mimetypes.add_type("application/javascript", ".js")

@@ -240,10 +240,19 @@ with tab_list:
                             with st.spinner("Sending contract..."):
                                 result = send_contract(cid)
                                 if result:
-                                    st.success("Contract sent. Client has been notified by email.")
+                                    email_ok = result.get("email_sent", False)
+                                    sms_ok = result.get("sms_sent", False)
+                                    if email_ok and sms_ok:
+                                        st.success("Contract sent! Client notified by email + SMS. Team confirmation sent.")
+                                    elif email_ok:
+                                        st.success("Contract sent! Client notified by email. Team confirmation sent.")
+                                    elif sms_ok:
+                                        st.warning("Contract sent. SMS delivered but email failed — check client email address.")
+                                    else:
+                                        st.warning("Contract marked as sent but notifications failed. Check client email/phone.")
                                     st.rerun()
                                 else:
-                                    st.error("Failed to send contract.")
+                                    st.error("Failed to send contract. Check that the client exists and contract has a document.")
                     elif cstatus == "draft" and not has_doc:
                         st.button("Send to Client", key=f"send_{cid}",
                                   width='stretch', disabled=True,

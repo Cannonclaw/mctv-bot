@@ -16,6 +16,7 @@ from services.storage_service import (
 )
 from services.notification_service import (
     notify_contract_ready, notify_contract_signed,
+    notify_contract_sent_team,
     sms_contract_ready,
 )
 from services.portal_service import get_client, log_activity
@@ -271,16 +272,17 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
 
 
 def send_contract(contract_id: str) -> dict | None:
-    """Mark contract as 'sent' and email the client.
+    """Mark contract as 'sent', email the client, and notify the team.
 
-    Returns updated contract or None.
+    Returns a dict with the updated contract and notification results:
+        {"contract": {...}, "email_sent": bool, "sms_sent": bool}
+    Returns None if the contract cannot be sent.
     """
     contract = get_contract(contract_id)
     if not contract:
         return None
 
     if contract.get("status") not in ("draft", "sent"):
-        print(f"[contract_service] Cannot send contract in status: {contract.get('status')}")
         return None
 
     client = get_client(contract.get("client_id", ""))
@@ -293,18 +295,34 @@ def send_contract(contract_id: str) -> dict | None:
         "sent_at": datetime.now().isoformat(),
     })
 
-    # Send notification email
-    notify_contract_ready(
-        client_email=client.get("contact_email", ""),
-        client_name=client.get("contact_name", ""),
-        contract_title=contract.get("title", ""),
+    client_email = client.get("contact_email", "")
+    client_name = client.get("contact_name", "")
+    client_phone = client.get("contact_phone", "")
+    business_name = client.get("business_name", "")
+    contract_title = contract.get("title", "")
+
+    # Send notification email to client
+    email_ok = notify_contract_ready(
+        client_email=client_email,
+        client_name=client_name,
+        contract_title=contract_title,
     )
 
-    # Send SMS notification (fails silently if Twilio not configured or no phone)
-    sms_contract_ready(
-        phone=client.get("contact_phone", ""),
-        contact_name=client.get("contact_name", ""),
-        business_name=client.get("business_name", ""),
+    # Send SMS notification to client
+    sms_ok = sms_contract_ready(
+        phone=client_phone,
+        contact_name=client_name,
+        business_name=business_name,
+    )
+
+    # Send confirmation to MCTV team
+    notify_contract_sent_team(
+        contract_title=contract_title,
+        client_name=client_name,
+        business_name=business_name,
+        client_email=client_email,
+        email_ok=email_ok,
+        sms_ok=sms_ok,
     )
 
     log_activity(
@@ -314,7 +332,7 @@ def send_contract(contract_id: str) -> dict | None:
         entity_id=contract_id,
     )
 
-    return updated
+    return {"contract": updated, "email_sent": email_ok, "sms_sent": sms_ok}
 
 
 def record_contract_view(contract_id: str, client_id: str = "") -> dict | None:

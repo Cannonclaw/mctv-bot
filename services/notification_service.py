@@ -11,10 +11,13 @@ Extends the existing SMTP pattern from leads_service.py for:
 - Portal account created
 """
 
+import logging
 import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+logger = logging.getLogger(__name__)
 
 
 def _get_smtp_config() -> tuple:
@@ -49,7 +52,11 @@ def _send_email(to_emails: str, subject: str, body: str) -> bool:
     """
     host, port, user, password, from_addr = _get_smtp_config()
     if not host or not user:
-        print(f"[notify] SMTP not configured — skipping: {subject}")
+        logger.warning("SMTP not configured — skipping: %s", subject)
+        return False
+
+    if not to_emails or not to_emails.strip():
+        logger.warning("No recipient email — skipping: %s", subject)
         return False
 
     try:
@@ -59,7 +66,7 @@ def _send_email(to_emails: str, subject: str, body: str) -> bool:
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
 
-        recipients = [e.strip() for e in to_emails.split(",")]
+        recipients = [e.strip() for e in to_emails.split(",") if e.strip()]
 
         if port == 465:
             with smtplib.SMTP_SSL(host, port) as server:
@@ -71,9 +78,10 @@ def _send_email(to_emails: str, subject: str, body: str) -> bool:
                 server.login(user, password)
                 server.sendmail(from_addr, recipients, msg.as_string())
 
+        logger.info("Email sent to %s — %s", to_emails, subject)
         return True
     except Exception as e:
-        print(f"[notify] EMAIL ERROR: {e}")
+        logger.error("EMAIL ERROR sending to %s: %s", to_emails, e)
         return False
 
 
@@ -134,6 +142,30 @@ MCTV Elite Advertising
 www.mctvofms.com
 """
     return _send_email(client_email, subject, body)
+
+
+def notify_contract_sent_team(contract_title: str, client_name: str,
+                              business_name: str, client_email: str,
+                              email_ok: bool, sms_ok: bool) -> bool:
+    """Notify the MCTV team that a contract was sent to a client."""
+    email_status = f"Delivered to {client_email}" if email_ok else f"FAILED to {client_email or 'NO EMAIL'}"
+    sms_status = "Delivered" if sms_ok else "Not sent"
+
+    subject = f"Contract Sent: {business_name}"
+    body = f"""CONTRACT SENT
+========================
+
+Business: {business_name}
+Contact: {client_name}
+Contract: {contract_title}
+
+Notifications:
+  Email: {email_status}
+  SMS: {sms_status}
+
+Log in to the MCTV Bot to track the contract status.
+"""
+    return _send_email(_get_team_emails(), subject, body)
 
 
 def notify_contract_signed(contract_title: str, client_name: str,
@@ -393,16 +425,19 @@ def notify_contract_expired_team(contracts: list) -> bool:
 # These mirror the email notifications above but send a short text instead.
 # They fail silently if Twilio is not configured or the contact hasn't opted in.
 
-def _try_sms(phone: str, template_key: str, variables: dict):
-    """Attempt to send an SMS notification. Fails silently."""
+def _try_sms(phone: str, template_key: str, variables: dict) -> bool:
+    """Attempt to send an SMS notification. Returns True on success."""
     if not phone:
-        return
+        return False
     try:
         from services.sms_service import send_template, is_configured
         if is_configured():
             send_template(template_key, phone, variables)
+            return True
+        return False
     except Exception as e:
-        print(f"[notify] SMS failed ({template_key}): {e}")
+        logger.warning("SMS failed (%s): %s", template_key, e)
+        return False
 
 
 def sms_proposal_sent(phone: str, contact_name: str, business_name: str,
@@ -416,9 +451,9 @@ def sms_proposal_sent(phone: str, contact_name: str, business_name: str,
 
 
 def sms_contract_ready(phone: str, contact_name: str, business_name: str,
-                       rep_name: str = "Mary Michael"):
+                       rep_name: str = "Mary Michael") -> bool:
     """Text notification when a contract is ready to sign."""
-    _try_sms(phone, "contract_ready", {
+    return _try_sms(phone, "contract_ready", {
         "contact_name": contact_name,
         "business_name": business_name,
         "rep_name": rep_name,
