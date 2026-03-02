@@ -29,22 +29,24 @@ DATA_DIR = Path(__file__).parent.parent / "data" / "sms"
 # ── Twilio Client ────────────────────────────────────────────────────────────
 
 def _get_twilio_config() -> tuple:
-    """Return (account_sid, auth_token, from_number) or Nones."""
+    """Return (account_sid, auth_token, from_number, messaging_service_sid)."""
     sid = os.environ.get("TWILIO_ACCOUNT_SID", "")
     token = os.environ.get("TWILIO_AUTH_TOKEN", "")
     from_number = os.environ.get("TWILIO_PHONE_NUMBER", "")
-    return sid, token, from_number
+    msg_svc_sid = os.environ.get("TWILIO_MESSAGING_SERVICE_SID", "")
+    return sid, token, from_number, msg_svc_sid
 
 
 def is_configured() -> bool:
     """Check if Twilio SMS is configured."""
-    sid, token, from_number = _get_twilio_config()
-    return bool(sid and token and from_number)
+    sid, token, from_number, msg_svc_sid = _get_twilio_config()
+    # Need SID + token, plus either a Messaging Service or direct phone number
+    return bool(sid and token and (msg_svc_sid or from_number))
 
 
 def _get_client():
     """Get Twilio REST client. Returns None if not configured."""
-    sid, token, _ = _get_twilio_config()
+    sid, token, _, _ = _get_twilio_config()
     if not sid or not token:
         return None
     try:
@@ -256,7 +258,7 @@ def send_sms(to: str, body: str, template: str = "",
                      error="Twilio not configured")
         return {"success": False, "sid": "", "error": "Twilio SMS not configured"}
 
-    _, _, from_number = _get_twilio_config()
+    _, _, from_number, msg_svc_sid = _get_twilio_config()
     client = _get_client()
     if not client:
         return {"success": False, "sid": "", "error": "Could not create Twilio client"}
@@ -267,11 +269,20 @@ def send_sms(to: str, body: str, template: str = "",
         full_body += "\n\nReply STOP to unsubscribe."
 
     try:
-        message = client.messages.create(
-            body=full_body,
-            from_=from_number,
-            to=to_formatted,
-        )
+        # Use Messaging Service SID for A2P 10DLC compliance when available,
+        # fall back to direct phone number for backward compatibility
+        if msg_svc_sid:
+            message = client.messages.create(
+                body=full_body,
+                messaging_service_sid=msg_svc_sid,
+                to=to_formatted,
+            )
+        else:
+            message = client.messages.create(
+                body=full_body,
+                from_=from_number,
+                to=to_formatted,
+            )
         _log_message(to_formatted, full_body, template, status="sent")
         return {"success": True, "sid": message.sid, "error": ""}
     except Exception as e:
