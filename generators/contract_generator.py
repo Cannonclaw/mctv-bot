@@ -501,6 +501,88 @@ BUNDLE_CLAUSES = [
 ]
 
 
+RENEWAL_CLAUSES = [
+    {
+        "title": "1. Continuation of Services",
+        "body": (
+            "MCTV Elite Advertising ('MCTV') and the Renewing Advertiser agree to "
+            "continue the advertising partnership established under the original "
+            "agreement. All services, screen placements, and content rotations will "
+            "continue without interruption during the transition to this renewed term. "
+            "This renewal supersedes and replaces the prior agreement in its entirety."
+        ),
+    },
+    {
+        "title": "2. Renewed Terms",
+        "body": (
+            "The terms of this renewed agreement are specified in the Partnership "
+            "Details section above. Any changes to screen count, monthly rate, or "
+            "market coverage from the original agreement are reflected in the updated "
+            "Partnership Details. Where this renewal is silent on a matter, the terms "
+            "of the original agreement shall apply."
+        ),
+    },
+    {
+        "title": "3. Rate & Loyalty Pricing",
+        "body": (
+            "The monthly rate for this renewal reflects MCTV's commitment to long-term "
+            "partnerships. Renewing advertisers may receive preferential pricing or rate "
+            "locks as a loyalty benefit. Any loyalty adjustments are reflected in the "
+            "Partnership Details section. MCTV reserves the right to adjust rates at "
+            "the next renewal period with 30 days advance written notice."
+        ),
+    },
+    {
+        "title": "4. Term & Future Renewal",
+        "body": (
+            "This renewed agreement begins on the Start Date specified above and "
+            "continues for the agreed term. Unless either party provides written notice "
+            "of non-renewal at least 30 days before the end of the current term, this "
+            "agreement will automatically renew for successive periods of equal length "
+            "at the then-current rate."
+        ),
+    },
+    {
+        "title": "5. Payment Continuation",
+        "body": (
+            "Invoices continue to be issued monthly on the first business day of each "
+            "month. Payment is due within 30 days of the invoice date. MCTV reserves "
+            "the right to suspend ad display for accounts more than 45 days past due. "
+            "A late fee of 1.5% per month may be applied to overdue balances. Any "
+            "outstanding balance from the prior agreement carries forward."
+        ),
+    },
+    {
+        "title": "6. Content Transition",
+        "body": (
+            "All existing creative content from the prior agreement carries over to "
+            "this renewed term at no additional cost. The Renewing Advertiser retains "
+            "ownership of all content created by MCTV during both the original and "
+            "renewed terms. Fresh creative updates are included as part of this "
+            "renewed partnership."
+        ),
+    },
+    {
+        "title": "7. Cancellation",
+        "body": (
+            "Either party may cancel this agreement with 60 days written notice. "
+            "If the Renewing Advertiser cancels before the end of the renewed term, "
+            "any prepay bonuses or discounts already applied will be prorated and "
+            "billed. MCTV will make reasonable efforts to wind down ad display "
+            "gracefully."
+        ),
+    },
+    {
+        "title": "8. Governing Law",
+        "body": (
+            "This agreement shall be governed by and construed in accordance with "
+            "the laws of the State of Mississippi. Any disputes arising under this "
+            "agreement shall be resolved in the courts of Hinds County, Mississippi."
+        ),
+    },
+]
+
+
 # Map contract types to their clause sets
 _CLAUSE_MAP = {
     "advertiser": STANDARD_CLAUSES,
@@ -508,6 +590,7 @@ _CLAUSE_MAP = {
     "host_advertising": HOST_ADVERTISING_CLAUSES,
     "category_exclusivity": CATEGORY_EXCLUSIVITY_CLAUSES,
     "bundle": BUNDLE_CLAUSES,
+    "renewal": RENEWAL_CLAUSES,
 }
 
 
@@ -534,6 +617,7 @@ class ContractGenerator:
         "host_advertising": "Host Advertising Agreement",
         "category_exclusivity": "Category Exclusivity Agreement",
         "bundle": "Multi-Brand Bundle Agreement",
+        "renewal": "Advertising Partnership Renewal",
     }
 
     # Party labels for signature blocks
@@ -543,6 +627,7 @@ class ContractGenerator:
         "host_advertising": "Host Advertiser",
         "category_exclusivity": "Exclusive Advertiser",
         "bundle": "Bundle Advertiser",
+        "renewal": "Renewing Advertiser",
     }
 
     def __init__(self, config: dict | None = None):
@@ -567,6 +652,8 @@ class ContractGenerator:
         exclusive_category: str = "",
         # Bundle fields
         bundle_brands: list[str] | None = None,
+        # Multi-tier options (Good/Better/Best comparison)
+        tier_options: list[dict] | None = None,
     ) -> tuple[Path, Path | None, bytes]:
         """Generate a contract document.
 
@@ -623,7 +710,15 @@ class ContractGenerator:
         # ── Partnership Details section ─────────────────────────────
         self.docx_service.add_section_header(doc, "Partnership Details")
 
-        if contract_type == "host_advertising":
+        # Multi-tier comparison table (if tier_options provided)
+        if tier_options and len(tier_options) >= 2 and contract_type in (
+            "advertiser", "renewal",
+        ):
+            self._add_tier_comparison_table(doc, tier_options, term_months,
+                                            markets, start_date, end_date,
+                                            auto_renew, business_name,
+                                            client_name)
+        elif contract_type == "host_advertising":
             self._add_host_advertising_details(
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
@@ -645,6 +740,12 @@ class ContractGenerator:
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
                 auto_renew, bundle_brands or [],
+            )
+        elif contract_type == "renewal":
+            self._add_renewal_details(
+                doc, business_name, client_name, tier_name, screen_count,
+                monthly_rate, term_months, markets, start_date, end_date,
+                auto_renew,
             )
         else:
             self._add_advertiser_details(
@@ -958,6 +1059,186 @@ class ContractGenerator:
             doc,
             headers=["Detail", "Value"],
             rows=details,
+        )
+
+    # ------------------------------------------------------------------
+    # Renewal details
+    # ------------------------------------------------------------------
+
+    def _add_renewal_details(self, doc, business_name, client_name,
+                              tier_name, screen_count, monthly_rate,
+                              term_months, markets, start_date, end_date,
+                              auto_renew):
+        """Add the renewal partnership details table."""
+        total_value = monthly_rate * term_months
+
+        details = [
+            ("Renewing Advertiser", business_name),
+            ("Contact", client_name),
+            ("Package", tier_name),
+            ("Screen Count", str(screen_count)),
+            ("Monthly Rate", f"${monthly_rate:,.2f}"),
+            ("Renewed Term", f"{term_months} months"),
+            ("Total Contract Value", f"${total_value:,.2f}"),
+            ("Market(s)", ", ".join(markets)),
+            ("Renewal Start Date", _format_date(start_date)),
+            ("Renewal End Date", _format_date(end_date)),
+            ("Auto-Renew", "Yes" if auto_renew else "No"),
+            ("Content Creation", "Included — existing creative carries over"),
+            ("Plays per Hour", "4 per screen"),
+        ]
+
+        self.docx_service.add_data_table(
+            doc,
+            headers=["Detail", "Value"],
+            rows=details,
+        )
+
+        self.docx_service.add_callout_box(
+            doc,
+            "THANK YOU FOR RENEWING\n\n"
+            "We appreciate your continued partnership with MCTV Elite Advertising. "
+            "Your existing ad creative and screen placements will continue "
+            "seamlessly into your renewed term."
+        )
+
+    # ------------------------------------------------------------------
+    # Multi-tier comparison table (Good / Better / Best)
+    # ------------------------------------------------------------------
+
+    def _add_tier_comparison_table(self, doc, tier_options, term_months,
+                                    markets, start_date, end_date,
+                                    auto_renew, business_name, client_name):
+        """Add a side-by-side tier comparison table for multi-option contracts."""
+        from docx.shared import Inches, RGBColor
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+        self.docx_service.add_body_text(
+            doc,
+            f"We have prepared {len(tier_options)} package options for "
+            f"{business_name}. Review the comparison below and select the "
+            f"package that best fits your goals."
+        )
+
+        network = self.config.get("network", {})
+        plays_per_hour = network.get("plays_per_hour", 4)
+        hours_per_day = network.get("hours_per_day", 12)
+        days_per_month = network.get("days_per_month", 30)
+
+        # Recommended = middle tier (index 1 for 3 tiers, 0 for 2)
+        rec_idx = 1 if len(tier_options) > 2 else 0
+
+        # Build comparison rows
+        row_labels = [
+            "Package",
+            "Screens",
+            "Monthly Rate",
+            "Daily Investment",
+            "Monthly Ad Plays",
+            "CPM",
+        ]
+
+        num_tiers = len(tier_options)
+        table = doc.add_table(rows=len(row_labels) + 2, cols=num_tiers + 1)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # Header row with tier names
+        header_row = table.rows[0]
+        header_row.cells[0].text = ""
+        for i, tier in enumerate(tier_options):
+            cell = header_row.cells[i + 1]
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            label = tier.get("name", f"Option {i + 1}")
+            if i == rec_idx:
+                label += "\n★ RECOMMENDED"
+            run = p.add_run(label)
+            run.font.size = Pt(10)
+            run.font.bold = True
+            run.font.name = "Arial"
+            run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            # Gold background for recommended, navy for others
+            tc_pr = cell._element.get_or_add_tcPr()
+            bg = self.docx_service.c["accent_hex"] if i == rec_idx else self.docx_service.c["bg_hex"]
+            shd = tc_pr.makeelement(qn("w:shd"), {
+                qn("w:fill"): bg, qn("w:val"): "clear",
+            })
+            tc_pr.append(shd)
+
+        # Data rows
+        for r, label in enumerate(row_labels):
+            row = table.rows[r + 1]
+            # Label cell
+            lp = row.cells[0].paragraphs[0]
+            lr = lp.add_run(label)
+            lr.font.size = Pt(9)
+            lr.font.bold = True
+            lr.font.name = "Arial"
+            lr.font.color.rgb = self.docx_service.c["text"]
+
+            for i, tier in enumerate(tier_options):
+                cell = row.cells[i + 1]
+                p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                screens = tier.get("screens", 10)
+                rate = float(tier.get("rate", 350))
+                daily = rate / 30
+                plays = screens * plays_per_hour * hours_per_day * days_per_month
+                impressions = get_tier_impressions(self.config, screens)
+                cpm = calculate_cpm(rate, impressions)
+
+                values = {
+                    "Package": tier.get("name", ""),
+                    "Screens": str(screens),
+                    "Monthly Rate": f"${rate:,.0f}",
+                    "Daily Investment": f"${daily:.2f}",
+                    "Monthly Ad Plays": f"{plays:,}",
+                    "CPM": f"${cpm:.2f}" if cpm > 0 else "N/A",
+                }
+                val = values.get(label, "")
+                vr = p.add_run(val)
+                vr.font.size = Pt(9)
+                vr.font.name = "Arial"
+                vr.font.color.rgb = self.docx_service.c["text"]
+
+                # Light gold background for recommended column
+                if i == rec_idx:
+                    tc_pr = cell._element.get_or_add_tcPr()
+                    shd = tc_pr.makeelement(qn("w:shd"), {
+                        qn("w:fill"): "FDF6E8", qn("w:val"): "clear",
+                    })
+                    tc_pr.append(shd)
+
+        # "Select Your Package" row
+        sel_row = table.rows[-1]
+        lp = sel_row.cells[0].paragraphs[0]
+        lr = lp.add_run("Your Selection")
+        lr.font.size = Pt(9)
+        lr.font.bold = True
+        lr.font.name = "Arial"
+        for i in range(num_tiers):
+            cell = sel_row.cells[i + 1]
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run("☐")
+            run.font.size = Pt(14)
+
+        # Common details below the comparison
+        self.docx_service.add_body_text(doc, "")
+        common_details = [
+            ("Advertiser", business_name),
+            ("Contact", client_name),
+            ("Term", f"{term_months} months"),
+            ("Market(s)", ", ".join(markets)),
+            ("Start Date", _format_date(start_date)),
+            ("End Date", _format_date(end_date)),
+            ("Auto-Renew", "Yes" if auto_renew else "No"),
+            ("Content Creation", "Included at no additional cost"),
+            ("Plays per Hour", "4 per screen"),
+        ]
+        self.docx_service.add_data_table(
+            doc, headers=["Detail", "Value"], rows=common_details,
         )
 
     # ------------------------------------------------------------------

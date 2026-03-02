@@ -15,7 +15,7 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 from services.auth import require_portal_auth, get_portal_user
 from services.contract_service import (
     get_contracts_for_client, record_contract_view,
-    sign_contract, get_contract_download_url,
+    sign_contract, get_contract_download_url, update_contract,
 )
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
@@ -165,8 +165,56 @@ for contract in contracts:
         except Exception:
             pass
 
+    # ── TIER SELECTION (multi-option contracts) ─────────────────────
+    tier_opts = contract.get("tier_options")
+    chosen_tier = contract.get("selected_tier", "")
+    needs_tier_selection = (
+        tier_opts and isinstance(tier_opts, list) and len(tier_opts) >= 2
+        and not chosen_tier
+        and cstatus in ("sent", "viewed")
+    )
+
+    if needs_tier_selection:
+        st.divider()
+        st.markdown("### Select Your Package")
+        st.markdown(
+            "Your MCTV representative has prepared multiple package options "
+            "for you. Please select the one that best fits your needs before signing."
+        )
+
+        tier_labels = []
+        for i, opt in enumerate(tier_opts):
+            name = opt.get("name", f"Option {i + 1}")
+            scr = opt.get("screens", 0)
+            rt = float(opt.get("rate", 0))
+            tier_labels.append(f"{name} — {scr} Screens — ${rt:,.0f}/mo")
+
+        tier_choice = st.radio(
+            "Choose your package:",
+            tier_labels,
+            index=1 if len(tier_labels) > 2 else 0,
+            key=f"tier_select_{cid}",
+        )
+
+        if st.button("Confirm Package Selection", key=f"confirm_tier_{cid}",
+                      type="primary", use_container_width=True):
+            # Extract the selected tier name
+            idx = tier_labels.index(tier_choice)
+            selected_opt = tier_opts[idx]
+            sel_name = selected_opt.get("name", "")
+            sel_screens = selected_opt.get("screens", 0)
+            sel_rate = float(selected_opt.get("rate", 0))
+            update_contract(cid, {
+                "selected_tier": sel_name,
+                "tier_name": sel_name,
+                "screen_count": sel_screens,
+                "monthly_rate": sel_rate,
+            })
+            st.success(f"Package **{sel_name}** selected! You can now sign below.")
+            st.rerun()
+
     # ── SIGNATURE SECTION ───────────────────────────────────────────
-    if cstatus in ("sent", "viewed"):
+    if cstatus in ("sent", "viewed") and not needs_tier_selection:
         st.divider()
         st.markdown("### Sign Your Contract")
 

@@ -490,11 +490,12 @@ with tab_create:
             contract_type = st.selectbox(
                 "Contract Type *",
                 ["Advertiser", "Host", "Host Advertising",
-                 "Category Exclusivity", "Bundle"],
+                 "Category Exclusivity", "Bundle", "Renewal"],
                 help=(
                     "**Host Advertising** = hosts who pay for extra screens  |  "
                     "**Category Exclusivity** = no competitor ads on their screens  |  "
-                    "**Bundle** = multiple brands under one contract"
+                    "**Bundle** = multiple brands under one contract  |  "
+                    "**Renewal** = renew an existing partnership with loyalty terms"
                 ),
             )
         with fc2:
@@ -537,6 +538,45 @@ with tab_create:
             )
             if brands_input:
                 bundle_brands = [b.strip() for b in brands_input.strip().split("\n") if b.strip()]
+
+        # Renewal: optional original contract reference
+        is_renewal = (contract_type == "Renewal")
+        renewal_source_contract = None
+        if is_renewal and selected_client_id:
+            from services.contract_service import get_contracts_for_client
+            client_contracts = get_contracts_for_client(selected_client_id)
+            active_contracts = [
+                c for c in client_contracts
+                if c.get("status") in ("active", "signed", "expired")
+            ]
+            if active_contracts:
+                contract_labels = {
+                    f"{c.get('title', 'Contract')} ({c.get('status', '').title()})": c
+                    for c in active_contracts
+                }
+                selected_renewal_label = st.selectbox(
+                    "Renewing from (optional)",
+                    ["None — new renewal"] + list(contract_labels.keys()),
+                    help="Select the original contract to pre-fill details",
+                )
+                if selected_renewal_label != "None — new renewal":
+                    renewal_source_contract = contract_labels.get(selected_renewal_label)
+
+        # Multi-tier comparison toggle (advertiser and renewal only)
+        include_tier_options = False
+        selected_tier_names = []
+        if contract_type in ("Advertiser", "Renewal"):
+            include_tier_options = st.checkbox(
+                "Include tier comparison (Good / Better / Best)",
+                help="Present 2-3 package options for the client to choose from",
+            )
+            if include_tier_options:
+                tier_name_list = [t.get("name", "") for t in TIERS]
+                selected_tier_names = st.multiselect(
+                    "Select tiers to include (2-3)",
+                    tier_name_list,
+                    default=tier_name_list[:3] if len(tier_name_list) >= 3 else tier_name_list,
+                )
 
         # Tier / package selection
         st.markdown("**Package Details**")
@@ -611,6 +651,8 @@ with tab_create:
                 st.error("Please enter the exclusive business category.")
             elif contract_type == "Bundle" and not bundle_brands:
                 st.error("Please enter at least one brand name for the bundle.")
+            elif include_tier_options and len(selected_tier_names) < 2:
+                st.error("Please select at least 2 tiers for the comparison table.")
             else:
                 # Calculate end date
                 start_str = start_date.strftime("%Y-%m-%d")
@@ -623,6 +665,19 @@ with tab_create:
                     tier_label = f"Host Discount {discount_pct}% - {selected_tier if selected_tier != 'Custom' else f'{screen_count} Screens'}"
                 else:
                     tier_label = selected_tier if selected_tier != "Custom" else f"{screen_count} Screens"
+
+                # Build tier_options list for multi-tier contracts
+                tier_options_data = None
+                if include_tier_options and selected_tier_names:
+                    tier_options_data = []
+                    for tn in selected_tier_names:
+                        t = next((t for t in TIERS if t.get("name") == tn), None)
+                        if t:
+                            tier_options_data.append({
+                                "name": t.get("name", ""),
+                                "screens": t.get("screens", 10),
+                                "rate": float(t.get("monthly_rate", 350)),
+                            })
 
                 with st.spinner("Creating contract..."):
                     result = create_contract(
@@ -640,6 +695,7 @@ with tab_create:
                         created_by=created_by,
                         exclusive_category=exclusive_category,
                         bundle_brands=bundle_brands,
+                        tier_options=tier_options_data,
                     )
 
                     if result:

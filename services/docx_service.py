@@ -669,7 +669,7 @@ class DocxService:
             p.space_after = Pt(4)
             try:
                 run = p.add_run()
-                run.add_picture(photo_paths[0], width=Inches(3.0))
+                run.add_picture(photo_paths[0], width=Inches(2.5))
             except Exception:
                 pass
             return
@@ -687,7 +687,7 @@ class DocxService:
                 p.space_after = Pt(2)
                 try:
                     run = p.add_run()
-                    run.add_picture(photo_paths[i], width=Inches(2.8))
+                    run.add_picture(photo_paths[i], width=Inches(2.3))
                 except Exception:
                     run = p.add_run("[Image]")
                     run.font.size = Pt(9)
@@ -709,7 +709,7 @@ class DocxService:
                 p.space_after = Pt(2)
                 try:
                     run = p.add_run()
-                    run.add_picture(photo_paths[i], width=Inches(2.8))
+                    run.add_picture(photo_paths[i], width=Inches(2.3))
                 except Exception:
                     run = p.add_run("[Image]")
                     run.font.size = Pt(9)
@@ -723,7 +723,7 @@ class DocxService:
             p.space_after = Pt(2)
             try:
                 run = p.add_run()
-                run.add_picture(photo_paths[2], width=Inches(3.0))
+                run.add_picture(photo_paths[2], width=Inches(2.5))
             except Exception:
                 run = p.add_run("[Image]")
                 run.font.size = Pt(9)
@@ -746,7 +746,7 @@ class DocxService:
             p.space_after = Pt(2)
             try:
                 run = p.add_run()
-                run.add_picture(photo_path, width=Inches(2.8))
+                run.add_picture(photo_path, width=Inches(2.3))
             except Exception:
                 run = p.add_run("[Image]")
                 run.font.size = Pt(9)
@@ -754,7 +754,7 @@ class DocxService:
         self._remove_table_borders(table)
 
     def add_photos_grid(self, doc: Document, photo_paths: list, title: str = None,
-                        max_width: float = 2.5, cols: int = 2,
+                        max_width: float = 2.0, cols: int = 2,
                         captions: list = None):
         """Add a grid of photos to the document.
 
@@ -822,6 +822,11 @@ class DocxService:
                 cap_run.font.name = "Arial"
 
         self._remove_table_borders(table)
+
+        # Prevent photo grid rows from splitting across pages
+        for row in table.rows:
+            tr_pr = row._tr.get_or_add_trPr()
+            tr_pr.append(tr_pr.makeelement(qn("w:cantSplit"), {}))
 
     def add_metrics_banner(self, doc: Document, metrics: dict):
         """Add a row of big metrics with navy background (e.g., 125+ Screens)."""

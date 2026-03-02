@@ -32,6 +32,8 @@ _TYPE_TO_DB = {
     # Host Advertising stores as 'advertising' in DB (constraint compatible).
     # Distinguished by tier_name starting with "Host Discount".
     "host_advertising": "advertising",
+    # Renewal stores as 'advertising' in DB. Distinguished by title containing "Renewal".
+    "renewal": "advertising",
     # DB values pass through unchanged
     "advertising": "advertising",
     "host_media_kit": "host_media_kit",
@@ -66,6 +68,10 @@ def _normalize_contract(row: dict) -> dict:
         if (row["contract_type"] == "advertiser"
                 and row.get("tier_name", "").startswith("Host Discount")):
             row["contract_type"] = "host_advertising"
+        # Detect renewal: stored as 'advertising' but title contains "Renewal"
+        elif (row["contract_type"] == "advertiser"
+                and "Renewal" in row.get("title", "")):
+            row["contract_type"] = "renewal"
     return row
 
 
@@ -86,6 +92,8 @@ def create_contract(
     created_by: str = "",
     exclusive_category: str = "",
     bundle_brands: list[str] | None = None,
+    tier_options: list[dict] | None = None,
+    selected_tier: str = "",
 ) -> dict | None:
     """Create a new contract record (draft status).
 
@@ -124,6 +132,10 @@ def create_contract(
         data["exclusive_category"] = exclusive_category
     if bundle_brands:
         data["bundle_brands"] = bundle_brands
+    if tier_options:
+        data["tier_options"] = tier_options
+    if selected_tier:
+        data["selected_tier"] = selected_tier
 
     result = insert_row("contracts", data)
 
@@ -216,6 +228,7 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         notes="",
         exclusive_category=contract.get("exclusive_category", ""),
         bundle_brands=contract.get("bundle_brands", []),
+        tier_options=contract.get("tier_options"),
     )
 
     print(f"[contract_service] DOCX generated: {docx_path}")
@@ -664,12 +677,11 @@ def renew_contract(
     # Build renewal title
     client = get_client(original.get("client_id", ""))
     bname = client.get("business_name", "Client") if client else "Client"
-    type_label = original.get("contract_type", "advertiser").replace("_", " ").title()
-    title = f"MCTV {type_label} Renewal - {bname}"
+    title = f"MCTV Advertising Partnership Renewal - {bname}"
 
     new_contract = create_contract(
         client_id=original.get("client_id", ""),
-        contract_type=original.get("contract_type", "advertiser"),
+        contract_type="renewal",
         title=title,
         tier_name=original.get("tier_name", ""),
         screen_count=original.get("screen_count", 10),
@@ -681,6 +693,7 @@ def renew_contract(
         created_by="Auto-Renewal",
         exclusive_category=original.get("exclusive_category", ""),
         bundle_brands=original.get("bundle_brands"),
+        tier_options=original.get("tier_options"),
     )
 
     if new_contract:

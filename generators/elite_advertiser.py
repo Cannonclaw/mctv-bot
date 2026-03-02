@@ -19,7 +19,7 @@ class EliteAdvertiserProposal(BaseProposal):
     # No "scattered" behavior — photos only appear where assigned.
     PHOTO_DISTRIBUTION = {
         "opportunity_hook": {"source": "page2", "max": 4},
-        "market_coverage":  {"source": "page4", "max": 6, "cols": 2,
+        "market_coverage":  {"source": "page4", "max": 6, "cols": 3,
                              "title": "Our Screens in Your Community"},
     }
 

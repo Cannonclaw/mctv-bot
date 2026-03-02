@@ -103,6 +103,9 @@ class BaseProposal(ABC):
             # No "scattered throughout" behavior. Every photo is explicitly
             # assigned to a section via PHOTO_DISTRIBUTION.
             if photo_dist and section_key in photo_dist:
+                # Keep preceding text together with the photo grid
+                if doc.paragraphs:
+                    doc.paragraphs[-1].paragraph_format.keep_with_next = True
                 slot = photo_dist[section_key]
                 source = slot.get("source", "extra")
                 pool = photo_pools.get(source, [])
