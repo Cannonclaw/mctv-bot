@@ -139,7 +139,7 @@ uploaded content, or your violation of these Terms.
 ### 13. Governing Law
 
 These Terms are governed by the laws of the State of Mississippi. Any disputes shall be resolved
-in the courts of Lafayette County, Mississippi.
+in the courts of Hinds County, Mississippi.
 
 ### 14. Changes to Terms
 
