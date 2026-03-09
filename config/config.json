@@ -116,8 +116,10 @@
         6,
         12
       ],
-      "prepay_6mo_bonus": "Get 7 months (1 free)",
-      "prepay_12mo_bonus": "Get 13 months (1 free)"
+      "prepay_6mo_bonus_months": 1,
+      "prepay_6mo_bonus": "Pay 6 months upfront, get a 7th month FREE",
+      "prepay_12mo_bonus_months": 2,
+      "prepay_12mo_bonus": "Pay 12 months upfront, get the 13th & 14th months FREE"
     }
   },
   "venue_categories": [

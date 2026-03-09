@@ -109,7 +109,15 @@ for contract in contracts:
 
     with det_col2:
         st.markdown("**Term**")
-        st.text(f"Length: {term} months")
+        is_prepay = contract.get("prepay_upfront", False)
+        bonus_mo = contract.get("prepay_bonus_months", 0)
+        if is_prepay and bonus_mo > 0:
+            total_mo = term + bonus_mo
+            st.text(f"Paid: {term} months upfront")
+            st.text(f"Bonus: {bonus_mo} month{'s' if bonus_mo > 1 else ''} FREE")
+            st.text(f"Total: {total_mo} months")
+        else:
+            st.text(f"Length: {term} months")
         st.text(f"Start: {contract.get('start_date', 'TBD')}")
         st.text(f"End: {contract.get('end_date', 'TBD')}")
         st.text(f"Auto-Renew: {'Yes' if contract.get('auto_renew') else 'No'}")

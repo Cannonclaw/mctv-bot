@@ -102,6 +102,8 @@ def create_contract(
     bundle_brands: list[str] | None = None,
     tier_options: list[dict] | None = None,
     selected_tier: str = "",
+    prepay_upfront: bool = False,
+    prepay_bonus_months: int = 0,
 ) -> dict | None:
     """Create a new contract record (draft status).
 
@@ -144,6 +146,9 @@ def create_contract(
         data["tier_options"] = tier_options
     if selected_tier:
         data["selected_tier"] = selected_tier
+    if prepay_upfront:
+        data["prepay_upfront"] = True
+        data["prepay_bonus_months"] = prepay_bonus_months
 
     try:
         result = insert_row("contracts", data)
@@ -243,6 +248,8 @@ def generate_contract_document(contract_id: str, config: dict | None = None) -> 
         exclusive_category=contract.get("exclusive_category", ""),
         bundle_brands=contract.get("bundle_brands", []),
         tier_options=contract.get("tier_options"),
+        prepay_upfront=contract.get("prepay_upfront", False),
+        prepay_bonus_months=contract.get("prepay_bonus_months", 0),
     )
 
     print(f"[contract_service] DOCX generated: {docx_path}")

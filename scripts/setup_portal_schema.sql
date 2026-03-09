@@ -96,6 +96,9 @@ CREATE TABLE IF NOT EXISTS contracts (
   bundle_brands TEXT[],
   tier_options JSONB,
   selected_tier TEXT,
+  -- Prepay upfront
+  prepay_upfront BOOLEAN DEFAULT FALSE,
+  prepay_bonus_months INTEGER DEFAULT 0,
   -- Metadata
   created_by TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),

@@ -197,7 +197,12 @@ with tab_list:
                     st.text(f"Tier: {tier or 'Custom'}")
                     st.text(f"Screens: {screens}")
                     st.text(f"Monthly Rate: ${rate:,.2f}")
-                    st.text(f"Term: {term} months")
+                    is_prepay = contract.get("prepay_upfront", False)
+                    bonus_mo = contract.get("prepay_bonus_months", 0)
+                    if is_prepay and bonus_mo > 0:
+                        st.text(f"Prepaid: {term} months (+ {bonus_mo} FREE)")
+                    else:
+                        st.text(f"Term: {term} months")
 
                 with det_col2:
                     st.markdown("**Status & Dates**")
@@ -638,6 +643,19 @@ with tab_create:
         with term_col3:
             auto_renew = st.checkbox("Auto-Renew", value=True)
 
+        # Prepay upfront option (only for 6 or 12 month terms, paid contracts)
+        prepay_upfront = False
+        prepay_bonus_months = 0
+        if term_months in (6, 12) and contract_type not in ("Host Venue",):
+            prepay_upfront = st.checkbox(
+                f"Prepay Upfront — {'7th month FREE' if term_months == 6 else '13th & 14th months FREE'}",
+                value=False,
+                help=f"Client pays {term_months} months upfront and gets "
+                     f"{'1 bonus month' if term_months == 6 else '2 bonus months'} added to the contract.",
+            )
+            if prepay_upfront:
+                prepay_bonus_months = 1 if term_months == 6 else 2
+
         # Markets
         selected_markets = st.multiselect(
             "Markets",
@@ -667,9 +685,10 @@ with tab_create:
             elif include_tier_options and len(selected_tier_names) < 2:
                 st.error("Please select at least 2 tiers for the comparison table.")
             else:
-                # Calculate end date
+                # Calculate end date (include bonus months for prepay)
                 start_str = start_date.strftime("%Y-%m-%d")
-                end_dt = start_date + relativedelta(months=term_months)
+                total_months = term_months + prepay_bonus_months
+                end_dt = start_date + relativedelta(months=total_months)
                 end_str = end_dt.strftime("%Y-%m-%d")
 
                 # Determine contract type and tier name
@@ -710,6 +729,8 @@ with tab_create:
                             exclusive_category=exclusive_category,
                             bundle_brands=bundle_brands,
                             tier_options=tier_options_data,
+                            prepay_upfront=prepay_upfront,
+                            prepay_bonus_months=prepay_bonus_months,
                         )
                     except Exception as e:
                         logger.error("Contract creation exception: %s", e)

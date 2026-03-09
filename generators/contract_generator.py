@@ -658,6 +658,9 @@ class ContractGenerator:
         bundle_brands: list[str] | None = None,
         # Multi-tier options (Good/Better/Best comparison)
         tier_options: list[dict] | None = None,
+        # Prepay upfront
+        prepay_upfront: bool = False,
+        prepay_bonus_months: int = 0,
     ) -> tuple[Path, Path | None, bytes]:
         """Generate a contract document.
 
@@ -696,7 +699,8 @@ class ContractGenerator:
             logger.warning("Invalid start_date '%s', defaulting to today", start_date)
             start_dt = datetime.now()
             start_date = start_dt.strftime("%Y-%m-%d")
-        end_dt = start_dt + relativedelta(months=term_months)
+        total_months = term_months + prepay_bonus_months
+        end_dt = start_dt + relativedelta(months=total_months)
         end_date = end_dt.strftime("%Y-%m-%d")
 
         # Find prepared_by rep info
@@ -754,13 +758,13 @@ class ContractGenerator:
             self._add_renewal_details(
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
-                auto_renew,
+                auto_renew, prepay_upfront, prepay_bonus_months,
             )
         else:
             self._add_advertiser_details(
                 doc, business_name, client_name, tier_name, screen_count,
                 monthly_rate, term_months, markets, start_date, end_date,
-                auto_renew,
+                auto_renew, prepay_upfront, prepay_bonus_months,
             )
 
         if notes:
@@ -771,7 +775,7 @@ class ContractGenerator:
         if contract_type != "host":
             self._add_value_recap(
                 doc, contract_type, monthly_rate, screen_count, term_months,
-                business_name,
+                business_name, prepay_upfront, prepay_bonus_months,
             )
 
         # ── Terms & Conditions section ──────────────────────────────
@@ -818,7 +822,8 @@ class ContractGenerator:
     # ------------------------------------------------------------------
 
     def _add_value_recap(self, doc, contract_type, monthly_rate, screen_count,
-                         term_months, business_name):
+                         term_months, business_name,
+                         prepay_upfront=False, prepay_bonus_months=0):
         """Add a 'What You're Getting' value recap with metrics and prepay."""
         self.docx_service.add_section_header(
             doc, "What You're Getting", new_page=True,
@@ -855,9 +860,22 @@ class ContractGenerator:
             f"right at eye level."
         )
 
-        # Prepay bonuses callout (prominent, before legal terms)
-        if contract_type in ("advertiser", "host_advertising",
-                             "category_exclusivity", "bundle"):
+        # Prepay applied callout (when this contract IS prepaid)
+        if prepay_upfront and prepay_bonus_months > 0:
+            total_months = term_months + prepay_bonus_months
+            total_value = monthly_rate * term_months
+            bonus_label = f"{prepay_bonus_months} bonus month{'s' if prepay_bonus_months > 1 else ''}"
+            lines = [
+                "PREPAYMENT APPLIED",
+                f"\u2705  Payment: {term_months} months upfront \u2014 ${total_value:,.2f}",
+                f"\u2705  Bonus: {bonus_label} FREE (${monthly_rate * prepay_bonus_months:,.2f} value)",
+                f"\u2705  Total Coverage: {total_months} months of advertising",
+            ]
+            self.docx_service.add_callout_box(doc, "\n".join(lines))
+
+        # Prepay bonuses callout (general info when NOT prepaid)
+        elif contract_type in ("advertiser", "host_advertising",
+                               "category_exclusivity", "bundle", "renewal"):
             pricing = self.config.get("pricing", {})
             contract_terms = pricing.get("contract_terms", {})
             bonus_6 = contract_terms.get("prepay_6mo_bonus", "")
@@ -899,7 +917,8 @@ class ContractGenerator:
     def _add_advertiser_details(self, doc, business_name, client_name,
                                  tier_name, screen_count, monthly_rate,
                                  term_months, markets, start_date, end_date,
-                                 auto_renew):
+                                 auto_renew, prepay_upfront=False,
+                                 prepay_bonus_months=0):
         """Add the advertiser partnership details table."""
         total_value = monthly_rate * term_months
 
@@ -909,15 +928,25 @@ class ContractGenerator:
             ("Package", tier_name),
             ("Screen Count", str(screen_count)),
             ("Monthly Rate", f"${monthly_rate:,.2f}"),
-            ("Term", f"{term_months} months"),
-            ("Total Contract Value", f"${total_value:,.2f}"),
+        ]
+
+        if prepay_upfront and prepay_bonus_months > 0:
+            total_months = term_months + prepay_bonus_months
+            details.append(("Payment", f"Prepaid {term_months} months upfront \u2014 ${total_value:,.2f}"))
+            details.append(("Bonus Months", f"{prepay_bonus_months} month{'s' if prepay_bonus_months > 1 else ''} FREE"))
+            details.append(("Total Coverage", f"{total_months} months"))
+        else:
+            details.append(("Term", f"{term_months} months"))
+            details.append(("Total Contract Value", f"${total_value:,.2f}"))
+
+        details.extend([
             ("Market(s)", ", ".join(markets)),
             ("Start Date", _format_date(start_date)),
             ("End Date", _format_date(end_date)),
             ("Auto-Renew", "Yes" if auto_renew else "No"),
             ("Content Creation", "Included at no additional cost"),
             ("Plays per Hour", "4 per screen"),
-        ]
+        ])
 
         self.docx_service.add_data_table(
             doc,
@@ -1084,7 +1113,8 @@ class ContractGenerator:
     def _add_renewal_details(self, doc, business_name, client_name,
                               tier_name, screen_count, monthly_rate,
                               term_months, markets, start_date, end_date,
-                              auto_renew):
+                              auto_renew, prepay_upfront=False,
+                              prepay_bonus_months=0):
         """Add the renewal partnership details table."""
         total_value = monthly_rate * term_months
 
@@ -1094,15 +1124,25 @@ class ContractGenerator:
             ("Package", tier_name),
             ("Screen Count", str(screen_count)),
             ("Monthly Rate", f"${monthly_rate:,.2f}"),
-            ("Renewed Term", f"{term_months} months"),
-            ("Total Contract Value", f"${total_value:,.2f}"),
+        ]
+
+        if prepay_upfront and prepay_bonus_months > 0:
+            total_months = term_months + prepay_bonus_months
+            details.append(("Payment", f"Prepaid {term_months} months upfront \u2014 ${total_value:,.2f}"))
+            details.append(("Bonus Months", f"{prepay_bonus_months} month{'s' if prepay_bonus_months > 1 else ''} FREE"))
+            details.append(("Total Coverage", f"{total_months} months"))
+        else:
+            details.append(("Renewed Term", f"{term_months} months"))
+            details.append(("Total Contract Value", f"${total_value:,.2f}"))
+
+        details.extend([
             ("Market(s)", ", ".join(markets)),
             ("Renewal Start Date", _format_date(start_date)),
             ("Renewal End Date", _format_date(end_date)),
             ("Auto-Renew", "Yes" if auto_renew else "No"),
             ("Content Creation", "Included — existing creative carries over"),
             ("Plays per Hour", "4 per screen"),
-        ]
+        ])
 
         self.docx_service.add_data_table(
             doc,
