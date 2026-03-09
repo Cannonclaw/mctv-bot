@@ -3,11 +3,14 @@
 # or modification of this file is strictly prohibited.
 """Client portal contract page — view, download, and e-sign contracts."""
 
+import logging
 import streamlit as st
 import sys
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
@@ -162,8 +165,8 @@ for contract in contracts:
     if cstatus == "sent":
         try:
             record_contract_view(cid, client_id=client_id)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to record contract view for %s: %s", cid, e)
 
     # ── TIER SELECTION (multi-option contracts) ─────────────────────
     tier_opts = contract.get("tier_options")
@@ -214,6 +217,15 @@ for contract in contracts:
             st.rerun()
 
     # ── SIGNATURE SECTION ───────────────────────────────────────────
+    # Clear stale confirmation state so users must re-confirm each visit
+    _confirm_key = f"sign_confirmed_{cid}"
+    if _confirm_key not in st.session_state:
+        pass  # fresh visit, nothing to clear
+    elif st.session_state.get(f"_sign_page_loaded_{cid}") is None:
+        # First render this session — reset confirmation
+        st.session_state[_confirm_key] = False
+    st.session_state[f"_sign_page_loaded_{cid}"] = True
+
     if cstatus in ("sent", "viewed") and not needs_tier_selection:
         st.divider()
         st.markdown("### Sign Your Contract")

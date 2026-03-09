@@ -91,6 +91,11 @@ CREATE TABLE IF NOT EXISTS contracts (
   signed_user_agent TEXT,
   sent_at TIMESTAMPTZ,
   viewed_at TIMESTAMPTZ,
+  -- Contract-specific terms
+  exclusive_category TEXT,
+  bundle_brands TEXT[],
+  tier_options JSONB,
+  selected_tier TEXT,
   -- Metadata
   created_by TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),

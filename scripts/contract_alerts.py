@@ -52,6 +52,7 @@ logger = logging.getLogger("contract_alerts")
 from services.contract_service import (  # noqa: E402
     get_expiring_contracts,
     check_and_expire_contracts,
+    renew_contract,
     _alert_already_sent,
     _log_alert_sent,
 )
@@ -165,6 +166,19 @@ def main() -> int:
             newly_expired = _enrich_with_client(newly_expired)
             notify_contract_expired_team(newly_expired)
             logger.info("Auto-expired %d contract(s), team notified", len(newly_expired))
+
+            # Auto-renew contracts that have auto_renew enabled
+            for c in newly_expired:
+                if c.get("auto_renew"):
+                    try:
+                        renewed = renew_contract(c["id"])
+                        if renewed:
+                            logger.info(
+                                "Auto-renewed contract %s -> %s (%s)",
+                                c["id"], renewed.get("id"), c.get("client_name", ""),
+                            )
+                    except Exception as e:
+                        logger.error("Failed to auto-renew contract %s: %s", c["id"], e)
     except Exception as e:
         logger.error("Error during auto-expire: %s", e)
 
