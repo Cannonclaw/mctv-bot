@@ -9,4 +9,4 @@ Pillow>=10.0.0
 matplotlib>=3.8.0
 supabase>=2.5.0
 twilio>=9.0.0
-streamlit-cookies-controller>=0.0.9
+streamlit-cookies-controller>=0.0.4
