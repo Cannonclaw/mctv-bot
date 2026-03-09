@@ -150,6 +150,7 @@ def create_contract(
         data["prepay_upfront"] = True
         data["prepay_bonus_months"] = prepay_bonus_months
 
+    logger.info("Creating contract: keys=%s, type=%s, client=%s", list(data.keys()), db_type, client_id)
     try:
         result = insert_row("contracts", data)
     except Exception as e:
@@ -157,7 +158,7 @@ def create_contract(
         return None
 
     if not result:
-        logger.error("insert_row returned None for contract (client_id=%s, type=%s)", client_id, db_type)
+        logger.error("insert_row returned None for contract (client_id=%s, type=%s). Check supabase_client logs above for HTTP error.", client_id, db_type)
         return None
 
     log_activity(

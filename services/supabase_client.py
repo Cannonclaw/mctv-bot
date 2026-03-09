@@ -548,8 +548,16 @@ def _rest_request(method: str, endpoint: str, data: dict | None = None,
         with urllib.request.urlopen(req, timeout=15) as resp:
             raw = resp.read().decode("utf-8")
             return json.loads(raw) if raw else []
+    except urllib.error.HTTPError as e:
+        error_body = ""
+        try:
+            error_body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        print(f"[supabase_client] REST {method} {endpoint} HTTP {e.code}: {error_body}", flush=True)
+        return None
     except Exception as e:
-        print(f"[supabase_client] REST {method} {endpoint} failed: {e}")
+        print(f"[supabase_client] REST {method} {endpoint} failed: {e}", flush=True)
         return None
 
 
