@@ -12,6 +12,59 @@
 
 ---
 
+## 2026-03-23 — Sales Pipeline Engine
+
+### New Features
+- **Sales Pipeline Dashboard** (`pages/14_Pipeline.py`) — Full CRM pipeline with 9 stages (Prospect → Outreach → Engaged → Discovery → Proposal Sent → Negotiation → Contract Sent → Won → Lost)
+  - Visual pipeline board with stage columns, deal counts, and MRR per stage
+  - Deal management: add/edit/move deals, log calls, add notes, mark lost with reasons
+  - Revenue forecasting: 3-month weighted pipeline projection (expected, best case, high confidence)
+  - Pipeline analytics: win rate, average deal size, total pipeline value, weighted value
+  - Action items tab: flags overdue follow-ups and stale deals (7+ days no activity)
+  - Import leads: pull existing leads directly into pipeline with auto-scoring
+  - Stage probability auto-mapping (10% → 15% → 30% → 45% → 60% → 75% → 90% → 100%)
+
+- **Outbound Prospector** (`pages/15_Prospector.py`) — Systematic local business targeting
+  - 10 target industry profiles with fit scores, pitch angles, and avg deal sizes
+  - AI-powered prospect generation: Claude researches real businesses by city + industry
+  - Batch add: paste business lists (Name | Contact | Phone | Email) to bulk-import
+  - One-click add to pipeline with tier, rep, and nurture sequence assignment
+  - Duplicate detection: highlights businesses already in the pipeline
+
+- **Automated Nurture Sequences** (`services/nurture_service.py`) — Drip campaigns via email + SMS
+  - 4 sequence types: New Lead (6 steps), Post-Proposal (4 steps), Cold Outreach (4 steps), Re-Engagement (3 steps)
+  - 12 email templates and 7 SMS templates with variable substitution
+  - Nurture Center: view active campaigns, send next steps, batch process all pending
+  - Sequence management: start/stop sequences per opportunity
+  - Time-gated delivery: respects delay_days between steps
+
+- **Pipeline Service** (`services/pipeline_service.py`) — Full pipeline business logic
+  - CRUD operations with Supabase REST + local JSON fallback
+  - Stage management with automatic probability updates
+  - Activity logging (stage changes, calls, notes, nurture sends)
+  - Revenue forecasting and pipeline analytics
+  - Lead-to-pipeline import with automatic scoring and stage assignment
+
+- **Database Migration** (`scripts/008_pipeline_schema.sql`)
+  - `pipeline_opportunities` table (24 columns, full deal tracking)
+  - `pipeline_activity` table (activity history per opportunity)
+  - Indexes for stage, city, rep, next action date, nurture sequence
+  - Auto-update trigger for `updated_at`
+  - RLS policies for service role access
+
+### Updated
+- **app.py** — Added Sales Pipeline and Outbound Prospector to sidebar navigation (positioned above Research/Leads for visibility)
+- **Home page** — Replaced Client Management card with Sales Pipeline card for quick access
+
+### Files Added
+- `pages/14_Pipeline.py` — Sales Pipeline Dashboard (7 tabs)
+- `pages/15_Prospector.py` — Outbound Prospector (3 tabs)
+- `services/pipeline_service.py` — Pipeline CRUD, analytics, forecasting
+- `services/nurture_service.py` — Nurture sequences, email/SMS templates, batch processing
+- `scripts/008_pipeline_schema.sql` — Pipeline database schema
+
+---
+
 ## What's Working
 
 - [x] Elite Advertiser proposal (5 pages, scannable, photos scattered inline)

@@ -362,6 +362,8 @@ def main():
         st.page_link("pages/1_Proposals.py", label="Proposal Generator", icon="\U0001F4DD")
         st.page_link("pages/2_Reports.py", label="Traction Reports", icon="\U0001F4CA")
         st.page_link("pages/5_Video_Ads.py", label="Video Ads", icon="\U0001F3AC")
+        st.page_link("pages/14_Pipeline.py", label="Sales Pipeline", icon="\U0001F4B0")
+        st.page_link("pages/15_Prospector.py", label="Outbound Prospector", icon="\U0001F3AF")
         st.page_link("pages/7_Research.py", label="Prospect Research", icon="\U0001F50D")
         st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
         st.page_link("pages/8_Clients.py", label="Client Management", icon="\U0001F465")
@@ -464,13 +466,13 @@ def main():
     col5, col6, col7, col8 = st.columns(4)
 
     with col5:
-        st.markdown("### Client Management")
+        st.markdown("### Sales Pipeline")
         st.markdown(
-            "Manage client accounts, invite them to the portal, "
-            "track status, and assign reps."
+            "Track every deal from prospect to close. Visual pipeline, "
+            "revenue forecasting, and automated nurture sequences."
         )
-        if st.button("Manage Clients", type="primary", width='stretch'):
-            st.switch_page("pages/8_Clients.py")
+        if st.button("View Pipeline", type="primary", width='stretch'):
+            st.switch_page("pages/14_Pipeline.py")
 
     with col6:
         st.markdown("### Contracts")
