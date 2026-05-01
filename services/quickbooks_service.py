@@ -466,6 +466,7 @@ def create_qb_invoice(
     invoice_number: str = "",
     due_date: str = "",
     email: str = "",
+    allow_online_payment: bool = True,
 ) -> dict | None:
     """Create an invoice in QuickBooks.
 
@@ -476,6 +477,9 @@ def create_qb_invoice(
         invoice_number: Your invoice number (DocNumber in QB)
         due_date: Due date string (YYYY-MM-DD)
         email: Customer email for delivery
+        allow_online_payment: Enable QB Payments "Pay Now" button on the
+            customer-facing invoice. Requires QB Payments to be enabled
+            in the QBO account; harmless if not (field is ignored).
 
     Returns:
         Created QB invoice dict or None.
@@ -495,6 +499,10 @@ def create_qb_invoice(
         ],
     }
 
+    if allow_online_payment:
+        invoice_data["AllowOnlineCreditCardPayment"] = True
+        invoice_data["AllowOnlineACHPayment"] = True
+
     if invoice_number:
         invoice_data["DocNumber"] = invoice_number
     if due_date:
@@ -506,6 +514,50 @@ def create_qb_invoice(
     if result and "Invoice" in result:
         return result["Invoice"]
     return None
+
+
+def send_qb_invoice(qb_invoice_id: str, email: str = "") -> dict | None:
+    """Trigger QuickBooks to email the invoice to the customer.
+
+    QBO's email includes a "Pay Now" button that opens the customer-facing
+    invoice with online payment options (if QB Payments is enabled on the
+    account). Without QB Payments, the email still arrives but the button
+    is absent — the invoice can still be paid manually.
+
+    Args:
+        qb_invoice_id: QB Invoice Id (e.g. "123")
+        email: Override delivery address. Optional — if omitted, QBO uses
+            the BillEmail set on the invoice.
+
+    Returns:
+        QB Invoice dict (with EmailStatus="EmailSent" on success) or None.
+    """
+    endpoint = f"invoice/{qb_invoice_id}/send"
+    if email:
+        endpoint += f"?sendTo={urllib.parse.quote(email)}"
+
+    result = _api_request("POST", endpoint)
+    if result and "Invoice" in result:
+        return result["Invoice"]
+    return None
+
+
+def get_qb_invoice_url(qb_invoice_id: str) -> str:
+    """Return the QBO customer-facing invoice URL.
+
+    QBO does not expose a stable public URL via API — the URL embedded in
+    QBO's outbound email is signed and account-specific. This returns the
+    QBO Customer Portal "Pay Now" entry URL the merchant can share manually,
+    which deep-links to the invoice when QB Payments is enabled.
+    """
+    realm = get_realm_id()
+    if not realm or not qb_invoice_id:
+        return ""
+    # Sandbox vs production base URL
+    env = os.environ.get("QB_ENVIRONMENT", "production").lower()
+    if env == "sandbox":
+        return f"https://sandbox.qbo.intuit.com/app/invoice?txnId={qb_invoice_id}"
+    return f"https://qbo.intuit.com/app/invoice?txnId={qb_invoice_id}"
 
 
 def sync_invoice_to_qb(invoice: dict, client: dict) -> dict | None:

@@ -189,7 +189,96 @@ def get_client_dashboard(client_id: str) -> dict:
         "total_screens": total_screens,
         "pending_invoice_count": len(pending_invoices),
         "next_invoice": pending_invoices[0] if pending_invoices else None,
+        # Live performance metrics (computed from NTV360 snapshots + config)
+        "live_performance": _compute_live_performance(active_contracts, total_screens),
     }
+
+
+def _compute_live_performance(active_contracts: list, total_screens: int) -> dict:
+    """Build the running-performance KPIs shown on the advertiser dashboard.
+
+    Pulls the last 6 monthly NTV360 snapshots, projects month-to-date plays
+    based on days elapsed, and computes contract-to-date totals.
+    """
+    from datetime import date
+
+    out = {
+        "mtd_plays_estimated": 0,
+        "mtd_impressions_estimated": 0,
+        "last_month_plays": 0,
+        "last_month_impressions": 0,
+        "contract_to_date_plays": 0,
+        "trend": [],            # list[{month, plays, impressions}]
+        "snapshot_month": "",   # month of the most recent snapshot
+        "data_source": "modeled",
+    }
+
+    # Pull historical snapshots from Supabase (last 6 months)
+    try:
+        snapshots = query_table(
+            "ntv360_snapshots",
+            select="snapshot_month,total_plays,total_air_time,venue_count",
+            order="-snapshot_month",
+            limit=6,
+        ) or []
+    except Exception:
+        snapshots = []
+
+    # Trend chart data (oldest to newest for plotting)
+    out["trend"] = list(reversed([
+        {
+            "month": s.get("snapshot_month", ""),
+            "plays": int(s.get("total_plays", 0) or 0),
+            "impressions": int(s.get("total_plays", 0) or 0) * 60,  # rough: 60 impressions per play
+        }
+        for s in snapshots
+    ]))
+
+    # Last-completed-month actual
+    today = date.today()
+    cur_month = today.strftime("%Y-%m")
+    completed = [s for s in snapshots if s.get("snapshot_month", "") < cur_month]
+    if completed:
+        last = completed[0]
+        out["last_month_plays"] = int(last.get("total_plays", 0) or 0)
+        out["last_month_impressions"] = out["last_month_plays"] * 60
+        out["snapshot_month"] = last.get("snapshot_month", "")
+        out["data_source"] = "ntv360"
+
+    # Contract-to-date: sum plays across snapshots from earliest active contract
+    earliest_start = ""
+    for c in active_contracts:
+        sd = c.get("start_date", "")
+        if sd and (not earliest_start or sd < earliest_start):
+            earliest_start = sd
+    if earliest_start and snapshots:
+        ctd = sum(
+            int(s.get("total_plays", 0) or 0)
+            for s in snapshots
+            if s.get("snapshot_month", "") >= earliest_start[:7]
+        )
+        out["contract_to_date_plays"] = ctd
+
+    # Month-to-date estimate: if a current-month snapshot exists, use it.
+    # Otherwise project from last-month average + days-elapsed.
+    cur_snap = next((s for s in snapshots if s.get("snapshot_month", "") == cur_month), None)
+    if cur_snap:
+        out["mtd_plays_estimated"] = int(cur_snap.get("total_plays", 0) or 0)
+        out["mtd_impressions_estimated"] = out["mtd_plays_estimated"] * 60
+        out["data_source"] = "ntv360"
+    elif out["last_month_plays"] > 0:
+        days_in_month = 30
+        days_elapsed = today.day
+        ratio = max(min(days_elapsed / days_in_month, 1.0), 0.0)
+        # Per-screen pace from last month, scaled by contracted screens
+        last_screens = 125  # network total
+        per_screen_pace = out["last_month_plays"] / max(last_screens, 1)
+        projected = per_screen_pace * max(total_screens, 0) * ratio if total_screens else \
+                    out["last_month_plays"] * ratio
+        out["mtd_plays_estimated"] = int(projected)
+        out["mtd_impressions_estimated"] = int(projected * 60)
+
+    return out
 
 
 def get_host_dashboard(client_id: str) -> dict:

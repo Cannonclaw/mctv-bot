@@ -373,14 +373,29 @@ st.markdown("### Save & Share")
 
 with st.form("sim_save_form"):
     sc = st.columns(3)
-    p_business = sc[0].text_input("Prospect business name *")
-    p_name = sc[1].text_input("Contact name *")
-    p_email = sc[2].text_input("Contact email")
+    p_business = sc[0].text_input(
+        "Prospect business name *",
+        value=st.session_state.get("sim_prefill_business", ""),
+    )
+    p_name = sc[1].text_input(
+        "Contact name *",
+        value=st.session_state.get("sim_prefill_contact", ""),
+    )
+    p_email = sc[2].text_input(
+        "Contact email",
+        value=st.session_state.get("sim_prefill_email", ""),
+    )
 
     sc2 = st.columns(3)
-    p_phone = sc2[0].text_input("Contact phone")
+    p_phone = sc2[0].text_input(
+        "Contact phone",
+        value=st.session_state.get("sim_prefill_phone", ""),
+    )
     rep = sc2[1].text_input("Assigned rep")
-    notes = sc2[2].text_input("Notes")
+    notes = sc2[2].text_input(
+        "Notes",
+        value=st.session_state.get("sim_prefill_notes", ""),
+    )
 
     submitted = st.form_submit_button("Save & Generate Share Link", type="primary")
 
@@ -411,3 +426,158 @@ if submitted:
             st.success("Scenario saved.")
             st.code(share_url, language=None)
             st.caption("Send this link to the prospect. The view tracks open count.")
+
+st.divider()
+
+
+# ── Generate Elite Advertiser proposal PDF from this scenario ────────────────
+
+st.markdown("### Generate Proposal PDF")
+st.caption(
+    "Pull this scenario straight into the Elite Advertiser proposal generator. "
+    "Pre-fills business name, markets, recommended tier, and custom rate from above."
+)
+
+with st.expander("Generate proposal", expanded=False):
+    from services.config_service import get_team_first_names
+    _cfg_for_proposal = __import__("services.config_service", fromlist=["load_config"]).load_config()
+
+    pf = st.columns(2)
+    p_business2 = pf[0].text_input(
+        "Business name *", value=p_business if 'p_business' in dir() else "",
+        key="sim_prop_biz",
+    )
+    p_contact2 = pf[1].text_input(
+        "Contact name *", value=p_name if 'p_name' in dir() else "",
+        key="sim_prop_contact",
+    )
+
+    pf2 = st.columns(3)
+    p_email2 = pf2[0].text_input(
+        "Contact email", value=p_email if 'p_email' in dir() else "",
+        key="sim_prop_email",
+    )
+    p_industry = pf2[1].text_input(
+        "Industry *", placeholder="Restaurant, Salon, Law Firm, etc.",
+        key="sim_prop_industry",
+    )
+    rep_options = get_team_first_names(_cfg_for_proposal) or ["Mary Michael", "Creed", "Swayze"]
+    p_rep = pf2[2].selectbox("Sales rep", rep_options, key="sim_prop_rep")
+
+    p_addl = st.text_area(
+        "Additional notes (optional)",
+        placeholder="Specific goals, deadlines, or anything you want the proposal to address.",
+        height=80, key="sim_prop_notes",
+    )
+
+    color_options = ["original", "light_airy", "dark_sophisticated", "peaceful_pastels"]
+    p_color = st.selectbox("Color scheme", color_options, key="sim_prop_color")
+
+    if st.button("Generate Proposal PDF", type="primary", key="sim_prop_btn"):
+        if not p_business2 or not p_contact2 or not p_industry:
+            st.error("Business name, contact name, and industry are required.")
+        else:
+            import os as _os
+            api_key = _os.environ.get("ANTHROPIC_API_KEY", "")
+            if not api_key or api_key == "your-api-key-here":
+                st.error("ANTHROPIC_API_KEY not configured.")
+            else:
+                from models.proposal_data import ProposalInput
+                from services.claude_service import ClaudeService
+                from services.docx_service import DocxService
+                from services.config_service import get_team_member
+                from generators.elite_advertiser import EliteAdvertiserProposal
+
+                # Resolve full sales-rep name (matches "Mary Michael" -> full record)
+                team_match = next(
+                    (m for m in _cfg_for_proposal.get("team", [])
+                     if p_rep.lower() in m["name"].lower()),
+                    _cfg_for_proposal["team"][0],
+                )
+
+                data = ProposalInput(
+                    business_name=p_business2,
+                    contact_name=p_contact2,
+                    contact_email=p_email2,
+                    industry=p_industry,
+                    city=(result.cities[0] if result.cities else "Oxford"),
+                    selected_markets=list(result.cities) or ["Oxford"],
+                    recommended_tier=result.recommendation.tier_index,
+                    custom_pricing=bool(st.session_state.sim_custom_rate),
+                    custom_screen_count=result.total_screens,
+                    custom_monthly_rate=float(st.session_state.sim_custom_rate or 0),
+                    sales_rep=team_match["name"],
+                    additional_notes=p_addl or "",
+                )
+
+                model = _cfg_for_proposal.get("proposal_settings", {}).get(
+                    "model", "claude-sonnet-4-5-20250929"
+                )
+                claude = ClaudeService(api_key=api_key, model=model)
+                docx_svc = DocxService(_cfg_for_proposal, color_scheme=p_color)
+
+                # Auto-pick community screen photos for the relevant markets
+                from pathlib import Path as _P
+                screens_dir = _P(__file__).parent.parent / "assets" / "screens"
+                photos = []
+                for market in data.selected_markets:
+                    market_dir = screens_dir / market
+                    if market_dir.exists():
+                        photos.extend(sorted(
+                            str(p) for p in market_dir.glob("*")
+                            if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+                        ))
+                if not photos and screens_dir.exists():
+                    photos = sorted(
+                        str(p) for p in screens_dir.glob("*")
+                        if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+                    )
+                docx_svc.page2_photo_paths = photos[:2]
+                docx_svc.page4_photo_paths = photos[2:8]
+                docx_svc.page4_captions = []
+                docx_svc.venue_photo_paths = []
+                docx_svc.ad_example_paths = []
+                docx_svc.extra_photo_paths = photos[:8]
+                docx_svc.client_logo_path = None
+
+                progress = st.progress(0, text="Starting generation...")
+                status_label = st.empty()
+
+                def _on_progress(section_name, current, total):
+                    progress.progress(current / total,
+                                      text=f"Generating: {section_name} ({current}/{total})")
+                    status_label.caption(f"Section {current} of {total}")
+
+                try:
+                    generator = EliteAdvertiserProposal(_cfg_for_proposal, claude, docx_svc)
+                    proposal_path, _email_path = generator.generate(
+                        data, progress_callback=_on_progress,
+                    )
+                    progress.progress(1.0, text="Complete!")
+                    status_label.empty()
+                    st.success("Proposal generated.")
+
+                    pdf_path = DocxService.get_pdf_path(proposal_path)
+                    cols = st.columns(2 if pdf_path else 1)
+                    with open(proposal_path, "rb") as f:
+                        cols[0].download_button(
+                            "Download Word (.docx)",
+                            data=f.read(),
+                            file_name=proposal_path.name,
+                            mime=("application/vnd.openxmlformats-officedocument."
+                                  "wordprocessingml.document"),
+                            key="sim_prop_dl_docx",
+                        )
+                    if pdf_path:
+                        with open(pdf_path, "rb") as f:
+                            cols[1].download_button(
+                                "Download PDF",
+                                data=f.read(),
+                                file_name=pdf_path.name,
+                                mime="application/pdf",
+                                key="sim_prop_dl_pdf",
+                            )
+                except Exception as e:
+                    progress.empty()
+                    status_label.empty()
+                    st.error(f"Generation failed: {e}")

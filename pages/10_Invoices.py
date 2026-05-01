@@ -19,7 +19,7 @@ from services.invoice_service import (
     delete_invoice, send_invoice, mark_paid, void_invoice,
     mark_overdue, check_and_mark_overdue, generate_monthly_invoices,
     get_ar_aging, get_invoice_summary,
-    get_overdue_invoices, send_bulk_reminders,
+    get_overdue_invoices, send_bulk_reminders, send_pay_link,
     record_partial_payment, get_payment_history, get_balance_due,
 )
 import json
@@ -214,6 +214,19 @@ with tab_list:
                                 st.rerun()
                             else:
                                 st.error("Failed to send invoice.")
+                    elif istatus in ("sent", "viewed", "overdue"):
+                        # Re-send the QBO Pay Now email on demand
+                        last_sent = inv.get("qb_email_sent_at")
+                        label = "Resend Pay Link" if last_sent else "Send Pay Link"
+                        if st.button(label, key=f"qbo_pay_{iid}",
+                                     width='stretch'):
+                            with st.spinner("Asking QuickBooks to email the customer..."):
+                                r = send_pay_link(iid)
+                            if r.get("sent"):
+                                st.success(r.get("message", "Sent."))
+                                st.rerun()
+                            else:
+                                st.error(r.get("message", "Could not send."))
 
                 with act2:
                     if istatus in ("sent", "viewed", "overdue"):

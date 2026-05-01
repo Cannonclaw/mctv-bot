@@ -179,17 +179,90 @@ def send_invoice(invoice_id: str) -> dict | None:
         entity_id=invoice_id,
     )
 
-    # Auto-sync to QuickBooks if connected
+    # Auto-sync to QuickBooks if connected, capture QB invoice ID for pay link
     try:
-        from services.quickbooks_service import is_connected, sync_invoice_to_qb
+        from services.quickbooks_service import is_connected, sync_invoice_to_qb, get_qb_invoice_url
         if is_connected():
             qb_inv = sync_invoice_to_qb(invoice, client)
             if qb_inv:
-                print(f"[invoice_service] Synced to QuickBooks: {invoice.get('invoice_number', '')}")
+                qb_id = qb_inv.get("Id", "")
+                if qb_id:
+                    update_invoice(invoice_id, {
+                        "qb_invoice_id": qb_id,
+                        "qb_invoice_url": get_qb_invoice_url(qb_id),
+                    })
+                print(f"[invoice_service] Synced to QuickBooks: {invoice.get('invoice_number', '')} (QB Id {qb_id})")
     except Exception as e:
         print(f"[invoice_service] QB sync skipped: {e}")
 
     return updated
+
+
+def send_pay_link(invoice_id: str) -> dict:
+    """Send the customer the QBO-hosted invoice with a Pay Now link.
+
+    Triggers QBO's outbound invoice email (which includes the Pay Now button
+    when QB Payments is enabled on the account). Idempotent: re-sends fine.
+
+    Returns:
+        {"sent": bool, "message": str, "qb_email_status": str}
+    """
+    invoice = get_invoice(invoice_id)
+    if not invoice:
+        return {"sent": False, "message": "Invoice not found.", "qb_email_status": ""}
+
+    client = get_client(invoice.get("client_id", ""))
+    if not client:
+        return {"sent": False, "message": "Client not found.", "qb_email_status": ""}
+
+    try:
+        from services.quickbooks_service import (
+            is_connected, sync_invoice_to_qb, send_qb_invoice, get_qb_invoice_url,
+        )
+    except ImportError:
+        return {"sent": False, "message": "QuickBooks service unavailable.", "qb_email_status": ""}
+
+    if not is_connected():
+        return {"sent": False,
+                "message": "QuickBooks is not connected. Connect it in Settings → Integrations.",
+                "qb_email_status": ""}
+
+    qb_id = invoice.get("qb_invoice_id", "")
+    if not qb_id:
+        # Sync first to get a QB invoice ID
+        qb_inv = sync_invoice_to_qb(invoice, client)
+        if not qb_inv or not qb_inv.get("Id"):
+            return {"sent": False,
+                    "message": "Could not create invoice in QuickBooks.",
+                    "qb_email_status": ""}
+        qb_id = qb_inv["Id"]
+        update_invoice(invoice_id, {
+            "qb_invoice_id": qb_id,
+            "qb_invoice_url": get_qb_invoice_url(qb_id),
+        })
+
+    sent = send_qb_invoice(qb_id, email=client.get("contact_email", ""))
+    if not sent:
+        return {"sent": False,
+                "message": "QuickBooks rejected the send. Check the API logs.",
+                "qb_email_status": ""}
+
+    update_invoice(invoice_id, {
+        "qb_email_sent_at": datetime.now().isoformat(),
+        "pay_link_provider": "qbo",
+        "status": "sent" if invoice.get("status") in ("draft", "sent") else invoice.get("status"),
+    })
+    log_activity(
+        client_id=client.get("id", ""),
+        action=f"QuickBooks emailed invoice {invoice.get('invoice_number', '')} with Pay Now link",
+        entity_type="invoice",
+        entity_id=invoice_id,
+    )
+    return {
+        "sent": True,
+        "message": "QuickBooks emailed the invoice. The customer's email includes a Pay Now button if QB Payments is enabled on your account.",
+        "qb_email_status": sent.get("EmailStatus", ""),
+    }
 
 
 def mark_paid(invoice_id: str, paid_date: str = "") -> dict | None:

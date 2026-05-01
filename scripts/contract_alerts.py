@@ -232,10 +232,24 @@ def main() -> int:
         days = c.get("days_remaining", 30)
         auto = c.get("auto_renew", False)
 
+        # Generate one-click renewal token (only if not auto-renew, since
+        # auto-renew contracts handle themselves).
+        renewal_url = ""
+        if not auto:
+            try:
+                from services.contract_service import generate_renewal_offer
+                offer = generate_renewal_offer(cid)
+                if offer:
+                    renewal_url = offer.get("url", "")
+            except Exception as e:
+                logger.warning("Failed to generate renewal token for %s: %s", cid, e)
+
         # Client email (only if not already sent)
         if email and not _alert_already_sent(cid, "expiring_30_client", "email"):
             try:
-                sent = notify_contract_expiring_client(email, contact, title, days, auto)
+                sent = notify_contract_expiring_client(
+                    email, contact, title, days, auto, renewal_url=renewal_url,
+                )
                 if sent:
                     _log_alert_sent(cid, "expiring_30_client", email, "email")
                     results["client_emails"] += 1

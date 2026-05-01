@@ -270,6 +270,56 @@ mailto = (
     f"&body={body.replace(chr(10), '%0A').replace(' ', '%20')}"
 )
 
+# ── Calendar booking ─────────────────────────────────────────────────────────
+# Resolve the assigned rep's calendar URL (or the default) at view time so
+# config changes take effect without needing to re-save scenarios.
+
+def _booking_url() -> tuple[str, str]:
+    """Return (url, rep_name) for the booking widget. Empty url = no widget."""
+    try:
+        from services.config_service import load_config
+        cfg = load_config()
+    except Exception:
+        return "", ""
+    assigned = (scenario.get("assigned_rep") or "").strip().lower()
+    booking_cfg = cfg.get("booking", {}) or {}
+    # Match the assigned rep first
+    for m in cfg.get("team", []):
+        if assigned and assigned in m.get("name", "").lower():
+            cal = (m.get("calendar_url") or "").strip()
+            if cal:
+                return cal, m.get("name", "")
+    # Fallback to default
+    default = (booking_cfg.get("default_calendar_url") or "").strip()
+    if default:
+        # Use first team member's name as the host label
+        first = (cfg.get("team") or [{}])[0]
+        return default, first.get("name", "MCTV team")
+    return "", ""
+
+_cal_url, _cal_rep = _booking_url()
+
+if _cal_url:
+    try:
+        from services.config_service import load_config as _lc
+        _booking_label = (_lc().get("booking", {}) or {}).get("label",
+                                                              "Book a 15-Minute Discovery Call")
+        _booking_subtitle = (_lc().get("booking", {}) or {}).get("subtitle", "")
+    except Exception:
+        _booking_label, _booking_subtitle = "Book a 15-Minute Discovery Call", ""
+
+    st.markdown(f"### {_booking_label}")
+    if _booking_subtitle:
+        st.caption(_booking_subtitle)
+
+    # Embed Cal.com / Calendly / Google Appointment via iframe; users get a
+    # working scheduler in-page. If a host blocks iframing, the link button
+    # below still opens it in a new tab.
+    st.components.v1.iframe(_cal_url, height=720, scrolling=True)
+    st.caption(f"Trouble loading? [Open the booking page in a new tab]({_cal_url}).")
+    st.divider()
+
+
 cta = st.columns([2, 1])
 with cta[0]:
     st.markdown("### Ready to move forward?")

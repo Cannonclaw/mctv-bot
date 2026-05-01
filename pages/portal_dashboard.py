@@ -116,6 +116,41 @@ def _render_advertiser_dashboard(dash: dict, status: str):
 
     st.divider()
 
+    # ── Live Performance ──────────────────────────────────────────────────
+    perf = dash.get("live_performance") or {}
+    if perf and (perf.get("mtd_plays_estimated") or perf.get("last_month_plays")):
+        st.markdown("### Live Performance")
+        st.caption(
+            f"Source: {perf.get('data_source', 'modeled').upper()} · "
+            f"Latest snapshot: {perf.get('snapshot_month') or 'pending'}"
+        )
+
+        p1, p2, p3, p4 = st.columns(4)
+        mtd_plays = int(perf.get("mtd_plays_estimated", 0) or 0)
+        mtd_imps  = int(perf.get("mtd_impressions_estimated", 0) or 0)
+        last_plays = int(perf.get("last_month_plays", 0) or 0)
+        ctd_plays = int(perf.get("contract_to_date_plays", 0) or 0)
+        delta_pct = ""
+        if last_plays > 0 and mtd_plays > 0:
+            pct = (mtd_plays - last_plays) / last_plays * 100
+            delta_pct = f"{pct:+.0f}% vs last mo"
+        p1.metric("This Month — Plays", f"{mtd_plays:,}", delta=delta_pct or None,
+                  delta_color="normal")
+        p2.metric("This Month — Impressions", f"{mtd_imps:,}")
+        p3.metric("Last Month — Plays", f"{last_plays:,}")
+        p4.metric("Contract-to-Date Plays", f"{ctd_plays:,}")
+
+        trend = perf.get("trend") or []
+        if len(trend) >= 2:
+            st.bar_chart(
+                trend,
+                x="month",
+                y="plays",
+                height=240,
+            )
+
+        st.divider()
+
     # ── Quick Actions ──────────────────────────────────────────────────────
     st.markdown("### Quick Actions")
 
@@ -196,6 +231,54 @@ def _render_advertiser_dashboard(dash: dict, status: str):
 # HOST DASHBOARD
 # ==========================================================================
 
+def _render_host_referrals(dash: dict):
+    """Referral program panel for hosts."""
+    import os as _os
+    try:
+        from services.referral_service import (
+            get_or_create_code, get_host_referral_summary,
+        )
+    except ImportError:
+        return
+
+    client = dash.get("client") or {}
+    if not client.get("id"):
+        return
+
+    code = get_or_create_code(client["id"])
+    summary = get_host_referral_summary(client["id"])
+
+    base = _os.environ.get("PORTAL_URL", "https://bot.mctvofms.com").rstrip("/")
+    share_url = f"{base}/Intake?ref={code}"
+
+    st.markdown("### \U0001F381 Your Referral Program")
+    st.caption(
+        "Send other businesses to MCTV. When they sign their first contract, "
+        "you earn screen-time credit. Share your link below."
+    )
+
+    sc1, sc2, sc3, sc4 = st.columns(4)
+    sc1.metric("Total Referrals", summary["total"])
+    sc2.metric("Pending", summary["pending_count"])
+    sc3.metric("Converted", summary["converted_count"])
+    sc4.metric("Reward Earned", f"${summary['paid_reward_value']:,.0f}")
+
+    st.markdown(f"**Your code:** `{code}`")
+    st.code(share_url, language=None)
+    st.caption("Copy this link and share it with prospects. We'll attribute the referral automatically.")
+
+    if summary["rows"]:
+        with st.expander(f"Recent referrals ({len(summary['rows'])})", expanded=False):
+            rows = [{
+                "Business": r.get("referred_business_name", ""),
+                "Contact": r.get("referred_contact_name", ""),
+                "Status": r.get("status", "").title(),
+                "Reward": f"${float(r.get('reward_value', 0) or 0):,.0f}",
+                "Date": (r.get("created_at") or "")[:10],
+            } for r in summary["rows"][:20]]
+            st.dataframe(rows, width="stretch", hide_index=True)
+
+
 def _render_host_dashboard(dash: dict, status: str):
     """Full host/venue dashboard: screens, free ads, activity, revenue share."""
 
@@ -212,6 +295,11 @@ def _render_host_dashboard(dash: dict, status: str):
         m4.metric("Revenue Share", f"${rev_share:,.2f}/mo")
     else:
         m4.metric("Status", status.title())
+
+    st.divider()
+
+    # ── Referral Program ──────────────────────────────────────────────────
+    _render_host_referrals(dash)
 
     st.divider()
 

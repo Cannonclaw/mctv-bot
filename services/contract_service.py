@@ -761,6 +761,84 @@ def renew_contract(
     return new_contract
 
 
+# ── One-Click Renewal Offers ──────────────────────────────────────────────
+
+def generate_renewal_offer(contract_id: str) -> dict | None:
+    """Issue a one-click renewal token for a contract.
+
+    Stores a UUID on contracts.renewal_token and stamps renewal_offer_sent_at.
+    Idempotent: re-running returns the same token if one is already set.
+
+    Returns dict with {token, url, contract} or None on failure.
+    """
+    import os, uuid
+    contract = get_contract(contract_id)
+    if not contract:
+        return None
+
+    token = contract.get("renewal_token")
+    if not token:
+        token = str(uuid.uuid4())
+        update_contract(contract_id, {
+            "renewal_token": token,
+            "renewal_offer_sent_at": datetime.now(CT).isoformat(),
+        })
+    elif not contract.get("renewal_offer_sent_at"):
+        update_contract(contract_id, {
+            "renewal_offer_sent_at": datetime.now(CT).isoformat(),
+        })
+
+    base_url = os.environ.get("PORTAL_URL", "https://bot.mctvofms.com").rstrip("/")
+    return {
+        "token": token,
+        "url": f"{base_url}/portal_renewal?token={token}",
+        "contract": contract,
+    }
+
+
+def find_contract_by_renewal_token(token: str) -> dict | None:
+    """Look up a contract by its public renewal token."""
+    if not token:
+        return None
+    rows = query_table("contracts", filters={"renewal_token": token}, limit=1)
+    return rows[0] if rows else None
+
+
+def accept_renewal_offer(token: str, term_months: int | None = None) -> dict | None:
+    """Mark a renewal offer accepted and create the new draft contract.
+
+    Returns the NEW (draft) contract dict on success, None on failure.
+    Idempotent: if the offer was already accepted, returns the existing
+    renewal_contract_id row.
+    """
+    original = find_contract_by_renewal_token(token)
+    if not original:
+        return None
+
+    # Already accepted — return the existing renewal record
+    if original.get("renewal_contract_id"):
+        existing = get_contract(original["renewal_contract_id"])
+        if existing:
+            return existing
+
+    new_contract = renew_contract(original["id"], new_term_months=term_months)
+    if not new_contract:
+        return None
+
+    update_contract(original["id"], {
+        "renewal_accepted_at": datetime.now(CT).isoformat(),
+        "renewal_contract_id": new_contract.get("id", ""),
+    })
+    log_activity(
+        client_id=original.get("client_id", ""),
+        action="One-click renewal accepted",
+        entity_type="contract",
+        entity_id=new_contract.get("id", ""),
+        details={"original_contract_id": original.get("id", ""), "via": "renewal_token"},
+    )
+    return new_contract
+
+
 # ── Alert Tracking (contract_alerts_log) ──────────────────────────────────
 
 def _alert_already_sent(contract_id: str, alert_type: str, channel: str) -> bool:

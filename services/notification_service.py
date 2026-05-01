@@ -356,14 +356,24 @@ def notify_contract_expiring_team(contracts_by_bucket: dict) -> bool:
 
 def notify_contract_expiring_client(client_email: str, client_name: str,
                                      contract_title: str, days_remaining: int,
-                                     auto_renew: bool) -> bool:
-    """Notify a client that their MCTV contract is approaching expiration."""
+                                     auto_renew: bool,
+                                     renewal_url: str = "") -> bool:
+    """Notify a client that their MCTV contract is approaching expiration.
+
+    If ``renewal_url`` is provided, the email includes a one-click renewal CTA.
+    """
     portal_url = _get_portal_url()
 
     if auto_renew:
         renewal_msg = (
             "Your contract is set to auto-renew, so no action is needed on your part. "
             "If you'd like to make changes or have questions, just reach out to your MCTV representative."
+        )
+    elif renewal_url:
+        renewal_msg = (
+            f"Renew in one click: {renewal_url}\n\n"
+            "Click the link above to lock in another term at the same rate. "
+            "We'll email the new contract for signature within 1 business day."
         )
     else:
         renewal_msg = (

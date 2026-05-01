@@ -17,21 +17,109 @@
       "title": "Owner / Managing Partner",
       "phone": "(601) 201-8202",
       "email": "creed@mctvofms.com",
-      "photo": "assets/team/creed_headshot.png"
+      "photo": "assets/team/creed_headshot.png",
+      "calendar_url": ""
     },
     {
       "name": "Mary Michael Cannon",
       "title": "Owner / Managing Partner",
       "phone": "(662) 801-5677",
       "email": "mmc@mctvofms.com",
-      "photo": "assets/team/mary_michael_headshot.png"
+      "photo": "assets/team/mary_michael_headshot.png",
+      "calendar_url": ""
     },
     {
       "name": "Swayze Hollingsworth",
       "title": "Director of Sales",
       "phone": "(662) 907-0404",
       "email": "swayze@mctvofms.com",
-      "photo": "assets/team/swayze_headshot.png"
+      "photo": "assets/team/swayze_headshot.png",
+      "calendar_url": ""
+    }
+  ],
+  "booking": {
+    "default_calendar_url": "",
+    "label": "Book a 15-Minute Discovery Call",
+    "subtitle": "Pick a time that works for you. We'll walk through the package, answer questions, and get the paperwork moving."
+  },
+  "sponsorship_packages": [
+    {
+      "key": "ole_miss_football",
+      "name": "Ole Miss Football Season Sponsorship",
+      "tagline": "Own the Square through gameday season",
+      "description": "Lock in premium screen rotation across every Oxford venue from late August through bowl season. 4 months of saturation around Ole Miss home games, tailgates, and watch parties.",
+      "markets": ["Oxford"],
+      "screens": 75,
+      "monthly_rate": 1300,
+      "term_months": 4,
+      "season_start_month": 8,
+      "season_end_month": 12,
+      "best_for": ["restaurant", "bar", "retail", "automotive", "real estate"]
+    },
+    {
+      "key": "msstate_football",
+      "name": "Mississippi State Bulldog Season Sponsorship",
+      "tagline": "Hail State \u2014 own the Golden Triangle this fall",
+      "description": "Saturation across all 30 Starkville venues from September through bowl season. Ride the football and basketball tailgate energy from Cotton District to The Junction.",
+      "markets": ["Starkville"],
+      "screens": 30,
+      "monthly_rate": 800,
+      "term_months": 4,
+      "season_start_month": 9,
+      "season_end_month": 12,
+      "best_for": ["restaurant", "bar", "retail", "automotive"]
+    },
+    {
+      "key": "double_decker",
+      "name": "Double Decker Festival Blitz",
+      "tagline": "Be the brand on the Square Double Decker weekend",
+      "description": "Premium 30-day saturation across Oxford venues built around Double Decker (late April). Captures festival-goers, art collectors, and out-of-town visitors filling the Square.",
+      "markets": ["Oxford"],
+      "screens": 75,
+      "monthly_rate": 1500,
+      "term_months": 1,
+      "season_start_month": 4,
+      "season_end_month": 4,
+      "best_for": ["restaurant", "bar", "retail", "art", "real estate"]
+    },
+    {
+      "key": "graduation_season",
+      "name": "Graduation & Move-Out Season",
+      "tagline": "Catch parents, grads, and move-out spend",
+      "description": "May saturation across Oxford and Starkville college venues. Hits parents in town for graduation, students prepping move-out, and the rush of summer-season decisions.",
+      "markets": ["Oxford", "Starkville"],
+      "screens": 105,
+      "monthly_rate": 1750,
+      "term_months": 1,
+      "season_start_month": 5,
+      "season_end_month": 5,
+      "best_for": ["storage", "moving", "restaurant", "retail", "automotive", "real estate"]
+    },
+    {
+      "key": "holiday_shopping",
+      "name": "Holiday Shopping Sponsorship",
+      "tagline": "Own the network from Black Friday through New Year",
+      "description": "Network-wide saturation across Oxford, Starkville, and Tupelo from mid-November through year-end. Built for retailers, restaurants, and gift-card-driven brands chasing holiday spend.",
+      "markets": ["Oxford", "Starkville", "Tupelo"],
+      "screens": 130,
+      "monthly_rate": 2000,
+      "term_months": 2,
+      "season_start_month": 11,
+      "season_end_month": 12,
+      "best_for": ["retail", "restaurant", "salon", "fitness", "automotive"]
+    },
+    {
+      "key": "summer_tupelo",
+      "name": "Tupelo Summer Sponsorship",
+      "tagline": "Own North Mississippi's biggest summer city",
+      "description": "Tupelo network saturation June through August. Built around concerts at Cadence Bank Arena, family travel, and the Elvis Festival weekend.",
+      "markets": ["Tupelo"],
+      "screens": 25,
+      "monthly_rate": 700,
+      "term_months": 3,
+      "season_start_month": 6,
+      "season_end_month": 8,
+      "best_for": ["restaurant", "retail", "automotive", "real estate", "tourism"]
     }
   ],
   "network": {
