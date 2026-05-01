@@ -6,6 +6,7 @@
 import streamlit as st
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -240,6 +241,29 @@ additional_notes = st.text_area(
 st.divider()
 
 
+# ── SMS CONSENT (TCPA / A2P 10DLC) ───────────────────────────────────────────
+# This block satisfies TCR's MESSAGE_FLOW review by capturing explicit, informed
+# consent next to the phone number field. Do NOT remove or weaken this label
+# without first updating the A2P campaign description in the Twilio Console.
+
+SMS_CONSENT_LABEL = (
+    "I agree to receive SMS messages from MCTV Digital regarding my "
+    "advertising inquiry. Message and data rates may apply. Message "
+    "frequency varies. Reply STOP to opt out, HELP for help."
+)
+
+st.markdown("#### SMS Updates")
+sms_consent = st.checkbox(SMS_CONSENT_LABEL + " *", key="intake_sms_consent")
+st.caption(
+    "Required to text you about your inquiry. View our "
+    "[SMS Terms](https://mctvofms.com/sms-terms/) and "
+    "[Privacy Policy](https://mctvofms.com/privacy-policy/). "
+    "Your number is never sold or shared with third parties for marketing."
+)
+
+st.divider()
+
+
 # ── SUBMIT ───────────────────────────────────────────────────────────────────
 
 if st.button("Submit", type="primary", width='stretch'):
@@ -267,6 +291,11 @@ if st.button("Submit", type="primary", width='stretch'):
         st.error(f"Please fill in: {', '.join(missing)}")
     elif phone_invalid:
         st.error("Please enter a valid phone number (at least 10 digits).")
+    elif not sms_consent:
+        st.error(
+            "Please check the SMS consent box to continue. "
+            "We need explicit permission before texting you."
+        )
     else:
         # Save the logo to a permanent location if uploaded
         logo_filename = None
@@ -279,6 +308,20 @@ if st.button("Submit", type="primary", width='stretch'):
             logo_filename = f"{safe_biz}{suffix}"
             with open(logos_dir / logo_filename, "wb") as f:
                 f.write(client_logo.getbuffer())
+
+        # Capture client IP (best-effort) for proof-of-consent
+        client_ip = ""
+        try:
+            headers = getattr(st.context, "headers", {}) or {}
+            client_ip = (
+                headers.get("X-Forwarded-For", "").split(",")[0].strip()
+                or headers.get("X-Real-Ip", "")
+                or ""
+            )
+        except Exception:
+            pass
+
+        consent_at = datetime.now(timezone.utc).isoformat()
 
         # Build lead data
         lead = {
@@ -293,11 +336,24 @@ if st.button("Submit", type="primary", width='stretch'):
             "how_heard": how_heard if how_heard != "Select one..." else "",
             "additional_notes": additional_notes,
             "logo_file": logo_filename,
+            "sms_consent": True,
+            "sms_consent_at": consent_at,
+            "sms_consent_ip": client_ip,
+            "sms_consent_text": SMS_CONSENT_LABEL,
+            "sms_consent_url": "https://mctvofms.com/get-started/",
         }
 
         # Save and notify
         lead_id = save_lead(lead)
         email_ok = send_notification_email(lead)
+
+        # Record opt-in in the dedicated sms_consent table so it survives
+        # lead -> client conversion and is independent of the leads row.
+        try:
+            from services.sms_service import set_consent
+            set_consent(contact_phone, opted_in=True, name=contact_name)
+        except Exception as _e:
+            print(f"[intake] set_consent failed: {_e}")
 
         st.session_state["intake_submitted"] = True
         st.rerun()
