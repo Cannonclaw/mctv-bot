@@ -677,6 +677,34 @@ if proposal_type == "Elite Advertiser":
         height=120,
     )
 
+    # Soft exclusivity warning — Elite Advertiser proposals don't grant
+    # exclusivity, but if their industry already has an exclusivity holder
+    # in the same markets, the rep should know before pitching.
+    if industry and selected_markets:
+        try:
+            from services.exclusivity_service import find_conflicts
+            conflicts = find_conflicts(industry, selected_markets)
+            if conflicts:
+                lines = [
+                    f"\u26A0\uFE0F **Heads up:** another client holds category "
+                    f"exclusivity in this industry + markets:"
+                ]
+                for c in conflicts:
+                    markets = ", ".join(c["overlapping_markets"])
+                    end = c["end_date"][:10] if c["end_date"] else "no end"
+                    lines.append(
+                        f"  - **{c['business_name']}** has '{c['exclusive_category']}' "
+                        f"exclusivity in {markets} until {end}"
+                    )
+                lines.append(
+                    "\nElite Advertiser proposals don't grant exclusivity, "
+                    "so you can still pitch — but coordinate with the existing "
+                    "client's contract terms before promising anything."
+                )
+                st.warning("\n".join(lines))
+        except Exception:
+            pass
+
     if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name or not industry:
             st.error("Please fill in all required fields (marked with *).")

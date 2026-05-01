@@ -386,6 +386,57 @@ with tab_list:
                             else:
                                 st.error("Could not generate offer.")
 
+                    with bonus_cols[2]:
+                        if st.button("\U0001F680 Onboarding",
+                                     key=f"onb_{cid}", width='stretch',
+                                     disabled=cstatus != "active",
+                                     help=("Mark onboarding steps complete"
+                                           if cstatus == "active"
+                                           else "Active contracts only")):
+                            st.session_state[f"show_onb_{cid}"] = not st.session_state.get(f"show_onb_{cid}", False)
+                            st.rerun()
+
+                # Onboarding panel — toggled by the button above
+                if st.session_state.get(f"show_onb_{cid}") and cstatus == "active":
+                    from services.onboarding_service import (
+                        STEPS, get_state, mark_step, progress_pct,
+                    )
+                    state = get_state(cid)
+                    pct = progress_pct(state)
+                    st.markdown(f"##### Onboarding Checklist — {pct}% complete")
+                    st.progress(pct / 100)
+                    for step_key, step_label in STEPS:
+                        step = state.get(step_key, {}) or {}
+                        ck1, ck2 = st.columns([4, 1])
+                        new_val = ck1.checkbox(
+                            step_label,
+                            value=bool(step.get("done")),
+                            key=f"onb_chk_{cid}_{step_key}",
+                            help=(f"Done {step.get('done_at', '')[:10]}"
+                                  if step.get('done') else None),
+                        )
+                        if new_val != bool(step.get("done")):
+                            mark_step(cid, step_key, done=new_val,
+                                      notes=step.get("notes", ""))
+                            st.rerun()
+                        if ck2.button("\u270F\uFE0F",
+                                      key=f"onb_note_btn_{cid}_{step_key}",
+                                      help="Add note", width='stretch'):
+                            st.session_state[f"onb_note_open_{cid}_{step_key}"] = True
+                        if st.session_state.get(f"onb_note_open_{cid}_{step_key}"):
+                            note_val = st.text_input(
+                                f"Note for: {step_label}",
+                                value=step.get("notes", ""),
+                                key=f"onb_note_input_{cid}_{step_key}",
+                            )
+                            if st.button("Save note",
+                                         key=f"onb_note_save_{cid}_{step_key}"):
+                                mark_step(cid, step_key,
+                                          done=bool(step.get("done")),
+                                          notes=note_val)
+                                st.session_state.pop(f"onb_note_open_{cid}_{step_key}", None)
+                                st.rerun()
+
                 # Cancel confirmation
                 if st.session_state.get(f"confirm_cancel_{cid}"):
                     st.warning(f"Cancel this contract? This will notify the client if already sent.")

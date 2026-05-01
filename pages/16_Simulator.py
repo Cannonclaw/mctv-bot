@@ -560,6 +560,184 @@ WRITE THE BRIEF
             key="sim_brief_dl",
         )
 
+
+# ── AI Ad Copy Generator ─────────────────────────────────────────────────────
+
+st.markdown("### Ad Copy Generator")
+st.caption(
+    "Generates 3 ready-to-render ad concepts: headline (6-10 words), "
+    "sub-line, visual direction, and a short CTA. Optimized for silent "
+    "1920\u00D71080 billboard slots with 30-60 minute dwell. Drop straight "
+    "into Creatomate or hand to your designer."
+)
+
+with st.expander("Generate ad copy", expanded=False):
+    cw_col1, cw_col2 = st.columns(2)
+    cw_business = cw_col1.text_input(
+        "Business name *",
+        value=st.session_state.get("sim_prefill_business", ""),
+        key="cw_business",
+    )
+    cw_industry = cw_col2.text_input(
+        "Industry *",
+        value=st.session_state.get("sim_prefill_industry", ""),
+        placeholder="Restaurant, Salon, Law Firm",
+        key="cw_industry",
+    )
+
+    cw_offer = st.text_input(
+        "What's the offer / promise / hook? *",
+        placeholder="e.g. 'Lunch combo $9.99', 'Free consultation', "
+                    "'New location now open'",
+        key="cw_offer",
+    )
+
+    cw_col3, cw_col4 = st.columns(2)
+    cw_cta_type = cw_col3.selectbox(
+        "Primary CTA",
+        ["Phone number", "Short URL / domain", "Visit-in-person",
+         "QR code (we'll generate visual)", "Social handle"],
+        key="cw_cta_type",
+    )
+    cw_cta_value = cw_col4.text_input(
+        "CTA value",
+        placeholder="(601) 201-8202  /  yoursite.com  /  @youraccount",
+        key="cw_cta_value",
+    )
+
+    cw_tone = st.select_slider(
+        "Tone",
+        options=["Plain-spoken", "Friendly", "Confident", "Bold",
+                 "Sophisticated", "Playful"],
+        value="Confident",
+        key="cw_tone",
+    )
+
+    cw_constraints = st.text_area(
+        "Must include / must avoid (optional)",
+        placeholder="e.g. must include 'Hotty Toddy', avoid promotional "
+                    "claims like 'best in town'",
+        height=70,
+        key="cw_constraints",
+    )
+
+    if st.button("Generate 3 Ad Concepts", type="primary",
+                 key="cw_btn",
+                 disabled=not (cw_business and cw_industry and cw_offer)):
+        import os as _os
+        api_key = _os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key or api_key == "your-api-key-here":
+            st.error("ANTHROPIC_API_KEY not configured.")
+        else:
+            blend = result.blend
+            top_age = max(blend.age_pct.items(), key=lambda kv: kv[1]) if blend.age_pct else ("?", 0)
+            tags = ", ".join(blend.audience_tags or []) or "general audience"
+            cities = ", ".join(result.cities) or "Oxford"
+
+            COPY_PROMPT = f"""You are a senior copywriter for indoor digital
+billboard ads on the MCTV network in North Mississippi. Generate exactly
+THREE distinct ad concepts for the brief below.
+
+CRITICAL CONSTRAINTS — every concept must satisfy these:
+- Format: 1920\u00D71080 landscape, SILENT (no audio), seen across a room
+- Headline: 6-10 words MAX, scannable from across a room, no jargon
+- Sub-line: 0-7 words, optional supporting line
+- Visual direction: 1-2 sentences describing the imagery (NOT a finished ad,
+  just direction for the designer). Avoid generic stock-photo cliches.
+- CTA: short, readable from 20 feet — phone, URL, or social handle
+- No long URLs (cap at ~20 chars). No tiny print. No claims a business
+  owner couldn't honestly make.
+- Each of the 3 concepts must take a DIFFERENT angle (e.g. urgency vs
+  curiosity vs social proof vs benefit).
+
+THE BRIEF
+=========
+Business: {cw_business}
+Industry: {cw_industry}
+Offer / hook: {cw_offer}
+CTA type: {cw_cta_type}
+CTA value: {cw_cta_value}
+Tone: {cw_tone}
+Cities running in: {cities}
+Top audience age: {top_age[0]} ({top_age[1]}%)
+Audience tags: {tags}
+Must include / avoid: {cw_constraints or '(none specified)'}
+
+OUTPUT (return EXACTLY this JSON, no markdown fences, no commentary):
+{{
+  "concepts": [
+    {{
+      "angle": "<one-word angle e.g. urgency, curiosity, social-proof, benefit, identity>",
+      "headline": "<6-10 word headline>",
+      "subline": "<0-7 word supporting line, or empty string>",
+      "visual_direction": "<1-2 sentences>",
+      "cta": "<final CTA text, exactly as it should appear on screen>",
+      "color_mood": "<2-4 words, e.g. 'warm + earthy', 'cool blues, gold accents'>",
+      "rationale": "<one sentence on why this hooks the target audience>"
+    }},
+    ...3 total...
+  ]
+}}
+"""
+            try:
+                import anthropic, json as _json
+                claude = anthropic.Anthropic(api_key=api_key)
+                with st.spinner("Writing copy..."):
+                    resp = claude.messages.create(
+                        model="claude-sonnet-4-5-20250929",
+                        max_tokens=2000,
+                        messages=[{"role": "user", "content": COPY_PROMPT}],
+                    )
+                    raw = resp.content[0].text.strip()
+                    if raw.startswith("```"):
+                        raw = raw.split("```", 2)[1]
+                        if raw.startswith("json"):
+                            raw = raw[4:]
+                        raw = raw.strip()
+                    parsed = _json.loads(raw)
+                st.session_state["sim_ad_copy"] = parsed
+            except _json.JSONDecodeError as e:
+                st.error(f"Could not parse Claude's response as JSON: {e}")
+                st.code(raw[:1500] if 'raw' in dir() else "(no output)")
+            except Exception as e:
+                st.error(f"Generation failed: {e}")
+
+    copy_data = st.session_state.get("sim_ad_copy")
+    if copy_data and copy_data.get("concepts"):
+        st.markdown("---")
+        for i, concept in enumerate(copy_data["concepts"], 1):
+            st.markdown(
+                f"#### Concept {i} — *{concept.get('angle', 'angle').title()}*"
+            )
+            st.markdown(
+                f"<div style='background:#1B1F3B; color:white; padding:1.5rem; "
+                f"border-radius:8px; text-align:center; margin:0.5rem 0;'>"
+                f"<div style='color:#C5A55A; font-size:2rem; font-weight:bold; "
+                f"line-height:1.2;'>{concept.get('headline', '')}</div>"
+                + (f"<div style='color:#e8e8e8; font-size:1.1rem; margin-top:0.5rem;'>"
+                   f"{concept['subline']}</div>" if concept.get('subline') else "")
+                + f"<div style='color:#C5A55A; font-size:1.1rem; margin-top:1rem; "
+                f"font-weight:bold;'>{concept.get('cta', '')}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+            cc1, cc2 = st.columns(2)
+            cc1.markdown(f"**Visual:** {concept.get('visual_direction', '')}")
+            cc2.markdown(f"**Mood:** {concept.get('color_mood', '')}")
+            st.caption(f"_Rationale:_ {concept.get('rationale', '')}")
+            st.divider()
+
+        # Download all three as a single text file
+        import json as _json2
+        full_text = _json2.dumps(copy_data, indent=2)
+        st.download_button(
+            "Download all 3 concepts (.json)",
+            data=full_text,
+            file_name=f"{(cw_business or 'ad').replace(' ', '_')}_ad_copy.json",
+            mime="application/json",
+            key="cw_dl",
+        )
+
 st.divider()
 
 
