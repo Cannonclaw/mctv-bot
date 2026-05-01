@@ -33,6 +33,9 @@ st.set_page_config(page_title="Contracts - MCTV Bot", page_icon="\U0001F4DD", la
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 
 # ── Load config for tiers ──────────────────────────────────────────────────
 

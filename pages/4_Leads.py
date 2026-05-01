@@ -31,6 +31,9 @@ st.set_page_config(page_title="Leads - MCTV Bot", page_icon="\U0001F4CB", layout
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 st.markdown("## Incoming Leads")
 st.caption("Client intake submissions from the public form. Click a lead to see details and generate a proposal.")
 

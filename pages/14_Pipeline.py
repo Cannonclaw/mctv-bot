@@ -15,6 +15,9 @@ from services.auth import check_team_auth
 if not check_team_auth():
     st.stop()
 
+
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
 from services.pipeline_service import (
     STAGES, TIERS,
     get_all_opportunities, get_opportunity, create_opportunity,

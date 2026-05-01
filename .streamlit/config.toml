@@ -13,3 +13,8 @@ enableCORS = false
 
 [browser]
 gatherUsageStats = false
+
+[client]
+# Hide Streamlit's alphabetized auto page nav. We render our own grouped,
+# branded sidebar via services.team_ui.render_team_sidebar() instead.
+showSidebarNavigation = false

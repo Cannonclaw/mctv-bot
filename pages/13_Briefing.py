@@ -36,6 +36,9 @@ st.set_page_config(
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 
 # ── Load config ───────────────────────────────────────────────────────────────
 

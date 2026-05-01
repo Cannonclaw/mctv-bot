@@ -32,6 +32,9 @@ from services.auth import check_password
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 st.markdown("## Traction Report Generator")
 st.caption("Generate professional traction and ad performance reports.")
 

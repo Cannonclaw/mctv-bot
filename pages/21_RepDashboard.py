@@ -36,6 +36,9 @@ st.set_page_config(
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 st.markdown("## Rep Dashboard")
 st.caption(
     "Pipeline, MRR attributed, and commission accrual per rep. Switch reps "

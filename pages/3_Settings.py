@@ -21,6 +21,9 @@ from services.auth import check_password
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 # ── QuickBooks OAuth Callback Handler ────────────────────────────────────────
 # When Intuit redirects back after authorization, the URL will contain
 # ?code=xxx&realmId=xxx&state=xxx  — we catch those here BEFORE rendering.

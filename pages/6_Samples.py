@@ -22,6 +22,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
 # Hide sidebar and Streamlit chrome for a clean public look
 # Also inject SEO meta tags, Open Graph, and JSON-LD structured data
 st.markdown("""

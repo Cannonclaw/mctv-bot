@@ -364,68 +364,29 @@ def render_landing_page():
 # ── Team Dashboard (authenticated) ─────────────────────────────────────────
 
 def main():
-    # Sidebar
-    with st.sidebar:
-        st.markdown("## MCTV ELITE ADVERTISING")
-        st.markdown("*Indoor Digital Billboard Network*")
-        st.divider()
+    from services.team_ui import render_team_sidebar
 
-        # API Key status
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        if api_key and api_key != "your-api-key-here":
-            st.success("Claude API: Connected")
-        else:
-            st.warning("Claude API: Not configured")
-            st.caption("Set your key in Settings or .env file")
+    render_team_sidebar()
 
-        creatomate_key = os.environ.get("CREATOMATE_API_KEY", "")
-        if creatomate_key:
-            st.success("Video API: Connected")
-        else:
-            st.caption("Video API: Not configured")
+    # ── HERO ──────────────────────────────────────────────────────────────
+    user_name = st.session_state.get("team_user", "")
+    greet = f"Welcome back{', ' + user_name.split()[0] if user_name else ''}."
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #1B1F3B 0%, #2a2f55 100%);
+                color: white; padding: 1.8rem 2rem; border-radius: 14px;
+                margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(27,31,59,0.15);">
+        <p style="color:#C5A55A; font-size:0.78rem; letter-spacing:0.18em; margin:0;
+                  text-transform:uppercase; font-weight:600;">MCTV ELITE ADVERTISING</p>
+        <h1 style="color:#fff; margin:0.4rem 0 0.3rem; font-size:1.9rem; font-weight:700;
+                   letter-spacing:-0.01em;">{greet}</h1>
+        <p style="color:#d8d8d8; margin:0; font-size:1.02rem;">
+            North Mississippi's indoor digital billboard network — 125+ screens,
+            1.9M+ monthly impressions, captive audiences across Oxford, Starkville, and Tupelo.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        st.divider()
-        st.markdown("**Navigation**")
-        st.page_link("app.py", label="Home", icon="\U0001F3E0")
-        st.page_link("pages/1_Proposals.py", label="Proposal Generator", icon="\U0001F4DD")
-        st.page_link("pages/2_Reports.py", label="Traction Reports", icon="\U0001F4CA")
-        st.page_link("pages/5_Video_Ads.py", label="Video Ads", icon="\U0001F3AC")
-        st.page_link("pages/14_Pipeline.py", label="Sales Pipeline", icon="\U0001F4B0")
-        st.page_link("pages/15_Prospector.py", label="Outbound Prospector", icon="\U0001F3AF")
-        st.page_link("pages/7_Research.py", label="Prospect Research", icon="\U0001F50D")
-        st.page_link("pages/4_Leads.py", label="Incoming Leads", icon="\U0001F4CB")
-        st.page_link("pages/8_Clients.py", label="Client Management", icon="\U0001F465")
-        st.page_link("pages/9_Contracts.py", label="Contracts", icon="\U0001F4DD")
-        st.page_link("pages/10_Invoices.py", label="Invoices", icon="\U0001F4B0")
-        st.page_link("pages/11_Creative.py", label="Creative Requests", icon="\U0001F3A8")
-        st.page_link("pages/12_Messaging.py", label="SMS Messaging", icon="\U0001F4F1")
-        st.page_link("pages/13_Briefing.py", label="Daily Briefing", icon="\U0001F4CB")
-        st.page_link("pages/16_Simulator.py", label="Audience Simulator", icon="\U0001F4CA")
-        st.page_link("pages/17_VoiceToProposal.py", label="Voice-to-Proposal", icon="\U0001F3A4")
-        st.page_link("pages/18_ScreenHealth.py", label="Screen Health", icon="\U0001F6A8")
-        st.page_link("pages/19_SalesCoach.py", label="Sales Coach", icon="\U0001F3C6")
-        st.page_link("pages/20_HostPipeline.py", label="Host Pipeline", icon="\U0001F3E2")
-        st.page_link("pages/21_RepDashboard.py", label="Rep Dashboard", icon="\U0001F4B0")
-        st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
-
-        st.divider()
-        st.page_link("pages/portal_login.py", label="Client Portal", icon="\U0001F310")
-
-        st.divider()
-        if st.button("Log Out", width='stretch', key="team_logout_btn"):
-            team_logout()
-            st.rerun()
-
-        st.caption("MCTV Elite Advertising")
-        st.caption("Oxford | Starkville | Tupelo")
-        st.caption("www.mctvofms.com")
-        st.caption("\u00A9 2026 MCTV Digital, Inc.")
-
-    # Main content - Home page
-    st.markdown('<p class="main-header">MCTV Elite Advertising Bot</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Generate proposals and traction reports in seconds</p>', unsafe_allow_html=True)
-
-    # ── Quick-glance alert bar ────────────────────────────────────────────
+    # ── TODAY'S BRIEFING ───────────────────────────────────────────────────
     try:
         from services.briefing_service import generate_briefing as _gen_briefing
         if "home_alerts" not in st.session_state:
@@ -433,145 +394,127 @@ def main():
             st.session_state.home_alerts = _brief.get("alerts", [])
             st.session_state.home_summary = _brief.get("executive_summary", {})
 
-        _alerts = st.session_state.get("home_alerts", [])
         _summary = st.session_state.get("home_summary", {})
+        _alerts = st.session_state.get("home_alerts", [])
 
-        if _alerts or _summary:
-            # KPI row
-            _k1, _k2, _k3, _k4, _k5 = st.columns(5)
-            _k1.metric("MRR", f"${_summary.get('monthly_recurring_revenue', 0):,.0f}")
-            _k2.metric("Active Clients", _summary.get("active_clients", 0))
-            _k3.metric("Pending Sig", _summary.get("contracts_awaiting_signature", 0))
-            _k4.metric("Overdue AR", f"${_summary.get('overdue_amount', 0):,.0f}")
-            _k5.metric("Hot Leads", _summary.get("hot_leads", 0))
+        if _summary:
+            st.markdown("##### \U0001F4CA  At a glance")
+            k1, k2, k3, k4, k5 = st.columns(5)
+            k1.metric("MRR",
+                      f"${_summary.get('monthly_recurring_revenue', 0):,.0f}")
+            k2.metric("Active Clients",
+                      _summary.get("active_clients", 0))
+            k3.metric("Pending Sig",
+                      _summary.get("contracts_awaiting_signature", 0))
+            k4.metric("Overdue AR",
+                      f"${_summary.get('overdue_amount', 0):,.0f}")
+            k5.metric("Hot Leads",
+                      _summary.get("hot_leads", 0))
 
-            # Show top 3 alerts
-            if _alerts:
-                for _a in _alerts[:3]:
-                    st.warning(_a)
-                if len(_alerts) > 3:
-                    if st.button(f"View all {len(_alerts)} alerts \u2192", key="goto_briefing"):
-                        st.switch_page("pages/13_Briefing.py")
+        if _alerts:
+            st.markdown("##### \u26A0\uFE0F  Today's focus")
+            for _a in _alerts[:3]:
+                st.warning(_a)
+            if len(_alerts) > 3:
+                if st.button(f"View all {len(_alerts)} alerts \u2192",
+                             key="goto_briefing"):
+                    st.switch_page("pages/13_Briefing.py")
     except Exception:
-        pass  # Graceful fallback if briefing service unavailable
+        pass
 
-    st.divider()
+    st.markdown("&nbsp;", unsafe_allow_html=True)
 
-    # Feature cards
-    col1, col2, col3, col4 = st.columns(4)
+    # ── PRIMARY ACTIONS ─────────────────────────────────────────────────
+    st.markdown("##### \U0001F680  Move a deal forward")
+    p1, p2, p3, p4 = st.columns(4)
 
-    with col1:
-        st.markdown("### Proposals")
-        st.markdown(
-            "Create polished advertising proposals tailored to each client. "
-            "6 types including Elite Advertiser, Host Media Kit, and more."
-        )
-        if st.button("Create Proposal", type="primary", width='stretch'):
-            st.switch_page("pages/1_Proposals.py")
+    def _action_card(col, emoji, title, blurb, target, btn_text, btn_key):
+        with col:
+            st.markdown(
+                f"""<div style="background:#fff; border:1px solid #ececec;
+                       border-radius:12px; padding:1.2rem; height: 175px;
+                       box-shadow:0 1px 3px rgba(27,31,59,0.04);">
+                <div style="font-size:1.6rem; margin-bottom:0.4rem;">{emoji}</div>
+                <h4 style="color:#1B1F3B; margin:0 0 0.3rem; font-size:1.05rem;
+                           font-weight:700;">{title}</h4>
+                <p style="color:#6b7280; font-size:0.86rem; margin:0;
+                          line-height:1.4;">{blurb}</p>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            if st.button(btn_text, key=btn_key, type="primary",
+                         width="stretch"):
+                st.switch_page(target)
 
-    with col2:
-        st.markdown("### Prospect Research")
-        st.markdown(
-            "Research a prospect before your sales call. Get competitive intel, "
-            "talking points, and objection responses in seconds."
-        )
-        if st.button("Research Prospect", type="primary", width='stretch'):
-            st.switch_page("pages/7_Research.py")
+    _action_card(p1, "\U0001F4CA", "Build a Plan",
+                  "Pick venues on the map, see live impressions and CPM.",
+                  "pages/16_Simulator.py", "Open Simulator", "act_sim")
+    _action_card(p2, "\U0001F4DD", "New Proposal",
+                  "Generate a polished proposal PDF in under 60 seconds.",
+                  "pages/1_Proposals.py", "Create Proposal", "act_prop")
+    _action_card(p3, "\U0001F3A4", "Voice to Proposal",
+                  "Paste call notes — Claude pre-fills a scenario for you.",
+                  "pages/17_VoiceToProposal.py", "Open", "act_v2p")
+    _action_card(p4, "\U0001F3AF", "Prospector",
+                  "Hunt cold leads in Oxford, Starkville, and Tupelo.",
+                  "pages/15_Prospector.py", "Find Leads", "act_pro")
 
-    with col3:
-        st.markdown("### Traction Reports")
-        st.markdown(
-            "Generate professional traction and ad performance reports "
-            "from NTV360 data. Upload Excel exports or enter data manually."
-        )
-        if st.button("Create Report", type="primary", width='stretch'):
-            st.switch_page("pages/2_Reports.py")
+    st.markdown("&nbsp;", unsafe_allow_html=True)
 
-    with col4:
-        st.markdown("### Video Ads")
-        st.markdown(
-            "Create professional video advertisements using AI-powered templates. "
-            "Upload assets and generate broadcast-ready content."
-        )
-        if st.button("Create Video", type="primary", width='stretch'):
-            st.switch_page("pages/5_Video_Ads.py")
+    # ── PIPELINE + CLIENT WORK ───────────────────────────────────────────
+    p5, p6, p7, p8 = st.columns(4)
+    _action_card(p5, "\U0001F4B0", "Sales Pipeline",
+                  "Move deals through 9 stages. See revenue forecast.",
+                  "pages/14_Pipeline.py", "View Pipeline", "act_pipe")
+    _action_card(p6, "\U0001F4C3", "Contracts",
+                  "Send for e-signature, manage renewals and onboarding.",
+                  "pages/9_Contracts.py", "View Contracts", "act_contracts")
+    _action_card(p7, "\U0001F4B5", "Invoices",
+                  "Send Pay Now links via QuickBooks. Track AR.",
+                  "pages/10_Invoices.py", "View Invoices", "act_invoices")
+    _action_card(p8, "\U0001F4B2", "Rep Dashboard",
+                  "Your MRR, commission accrual, and stalled deals.",
+                  "pages/21_RepDashboard.py", "Your Numbers", "act_rep")
 
-    # Second row of feature cards
-    col5, col6, col7, col8 = st.columns(4)
+    st.markdown("&nbsp;", unsafe_allow_html=True)
 
-    with col5:
-        st.markdown("### Sales Pipeline")
-        st.markdown(
-            "Track every deal from prospect to close. Visual pipeline, "
-            "revenue forecasting, and automated nurture sequences."
-        )
-        if st.button("View Pipeline", type="primary", width='stretch'):
-            st.switch_page("pages/14_Pipeline.py")
+    # ── NETWORK SNAPSHOT ─────────────────────────────────────────────────
+    st.markdown("##### \U0001F4FA  Network Snapshot")
+    n1, n2, n3, n4 = st.columns(4)
+    n1.metric("Total Screens", "125+")
+    n2.metric("Monthly Impressions", "1.9M+")
+    n3.metric("Avg Dwell Time", "55+ min")
+    n4.metric("Markets", "3 Active")
 
-    with col6:
-        st.markdown("### Contracts")
-        st.markdown(
-            "Create branded contracts, generate PDFs, send for "
-            "e-signature, and track the full lifecycle."
-        )
-        if st.button("View Contracts", type="primary", width='stretch'):
-            st.switch_page("pages/9_Contracts.py")
-
-    with col7:
-        st.markdown("### Invoices")
-        st.markdown(
-            "Create and send invoices, track payments, run AR aging "
-            "reports, and sync with QuickBooks."
-        )
-        if st.button("View Invoices", type="primary", width='stretch'):
-            st.switch_page("pages/10_Invoices.py")
-
-    with col8:
-        st.markdown("### SMS Messaging")
-        st.markdown(
-            "Send text messages to clients via Twilio. Use templates, "
-            "manage opt-ins, and view message history."
-        )
-        if st.button("Send Messages", type="primary", width='stretch'):
-            st.switch_page("pages/12_Messaging.py")
-
-    st.divider()
-
-    # Quick stats
-    st.markdown("### Network Overview")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Screens", "125+")
-    c2.metric("Monthly Impressions", "1.9M+")
-    c3.metric("Avg Dwell Time", "55+ min")
-    c4.metric("Markets", "3 Active")
-
-    # Recent output files
-    st.markdown("### Recent Output")
+    # ── RECENT OUTPUT (compact list) ─────────────────────────────────────
     output_dir = Path(__file__).parent / "output"
     recent_files = []
-    for subdir in ["proposals", "reports", "contracts", "emails", "videos", "research"]:
+    for subdir in ["proposals", "reports", "contracts", "emails", "videos", "research", "case_studies"]:
         folder = output_dir / subdir
         if folder.exists():
             for f in sorted(folder.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:
-                # Skip hidden/dot files like .gitkeep
                 if f.name.startswith("."):
                     continue
                 recent_files.append((f.name, subdir, f))
 
     if recent_files:
-        for fname, category, fpath in recent_files[:10]:
-            col_a, col_b, col_c = st.columns([3, 1, 1])
+        st.markdown("##### \U0001F4C2  Recent Output")
+        for fname, category, fpath in recent_files[:8]:
+            col_a, col_b, col_c = st.columns([4, 1, 1])
             col_a.text(fname)
-            col_b.caption(category)
+            col_b.markdown(
+                f'<span style="color:#C5A55A; font-size:0.78rem; '
+                f'text-transform:uppercase; letter-spacing:0.06em; '
+                f'font-weight:600;">{category}</span>',
+                unsafe_allow_html=True,
+            )
             with open(fpath, "rb") as f:
                 col_c.download_button(
-                    "Download",
+                    "\u2B07\uFE0F",
                     data=f.read(),
                     file_name=fname,
                     key=f"dl_{category}_{fname}",
                 )
-    else:
-        st.info("No files generated yet. Create your first proposal or report above!")
 
 
 # ── Auth Routing ────────────────────────────────────────────────────────────

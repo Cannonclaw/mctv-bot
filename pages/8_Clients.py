@@ -27,6 +27,9 @@ st.set_page_config(page_title="Clients - MCTV Bot", page_icon="\U0001F465", layo
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 
 # ── Helper ──────────────────────────────────────────────────────────────────
 

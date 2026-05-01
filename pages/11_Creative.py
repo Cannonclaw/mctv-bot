@@ -22,6 +22,9 @@ st.set_page_config(page_title="Creative Requests - MCTV Bot", page_icon="\U0001F
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 if not is_configured():
     st.warning("Supabase is not configured yet.")
     st.stop()

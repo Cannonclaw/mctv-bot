@@ -34,6 +34,9 @@ from services.auth import check_password
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 # ── PRE-FILL FROM RESEARCH (if coming from Research page) ────────────────────
 _prefill = st.session_state.pop("prefill_proposal", None)
 

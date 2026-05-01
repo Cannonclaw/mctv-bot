@@ -26,6 +26,9 @@ st.set_page_config(
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 st.markdown("## Screen Health")
 st.caption(
     "Compares the most recent NTV360 snapshot against expected plays per screen "

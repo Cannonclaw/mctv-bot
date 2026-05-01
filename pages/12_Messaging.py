@@ -24,6 +24,9 @@ st.set_page_config(page_title="Messaging - MCTV Bot", page_icon="\U0001F4F1", la
 if not check_password():
     st.stop()
 
+from services.team_ui import render_team_sidebar
+render_team_sidebar()
+
 st.markdown("## SMS Messaging")
 st.caption("Send texts to leads, clients, and host venues. All messages require opt-in consent.")
 
