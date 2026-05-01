@@ -1,0 +1,344 @@
+[
+  {
+    "area": "simulator",
+    "name": "venues loaded",
+    "ok": true,
+    "detail": "97 total, 90 with geocodes"
+  },
+  {
+    "area": "simulator",
+    "name": "build_scenario(5 Oxford venues)",
+    "ok": true,
+    "detail": "6 screens, 103,102 impressions"
+  },
+  {
+    "area": "simulator",
+    "name": "impressions match hand-computed",
+    "ok": true,
+    "detail": "sim=103,102, hand=103,102"
+  },
+  {
+    "area": "simulator",
+    "name": "demographic blend renormalized",
+    "ok": true,
+    "detail": "age sum=100.0, income sum=100.0"
+  },
+  {
+    "area": "simulator",
+    "name": "save_scenario",
+    "ok": true,
+    "detail": "share_token=6164fe04"
+  },
+  {
+    "area": "simulator",
+    "name": "load_scenario_by_token",
+    "ok": true,
+    "detail": "view_count=0"
+  },
+  {
+    "area": "simulator",
+    "name": "cleanup test row",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "referrals",
+    "name": "get_or_create_code",
+    "ok": true,
+    "detail": "code=WK87SF"
+  },
+  {
+    "area": "referrals",
+    "name": "find_client_by_code",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "referrals",
+    "name": "record_referral_signup",
+    "ok": true,
+    "detail": "status=pending"
+  },
+  {
+    "area": "referrals",
+    "name": "mark_referral_qualified",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "referrals",
+    "name": "mark_referral_converted with reward",
+    "ok": true,
+    "detail": "reward=$25.0"
+  },
+  {
+    "area": "referrals",
+    "name": "get_host_referral_summary",
+    "ok": true,
+    "detail": "converted=1"
+  },
+  {
+    "area": "referrals",
+    "name": "cleanup",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "renewal",
+    "name": "generate_renewal_offer",
+    "ok": true,
+    "detail": "token=6ebcd9ce"
+  },
+  {
+    "area": "renewal",
+    "name": "find_contract_by_renewal_token",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "renewal",
+    "name": "accept_renewal_offer creates draft",
+    "ok": true,
+    "detail": "new_id=2c5b395c"
+  },
+  {
+    "area": "renewal",
+    "name": "cleanup",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "exclusivity",
+    "name": "detects same category + same market",
+    "ok": true,
+    "detail": "1 conflict(s)"
+  },
+  {
+    "area": "exclusivity",
+    "name": "ignores different market",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "exclusivity",
+    "name": "ignores different category",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "exclusivity",
+    "name": "is_clear() works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "exclusivity",
+    "name": "cleanup",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "categorize 9=promoter",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "categorize 7=passive",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "categorize 5=detractor",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "find_due_surveys picks up old contract",
+    "ok": true,
+    "detail": "due milestone=30d"
+  },
+  {
+    "area": "nps",
+    "name": "create_survey",
+    "ok": true,
+    "detail": "token=79297848"
+  },
+  {
+    "area": "nps",
+    "name": "find_survey_by_token",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "submit_response score=10",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "nps",
+    "name": "get_aggregate computes",
+    "ok": true,
+    "detail": "NPS=100.0"
+  },
+  {
+    "area": "nps",
+    "name": "cleanup",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "lead_scoring",
+    "name": "hot lead scores >= 80",
+    "ok": true,
+    "detail": "score=100"
+  },
+  {
+    "area": "lead_scoring",
+    "name": "cold lead scores <= 30",
+    "ok": true,
+    "detail": "score=11"
+  },
+  {
+    "area": "lead_scoring",
+    "name": "breakdown returns rich detail",
+    "ok": true,
+    "detail": "bucket=hot"
+  },
+  {
+    "area": "screen_health",
+    "name": "expected_per_screen calc",
+    "ok": true,
+    "detail": "1440/screen"
+  },
+  {
+    "area": "screen_health",
+    "name": "venues classified",
+    "ok": true,
+    "detail": "85 venues, dark=0 low=10 ok=75"
+  },
+  {
+    "area": "onboarding",
+    "name": "default_state has all steps",
+    "ok": true,
+    "detail": "7 steps"
+  },
+  {
+    "area": "onboarding",
+    "name": "progress_pct empty=0",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "onboarding",
+    "name": "start_onboarding seeds state + welcome",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "onboarding",
+    "name": "mark_step persists",
+    "ok": true,
+    "detail": "pct=28%"
+  },
+  {
+    "area": "onboarding",
+    "name": "cleanup",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "cron",
+    "name": "scripts/qbo_reconcile.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/upsell_triggers.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/win_back_lost_leads.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/stalled_deal_alerts.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/weekly_advertiser_pulse.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/weekly_rep_recap.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/nps_send.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "cron",
+    "name": "scripts/push_briefing.py",
+    "ok": true,
+    "detail": "exit=0"
+  },
+  {
+    "area": "twilio",
+    "name": "account balance",
+    "ok": true,
+    "detail": "$17.70"
+  },
+  {
+    "area": "twilio",
+    "name": "A2P campaign status",
+    "ok": true,
+    "detail": "status=IN_PROGRESS"
+  },
+  {
+    "area": "twilio",
+    "name": "phone webhook clean (no demo URL)",
+    "ok": true,
+    "detail": "sms_url=''"
+  },
+  {
+    "area": "misc",
+    "name": "format_conflict_message produces text",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "area": "misc",
+    "name": "audience profiles loaded",
+    "ok": true,
+    "detail": "16 entries"
+  },
+  {
+    "area": "misc",
+    "name": "venue geocodes loaded",
+    "ok": true,
+    "detail": "90 venues geocoded"
+  },
+  {
+    "area": "misc",
+    "name": "census ZIP 38655 returns data",
+    "ok": true,
+    "detail": "pop=45290, income=$59,963"
+  }
+]

@@ -44,6 +44,29 @@ st.markdown("""
     .plan-hero h1 { color: #C5A55A; margin: 0; font-size: 1.7rem; }
     .plan-hero p { color: #e8e8e8; margin: 0.4rem 0 0; }
 </style>
+
+<!-- iframe auto-resize so /build-your-plan/ on WordPress doesn't truncate -->
+<script>
+(function() {
+    if (window.parent === window) return;
+    var lastHeight = 0;
+    function sendHeight() {
+        var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        if (h !== lastHeight) {
+            lastHeight = h;
+            window.parent.postMessage({type: 'streamlit:height', height: h}, '*');
+        }
+    }
+    sendHeight();
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    setInterval(sendHeight, 1000);
+    if (window.MutationObserver) {
+        new MutationObserver(sendHeight).observe(document.body,
+            {childList: true, subtree: true, attributes: true});
+    }
+})();
+</script>
 """, unsafe_allow_html=True)
 
 
