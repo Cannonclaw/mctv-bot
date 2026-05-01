@@ -475,6 +475,26 @@ def activate_contract(contract_id: str) -> dict | None:
         entity_id=contract_id,
     )
 
+    # Close the host-referral loop: if this client came from a referral,
+    # mark it converted and queue a reward (5% of monthly rate as screen-time).
+    try:
+        client_id = contract.get("client_id", "")
+        client = get_client(client_id) if client_id else None
+        lead_id = (client or {}).get("lead_id", "")
+        if lead_id:
+            from services.referral_service import mark_referral_converted
+            monthly = float(contract.get("monthly_rate", 0) or 0)
+            reward = round(monthly * 0.05, 2)
+            mark_referral_converted(
+                lead_id=lead_id,
+                client_id=client_id,
+                contract_id=contract_id,
+                reward_value=reward,
+                reward_type="screen_time",
+            )
+    except Exception as e:
+        print(f"[contract_service] Referral conversion hook skipped: {e}")
+
     return updated
 
 

@@ -375,6 +375,8 @@ def main():
         st.page_link("pages/16_Simulator.py", label="Audience Simulator", icon="\U0001F4CA")
         st.page_link("pages/17_VoiceToProposal.py", label="Voice-to-Proposal", icon="\U0001F3A4")
         st.page_link("pages/18_ScreenHealth.py", label="Screen Health", icon="\U0001F6A8")
+        st.page_link("pages/19_SalesCoach.py", label="Sales Coach", icon="\U0001F3C6")
+        st.page_link("pages/20_HostPipeline.py", label="Host Pipeline", icon="\U0001F3E2")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
         st.divider()

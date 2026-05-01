@@ -99,7 +99,7 @@ def convert_lead_to_client(lead: dict, client_type: str = "advertiser",
     Returns:
         Created client dict or None.
     """
-    return create_client(
+    new_client = create_client(
         business_name=lead.get("business_name", ""),
         contact_name=lead.get("contact_name", ""),
         contact_email=lead.get("contact_email", ""),
@@ -111,6 +111,17 @@ def convert_lead_to_client(lead: dict, client_type: str = "advertiser",
         lead_id=lead.get("id", ""),
         notes=lead.get("additional_notes", ""),
     )
+
+    # Promote any pending referral attached to this lead to 'qualified'.
+    # Reward fires later when the contract activates.
+    if new_client:
+        try:
+            from services.referral_service import mark_referral_qualified
+            mark_referral_qualified(lead.get("id", ""), new_client.get("id", ""))
+        except Exception as e:
+            print(f"[portal_service] Referral qualify hook skipped: {e}")
+
+    return new_client
 
 
 # ── Portal Account Management ───────────────────────────────────────────────

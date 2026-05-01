@@ -88,14 +88,11 @@ def record_referral_signup(referral_code: str, lead: dict) -> dict | None:
     return insert_row("referrals", payload)
 
 
-def mark_referral_converted(lead_id: str, client_id: str = "",
-                            contract_id: str = "",
-                            reward_value: float = 0.0,
-                            reward_type: str = "screen_time") -> dict | None:
-    """Mark a pending referral as converted when the lead signs.
+def mark_referral_qualified(lead_id: str, client_id: str = "") -> dict | None:
+    """Bump a pending referral to 'qualified' when the lead becomes a client.
 
-    Returns the updated referral row, or None if no matching pending
-    referral exists for this lead.
+    Lifecycle: pending -> qualified -> converted -> paid. No reward at this
+    stage; that fires on contract activation in mark_referral_converted.
     """
     rows = query_table(
         "referrals",
@@ -106,13 +103,41 @@ def mark_referral_converted(lead_id: str, client_id: str = "",
         return None
     ref = rows[0]
     return update_row("referrals", ref["id"], {
-        "status": "converted",
+        "status": "qualified",
         "converted_client_id": client_id or None,
-        "converted_contract_id": contract_id or None,
-        "reward_value": reward_value,
-        "reward_type": reward_type,
         "updated_at": datetime.now().isoformat(),
     })
+
+
+def mark_referral_converted(lead_id: str, client_id: str = "",
+                            contract_id: str = "",
+                            reward_value: float = 0.0,
+                            reward_type: str = "screen_time") -> dict | None:
+    """Mark a referral as converted when the contract activates.
+
+    Matches both 'pending' and 'qualified' rows so it works whether or not
+    mark_referral_qualified ran earlier.
+
+    Returns the updated referral row, or None if no matching referral exists.
+    """
+    # Try qualified first, then pending
+    for status in ("qualified", "pending"):
+        rows = query_table(
+            "referrals",
+            filters={"referred_lead_id": str(lead_id), "status": status},
+            limit=1,
+        )
+        if rows:
+            ref = rows[0]
+            return update_row("referrals", ref["id"], {
+                "status": "converted",
+                "converted_client_id": client_id or None,
+                "converted_contract_id": contract_id or None,
+                "reward_value": reward_value,
+                "reward_type": reward_type,
+                "updated_at": datetime.now().isoformat(),
+            })
+    return None
 
 
 def get_host_referrals(client_id: str) -> list:

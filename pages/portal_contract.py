@@ -70,6 +70,130 @@ if not contracts:
     st.stop()
 
 
+# ── Contract Chat helper ────────────────────────────────────────────────────
+
+def _extract_contract_text(contract: dict) -> str:
+    """Pull plain text out of a contract document. Caches per contract id.
+
+    Reads .docx via python-docx and .pdf via pdfminer/PyPDF2 if installed.
+    Falls back to a structured summary built from contract fields when the
+    document file isn't reachable.
+    """
+    cid = contract.get("id", "")
+    cache_key = f"contract_text_{cid}"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+
+    doc_url = contract.get("document_url", "")
+    text = ""
+
+    if doc_url:
+        is_local = doc_url.startswith("/") or doc_url.startswith("C:") or doc_url.startswith("output")
+        local_path = Path(doc_url) if is_local else None
+        if local_path and local_path.exists():
+            try:
+                if local_path.suffix.lower() == ".docx":
+                    from docx import Document
+                    d = Document(str(local_path))
+                    text = "\n".join(p.text for p in d.paragraphs if p.text.strip())
+                elif local_path.suffix.lower() == ".pdf":
+                    try:
+                        from pypdf import PdfReader
+                        reader = PdfReader(str(local_path))
+                        text = "\n".join((p.extract_text() or "") for p in reader.pages)
+                    except ImportError:
+                        text = ""
+            except Exception as _e:
+                logger.warning("Could not parse %s: %s", local_path, _e)
+
+    # Always append a structured summary from fields so the assistant has the
+    # canonical numbers even if doc parse fails or is partial.
+    summary_lines = [
+        "STRUCTURED CONTRACT FACTS:",
+        f"- Title: {contract.get('title', '')}",
+        f"- Type: {contract.get('contract_type', '')}",
+        f"- Tier: {contract.get('tier_name', 'Custom')}",
+        f"- Screens: {contract.get('screen_count', 0)}",
+        f"- Monthly rate: ${float(contract.get('monthly_rate', 0) or 0):,.2f}",
+        f"- Term: {contract.get('term_months', 0)} months",
+        f"- Start date: {contract.get('start_date', '')}",
+        f"- End date: {contract.get('end_date', '')}",
+        f"- Auto-renew: {bool(contract.get('auto_renew'))}",
+        f"- Markets: {', '.join(contract.get('markets') or [])}",
+        f"- Status: {contract.get('status', '')}",
+        f"- Prepay upfront: {bool(contract.get('prepay_upfront'))}",
+        f"- Prepay bonus months: {contract.get('prepay_bonus_months', 0)}",
+        f"- Signed by: {contract.get('signed_by', '')}",
+        f"- Signed at: {contract.get('signed_at', '')}",
+    ]
+    summary = "\n".join(summary_lines)
+
+    full = (text + "\n\n" + summary).strip() if text else summary
+    st.session_state[cache_key] = full
+    return full
+
+
+def _render_contract_chat(cid: str, contract: dict):
+    """Render a Claude-powered chat for a single contract."""
+    import os as _os
+    api_key = _os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key or api_key == "your-api-key-here":
+        st.warning("Contract chat is not configured (ANTHROPIC_API_KEY missing).")
+        return
+
+    history_key = f"contract_chat_{cid}"
+    if history_key not in st.session_state:
+        st.session_state[history_key] = []
+
+    contract_text = _extract_contract_text(contract)
+
+    # Display history
+    for msg in st.session_state[history_key]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    user_msg = st.chat_input(
+        "e.g. When does my contract end? Can I add screens? What's auto-renew?",
+        key=f"chat_input_{cid}",
+    )
+
+    if user_msg:
+        st.session_state[history_key].append({"role": "user", "content": user_msg})
+        with st.chat_message("user"):
+            st.markdown(user_msg)
+
+        system_prompt = (
+            "You are an MCTV Elite Advertising support assistant. The user is "
+            "an advertising client viewing their own contract. Answer questions "
+            "about THIS contract using only the contract text + structured "
+            "facts below. Be concise (3-6 sentences max), specific, and quote "
+            "exact dates / dollar figures / clause titles when relevant. If a "
+            "question can't be answered from the contract, say so and suggest "
+            "they contact their MCTV rep. Never invent terms.\n\n"
+            f"=== CONTRACT ===\n{contract_text}\n=== END CONTRACT ==="
+        )
+
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            messages = [{"role": m["role"], "content": m["content"]}
+                        for m in st.session_state[history_key]]
+            with st.chat_message("assistant"):
+                with st.spinner("Reading your contract..."):
+                    resp = client.messages.create(
+                        model="claude-sonnet-4-5-20250929",
+                        max_tokens=600,
+                        system=system_prompt,
+                        messages=messages,
+                    )
+                    answer = resp.content[0].text
+                    st.markdown(answer)
+            st.session_state[history_key].append({"role": "assistant", "content": answer})
+        except Exception as e:
+            with st.chat_message("assistant"):
+                st.error(f"Sorry, I couldn't process that: {e}")
+
+
 # ── Display each contract ──────────────────────────────────────────────────
 
 for contract in contracts:
@@ -364,5 +488,12 @@ for contract in contracts:
         st.info("This contract is being prepared by your MCTV representative. You'll be notified when it's ready to sign.")
 
     st.divider()
+
+    # ── Ask About This Contract ────────────────────────────────────────────
+    # Only show for contracts that have a real document the chat can read.
+    if contract.get("document_url"):
+        with st.expander("\U0001F4AC Ask about this contract", expanded=False):
+            _render_contract_chat(cid, contract)
+        st.divider()
 
 render_portal_footer()
