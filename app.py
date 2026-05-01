@@ -27,54 +27,82 @@ mimetypes.add_type("application/javascript", ".mjs")
 
 import streamlit as st
 
-# Fix 2: Streamlit's static file handler explicitly forces text/plain for
-# any extension not in its safe list.  We patch both the base module AND
-# the Starlette routes module (each has its own copy after `from` import).
-import streamlit.web.server.app_static_file_handler as _asfh
-import streamlit.web.server.starlette.starlette_routes as _star_routes
+# Fix 2 + 3: Streamlit internal-module patches for .js MIME types and PWA
+# service-worker scope. These reach into Streamlit's private innards and
+# the module paths shift between versions, so we wrap each patch in its
+# own try/except — none of them are critical, and we'd rather have the app
+# boot than enforce a fix Streamlit may have already applied upstream.
+def _apply_streamlit_patches():
+    try:
+        import streamlit.web.server.app_static_file_handler as _asfh
+    except ImportError:
+        logging.warning("streamlit.web.server.app_static_file_handler missing — "
+                        "skipping .js MIME + PWA Tornado patches")
+        _asfh = None
 
-_JS_EXTS = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js",)
-_asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
-_star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = _JS_EXTS
+    try:
+        import streamlit.web.server.starlette.starlette_routes as _star_routes
+    except ImportError:
+        logging.warning("streamlit.web.server.starlette.starlette_routes missing — "
+                        "skipping PWA Starlette patches")
+        _star_routes = None
 
-# Fix 3: PWA scope expansion — send "Service-Worker-Allowed: /" header.
-# The service worker lives at /app/static/service-worker.js but needs root
-# scope (/) to intercept all navigation requests.  Both Tornado and Starlette
-# handlers must include this header on the service-worker.js response.
-#
-# Tornado handler — patch set_extra_headers():
-_orig_set_extra = _asfh.AppStaticFileHandler.set_extra_headers
+    # .js extension whitelist
+    if _asfh is not None and hasattr(_asfh, "SAFE_APP_STATIC_FILE_EXTENSIONS"):
+        try:
+            js_exts = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js",)
+            _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = js_exts
+            if _star_routes is not None and hasattr(_star_routes,
+                                                     "SAFE_APP_STATIC_FILE_EXTENSIONS"):
+                _star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = js_exts
+        except Exception as _e:
+            logging.warning("Could not patch SAFE_APP_STATIC_FILE_EXTENSIONS: %s", _e)
 
-def _sw_extra_headers(self, path):
-    _orig_set_extra(self, path)
-    if path.endswith("service-worker.js"):
-        self.set_header("Service-Worker-Allowed", "/")
+    # Tornado: Service-Worker-Allowed header
+    if _asfh is not None and hasattr(_asfh, "AppStaticFileHandler"):
+        try:
+            _orig_set_extra = _asfh.AppStaticFileHandler.set_extra_headers
 
-_asfh.AppStaticFileHandler.set_extra_headers = _sw_extra_headers
+            def _sw_extra_headers(self, path):
+                _orig_set_extra(self, path)
+                if path.endswith("service-worker.js"):
+                    self.set_header("Service-Worker-Allowed", "/")
 
-# Starlette handler — wrap the static-file route endpoint:
-_orig_starlette_static = _star_routes.create_app_static_serving_routes
+            _asfh.AppStaticFileHandler.set_extra_headers = _sw_extra_headers
+        except Exception as _e:
+            logging.warning("Could not patch Tornado AppStaticFileHandler: %s", _e)
 
-def _patched_starlette_static(main_script_path, base_url=None):
-    from starlette.routing import Route as _Route
-    routes = _orig_starlette_static(main_script_path, base_url)
-    patched = []
-    for r in routes:
-        if hasattr(r, "methods") and r.methods and "GET" in r.methods:
-            _orig_ep = r.endpoint
+    # Starlette: Service-Worker-Allowed header via wrapped route endpoint
+    if _star_routes is not None and hasattr(_star_routes,
+                                              "create_app_static_serving_routes"):
+        try:
+            _orig_starlette_static = _star_routes.create_app_static_serving_routes
 
-            async def _wrapped(request, _ep=_orig_ep):
-                resp = await _ep(request)
-                if request.path_params.get("path", "").endswith("service-worker.js"):
-                    resp.headers["Service-Worker-Allowed"] = "/"
-                return resp
+            def _patched_starlette_static(main_script_path, base_url=None):
+                from starlette.routing import Route as _Route
+                routes = _orig_starlette_static(main_script_path, base_url)
+                patched = []
+                for r in routes:
+                    if hasattr(r, "methods") and r.methods and "GET" in r.methods:
+                        _orig_ep = r.endpoint
 
-            patched.append(_Route(r.path, _wrapped, methods=list(r.methods)))
-        else:
-            patched.append(r)
-    return patched
+                        async def _wrapped(request, _ep=_orig_ep):
+                            resp = await _ep(request)
+                            if request.path_params.get("path", "").endswith("service-worker.js"):
+                                resp.headers["Service-Worker-Allowed"] = "/"
+                            return resp
 
-_star_routes.create_app_static_serving_routes = _patched_starlette_static
+                        patched.append(_Route(r.path, _wrapped, methods=list(r.methods)))
+                    else:
+                        patched.append(r)
+                return patched
+
+            _star_routes.create_app_static_serving_routes = _patched_starlette_static
+        except Exception as _e:
+            logging.warning("Could not patch Starlette static routes: %s", _e)
+
+
+_apply_streamlit_patches()
 
 import sys
 from pathlib import Path
