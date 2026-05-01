@@ -1,7 +1,7 @@
 # MCTV-Bot Render Blueprint
 # Docs: https://docs.render.com/blueprint-spec
 #
-# Deploys the Streamlit web app + 4 scheduled cron jobs.
+# Deploys the Streamlit web app + 12 scheduled cron jobs.
 # All services share the same Dockerfile and env var group.
 
 services:
@@ -69,6 +69,110 @@ services:
     dockerfilePath: ./Dockerfile
     schedule: "0 15 1 * *"
     dockerCommand: python scripts/monthly_reports.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Weekly Advertiser Pulse ─────────────────────────────────────────
+  # 8:30 AM CT every Monday = 14:30 UTC
+  - type: cron
+    name: mctv-weekly-pulse
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "30 14 * * 1"
+    dockerCommand: python scripts/weekly_advertiser_pulse.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Daily Briefing Push (Slack/SMS) ─────────────────────────────────
+  # 7:30 AM CT (Mon-Fri) = 13:30 UTC
+  - type: cron
+    name: mctv-briefing-push
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "30 13 * * 1-5"
+    dockerCommand: python scripts/push_briefing.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: QuickBooks Reconciliation ───────────────────────────────────────
+  # 7:00 AM CT every day = 13:00 UTC (runs 1h after main daily briefing)
+  - type: cron
+    name: mctv-qbo-reconcile
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 14 * * *"
+    dockerCommand: python scripts/qbo_reconcile.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: NPS Survey Sender ───────────────────────────────────────────────
+  # 9:00 AM CT every day = 15:00 UTC
+  - type: cron
+    name: mctv-nps-send
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 15 * * *"
+    dockerCommand: python scripts/nps_send.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Win-back Campaign ───────────────────────────────────────────────
+  # 9:30 AM CT Tue/Thu = 15:30 UTC
+  - type: cron
+    name: mctv-winback
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "30 15 * * 2,4"
+    dockerCommand: python scripts/win_back_lost_leads.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Weekly Per-Rep Recap ────────────────────────────────────────────
+  # 8:00 AM CT every Monday = 14:00 UTC
+  - type: cron
+    name: mctv-rep-recap
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 14 * * 1"
+    dockerCommand: python scripts/weekly_rep_recap.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Smart Upsell Triggers ───────────────────────────────────────────
+  # 9:00 AM CT every Wednesday = 15:00 UTC
+  - type: cron
+    name: mctv-upsell-triggers
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 15 * * 3"
+    dockerCommand: python scripts/upsell_triggers.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Stalled Deal Alerts ─────────────────────────────────────────────
+  # 7:45 AM CT (Mon-Fri) = 13:45 UTC
+  - type: cron
+    name: mctv-stalled-alerts
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "45 13 * * 1-5"
+    dockerCommand: python scripts/stalled_deal_alerts.py
     region: ohio
     branch: main
     envVarGroups:
