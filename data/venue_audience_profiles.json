@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "description": "Per-category audience multipliers applied to ZIP-level Census ACS baselines. Values >1.0 over-index, <1.0 under-index. Hand-curated v1 estimates derived from standard DMA segmentation; refine with measured data when available.",
+    "age_bands": ["under_18", "18_24", "25_34", "35_44", "45_54", "55_64", "65_plus"],
+    "income_brackets": ["under_35k", "35k_50k", "50k_75k", "75k_100k", "100k_150k", "over_150k"],
+    "education": ["high_school_or_less", "some_college", "bachelors", "graduate"],
+    "schema_version": 1
+  },
+  "Bar/Restaurant": {
+    "label": "Bar / Restaurant",
+    "tags": ["social", "discretionary spend", "evening dwell"],
+    "description": "Patrons trend young-to-middle adult with disposable income and a social/discretionary mindset.",
+    "age_multipliers":   [0.3, 1.4, 1.5, 1.3, 1.0, 0.8, 0.5],
+    "income_multipliers":[0.8, 1.0, 1.2, 1.3, 1.2, 1.0],
+    "education_multipliers":[0.9, 1.1, 1.2, 1.1]
+  },
+  "Coffee/Donut/Bagel Shop": {
+    "label": "Coffee / Bakery",
+    "tags": ["morning routine", "professionals", "students"],
+    "description": "Heavy on commuters, students, and white-collar professionals stopping in on routine.",
+    "age_multipliers":   [0.4, 1.5, 1.5, 1.2, 1.0, 0.9, 0.6],
+    "income_multipliers":[0.7, 1.0, 1.2, 1.3, 1.3, 1.1],
+    "education_multipliers":[0.7, 1.1, 1.3, 1.3]
+  },
+  "Barbershop/Salon": {
+    "label": "Barber / Salon",
+    "tags": ["beauty", "wellness", "long dwell"],
+    "description": "Long captive dwell. Salons skew female 25-54; barbershops skew male 18-44.",
+    "age_multipliers":   [0.5, 1.2, 1.4, 1.4, 1.2, 1.0, 0.8],
+    "income_multipliers":[0.9, 1.1, 1.2, 1.2, 1.1, 1.0],
+    "education_multipliers":[1.0, 1.1, 1.1, 1.0]
+  },
+  "Health & Fitness": {
+    "label": "Gym / Fitness",
+    "tags": ["fitness-oriented", "health-conscious", "young professionals"],
+    "description": "Health-conscious adults, often with above-median income and education.",
+    "age_multipliers":   [0.3, 1.4, 1.6, 1.4, 1.1, 0.8, 0.4],
+    "income_multipliers":[0.6, 0.9, 1.2, 1.4, 1.4, 1.2],
+    "education_multipliers":[0.7, 1.1, 1.4, 1.3]
+  },
+  "Medical": {
+    "label": "Medical Office",
+    "tags": ["captive waiting room", "broad demographic", "insured"],
+    "description": "Broadest demographic of any venue — anyone with a health need. Slight skew older for primary care/specialist offices.",
+    "age_multipliers":   [0.7, 0.9, 1.0, 1.1, 1.2, 1.2, 1.1],
+    "income_multipliers":[1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    "education_multipliers":[1.0, 1.0, 1.0, 1.0]
+  },
+  "Retail": {
+    "label": "Retail",
+    "tags": ["shoppers", "broad demographic"],
+    "description": "Mainstream shoppers — close to general-population mix with a slight female skew at boutique categories.",
+    "age_multipliers":   [0.6, 1.0, 1.2, 1.2, 1.1, 1.0, 0.9],
+    "income_multipliers":[1.0, 1.1, 1.1, 1.1, 1.0, 0.9],
+    "education_multipliers":[1.0, 1.1, 1.1, 1.0]
+  },
+  "Gas/ Grocery": {
+    "label": "Gas / Grocery",
+    "tags": ["high frequency", "everyone", "convenience"],
+    "description": "Highest-frequency stop in the network. Reaches close to the entire ZIP demographic.",
+    "age_multipliers":   [0.6, 1.0, 1.1, 1.1, 1.1, 1.0, 0.9],
+    "income_multipliers":[1.1, 1.1, 1.0, 1.0, 1.0, 0.9],
+    "education_multipliers":[1.1, 1.1, 1.0, 0.9]
+  },
+  "Liquor/Wine/Beer Store": {
+    "label": "Liquor / Wine / Beer",
+    "tags": ["adults 21+", "discretionary spend"],
+    "description": "Strictly 21+. Skews male, middle-income, evening visit.",
+    "age_multipliers":   [0.0, 1.2, 1.4, 1.3, 1.2, 1.0, 0.8],
+    "income_multipliers":[0.9, 1.1, 1.2, 1.2, 1.1, 1.0],
+    "education_multipliers":[1.0, 1.1, 1.1, 1.0]
+  },
+  "Family Rec & Entertainment": {
+    "label": "Family Rec / Entertainment",
+    "tags": ["families", "kids", "weekend"],
+    "description": "Parents with children plus social groups. Strong household-with-kids skew.",
+    "age_multipliers":   [1.4, 1.0, 1.2, 1.5, 1.3, 0.9, 0.6],
+    "income_multipliers":[0.9, 1.1, 1.3, 1.3, 1.2, 1.0],
+    "education_multipliers":[1.0, 1.1, 1.1, 1.0]
+  },
+  "Professional Services": {
+    "label": "Professional Services",
+    "tags": ["white-collar", "decision makers"],
+    "description": "Office visitors and clients of accountants, lawyers, advisors. Skews college-educated and higher-income.",
+    "age_multipliers":   [0.3, 0.8, 1.2, 1.4, 1.3, 1.1, 0.8],
+    "income_multipliers":[0.7, 0.9, 1.1, 1.3, 1.4, 1.3],
+    "education_multipliers":[0.6, 1.0, 1.4, 1.5]
+  },
+  "Travel & Tourism": {
+    "label": "Travel & Tourism",
+    "tags": ["visitors", "out-of-market", "discretionary"],
+    "description": "Mix of locals and visitors. Visitor demographic varies by event/season; treated as ZIP baseline with slight income lift.",
+    "age_multipliers":   [0.7, 1.1, 1.2, 1.2, 1.1, 1.0, 0.9],
+    "income_multipliers":[0.9, 1.0, 1.1, 1.2, 1.2, 1.1],
+    "education_multipliers":[0.9, 1.1, 1.2, 1.1]
+  },
+  "Education": {
+    "label": "Education",
+    "tags": ["students", "faculty", "young adults"],
+    "description": "College towns: skews 18-24 heavily, plus parents at family-facing K-12 venues.",
+    "age_multipliers":   [1.2, 1.8, 1.1, 1.0, 1.0, 0.8, 0.5],
+    "income_multipliers":[1.2, 1.0, 0.9, 1.0, 1.1, 1.0],
+    "education_multipliers":[0.8, 1.4, 1.3, 1.3]
+  },
+  "Non Profit, Community, Government": {
+    "label": "Community / Civic",
+    "tags": ["broad community", "civic-minded"],
+    "description": "Cross-section of the community by design. Treated near ZIP baseline.",
+    "age_multipliers":   [0.9, 1.0, 1.0, 1.0, 1.1, 1.1, 1.0],
+    "income_multipliers":[1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    "education_multipliers":[1.0, 1.0, 1.0, 1.0]
+  },
+  "Auto Shop/Auto Dealer/Oil Change": {
+    "label": "Auto Service / Dealer",
+    "tags": ["car owners", "longer dwell", "decision makers"],
+    "description": "Vehicle owners — adults 25-64, mix of household incomes, often making spend decisions.",
+    "age_multipliers":   [0.2, 1.0, 1.3, 1.4, 1.3, 1.1, 0.8],
+    "income_multipliers":[0.9, 1.1, 1.2, 1.2, 1.1, 1.0],
+    "education_multipliers":[1.1, 1.1, 1.0, 0.9]
+  },
+  "Other": {
+    "label": "Other",
+    "tags": ["mixed audience"],
+    "description": "Mixed/uncategorized venues. Treated as ZIP baseline with no skew applied.",
+    "age_multipliers":   [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    "income_multipliers":[1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    "education_multipliers":[1.0, 1.0, 1.0, 1.0]
+  }
+}

@@ -10,3 +10,5 @@ matplotlib>=3.8.0
 supabase>=2.5.0
 twilio>=9.0.0
 streamlit-cookies-controller>=0.0.4
+folium>=0.17.0
+streamlit-folium>=0.22.0

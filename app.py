@@ -372,6 +372,7 @@ def main():
         st.page_link("pages/11_Creative.py", label="Creative Requests", icon="\U0001F3A8")
         st.page_link("pages/12_Messaging.py", label="SMS Messaging", icon="\U0001F4F1")
         st.page_link("pages/13_Briefing.py", label="Daily Briefing", icon="\U0001F4CB")
+        st.page_link("pages/16_Simulator.py", label="Audience Simulator", icon="\U0001F4CA")
         st.page_link("pages/3_Settings.py", label="Settings", icon="\u2699\uFE0F")
 
         st.divider()

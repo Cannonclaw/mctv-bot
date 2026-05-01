@@ -1,0 +1,452 @@
+{
+  "39759 nutrition": {
+    "lat": 33.45573432361,
+    "lon": -88.800650186028,
+    "matched_address": "450 HWY 12 E, STARKVILLE, MS, 39759"
+  },
+  "4 corner's chevron (chicken on a stick)": {
+    "lat": 34.363986734044,
+    "lon": -89.519308489072,
+    "matched_address": "502 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "662 wine and liquor": {
+    "lat": 34.308954441622,
+    "lon": -88.707006236985,
+    "matched_address": "3650 N GLOSTER ST, TUPELO, MS, 38804"
+  },
+  "aaron wash beard co": {
+    "lat": 34.245205692261,
+    "lon": -88.717352163022,
+    "matched_address": "793 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "all shook up nutrition": {
+    "lat": 34.246944041797,
+    "lon": -88.77275313752,
+    "matched_address": "5383 CLIFF GOOKIN BLVD, TUPELO, MS, 38801"
+  },
+  "amara salon & aesthetics": {
+    "lat": 34.363330837632,
+    "lon": -89.514686818654,
+    "matched_address": "1550 UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "arepas coffee & bar": {
+    "lat": 33.460782915348,
+    "lon": -88.802163793825,
+    "matched_address": "102 RUE DU GRAND FROMAGE, STARKVILLE, MS, 39759"
+  },
+  "b's hickory smoke bbq": {
+    "lat": 34.378986589728,
+    "lon": -89.542570663382,
+    "matched_address": "825 COLLEGE HILL RD, OXFORD, MS, 38655"
+  },
+  "bennett home furniture & more": {
+    "lat": 33.455146228483,
+    "lon": -88.801184057824,
+    "matched_address": "404 HWY 12 E, STARKVILLE, MS, 39759"
+  },
+  "bep haus": {
+    "lat": 34.366397399693,
+    "lon": -89.550904134004,
+    "matched_address": "1502 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "bj's family pharmacy": {
+    "lat": 33.455321501898,
+    "lon": -88.813698885742,
+    "matched_address": "605 S JACKSON ST, STARKVILLE, MS, 39759"
+  },
+  "booth's barbeque and yard": {
+    "lat": 34.350413074892,
+    "lon": -89.520670003335,
+    "matched_address": "2200 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "built different fitness": {
+    "lat": 34.362001893183,
+    "lon": -89.565404857895,
+    "matched_address": "2580 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "cannon chevrolet buick cadillac of oxford": {
+    "lat": 34.349134049287,
+    "lon": -89.580685963149,
+    "matched_address": "100 THACKER LOOP, OXFORD, MS, 38655"
+  },
+  "cannon collision center": {
+    "lat": 34.349134049287,
+    "lon": -89.580685963149,
+    "matched_address": "100 THACKER LOOP, OXFORD, MS, 38655"
+  },
+  "cardiology associates of north mississippi": {
+    "lat": 34.25028583016,
+    "lon": -88.716529887683,
+    "matched_address": "499 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "casa mexicana of oxford": {
+    "lat": 34.360715611537,
+    "lon": -89.582642824476,
+    "matched_address": "422 HWY 6 W, OXFORD, MS, 38655"
+  },
+  "cellars wine & spirits": {
+    "lat": 33.458302061806,
+    "lon": -88.804164647698,
+    "matched_address": "500 RUSSELL ST, STARKVILLE, MS, 39759"
+  },
+  "copy cow": {
+    "lat": 33.458302061806,
+    "lon": -88.804164647698,
+    "matched_address": "500 RUSSELL ST, STARKVILLE, MS, 39759"
+  },
+  "crossfit tupelo": {
+    "lat": 34.288182739348,
+    "lon": -88.743908217745,
+    "matched_address": "1892 MCCULLOUGH BLVD, TUPELO, MS, 38801"
+  },
+  "el charro cocina & cantina": {
+    "lat": 34.373201934509,
+    "lon": -89.502006139386,
+    "matched_address": "669 SISK AVE, OXFORD, MS, 38655"
+  },
+  "element hair studio": {
+    "lat": 34.365129250628,
+    "lon": -89.520089412345,
+    "matched_address": "404 S 11TH ST, OXFORD, MS, 38655"
+  },
+  "elm lake golf course": {
+    "lat": 33.489157270571,
+    "lon": -88.549667642174,
+    "matched_address": "1609 TAYLOR THURSTON RD, COLUMBUS, MS, 39701"
+  },
+  "exceed technologies": {
+    "lat": 34.25028583016,
+    "lon": -88.716529887683,
+    "matched_address": "499 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "finch & kelly": {
+    "lat": 34.366302521071,
+    "lon": -89.520312187081,
+    "matched_address": "1003 VAN BUREN AVE, OXFORD, MS, 38655"
+  },
+  "hobie\u2019s tiki dawgs & daqs": {
+    "lat": 33.459050352418,
+    "lon": -88.802636651563,
+    "matched_address": "203 MAXWELL ST, STARKVILLE, MS, 39759"
+  },
+  "hotel tupelo": {
+    "lat": 34.257410332957,
+    "lon": -88.69949324282,
+    "matched_address": "314 E MAIN ST, TUPELO, MS, 38804"
+  },
+  "internal medicine associates of oxford": {
+    "lat": 34.335056352266,
+    "lon": -89.522844853916,
+    "matched_address": "551 AZALEA DR, OXFORD, MS, 38655"
+  },
+  "james food center post office": {
+    "lat": 34.367770484902,
+    "lon": -89.525025350423,
+    "matched_address": "505 JACKSON AVE E, OXFORD, MS, 38655"
+  },
+  "landshark seafood & catfish": {
+    "lat": 34.362346503346,
+    "lon": -89.563420636965,
+    "matched_address": "2311 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "legends hair salon": {
+    "lat": 33.45570789113,
+    "lon": -88.800671018407,
+    "matched_address": "448 HWY 12 E, STARKVILLE, MS, 39759"
+  },
+  "little bambini children's boutique": {
+    "lat": 34.363589572672,
+    "lon": -89.515547298882,
+    "matched_address": "1529 UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "little magnolia gifts and apparel": {
+    "lat": 34.256264925885,
+    "lon": -88.730835344833,
+    "matched_address": "1608 W MAIN ST, TUPELO, MS, 38801"
+  },
+  "loaded nutrition - tupelo": {
+    "lat": 34.257260513573,
+    "lon": -88.7122733811,
+    "matched_address": "623 W MAIN ST, TUPELO, MS, 38804"
+  },
+  "luxe styling studio": {
+    "lat": 34.363748559907,
+    "lon": -89.517486616039,
+    "matched_address": "1312B UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "magnolia dermatology: columbus clinic": {
+    "lat": 33.52596532252,
+    "lon": -88.430675808299,
+    "matched_address": "428 HOSPITAL DR, COLUMBUS, MS, 39705"
+  },
+  "magnolia wine & spirits": {
+    "lat": 34.356942647595,
+    "lon": -89.520666375811,
+    "matched_address": "1453 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "marathon south lamar": {
+    "lat": 34.35687336847,
+    "lon": -89.52068212107,
+    "matched_address": "1455 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "midtown pointe shopping center": {
+    "lat": 34.25028583016,
+    "lon": -88.716529887683,
+    "matched_address": "499 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "mississippi asthma & allergy clinic, p.a.": {
+    "lat": 34.347364620057,
+    "lon": -89.515256009246,
+    "matched_address": "1190 S 18TH ST EXD, OXFORD, MS, 38655"
+  },
+  "mississippi asthma & allergy clinic, pa - starkville": {
+    "lat": 33.473896076663,
+    "lon": -88.821894540701,
+    "matched_address": "100 BRANDON RD, STARKVILLE, MS, 39759"
+  },
+  "mississippi ice daiquiri shop": {
+    "lat": 33.463560723206,
+    "lon": -88.801359520832,
+    "matched_address": "395 COLLEGE VIEW DR, STARKVILLE, MS, 39759"
+  },
+  "montgomery's jewelry": {
+    "lat": 33.463763781818,
+    "lon": -88.814920114388,
+    "matched_address": "218 E MAIN ST, STARKVILLE, MS, 39759"
+  },
+  "nail e!": {
+    "lat": 34.362001893183,
+    "lon": -89.565404857895,
+    "matched_address": "2580 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "nail e! tupelo": {
+    "lat": 34.310480096561,
+    "lon": -88.706910801007,
+    "matched_address": "3952B N GLOSTER ST, TUPELO, MS, 38804"
+  },
+  "nail thology": {
+    "lat": 34.36358034525,
+    "lon": -89.515487769158,
+    "matched_address": "1535 UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "oktibbeha county co-op": {
+    "lat": 33.444273666819,
+    "lon": -88.845076797766,
+    "matched_address": "201 POLLARD RD, STARKVILLE, MS, 39759"
+  },
+  "oxford dental": {
+    "lat": 34.351740970401,
+    "lon": -89.520775481213,
+    "matched_address": "2155 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "oxford park commission": {
+    "lat": 34.375139343617,
+    "lon": -89.52317141239,
+    "matched_address": "396 PRICE ST, OXFORD, MS, 38655"
+  },
+  "oxford super tan": {
+    "lat": 34.371985901354,
+    "lon": -89.534468992625,
+    "matched_address": "301 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "oxford t-shirt co.": {
+    "lat": 34.356942647595,
+    "lon": -89.520666375811,
+    "matched_address": "1453 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "oxford urology -tupelo": {
+    "lat": 34.228116686132,
+    "lon": -88.725414247399,
+    "matched_address": "2089 SOUTHRIDGE DR, TUPELO, MS, 38801"
+  },
+  "oxford-lafayette county chamber of commerce": {
+    "lat": 34.370887421669,
+    "lon": -89.531690175544,
+    "matched_address": "299 W JACKSON AVE, OXFORD, MS, 38655"
+  },
+  "party in the sip": {
+    "lat": 34.363592365127,
+    "lon": -89.515566846062,
+    "matched_address": "1527 UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "pizza doctor": {
+    "lat": 34.25028583016,
+    "lon": -88.716529887683,
+    "matched_address": "499 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "premier aesthetics": {
+    "lat": 34.288121130094,
+    "lon": -88.743791274755,
+    "matched_address": "1890 MCCULLOUGH BLVD, TUPELO, MS, 38801"
+  },
+  "rafters music and food": {
+    "lat": 34.366970692886,
+    "lon": -89.520167792054,
+    "matched_address": "1006 E JACKSON AVE, OXFORD, MS, 38655"
+  },
+  "rainbow cleaners": {
+    "lat": 34.366856027873,
+    "lon": -89.518539977767,
+    "matched_address": "1203 E JACKSON AVE, OXFORD, MS, 38655"
+  },
+  "rebel body fitness": {
+    "lat": 34.366314215391,
+    "lon": -89.551376408408,
+    "matched_address": "1627 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "rebel yell rooftop bar": {
+    "lat": 34.367003934079,
+    "lon": -89.519554187927,
+    "matched_address": "1107 E JACKSON AVE, OXFORD, MS, 38655"
+  },
+  "redmed urgent clinic of oxford - jackson ave": {
+    "lat": 34.364306827457,
+    "lon": -89.555679470916,
+    "matched_address": "1902 JACKSON AVE W, OXFORD, MS, 38655"
+  },
+  "revive wellness clinic - starkville": {
+    "lat": 33.460943503704,
+    "lon": -88.808311583103,
+    "matched_address": "100 RUSSELL ST, STARKVILLE, MS, 39759"
+  },
+  "revive wellness of oxford": {
+    "lat": 34.351391768211,
+    "lon": -89.520808289373,
+    "matched_address": "2166 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "right track medical group - oxford": {
+    "lat": 34.345967912306,
+    "lon": -89.516881416981,
+    "matched_address": "1203 MEDICAL PARK DR, OXFORD, MS, 38655"
+  },
+  "right track medical group - starkville": {
+    "lat": 33.454510059888,
+    "lon": -88.810213159946,
+    "matched_address": "200 HWY 12 E, STARKVILLE, MS, 39759"
+  },
+  "right track medical group - tupelo": {
+    "lat": 34.249761442221,
+    "lon": -88.658429282178,
+    "matched_address": "4428 S EASON BLVD, TUPELO, MS, 38804"
+  },
+  "rosati's pizza": {
+    "lat": 34.368233959259,
+    "lon": -89.518411211732,
+    "matched_address": "319 N LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "second skin waxing": {
+    "lat": 34.257260513573,
+    "lon": -88.7122733811,
+    "matched_address": "623 W MAIN ST, TUPELO, MS, 38804"
+  },
+  "sip oxford": {
+    "lat": 34.363577307321,
+    "lon": -89.515468275788,
+    "matched_address": "1537 UNIVERSITY AVE, OXFORD, MS, 38655"
+  },
+  "skate odyssey inc": {
+    "lat": 33.449313624901,
+    "lon": -88.822443160011,
+    "matched_address": "830 LOUISVILLE ST, STARKVILLE, MS, 39759"
+  },
+  "skate zone in tupelo": {
+    "lat": 34.255747041665,
+    "lon": -88.748761610671,
+    "matched_address": "103 PARK GATE ST, TUPELO, MS, 38801"
+  },
+  "sophia misaki beauty": {
+    "lat": 34.258019455386,
+    "lon": -88.711322362955,
+    "matched_address": "207 N MADISON ST, TUPELO, MS, 38804"
+  },
+  "southern coop": {
+    "lat": 34.373264934288,
+    "lon": -89.497085967357,
+    "matched_address": "705 SISK AVE, OXFORD, MS, 38655"
+  },
+  "starkvegas pawnshop": {
+    "lat": 33.466001305551,
+    "lon": -88.818327448013,
+    "matched_address": "202 MARTIN LUTHER KING JR DR W, STARKVILLE, MS, 39759"
+  },
+  "starkville veterinary hospital": {
+    "lat": 33.434174919103,
+    "lon": -88.825722355392,
+    "matched_address": "1400 LOUISVILLE ST, STARKVILLE, MS, 39759"
+  },
+  "style society": {
+    "lat": 34.288121130094,
+    "lon": -88.743791274755,
+    "matched_address": "1890 MCCULLOUGH BLVD, TUPELO, MS, 38801"
+  },
+  "texaco lamar express": {
+    "lat": 34.356831715481,
+    "lon": -89.520832817612,
+    "matched_address": "1448 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "the blind pig pub": {
+    "lat": 34.367275891703,
+    "lon": -89.518615830976,
+    "matched_address": "105 N LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "the breakfast club": {
+    "lat": 33.453859028213,
+    "lon": -88.818430020515,
+    "matched_address": "105 ECKFORD DR, STARKVILLE, MS, 39759"
+  },
+  "the children's dental center": {
+    "lat": 34.345971846416,
+    "lon": -89.521253232619,
+    "matched_address": "2408 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "the oxford growler": {
+    "lat": 34.367938867718,
+    "lon": -89.518471799449,
+    "matched_address": "265 N LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "the velvet ditch - sports bar & seafood": {
+    "lat": 34.364733661647,
+    "lon": -89.519153691194,
+    "matched_address": "430 S LAMAR BLVD, OXFORD, MS, 38655"
+  },
+  "tupelo river coffee": {
+    "lat": 34.257390609221,
+    "lon": -88.709540383837,
+    "matched_address": "522 W MAIN ST, TUPELO, MS, 38804"
+  },
+  "tupelo small animal hospital": {
+    "lat": 34.255578428169,
+    "lon": -88.683886708352,
+    "matched_address": "422 S VETERANS BLVD, TUPELO, MS, 38804"
+  },
+  "two brothers smoked meats": {
+    "lat": 33.460855919352,
+    "lon": -88.802336423124,
+    "matched_address": "621 UNIVERSITY DR, STARKVILLE, MS, 39759"
+  },
+  "umi japanese steakhouse & sushi bar": {
+    "lat": 33.45448209315,
+    "lon": -88.805665380123,
+    "matched_address": "315 HWY 12 E, STARKVILLE, MS, 39759"
+  },
+  "uno mas tacos y tequila jackson ave": {
+    "lat": 34.367007629469,
+    "lon": -89.519579439752,
+    "matched_address": "1101 E JACKSON AVE, OXFORD, MS, 38655"
+  },
+  "uno mas tacos y tequila starkville": {
+    "lat": 33.459621344249,
+    "lon": -88.802692561956,
+    "matched_address": "106 MAXWELL ST, STARKVILLE, MS, 39759"
+  },
+  "vibe aesthetics and wellness": {
+    "lat": 34.250372093901,
+    "lon": -88.716518444529,
+    "matched_address": "495 S GLOSTER ST, TUPELO, MS, 38801"
+  },
+  "vibe performance and testosterone": {
+    "lat": 34.254052346235,
+    "lon": -88.715937589108,
+    "matched_address": "311 S GLOSTER ST, TUPELO, MS, 38801"
+  }
+}
