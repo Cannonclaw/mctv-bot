@@ -238,9 +238,58 @@ proposal_type = st.selectbox(
         "Venue Partner / Revenue Share",
         "Category Exclusivity",
         "Renewal / Upgrade",
+        "Sponsorship Package",
     ],
     help="Choose the type of proposal to generate.",
 )
+
+
+# ── SPONSORSHIP PRESET (Elite Advertiser variant) ────────────────────────────
+# A "Sponsorship Package" is a preset-driven Elite Advertiser proposal aimed
+# at event/seasonal saturation deals (Ole Miss Football, holiday shopping, etc).
+# Picking a preset pre-fills selected_markets, screen count, monthly rate, and
+# notes so the rep gets a proposal in seconds.
+
+if proposal_type == "Sponsorship Package":
+    packages = config.get("sponsorship_packages", []) or []
+    st.markdown("#### Pick a sponsorship preset")
+    st.caption("Each preset bundles markets + screens + a seasonal narrative. "
+               "After picking, fill in the prospect details below and generate "
+               "an Elite Advertiser proposal with the package built in.")
+
+    if not packages:
+        st.warning("No sponsorship packages defined. Add some in config.json under `sponsorship_packages`.")
+        st.stop()
+
+    pkg_keys = [p["key"] for p in packages]
+    pkg_lookup = {p["key"]: p for p in packages}
+    chosen_key = st.selectbox(
+        "Preset",
+        pkg_keys,
+        format_func=lambda k: pkg_lookup[k]["name"],
+    )
+    chosen = pkg_lookup[chosen_key]
+
+    pcol1, pcol2 = st.columns([2, 1])
+    with pcol1:
+        st.markdown(f"**{chosen['name']}**")
+        st.caption(chosen.get("tagline", ""))
+        st.markdown(chosen.get("description", ""))
+        st.markdown(f"**Best for:** {', '.join(chosen.get('best_for', []))}")
+    with pcol2:
+        st.metric("Markets", ", ".join(chosen.get("markets", [])))
+        st.metric("Screens", chosen.get("screens", 0))
+        st.metric("Monthly rate", f"${float(chosen.get('monthly_rate', 0)):,.0f}")
+        st.metric("Term", f"{chosen.get('term_months', 1)} mo")
+
+    st.session_state["sponsorship_preset"] = chosen
+    st.info(
+        "Now scroll to the Elite Advertiser form below — markets, monthly rate, "
+        "and notes will be pre-populated from this preset. Just add the prospect "
+        "info and click Generate."
+    )
+    # Behind the scenes the generator uses the Elite Advertiser flow.
+    proposal_type = "Elite Advertiser"
 
 st.divider()
 
@@ -565,6 +614,9 @@ if proposal_type == "Elite Advertiser":
     st.markdown("### Elite Advertiser Proposal")
     st.caption("The flagship 5-6 page proposal — scannable, visual, punchy")
 
+    # Sponsorship preset overrides defaults if one was selected above
+    _sponsor = st.session_state.get("sponsorship_preset")
+
     col1, col2 = st.columns(2)
     with col1:
         business_name = st.text_input("Business Name *",
@@ -576,32 +628,53 @@ if proposal_type == "Elite Advertiser":
             value=_prefill.get("industry", "") if _prefill else "",
             placeholder="Custom Home Building / Construction")
     with col2:
-        _pf_city = _prefill.get("city", market_names[0]) if _prefill else market_names[0]
-        _city_idx = market_names.index(_pf_city) if _pf_city in market_names else 0
+        if _sponsor and _sponsor.get("markets"):
+            default_city = _sponsor["markets"][0]
+            default_markets = list(_sponsor["markets"])
+        else:
+            default_city = _prefill.get("city", market_names[0]) if _prefill else market_names[0]
+            default_markets = [market_names[0]]
+        _city_idx = market_names.index(default_city) if default_city in market_names else 0
         city = st.selectbox("Primary City", market_names, index=_city_idx)
-        selected_markets = st.multiselect("Markets to Include", market_names, default=[market_names[0]])
+        selected_markets = st.multiselect("Markets to Include", market_names, default=default_markets)
         _pf_rep = _prefill.get("sales_rep", team_names[1]) if _prefill else team_names[1]
         _rep_idx = team_names.index(_pf_rep) if _pf_rep in team_names else 1
         sales_rep = st.selectbox("Sales Rep", team_names, index=_rep_idx)
 
     st.markdown("#### Pricing")
-    custom_pricing = st.toggle("Use Custom Pricing", value=False,
+    # Sponsorship presets always use custom pricing (the preset rate)
+    default_custom = bool(_sponsor)
+    custom_pricing = st.toggle("Use Custom Pricing", value=default_custom,
                                 help="Enable to set a custom rate instead of standard tiers")
     if custom_pricing:
+        default_screens = int(_sponsor["screens"]) if _sponsor else 20
+        default_rate = float(_sponsor["monthly_rate"]) if _sponsor else 500.0
         cp1, cp2 = st.columns(2)
-        custom_screens = cp1.number_input("Number of Screens", min_value=1, value=20)
-        custom_rate = cp2.number_input("Monthly Rate ($)", min_value=0.0, value=500.0, step=50.0)
+        custom_screens = cp1.number_input("Number of Screens", min_value=1, value=default_screens)
+        custom_rate = cp2.number_input("Monthly Rate ($)", min_value=0.0, value=default_rate, step=50.0)
     else:
         custom_screens = 0
         custom_rate = 0.0
         st.info("Standard 4-tier pricing will be shown: $350/10 screens, $500/20, $800/40, $1,300/75+")
 
+    # Pre-fill notes with sponsorship narrative when a preset is in use
+    default_notes = ""
+    if _sponsor:
+        default_notes = (
+            f"Sponsorship Package: {_sponsor.get('name', '')}\n"
+            f"{_sponsor.get('description', '')}\n\n"
+            f"Term: {_sponsor.get('term_months', 1)} month(s). "
+            f"Best for: {', '.join(_sponsor.get('best_for', []))}."
+        )
+    elif _prefill:
+        default_notes = _prefill.get("additional_notes", "")
+
     additional_notes = st.text_area(
         "Additional Notes (optional)",
-        value=_prefill.get("additional_notes", "") if _prefill else "",
+        value=default_notes,
         placeholder="Any specific details about the business, their goals, competitors, etc. "
                     "This context helps Claude write more tailored content.",
-        height=100,
+        height=120,
     )
 
     if st.button("Generate Proposal", type="primary", width='stretch'):

@@ -15,6 +15,7 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.leads_service import save_lead, send_notification_email
 from services.config_service import load_config, get_market_names
+from services.referral_service import record_referral_signup, find_client_by_code
 
 st.set_page_config(
     page_title="Advertise With MCTV",
@@ -125,6 +126,18 @@ st.divider()
 
 
 # ── CHECK IF ALREADY SUBMITTED ───────────────────────────────────────────────
+
+# ── REFERRAL ATTRIBUTION ─────────────────────────────────────────────────────
+# Capture ?ref=<CODE> on first page load. Persist in session so it survives
+# the Streamlit reruns the form goes through.
+_ref_param = st.query_params.get("ref", "").strip().upper()
+if _ref_param and "intake_referral_code" not in st.session_state:
+    st.session_state["intake_referral_code"] = _ref_param
+_ref_code = st.session_state.get("intake_referral_code", "")
+_referrer = find_client_by_code(_ref_code) if _ref_code else None
+if _referrer:
+    st.info(f"Referred by **{_referrer.get('business_name', 'a partner host')}** — thanks for the introduction!")
+
 
 if st.session_state.get("intake_submitted"):
     st.markdown(
@@ -354,6 +367,15 @@ if st.button("Submit", type="primary", width='stretch'):
             set_consent(contact_phone, opted_in=True, name=contact_name)
         except Exception as _e:
             print(f"[intake] set_consent failed: {_e}")
+
+        # Record host referral attribution if a referral code was on the URL
+        if _ref_code:
+            try:
+                lead_with_id = dict(lead)
+                lead_with_id["id"] = lead_id
+                record_referral_signup(_ref_code, lead_with_id)
+            except Exception as _e:
+                print(f"[intake] record_referral_signup failed: {_e}")
 
         st.session_state["intake_submitted"] = True
         st.rerun()

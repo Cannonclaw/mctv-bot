@@ -172,19 +172,43 @@ ACTIVE_MARKETS = {"oxford", "starkville", "tupelo"}
 
 
 def calculate_lead_score(lead: dict) -> int:
-    """Calculate a lead score (0-100) based on available intake data.
+    """Calculate a lead score (0-100). Delegates to lead_scoring_service.
 
-    Scoring breakdown:
-      - Interest level:  up to 40 pts
-      - Has phone:       10 pts
-      - Has email:       10 pts
-      - Industry match:  5-15 pts
-      - Active market:   5-15 pts
-      - Has goals/msg:   10 pts
+    Pulls in additional signals (source, recency, stage, sms_consent) plus a
+    bonus for explicit "ready to go" interest level captured at intake.
     """
-    score = 0
+    try:
+        from services.lead_scoring_service import score_lead
+    except ImportError:
+        return _legacy_score(lead)
 
-    # Interest level (max 40)
+    base = score_lead(lead)["score"]
+
+    # Existing interest-level signal (from the intake radio) isn't in the
+    # generic scorer — layer it on top.
+    interest = (lead.get("interest_level") or "").lower()
+    if "ready" in interest:
+        base = min(100, base + 15)
+    elif "interested" in interest:
+        base = min(100, base + 8)
+    elif "curious" in interest or "exploring" in interest:
+        base = min(100, base + 3)
+
+    return base
+
+
+def calculate_lead_score_breakdown(lead: dict) -> dict:
+    """Return the full {score, bucket, breakdown} dict for richer display."""
+    try:
+        from services.lead_scoring_service import score_lead
+        return score_lead(lead)
+    except ImportError:
+        return {"score": _legacy_score(lead), "bucket": "warm", "breakdown": {}}
+
+
+def _legacy_score(lead: dict) -> int:
+    """Fallback legacy scorer if the new service is unavailable."""
+    score = 0
     interest = (lead.get("interest_level") or "").lower()
     if "ready" in interest:
         score += 40
@@ -194,31 +218,22 @@ def calculate_lead_score(lead: dict) -> int:
         score += 20
     elif "curious" in interest:
         score += 10
-
-    # Contact completeness
     if lead.get("contact_phone", "").strip():
         score += 10
     if lead.get("contact_email", "").strip():
         score += 10
-
-    # Industry value
     industry = (lead.get("industry") or "").lower()
     if any(kw in industry for kw in HIGH_VALUE_INDUSTRIES):
         score += 15
     elif industry:
         score += 5
-
-    # Market proximity
     city = (lead.get("city") or "").lower().strip()
     if city in ACTIVE_MARKETS:
         score += 15
     elif city:
         score += 5
-
-    # Has goals / message
     if (lead.get("goals") or "").strip() or (lead.get("additional_notes") or "").strip():
         score += 10
-
     return min(score, 100)
 
 

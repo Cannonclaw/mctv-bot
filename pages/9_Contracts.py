@@ -338,6 +338,54 @@ with tab_list:
                                 else:
                                     st.error("Failed to create renewal. Check logs.")
 
+                # ── Bonus actions row: Case Study + One-click Renewal Offer ─
+                if cstatus in ("active", "signed", "expired"):
+                    bonus_cols = st.columns(3)
+                    # Generate Case Study (only if 90+ days active)
+                    sd = contract.get("start_date", "")
+                    eligible = False
+                    days_active = 0
+                    try:
+                        from datetime import datetime as _dt, date as _date
+                        if sd:
+                            days_active = (_date.today() - _dt.fromisoformat(sd).date()).days
+                            eligible = days_active >= 90
+                    except Exception:
+                        pass
+
+                    with bonus_cols[0]:
+                        label = "\U0001F4DC Case Study" if eligible else "Case Study (90d+)"
+                        if st.button(label, key=f"casestudy_{cid}",
+                                     width='stretch', disabled=not eligible,
+                                     help=f"Generate a 1-pager from {days_active} days of traction data"):
+                            from services.case_study_service import generate_case_study
+                            with st.spinner("Writing case study..."):
+                                path = generate_case_study(cid)
+                            if path:
+                                with open(path, "rb") as f:
+                                    st.download_button(
+                                        "Download Case Study",
+                                        data=f.read(),
+                                        file_name=path.name,
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key=f"dl_casestudy_{cid}",
+                                    )
+                            else:
+                                st.error("Could not generate case study. Check logs.")
+
+                    with bonus_cols[1]:
+                        # Send one-click renewal offer (works for active + expired)
+                        if st.button("\U0001F517 Send Renewal Offer",
+                                     key=f"renewoffer_{cid}", width='stretch'):
+                            from services.contract_service import generate_renewal_offer
+                            offer = generate_renewal_offer(cid)
+                            if offer:
+                                st.success("Renewal offer link generated.")
+                                st.code(offer["url"], language=None)
+                                st.caption("Send this link to the client. One click renews on their end.")
+                            else:
+                                st.error("Could not generate offer.")
+
                 # Cancel confirmation
                 if st.session_state.get(f"confirm_cancel_{cid}"):
                     st.warning(f"Cancel this contract? This will notify the client if already sent.")
