@@ -70,6 +70,39 @@ if not contracts:
     st.stop()
 
 
+# ── Onboarding checklist ────────────────────────────────────────────────────
+
+def _render_onboarding_panel(cid: str, contract: dict):
+    """Show the 7-step onboarding checklist with completion state."""
+    try:
+        from services.onboarding_service import (
+            STEPS, STEP_KEYS, STEP_LABEL, get_state, progress_pct,
+        )
+    except ImportError:
+        return
+
+    state = get_state(cid)
+    pct = progress_pct(state)
+
+    st.markdown("### \U0001F680 Your Onboarding")
+    st.caption(
+        f"You're {pct}% through your first-month checklist. Your MCTV rep "
+        f"checks items off as you complete them — questions any time."
+    )
+    st.progress(pct / 100)
+
+    for key, label in STEPS:
+        step = state.get(key, {}) or {}
+        done = bool(step.get("done"))
+        done_at = step.get("done_at") or ""
+        icon = "\u2705" if done else "\u2B1C"
+        suffix = f" — {done_at[:10]}" if done and done_at else ""
+        st.markdown(f"{icon} **{label}**{suffix}")
+        notes = step.get("notes") or ""
+        if done and notes:
+            st.caption(f"  ↳ {notes}")
+
+
 # ── Contract Chat helper ────────────────────────────────────────────────────
 
 def _extract_contract_text(contract: dict) -> str:
@@ -488,6 +521,11 @@ for contract in contracts:
         st.info("This contract is being prepared by your MCTV representative. You'll be notified when it's ready to sign.")
 
     st.divider()
+
+    # ── Onboarding checklist (active contracts only) ───────────────────────
+    if cstatus == "active":
+        _render_onboarding_panel(cid, contract)
+        st.divider()
 
     # ── Ask About This Contract ────────────────────────────────────────────
     # Only show for contracts that have a real document the chat can read.

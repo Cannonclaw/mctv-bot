@@ -430,6 +430,139 @@ if submitted:
 st.divider()
 
 
+# ── AI Ad Concept Brief ──────────────────────────────────────────────────────
+
+st.markdown("### Ad Concept Brief")
+st.caption(
+    "Generate a 1-page creative brief Claude writes from this scenario. "
+    "Hand it to your designer, your AI ad tool, or send it to the prospect "
+    "as proof you understand their audience."
+)
+
+with st.expander("Generate ad concept brief", expanded=False):
+    bcol1, bcol2 = st.columns(2)
+    brief_business = bcol1.text_input(
+        "Business name *",
+        value=st.session_state.get("sim_prefill_business", ""),
+        key="brief_business",
+    )
+    brief_industry = bcol2.text_input(
+        "Industry *",
+        value=st.session_state.get("sim_prefill_industry", ""),
+        placeholder="Restaurant, Salon, Law Firm",
+        key="brief_industry",
+    )
+
+    brief_goal = st.selectbox(
+        "Primary goal",
+        ["Drive foot traffic",
+         "Build brand awareness",
+         "Promote a launch / event",
+         "Move existing inventory / promo",
+         "Recruit / hire",
+         "Other"],
+        key="brief_goal",
+    )
+
+    brief_constraints = st.text_area(
+        "Anything we MUST include or AVOID? (optional)",
+        placeholder="e.g. must include the dog (mascot), avoid using competitor names, "
+                    "reference Ole Miss home games",
+        height=80,
+        key="brief_constraints",
+    )
+
+    if st.button("Generate Brief", type="primary", key="brief_btn",
+                 disabled=not (brief_business and brief_industry)):
+        import os as _os
+        api_key = _os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key or api_key == "your-api-key-here":
+            st.error("ANTHROPIC_API_KEY not configured.")
+        else:
+            # Pull demographic blend + venue category mix to feed the prompt
+            blend = result.blend
+            top_age = max(blend.age_pct.items(), key=lambda kv: kv[1]) if blend.age_pct else ("?", 0)
+            top_income = max(blend.income_pct.items(), key=lambda kv: kv[1]) if blend.income_pct else ("?", 0)
+            top_edu = max(blend.education_pct.items(), key=lambda kv: kv[1]) if blend.education_pct else ("?", 0)
+            cats = sorted({v.general_category for v in result.venues})
+            tags = blend.audience_tags or []
+            cities = ", ".join(result.cities) or "Oxford"
+
+            BRIEF_PROMPT = f"""You write 1-page creative briefs for advertisers
+running on MCTV's indoor digital billboard network. Output is a brief, not a
+finished ad — it's what a designer or AI ad tool needs to do their job.
+
+Voice: practical, confident, no marketing fluff. Short paragraphs.
+
+Length: 280-360 words across the structured sections below. Use ONLY these
+section headers, exactly as written, on their own lines:
+
+THE BUSINESS
+THE GOAL
+THE AUDIENCE
+THE MESSAGE
+THE TONE
+THE CALL TO ACTION
+THE CREATIVE DIRECTION
+SCREENS THAT WILL CARRY IT
+
+CONTEXT
+=======
+Business: {brief_business}
+Industry: {brief_industry}
+Goal: {brief_goal}
+Cities: {cities}
+Total screens: {result.total_screens}
+Monthly impressions: ~{int(result.total_monthly_impressions):,}
+Venue categories the ad will run in: {', '.join(cats) or 'mixed'}
+
+Audience profile (impression-weighted blend across selected venues):
+- Top age band: {top_age[0]} ({top_age[1]}%)
+- Top income band: {top_income[0]} ({top_income[1]}%)
+- Top education: {top_edu[0]} ({top_edu[1]}%)
+- Audience signals: {', '.join(tags) or '(none)'}
+- Blended median household income: ${blend.median_household_income_blended:,}
+
+Constraints / must-include / must-avoid:
+{brief_constraints or '(none specified)'}
+
+KEY GUIDANCE FOR THE BRIEF
+- Indoor billboard ads are silent. No audio. Big visual + 6-10 words on screen.
+- Dwell times average 30-60 minutes — viewers see the ad multiple times.
+- Aspect ratio: 1920x1080 landscape.
+- The CTA must be readable from across a room. Phone numbers and short URLs
+  work; long URLs don't.
+
+WRITE THE BRIEF
+"""
+            try:
+                import anthropic
+                claude = anthropic.Anthropic(api_key=api_key)
+                with st.spinner("Writing brief..."):
+                    resp = claude.messages.create(
+                        model="claude-sonnet-4-5-20250929",
+                        max_tokens=1500,
+                        messages=[{"role": "user", "content": BRIEF_PROMPT}],
+                    )
+                    brief_text = resp.content[0].text
+                st.session_state["sim_ad_brief"] = brief_text
+            except Exception as e:
+                st.error(f"Generation failed: {e}")
+
+    if st.session_state.get("sim_ad_brief"):
+        st.markdown("---")
+        st.markdown(st.session_state["sim_ad_brief"])
+        st.download_button(
+            "Download brief (.txt)",
+            data=st.session_state["sim_ad_brief"],
+            file_name=f"{(brief_business or 'ad').replace(' ', '_')}_creative_brief.txt",
+            mime="text/plain",
+            key="sim_brief_dl",
+        )
+
+st.divider()
+
+
 # ── Generate Elite Advertiser proposal PDF from this scenario ────────────────
 
 st.markdown("### Generate Proposal PDF")

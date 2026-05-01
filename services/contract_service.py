@@ -495,6 +495,13 @@ def activate_contract(contract_id: str) -> dict | None:
     except Exception as e:
         print(f"[contract_service] Referral conversion hook skipped: {e}")
 
+    # Kick off the onboarding wizard (welcome email + checklist seeded).
+    try:
+        from services.onboarding_service import start_onboarding
+        start_onboarding(contract_id)
+    except Exception as e:
+        print(f"[contract_service] Onboarding kickoff skipped: {e}")
+
     return updated
 
 

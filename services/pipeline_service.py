@@ -246,9 +246,11 @@ def advance_stage(opp_id: str, new_stage: str, performed_by: str = "MCTV Bot") -
         return opp
 
     stage_info = STAGES.get(new_stage, {})
+    from datetime import datetime as _dt
     updates = {
         "stage": new_stage,
         "probability": stage_info.get("probability", 10),
+        "stage_entered_at": _dt.now().isoformat(),
     }
 
     if new_stage == "won":

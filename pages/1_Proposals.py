@@ -888,6 +888,29 @@ elif proposal_type == "Category Exclusivity":
     sales_rep = st.selectbox("Sales Rep", team_names)
     additional_notes = st.text_area("Additional Notes", height=80)
 
+    # Live exclusivity conflict check — warn the rep before they pitch a
+    # category that's already locked up for someone else in these markets.
+    if exclusive_category and selected_markets:
+        try:
+            from services.exclusivity_service import find_conflicts, format_conflict_message
+            conflicts = find_conflicts(exclusive_category, selected_markets)
+            if conflicts:
+                st.error(
+                    "**\u26A0\uFE0F Exclusivity Conflict Detected**\n\n"
+                    + format_conflict_message(conflicts)
+                    + "\n\nGenerating this proposal anyway is OK if you've "
+                    "already cleared it with the existing client, but the "
+                    "default move is to pick a different category or different "
+                    "markets."
+                )
+            else:
+                st.success(
+                    f"\u2705 No exclusivity conflicts for '{exclusive_category}' "
+                    f"in {', '.join(selected_markets)}."
+                )
+        except Exception as _e:
+            st.caption(f"Exclusivity check unavailable: {_e}")
+
     if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name or not exclusive_category:
             st.error("Please fill in all required fields.")
