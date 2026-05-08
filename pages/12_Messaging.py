@@ -15,8 +15,53 @@ from services.auth import check_password
 from services.sms_service import (
     is_configured, send_sms, send_template, get_templates,
     format_phone, set_consent, check_consent, get_all_consent,
-    get_message_history,
+    get_message_history, wait_for_delivery,
 )
+
+
+def _show_delivery_result(send_result: dict, label: str = ""):
+    """Render honest delivery feedback after send_sms / send_template.
+
+    Distinguishes API-acceptance from actual carrier delivery by polling
+    Twilio for the message's terminal status. Shows the friendly error
+    explanation when the carrier rejects or filters the message.
+    """
+    if not send_result.get("success"):
+        st.error(f"Send failed: {send_result.get('error', 'unknown error')}")
+        return
+
+    sid = send_result.get("sid", "")
+    if not sid:
+        st.success(f"Message accepted{(' — ' + label) if label else ''}")
+        return
+
+    with st.spinner("Waiting for carrier delivery confirmation..."):
+        result = wait_for_delivery(sid, timeout_s=12, poll_s=2.0)
+
+    status = result.get("status", "")
+    code = result.get("error_code")
+    err_label = result.get("error_label", "")
+    err_detail = result.get("error_detail", "")
+
+    if status == "delivered":
+        st.success(f"Delivered to handset{(' — ' + label) if label else ''}")
+        st.balloons()
+    elif status in ("undelivered", "failed"):
+        msg = f"Carrier rejected the message ({status})."
+        if err_label:
+            msg += f" {err_label}."
+        st.error(msg)
+        if err_detail:
+            st.caption(err_detail)
+        if code:
+            st.caption(f"Twilio error code: {code} | SID: {sid}")
+    else:
+        # Still in flight at timeout — typically "sent" or "queued"
+        st.warning(
+            f"Twilio accepted the message (status: {status or 'unknown'}), "
+            f"but no carrier confirmation yet. Check Message History in a "
+            f"minute, or look up SID {sid} in Twilio Console."
+        )
 from services.config_service import load_config, get_team_first_names
 
 st.set_page_config(page_title="Messaging - MCTV Bot", page_icon="\U0001F4F1", layout="wide")
@@ -145,11 +190,7 @@ with tab_compose:
                  disabled=not (formatted and message)):
         with st.spinner("Sending..."):
             result = send_sms(formatted, message)
-            if result["success"]:
-                st.success(f"Message sent to {formatted}")
-                st.balloons()
-            else:
-                st.error(f"Failed: {result['error']}")
+        _show_delivery_result(result, label=formatted)
 
 
 # ── TAB: Quick Templates ────────────────────────────────────────────────────
@@ -238,11 +279,8 @@ with tab_templates:
                      disabled=not (tmpl_formatted and all_filled)):
             with st.spinner("Sending..."):
                 result = send_template(template_key, tmpl_phone, variables)
-                if result["success"]:
-                    st.success(f"Sent '{template['name']}' to {tmpl_formatted}")
-                    st.balloons()
-                else:
-                    st.error(f"Failed: {result['error']}")
+            _show_delivery_result(result,
+                                  label=f"{template['name']} → {tmpl_formatted}")
 
 
 # ── TAB: Opt-In Management ──────────────────────────────────────────────────

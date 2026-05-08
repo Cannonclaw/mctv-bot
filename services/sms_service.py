@@ -17,6 +17,7 @@ environment variables. Fails gracefully when not configured.
 import os
 import re
 import json
+import time
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -24,6 +25,45 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "sms"
+
+# Carrier/Twilio error codes mapped to plain-English explanations + likely fix.
+# Used by the UI to show honest delivery feedback instead of a raw code.
+ERROR_CODE_HINTS = {
+    "30003": ("Unreachable handset",
+              "Phone is off, out of service, or doesn't accept SMS."),
+    "30004": ("Recipient blocked sender",
+              "The recipient has blocked your number or muted A2P traffic."),
+    "30005": ("Unknown handset",
+              "Number doesn't exist or isn't provisioned for SMS."),
+    "30006": ("Landline / unreachable carrier",
+              "Number is a landline or the carrier doesn't support SMS."),
+    "30007": ("Message filtered by carrier",
+              "Carrier flagged the message as spam. On AT&T/T-Mobile this is "
+              "almost always because your A2P 10DLC campaign isn't approved yet."),
+    "30008": ("Unknown carrier error",
+              "Carrier didn't return a reason. Often transient — retry later."),
+    "30032": ("Toll-free number unverified",
+              "Your toll-free sender hasn't been verified for A2P."),
+    "30034": ("Unregistered A2P 10DLC sender",
+              "Your 10DLC campaign isn't approved yet. AT&T blocks 100% of "
+              "unregistered traffic. Wait for TCR approval, then retry."),
+    "30041": ("Carrier delivery failure",
+              "Recipient out of range or carrier downtime."),
+    "21610": ("Recipient opted out (STOP)",
+              "This number replied STOP. You cannot text them until they "
+              "send START."),
+    "21614": ("Invalid mobile number",
+              "Number isn't a valid US mobile."),
+}
+
+
+def explain_error(error_code) -> tuple:
+    """Return (short_label, long_explanation) for a Twilio error code."""
+    if error_code is None:
+        return ("", "")
+    code = str(error_code)
+    return ERROR_CODE_HINTS.get(code, (f"Error {code}",
+                                       "See twilio.com/docs/api/errors for details."))
 
 
 # ── Twilio Client ────────────────────────────────────────────────────────────
@@ -388,6 +428,55 @@ TEMPLATES = {
 def get_templates() -> dict:
     """Return available message templates."""
     return TEMPLATES
+
+
+def get_message_status(sid: str) -> dict:
+    """Fetch current delivery status for a previously-sent message.
+
+    Returns {"status": str, "error_code": str|None, "error_label": str,
+             "error_detail": str}. Status values mirror Twilio's:
+    queued, sending, sent, delivered, undelivered, failed, accepted.
+    Empty status means the lookup failed.
+    """
+    if not sid:
+        return {"status": "", "error_code": None, "error_label": "",
+                "error_detail": "No message SID"}
+    client = _get_client()
+    if not client:
+        return {"status": "", "error_code": None, "error_label": "",
+                "error_detail": "Twilio client unavailable"}
+    try:
+        msg = client.messages(sid).fetch()
+        label, detail = explain_error(msg.error_code)
+        return {
+            "status": msg.status or "",
+            "error_code": msg.error_code,
+            "error_label": label,
+            "error_detail": detail,
+        }
+    except Exception as e:
+        logger.error("Failed to fetch message %s: %s", sid, e)
+        return {"status": "", "error_code": None, "error_label": "",
+                "error_detail": str(e)}
+
+
+def wait_for_delivery(sid: str, timeout_s: int = 12, poll_s: float = 2.0) -> dict:
+    """Poll Twilio until the message reaches a terminal state or timeout.
+
+    Terminal states: delivered, undelivered, failed. Returns the same shape
+    as get_message_status. On timeout, returns the last non-terminal status
+    (typically "sent" or "queued") so callers can surface "still pending".
+    """
+    terminal = {"delivered", "undelivered", "failed"}
+    deadline = time.time() + timeout_s
+    last = {"status": "", "error_code": None, "error_label": "",
+            "error_detail": ""}
+    while time.time() < deadline:
+        last = get_message_status(sid)
+        if last.get("status") in terminal:
+            return last
+        time.sleep(poll_s)
+    return last
 
 
 def send_template(template_key: str, to: str, variables: dict) -> dict:
