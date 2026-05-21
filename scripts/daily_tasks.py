@@ -58,7 +58,12 @@ def _supabase():
 
 
 def _load_active_team_members() -> list[dict]:
-    """Return all active team members. Tolerates schema variation."""
+    """Return all active team members. Tolerates schema variation.
+
+    Lookup order:
+      1. Supabase tables: team_members, users, staff
+      2. NOTIFY_EMAILS env var (CSV of email addresses) — fallback when no table exists
+    """
     sb = _supabase()
     # Try a few plausible table names. Adjust to your actual schema.
     for table_name in ("team_members", "users", "staff"):
@@ -72,6 +77,16 @@ def _load_active_team_members() -> list[dict]:
                     return rows
         except Exception as e:  # noqa: BLE001
             logger.debug("table %s not usable: %s", table_name, e)
+
+    # Fallback: parse NOTIFY_EMAILS env var (CSV)
+    notify_csv = os.environ.get("NOTIFY_EMAILS", "").strip()
+    if notify_csv:
+        emails = [e.strip() for e in notify_csv.split(",") if e.strip() and "@" in e]
+        if emails:
+            members = [{"id": e, "email": e, "name": e.split("@")[0].title()} for e in emails]
+            logger.info("Loaded %d team members from NOTIFY_EMAILS env var (fallback)", len(members))
+            return members
+
     logger.warning("No team members loaded — nothing to send.")
     return []
 
