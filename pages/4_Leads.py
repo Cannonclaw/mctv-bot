@@ -20,6 +20,7 @@ from services.leads_service import (
     calculate_lead_score,
     get_score_label,
     bulk_update_status,
+    bulk_assign_rep,
     export_leads_csv,
 )
 from services.supabase_client import is_configured as supabase_configured
@@ -173,9 +174,13 @@ if selected:
     with bulk_cols[2]:
         if st.button("Apply Rep", key="bulk_apply_rep", width='stretch'):
             if bulk_rep:
-                # Rep assignment would need a field update — for now update a note
-                st.info(f"Assigned **{bulk_rep}** to {len(selected)} lead(s). (Rep tracking coming soon)")
-                st.session_state["selected_leads"] = set()
+                try:
+                    bulk_assign_rep(list(selected), bulk_rep)
+                    st.session_state["selected_leads"] = set()
+                    st.success(f"Assigned **{bulk_rep}** to {len(selected)} lead(s)")
+                    st.rerun()
+                except Exception:
+                    st.error("Failed to assign rep")
             else:
                 st.warning("Select a rep first")
 
@@ -249,9 +254,11 @@ for lead in display_leads:
         contact_name = lead.get("contact_name", "")
         city = lead.get("city", "")
         industry = lead.get("industry", "")
+        assigned_rep = lead.get("assigned_rep", "")
+        rep_text = f" | \U0001F464 {assigned_rep}" if assigned_rep else ""
         st.markdown(
             f"{status_emoji} **{business_name}** — "
-            f"{contact_name} | {city} | {industry}"
+            f"{contact_name} | {city} | {industry}{rep_text}"
         )
 
     if show_prominent_convert:
@@ -285,6 +292,7 @@ for lead in display_leads:
             st.text(f"How Heard: {lead.get('how_heard', 'N/A')}")
             st.text(f"Submitted: {lead.get('submitted_at', 'N/A')[:16]}")
             st.text(f"Lead Score: {score} ({score_label})")
+            st.text(f"Assigned Rep: {lead.get('assigned_rep') or 'Unassigned'}")
 
             # Logo preview
             logo_file = lead.get("logo_file")
