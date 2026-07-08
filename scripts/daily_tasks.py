@@ -17,7 +17,7 @@ Render cron service config:
   Schedule:        0 13 * * 1-5     (weekdays 13:00 UTC)
   Command:         python scripts/daily_tasks.py
   Env vars:        ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-                   GMAIL_USER, GMAIL_APP_PASSWORD (or whatever notification_service uses)
+                   NOTIFY_EMAILS, SMTP_* (whatever notification_service uses)
 """
 from __future__ import annotations
 
@@ -143,15 +143,22 @@ def main() -> int:
                 skipped += 1
                 continue
 
-            _send_email(
-                to=tm_email,
+            # _send_email is plain-text SMTP: (to_emails, subject, body) -> bool.
+            # It returns False instead of raising, so check the result.
+            ok = _send_email(
+                to_emails=tm_email,
                 subject=payload["subject"],
-                html_body=payload["html_body"],
-                plain_body=payload["plain_body"],
+                body=payload["plain_body"],
             )
-            _log_send(tm_id, payload["subject"], payload["task_count"], "sent")
-            sent += 1
-            logger.info("sent to %s (%d tasks)", tm_email, payload["task_count"])
+            if ok:
+                _log_send(tm_id, payload["subject"], payload["task_count"], "sent")
+                sent += 1
+                logger.info("sent to %s (%d tasks)", tm_email, payload["task_count"])
+            else:
+                failed += 1
+                _log_send(tm_id, payload["subject"], payload["task_count"], "failed",
+                          "smtp send returned False (see cron logs)")
+                logger.error("send returned False for %s", tm_email)
         except Exception as e:  # noqa: BLE001
             failed += 1
             _log_send(tm_id, "(error)", 0, "failed", str(e))
@@ -162,8 +169,9 @@ def main() -> int:
         "daily_tasks cron complete in %.1fs — sent=%d skipped=%d failed=%d",
         duration, sent, skipped, failed,
     )
-    # Exit non-zero if everything failed so Render flags it
-    if sent == 0 and failed > 0:
+    # Exit non-zero on ANY failed send so Render flags the run —
+    # partial failures were previously invisible (exit 0).
+    if failed > 0:
         return 1
     return 0
 
