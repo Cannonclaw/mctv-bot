@@ -1,4 +1,4 @@
-<title>The Canon Chronicle — {DATE}</title>
+<title>The Cannon Chronicle — {DATE}</title>
 <style>
   :root {
     --paper: #F2EDE3;
@@ -203,6 +203,28 @@
     .sheet { animation: settle 0.5s ease-out; }
     @keyframes settle { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   }
+
+  /* ---------- Art ---------- */
+  .cartoon { margin: 20px 0 4px; padding: 14px 14px 10px; border: 1.5px solid var(--ink); background: var(--paper-raised); }
+  .cartoon svg { display: block; width: 100%; height: auto; }
+  .cartoon figcaption { font-style: italic; font-size: 13.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
+  figure.cartoon { margin-left: 0; margin-right: 0; }
+  .spot { display: block; margin: 12px auto 4px; height: 66px; }
+  .staff { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; text-align: center; padding: 6px 0 4px; }
+  .staff img { width: 108px; height: 108px; object-fit: cover; border-radius: 50%; border: 2px solid var(--ink); filter: grayscale(1) contrast(1.05); display: block; margin: 0 auto 8px; }
+  .staff b { display: block; font-size: 15px; }
+  .staff span { font-family: var(--font-util); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+  .colophon img.pub-logo { height: 26px; vertical-align: middle; margin: 6px 0 2px; }
+  .logo-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .logo-light { display: none; }
+    .logo-dark { display: inline; }
+    .staff img { filter: grayscale(1) contrast(1.0) brightness(0.95); }
+  }
+  :root[data-theme="light"] .logo-light { display: inline; }
+  :root[data-theme="light"] .logo-dark { display: none; }
+  :root[data-theme="dark"] .logo-light { display: none; }
+  :root[data-theme="dark"] .logo-dark { display: inline; }
 </style>
 
 <!--
@@ -210,6 +232,23 @@
   The daily job fills every {PLACEHOLDER} and repeats the marked blocks as
   needed. Section order and CSS classes must not change. No edition content
   is committed to this repo.
+-->
+
+<!--
+  ART (required in every edition):
+  1. LEAD EDITORIAL CARTOON — a <figure class="cartoon"> with a hand-drawn-style
+     inline SVG (flat shapes, stroke var(--ink), accents var(--cardinal)/var(--powder),
+     fills var(--paper)/var(--paper-raised) so it adapts to dark mode) lampooning the
+     day's lead story, plus an italic one-line figcaption. Place at the end of the lead.
+  2. WIRE SPOT CARTOONS — one small <svg class="spot" viewBox="0 0 120 70"> above each
+     Wire column head (Ole Miss pennant+football / a YOUR AD HERE screen / a robot
+     with a newspaper — vary them day to day).
+  3. THE NEWSROOM — before the colophon, a .staff strip with the three headshots from
+     assets/team/ (creed, mary_michael, swayze), downscaled to ~150px wide JPEG and
+     embedded as base64 data URIs (CSP blocks external images). Roles: Publisher &
+     Editor-in-Chief / Creative Desk / Sales Desk.
+  4. COLOPHON LOGO — assets/branding/mctv_logo_on_light.png + _on_dark.png embedded as
+     data URIs with classes pub-logo logo-light / logo-dark (theme swap handled in CSS).
 -->
 <div class="sheet">
 
@@ -220,7 +259,7 @@
   </div>
 
   <header class="masthead">
-    <h1>The Canon Chronicle</h1>
+    <h1>The Cannon Chronicle</h1>
     <div class="tagline">Printed daily for T. Creed Cannon &mdash; covering the desk, the network, and the Grove.</div>
     <div class="vitals">
       <!-- 4-6 key numbers of the day: <div><b>NUM</b> label</div> -->
@@ -340,7 +379,7 @@
   </section>
 
   <footer class="colophon">
-    The Canon Chronicle &middot; Compiled by four desks: Gmail, the work inbox &amp; calendars, the MCTV Bot repository, and the open web.<br>
+    The Cannon Chronicle &middot; Compiled by four desks: Gmail, the work inbox &amp; calendars, the MCTV Bot repository, and the open web.<br>
     {SOURCING_NOTE} Next edition: tomorrow morning.
   </footer>
 

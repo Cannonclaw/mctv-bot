@@ -1,4 +1,4 @@
-# The Canon Chronicle
+# The Cannon Chronicle
 
 A daily personal newspaper for Creed, compiled each morning by a Claude Code
 Routine and published as a private Claude artifact. This directory holds the
@@ -49,8 +49,8 @@ Defined in `template.html`. Newsprint ivory `#F2EDE3` / ink `#1C1A16`,
 cardinal accent `#A3122E`, powder-blue secondary `#4E6E8A`; dark theme via
 `prefers-color-scheme` plus `:root[data-theme]` overrides. Display face is
 a Didot/Bodoni stack, body is Georgia, utility is a condensed sans.
-Favicon is always 🗞️; artifact title format is
-`The Canon Chronicle — <date>`.
+Every edition carries art: a lead editorial cartoon (inline SVG, theme-aware), a spot cartoon above each Wire column, the Newsroom staff strip (grayscale team headshots from assets/team/ as base64 data URIs), and the MCTV logo in the colophon — see the ART comment block in template.html. Favicon is always 🗞️; artifact title format is
+`The Cannon Chronicle — <date>`.
 
 ## Rules for the daily job
 
