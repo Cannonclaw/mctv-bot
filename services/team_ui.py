@@ -27,6 +27,7 @@ NAV_SECTIONS = [
     ]),
     ("Grow Revenue", [
         ("pages/1_Proposals.py",       "Proposals",            "\U0001F4DD"),  # 📝
+        ("pages/25_Rate_Card.py",      "Rate Card",            "\U0001F3F7\uFE0F"),  # 🏷️
         ("pages/16_Simulator.py",      "Audience Simulator",   "\U0001F4CA"),  # 📊
         ("pages/17_VoiceToProposal.py","Voice to Proposal",    "\U0001F3A4"),  # 🎤
         ("pages/19_SalesCoach.py",     "Sales Coach",          "\U0001F3C6"),  # 🏆
@@ -48,6 +49,7 @@ NAV_SECTIONS = [
         ("pages/2_Reports.py",         "Traction Reports",     "\U0001F4C8"),  # 📈
         ("pages/13_Briefing.py",       "Daily Briefing",       "\U0001F4D1"),  # 📑
         ("pages/18_ScreenHealth.py",   "Screen Health",        "\U0001F6A8"),  # 🚨
+        ("pages/24_Loop_Inventory.py","Loop Inventory",       "\U0001F4FA"),  # 📺
         ("pages/21_RepDashboard.py",   "Rep Dashboard",        "\U0001F4B2"),  # 💲
     ]),
     ("Tools", [
