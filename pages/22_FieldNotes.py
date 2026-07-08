@@ -41,11 +41,18 @@ from services.team_ui import render_team_sidebar
 render_team_sidebar()
 
 
+TEAM = ["Creed", "Mary", "Swayze", "Jagger", "Elliot"]
+
+
 st.markdown("## \U0001F399 Field Notes")
 st.caption(
     "Tap record, speak your note, tap stop. Transcribes, extracts customer + action items, "
     "and saves to your account. Best from your phone."
 )
+
+# Shared team password = no per-user login; same session key as the Tasks
+# page so your identity carries across both.
+viewing_as = st.selectbox("Viewing as", TEAM, key="tasks_viewing_as")
 
 audio_value = st.audio_input(
     "Tap the microphone to record",
@@ -69,12 +76,22 @@ if audio_value is not None:
         st.session_state["last_processed_key"] = cache_key
         with st.spinner("Transcribing and structuring your note..."):
             try:
-                note = process_note(audio_bytes=audio_bytes)
+                note = process_note(audio_bytes=audio_bytes, team_member_id=viewing_as)
                 st.session_state["latest_note"] = note
+                st.session_state.pop("last_process_error", None)
                 st.success(f"✓ Saved as note `{note['id'][:8]}...`")
             except Exception as e:
-                st.error(f"Could not process this recording: {e}")
+                st.session_state["last_process_error"] = str(e)
                 st.session_state.pop("latest_note", None)
+
+    # Rendered OUTSIDE the once-per-recording guard above, so the error and
+    # the retry button survive the rerun a button click triggers.
+    if st.session_state.get("last_process_error"):
+        st.error(f"Could not process this recording: {st.session_state['last_process_error']}")
+        if st.button("Try again"):
+            st.session_state.pop("last_processed_key", None)
+            st.session_state.pop("last_process_error", None)
+            st.rerun()
 
     note = st.session_state.get("latest_note")
     if note:
@@ -84,7 +101,8 @@ if audio_value is not None:
 
             customer_match = (note.get("structured_data") or {}).get("customer_match")
             if customer_match and customer_match.get("name"):
-                confidence = customer_match.get("confidence", 0)
+                # model may return "confidence": null — `or 0` covers it
+                confidence = customer_match.get("confidence") or 0
                 badge = "\U0001F7E2 linked" if customer_match.get("id") else "\U0001F7E1 suggested"
                 st.write(
                     f"**Customer:** {customer_match['name']}  ·  {badge} "
@@ -115,14 +133,21 @@ st.divider()
 st.subheader("Your recent notes")
 
 query = st.text_input("Search your notes", placeholder="customer name, keyword, or phrase")
-notes = search_notes(query, limit=25) if query else list_recent_notes(limit=25)
+try:
+    notes = (
+        search_notes(query, team_member_id=viewing_as, limit=25)
+        if query else list_recent_notes(team_member_id=viewing_as, limit=25)
+    )
+except Exception as e:
+    st.error(f"Could not load notes: {e}")
+    notes = []
 
 if not notes:
     st.caption("No notes yet — your dictations will show up here.")
 else:
     for n in notes:
         header = (
-            f"{n['created_at'][:16].replace('T', ' ')}  ·  "
+            f"{(n.get('created_at') or '')[:16].replace('T', ' ')}  ·  "
             f"{n.get('summary') or '(no summary)'}"
         )
         with st.expander(header):

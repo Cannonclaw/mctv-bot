@@ -8,6 +8,7 @@ on weekdays.
 
 Drop into: mctv-bot/pages/23_Tasks.py
 """
+import html
 import os
 import sys
 from datetime import date, timedelta
@@ -29,6 +30,8 @@ from services.task_service import (
     list_group,
     list_overdue,
     list_upcoming,
+    unsnooze_due,
+    local_today,
 )
 
 st.set_page_config(
@@ -43,23 +46,13 @@ if not check_password():
 from services.team_ui import render_team_sidebar
 render_team_sidebar()
 
+# Wake any snoozed tasks whose date has arrived
+try:
+    unsnooze_due()
+except Exception:  # noqa: BLE001 — never block the page on maintenance
+    pass
 
-def _current_member():
-    tm = (
-        st.session_state.get("team_member")
-        or st.session_state.get("current_user")
-        or st.session_state.get("user")
-        or {}
-    )
-    if isinstance(tm, dict):
-        return tm
-    if isinstance(tm, str):
-        return {"id": tm}
-    return {"id": "system"}
-
-
-member = _current_member()
-tm_id = member.get("id", "system")
+TEAM = ["Creed", "Mary", "Swayze", "Jagger", "Elliot"]
 
 
 st.markdown("## \U0001F3AF Tasks")
@@ -67,6 +60,11 @@ st.caption(
     "Your daily task list — plus group tasks the whole team can pick up. "
     "Daily summary lands in your inbox every weekday at 7 AM CT."
 )
+
+# The team portal uses a shared password (no per-user login), so pick who
+# you are here. Assignments and the daily email match on this first name.
+viewing_as = st.selectbox("Viewing as", TEAM, key="tasks_viewing_as")
+tm_id = viewing_as
 
 
 with st.expander("+ Add a task", expanded=False):
@@ -76,9 +74,9 @@ with st.expander("+ Add a task", expanded=False):
         with col1:
             priority = st.selectbox("Priority", ["low", "normal", "high", "urgent"], index=1)
         with col2:
-            due = st.date_input("Due date", value=date.today())
+            due = st.date_input("Due date", value=local_today())
         with col3:
-            team_options = ["(group task)", "Creed", "Mary", "Swayze", "Jagger", "Elliot"]
+            team_options = ["(group task)"] + TEAM
             assignee_display = st.selectbox("Assign to", team_options)
         description = st.text_area("Description (optional)", height=80)
         submitted = st.form_submit_button("Create task", type="primary")
@@ -87,6 +85,10 @@ with st.expander("+ Add a task", expanded=False):
                 st.warning("Title is required.")
             else:
                 assigned = None if assignee_display == "(group task)" else assignee_display
+                # NB: no st.rerun() inside this try — RerunException subclasses
+                # Exception and would be swallowed as a bogus error. The task
+                # lists below are fetched later in this same run, so the new
+                # task appears without a rerun anyway.
                 try:
                     create_task(
                         title=title.strip(),
@@ -96,10 +98,10 @@ with st.expander("+ Add a task", expanded=False):
                         due_date=due,
                         created_by=tm_id,
                     )
-                    st.success("Task created.")
-                    st.rerun()
                 except Exception as e:
                     st.error(f"Could not create task: {e}")
+                else:
+                    st.success("Task created.")
 
 
 tab_today, tab_my, tab_group, tab_overdue, tab_week = st.tabs([
@@ -111,12 +113,22 @@ tab_today, tab_my, tab_group, tab_overdue, tab_week = st.tabs([
 ])
 
 
-def _render_task_card(t):
+def _task_action(fn, *args) -> bool:
+    try:
+        fn(*args)
+        return True
+    except Exception as e:  # noqa: BLE001
+        st.error(f"Could not update task: {e}")
+        return False
+
+
+def _render_task_card(t, key_prefix):
     pri_color = {"urgent": "#C00000", "high": "#ED7D31", "normal": "#1F3864", "low": "#888"}.get(
         t.get("priority", "normal"), "#1F3864"
     )
     pri_badge = (t.get("priority", "normal") or "normal").upper()
-    title = t.get("title", "(no title)")
+    # title is rendered inside unsafe_allow_html markdown — escape it
+    title = html.escape(str(t.get("title", "(no title)")))
     due = t.get("due_date") or "no due date"
     assignee = t.get("assigned_to") or "(group)"
     source = t.get("source", "manual")
@@ -133,40 +145,48 @@ def _render_task_card(t):
         if t.get("description"):
             st.caption(t["description"])
     with col_action:
-        if st.button("Done", key=f"done_{t['id']}", type="secondary"):
-            mark_done(t["id"])
-            st.rerun()
-        if st.button("Snooze 1d", key=f"snooze_{t['id']}"):
-            snooze(t["id"], date.today() + timedelta(days=1))
-            st.rerun()
+        # key_prefix keeps widget keys unique when the same task shows in
+        # more than one tab (Today / My tasks / This week all overlap).
+        # st.rerun() stays OUTSIDE the try (see _task_action) so it isn't
+        # swallowed as an exception.
+        if st.button("Done", key=f"done_{key_prefix}_{t['id']}", type="secondary"):
+            if _task_action(mark_done, t["id"]):
+                st.rerun()
+        if st.button("Snooze 1d", key=f"snooze_{key_prefix}_{t['id']}"):
+            if _task_action(snooze, t["id"], local_today() + timedelta(days=1)):
+                st.rerun()
+        if not t.get("assigned_to"):
+            if st.button("Claim", key=f"claim_{key_prefix}_{t['id']}"):
+                if _task_action(reassign, t["id"], tm_id):
+                    st.rerun()
 
 
-def _render_list(tasks, empty_msg="Nothing here."):
+def _render_list(tasks, empty_msg="Nothing here.", key_prefix="list"):
     if not tasks:
         st.caption(empty_msg)
         return
     for t in tasks:
         with st.container(border=True):
-            _render_task_card(t)
+            _render_task_card(t, key_prefix)
 
 
 with tab_today:
-    today_iso = date.today().isoformat()
+    today_iso = local_today().isoformat()
     today_mine = [t for t in list_for_member(tm_id) if t.get("due_date") == today_iso]
     today_group = [t for t in list_group() if t.get("due_date") == today_iso]
     st.subheader("Yours due today")
-    _render_list(today_mine, "Nothing due today for you.")
+    _render_list(today_mine, "Nothing due today for you.", key_prefix="today_mine")
     st.subheader("Group tasks due today")
-    _render_list(today_group, "Nothing for the team today.")
+    _render_list(today_group, "Nothing for the team today.", key_prefix="today_grp")
 
 with tab_my:
-    _render_list(list_for_member(tm_id), "No pending tasks assigned to you.")
+    _render_list(list_for_member(tm_id), "No pending tasks assigned to you.", key_prefix="mine")
 
 with tab_group:
-    _render_list(list_group(), "No group tasks pending.")
+    _render_list(list_group(), "No group tasks pending.", key_prefix="grp")
 
 with tab_overdue:
-    _render_list(list_overdue(tm_id), "Nothing overdue — clean slate.")
+    _render_list(list_overdue(tm_id), "Nothing overdue — clean slate.", key_prefix="over")
 
 with tab_week:
-    _render_list(list_upcoming(tm_id, days=7), "Nothing on the schedule this week.")
+    _render_list(list_upcoming(tm_id, days=7), "Nothing on the schedule this week.", key_prefix="week")
