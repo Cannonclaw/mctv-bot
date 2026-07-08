@@ -271,6 +271,41 @@ TEAM_CSS = """
     /* Hide Streamlit chrome */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
+
+    /* ── Mobile: make the sidebar-open control an obvious Menu button ────
+       On phones Streamlit collapses the sidebar and shows only a tiny
+       gray chevron — invisible against the page. Turn it into a button. */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stExpandSidebarButton"] {
+        background: #1B1F3B !important;
+        border: 1px solid #2a2f55 !important;
+        border-radius: 10px !important;
+        padding: 6px 12px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    [data-testid="stSidebarCollapsedControl"] *,
+    [data-testid="stExpandSidebarButton"] * {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+    }
+    [data-testid="stSidebarCollapsedControl"]::after,
+    [data-testid="stExpandSidebarButton"]::after {
+        content: "Menu";
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-left: 4px;
+    }
+    /* when one control nests inside the other, do not double-style */
+    [data-testid="stSidebarCollapsedControl"] [data-testid="stExpandSidebarButton"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none;
+        padding: 0 4px !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] [data-testid="stExpandSidebarButton"]::after {
+        content: none;
+    }
 </style>
 """
 
