@@ -114,7 +114,13 @@ def list_recent_notes(team_member_id: str | None = None, limit: int = 20) -> lis
 
 def search_notes(query: str, team_member_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
     tm_id = team_member_id or _current_team_member_id()
-    pattern = f"%{query}%"
+    # PostgREST .or_() filters are comma/paren-delimited — strip those chars
+    # from user input so a search like "Smith, John (Oxford)" can't break
+    # the filter syntax and crash the page.
+    safe = "".join(ch if ch not in ',()"' else " " for ch in query).strip()
+    if not safe:
+        return list_recent_notes(team_member_id=tm_id, limit=limit)
+    pattern = f"%{safe}%"
     res = (
         _sb()
         .table("field_notes")
@@ -129,30 +135,44 @@ def search_notes(query: str, team_member_id: str | None = None, limit: int = 20)
 
 
 def mark_action_item_done(note_id: str, action_item_index: int) -> None:
-    res = (
-        _sb()
-        .table("field_notes")
-        .select("action_items")
-        .eq("id", note_id)
-        .single()
-        .execute()
-    )
-    items = (res.data or {}).get("action_items") or []
-    if 0 <= action_item_index < len(items):
-        items[action_item_index]["done"] = not items[action_item_index].get("done", False)
-        _sb().table("field_notes").update({"action_items": items}).eq("id", note_id).execute()
+    # Used as a Streamlit on_change callback — must never raise, or the
+    # whole page run dies on a transient DB hiccup.
+    try:
+        res = (
+            _sb()
+            .table("field_notes")
+            .select("action_items")
+            .eq("id", note_id)
+            .single()
+            .execute()
+        )
+        items = (res.data or {}).get("action_items") or []
+        if 0 <= action_item_index < len(items):
+            items[action_item_index]["done"] = not items[action_item_index].get("done", False)
+            _sb().table("field_notes").update({"action_items": items}).eq("id", note_id).execute()
+    except Exception as e:
+        logger.warning("field_notes: could not toggle action item %s[%s]: %s", note_id, action_item_index, e)
+
+
+_AUDIO_MIME = {
+    "wav": "audio/wav",
+    "webm": "audio/webm",
+    "mp3": "audio/mpeg",
+    "m4a": "audio/mp4",
+    "ogg": "audio/ogg",
+}
 
 
 def _upload_audio(team_member_id: str, audio_bytes: bytes, filename_hint: str) -> str:
     ext = filename_hint.rsplit(".", 1)[-1].lower() if "." in filename_hint else "wav"
-    if ext not in {"wav", "webm", "mp3", "m4a", "ogg"}:
+    if ext not in _AUDIO_MIME:
         ext = "wav"
     object_name = f"{team_member_id}/{uuid.uuid4()}.{ext}"
     try:
         _sb().storage.from_(BUCKET).upload(
             path=object_name,
             file=audio_bytes,
-            file_options={"content-type": f"audio/{ext}"},
+            file_options={"content-type": _AUDIO_MIME[ext]},
         )
     except Exception as e:
         logger.warning("field_notes: storage upload failed (%s); continuing without audio file", e)
@@ -162,13 +182,7 @@ def _upload_audio(team_member_id: str, audio_bytes: bytes, filename_hint: str) -
 
 def _transcribe_and_structure(audio_bytes: bytes, filename_hint: str):
     ext = filename_hint.rsplit(".", 1)[-1].lower() if "." in filename_hint else "wav"
-    media_type = {
-        "wav": "audio/wav",
-        "webm": "audio/webm",
-        "mp3": "audio/mpeg",
-        "m4a": "audio/mp4",
-        "ogg": "audio/ogg",
-    }.get(ext, "audio/wav")
+    media_type = _AUDIO_MIME.get(ext, "audio/wav")
     audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
 
     candidate_lines = "\n".join(
@@ -178,8 +192,8 @@ def _transcribe_and_structure(audio_bytes: bytes, filename_hint: str):
     system = (
         "You are a sales-operations assistant for MCTV Elite Advertising, an indoor "
         "digital billboard network in North Mississippi. Listen to a voice memo from "
-        "a sales team member in the field and return STRICT JSON only \u2014 no markdown, "
-        "no commentary \u2014 with this exact shape:\n"
+        "a sales team member in the field and return STRICT JSON only — no markdown, "
+        "no commentary — with this exact shape:\n"
         "{\n"
         '  "transcript": "verbatim transcription of the audio",\n'
         '  "summary": "one short sentence capturing the gist",\n'
@@ -248,16 +262,21 @@ def _transcribe_and_structure(audio_bytes: bytes, filename_hint: str):
 
 
 def _candidate_customers():
+    # Live schema: the CRM table is `clients` with `business_name`
+    # (there is no `customers` table).
     try:
         res = (
             _sb()
-            .table("customers")
-            .select("id, name")
+            .table("clients")
+            .select("id, business_name")
             .order("created_at", desc=True)
             .limit(CUSTOMER_CANDIDATE_LIMIT)
             .execute()
         )
-        return res.data or []
+        return [
+            {"id": r["id"], "name": r.get("business_name") or "(unnamed)"}
+            for r in (res.data or [])
+        ]
     except Exception as e:
         logger.warning("field_notes: could not load customer candidates: %s", e)
         return []

@@ -44,10 +44,12 @@ NAV_SECTIONS = [
         ("pages/9_Contracts.py",       "Contracts",            "\U0001F4C3"),  # 📃
         ("pages/10_Invoices.py",       "Invoices",             "\U0001F4B5"),  # 💵
         ("pages/11_Creative.py",       "Creative Requests",    "\U0001F3A8"),  # 🎨
+        ("pages/22_FieldNotes.py",     "Field Notes",          "\U0001F399\uFE0F"),  # 🎙️
     ]),
     ("Operations", [
         ("pages/2_Reports.py",         "Traction Reports",     "\U0001F4C8"),  # 📈
         ("pages/13_Briefing.py",       "Daily Briefing",       "\U0001F4D1"),  # 📑
+        ("pages/23_Tasks.py",          "Tasks",                "\U0001F3AF"),  # 🎯
         ("pages/18_ScreenHealth.py",   "Screen Health",        "\U0001F6A8"),  # 🚨
         ("pages/24_Loop_Inventory.py","Loop Inventory",       "\U0001F4FA"),  # 📺
         ("pages/21_RepDashboard.py",   "Rep Dashboard",        "\U0001F4B2"),  # 💲
