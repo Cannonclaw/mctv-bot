@@ -25,6 +25,7 @@ compiles one page:
 | Work | Microsoft 365 + Google Calendar MCP | Client/prospect/team activity, action items, week's calendar (times in Central) |
 | Projects | Local repo + GitHub MCP | Recent commits, open PRs/issues, repo task signals, suggested priorities |
 | News | WebSearch | Ole Miss football, DOOH industry, Claude Code/AI, north MS local business, sports business |
+| Capital | WebSearch | **Standing beat:** new business credit lines & credit cards suited to a small MS media/advertising LLC — fintech corporate cards (Brex, Ramp, Divvy/BILL, Mercury), 0% intro-APR small-business cards (Amex, Chase Ink, Capital One), and SBA / bank / revenue-based lines of credit (e.g. tied to the ~$9.7k QB MRR). Report new/changed offers, rates, approval odds, and fit. |
 
 ## Sections (in order)
 
@@ -75,9 +76,11 @@ edition must be verifiable. Specific rules:
   pending" from inbox silence — query the Supabase tables (via the Supabase
   MCP or the app's own briefing) and report what they actually hold.
 - **Add a fifth gathering signal — the CRM/DB desk.** Before writing The Docket,
-  The Works, or Prospect Intelligence, read `pipeline_opportunities`,
-  `contracts`, and `invoices`. That is the ground truth for anything about
-  clients, deals, contracts, and collections.
+  The Works, or Prospect Intelligence, read `tasks`, `pipeline_opportunities`,
+  `contracts`, and `invoices`. That is the ground truth for anything about the
+  owner's to-dos, clients, deals, contracts, and collections. In particular,
+  every `pending` row in `tasks` is a Docket item — fold them in, ranked by
+  priority (`high` → HIGH pill) and due date, and check off completed ones.
 - **When a prior edition is proven wrong, print a Corrections & Amplifications
   box.** Don't silently edit history — own it on the page.
 - **Cross-check numbers.** Dollar figures, day-counts, screen counts, and
