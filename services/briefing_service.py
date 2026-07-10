@@ -152,10 +152,19 @@ def generate_briefing() -> dict:
         if created.startswith(today_str):
             new_leads_today += 1
 
+    # MRR: prefer real recurring revenue from QuickBooks (the system of record
+    # for billing); fall back to the contract sum only if QB is unavailable.
+    try:
+        from services.quickbooks_service import get_recurring_revenue
+        qb_mrr = get_recurring_revenue()
+    except Exception:
+        qb_mrr = 0.0
+
     briefing["executive_summary"] = {
         "active_clients": admin_summary.get("active_clients", 0),
         "monthly_recurring_revenue": float(
-            contract_summary.get("active_mrr", 0)
+            qb_mrr
+            or contract_summary.get("active_mrr", 0)
             or admin_summary.get("monthly_recurring_revenue", 0)
         ),
         "contracts_awaiting_signature": contract_summary.get(

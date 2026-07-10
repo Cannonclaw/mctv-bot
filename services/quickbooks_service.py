@@ -381,6 +381,77 @@ def _query(entity: str, where: str = "", max_results: int = 1000) -> list[dict]:
     return []
 
 
+# ── Recurring Revenue (MRR) ───────────────────────────────────────────────────
+
+def get_recurring_revenue(min_months: int = 2, lookback_months: int = 3) -> float:
+    """Estimate monthly recurring revenue (MRR) from QuickBooks invoices.
+
+    QuickBooks mixes true monthly advertising with one-time deals (large NIL
+    sponsorships, prepaid multi-month packages). Summing a single month's
+    invoices would spike in those months. Instead we treat an advertiser as
+    *recurring* only if they were invoiced in at least ``min_months`` distinct
+    calendar months of the trailing ``lookback_months`` window, then sum each
+    recurring advertiser's most recent monthly invoice total. One-off deals
+    (billed once) are excluded automatically.
+
+    Returns 0.0 if QuickBooks is not connected or on any error, so callers can
+    fall back to another MRR source.
+    """
+    if not is_connected():
+        return 0.0
+
+    try:
+        today = date.today()
+        # First day of the month (lookback_months - 1) months ago.
+        m = today.month - (lookback_months - 1)
+        y = today.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        window_start = date(y, m, 1)
+
+        invoices = _query(
+            "Invoice", where=f"TxnDate >= '{window_start.isoformat()}'"
+        )
+
+        # customer -> {"months": set(), "latest_date": date, "latest_amt": float}
+        by_customer: dict[str, dict] = {}
+        for inv in invoices:
+            cust = (inv.get("CustomerRef") or {})
+            key = cust.get("value") or cust.get("name")
+            if not key:
+                continue
+            txn_raw = inv.get("TxnDate", "")
+            try:
+                txn = date.fromisoformat(txn_raw)
+            except (ValueError, TypeError):
+                continue
+            try:
+                amt = float(inv.get("TotalAmt", 0) or 0)
+            except (ValueError, TypeError):
+                amt = 0.0
+
+            rec = by_customer.setdefault(
+                key, {"months": set(), "latest_date": None, "latest_amt": 0.0}
+            )
+            rec["months"].add((txn.year, txn.month))
+            if rec["latest_date"] is None or txn >= rec["latest_date"]:
+                rec["latest_date"] = txn
+                rec["latest_amt"] = amt
+
+        return round(
+            sum(
+                rec["latest_amt"]
+                for rec in by_customer.values()
+                if len(rec["months"]) >= min_months
+            ),
+            2,
+        )
+    except Exception as e:  # pragma: no cover - defensive; MRR must never crash the briefing
+        print(f"[quickbooks_service] get_recurring_revenue failed: {e}", flush=True)
+        return 0.0
+
+
 # ── Customer Sync ────────────────────────────────────────────────────────────
 
 def find_qb_customer(display_name: str) -> dict | None:
