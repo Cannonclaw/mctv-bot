@@ -383,16 +383,66 @@ def _query(entity: str, where: str = "", max_results: int = 1000) -> list[dict]:
 
 # ── Recurring Revenue (MRR) ───────────────────────────────────────────────────
 
-def get_recurring_revenue(min_months: int = 2, lookback_months: int = 3) -> float:
-    """Estimate monthly recurring revenue (MRR) from QuickBooks invoices.
+# Income accounts that are recurring but booked directly to the P&L (via sales
+# receipts / deposits), so they never appear as customer Invoices. These are
+# added to MRR on top of the invoice-derived recurring advertising revenue.
+RECURRING_PNL_INCOME_ACCOUNTS = ("Screen Share Income",)
 
-    QuickBooks mixes true monthly advertising with one-time deals (large NIL
-    sponsorships, prepaid multi-month packages). Summing a single month's
-    invoices would spike in those months. Instead we treat an advertiser as
-    *recurring* only if they were invoiced in at least ``min_months`` distinct
-    calendar months of the trailing ``lookback_months`` window, then sum each
-    recurring advertiser's most recent monthly invoice total. One-off deals
-    (billed once) are excluded automatically.
+
+def _find_pnl_row_amount(rows: list, account_name: str) -> float:
+    """Recursively find a P&L account row by name and return its period total."""
+    target = account_name.strip().lower()
+    for row in rows or []:
+        cols = row.get("ColData")
+        if cols and (cols[0].get("value", "") or "").strip().lower() == target:
+            try:
+                return float(cols[-1].get("value") or 0)
+            except (ValueError, TypeError):
+                return 0.0
+        sub = (row.get("Rows") or {}).get("Row", [])
+        if sub:
+            found = _find_pnl_row_amount(sub, account_name)
+            if found:
+                return found
+    return 0.0
+
+
+def _pnl_income_account_amount(account_name: str, start_date: str,
+                               end_date: str) -> float:
+    """Return one income account's total from the P&L report for a date range."""
+    try:
+        endpoint = (
+            f"reports/ProfitAndLoss?start_date={start_date}&end_date={end_date}"
+            "&accounting_method=Accrual&minorversion=65"
+        )
+        resp = _api_request("GET", endpoint)
+        if not resp:
+            return 0.0
+        rows = (resp.get("Rows") or {}).get("Row", [])
+        return _find_pnl_row_amount(rows, account_name)
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[quickbooks_service] P&L lookup for {account_name!r} failed: {e}",
+              flush=True)
+        return 0.0
+
+
+def get_recurring_revenue(min_months: int = 2, lookback_months: int = 3) -> float:
+    """Estimate monthly recurring revenue (MRR) from QuickBooks.
+
+    Two sources are combined:
+
+    1. **Recurring advertising** — from customer invoices. QuickBooks mixes true
+       monthly advertising with one-time deals (large NIL sponsorships, prepaid
+       multi-month packages). Summing a single month's invoices would spike in
+       those months. Instead we treat an advertiser as *recurring* only if they
+       were invoiced in at least ``min_months`` distinct calendar months of the
+       trailing ``lookback_months`` window, then sum each recurring advertiser's
+       most recent monthly invoice total. One-off deals (billed once) drop out.
+
+    2. **Recurring P&L income** — accounts like Screen Share Income are booked
+       directly to the P&L (sales receipts / deposits), never as invoices, so
+       the invoice pass can't see them. We add the most recent full calendar
+       month's amount for each account in ``RECURRING_PNL_INCOME_ACCOUNTS``.
 
     Returns 0.0 if QuickBooks is not connected or on any error, so callers can
     fall back to another MRR source.
@@ -439,14 +489,24 @@ def get_recurring_revenue(min_months: int = 2, lookback_months: int = 3) -> floa
                 rec["latest_date"] = txn
                 rec["latest_amt"] = amt
 
-        return round(
-            sum(
-                rec["latest_amt"]
-                for rec in by_customer.values()
-                if len(rec["months"]) >= min_months
-            ),
-            2,
+        invoice_recurring = sum(
+            rec["latest_amt"]
+            for rec in by_customer.values()
+            if len(rec["months"]) >= min_months
         )
+
+        # Add recurring income booked directly to the P&L (e.g. Screen Share
+        # Income), measured over the most recent full calendar month.
+        lm_end = today.replace(day=1) - timedelta(days=1)
+        lm_start = lm_end.replace(day=1)
+        pnl_recurring = sum(
+            _pnl_income_account_amount(
+                acct, lm_start.isoformat(), lm_end.isoformat()
+            )
+            for acct in RECURRING_PNL_INCOME_ACCOUNTS
+        )
+
+        return round(invoice_recurring + pnl_recurring, 2)
     except Exception as e:  # pragma: no cover - defensive; MRR must never crash the briefing
         print(f"[quickbooks_service] get_recurring_revenue failed: {e}", flush=True)
         return 0.0
