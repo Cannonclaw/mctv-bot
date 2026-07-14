@@ -261,9 +261,12 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
 
                     if prospects:
                         st.session_state["generated_prospects"] = prospects
-                        st.session_state["prospect_city"] = target_city
-                        st.session_state["prospect_industry"] = target_industry
-                        st.session_state["prospect_rep"] = assigned_rep
+                        # Store under distinct keys — "prospect_city" etc. are
+                        # widget keys (lines 171-175) and Streamlit forbids
+                        # writing to a key bound to an instantiated widget.
+                        st.session_state["generated_city"] = target_city
+                        st.session_state["generated_industry"] = target_industry
+                        st.session_state["generated_rep"] = assigned_rep
                         st.success(f"Found {len(prospects)} prospects!")
                     else:
                         st.warning("No prospects generated. Try again.")
@@ -275,9 +278,9 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
     # Display generated prospects
     if "generated_prospects" in st.session_state:
         prospects = st.session_state["generated_prospects"]
-        p_city = st.session_state.get("prospect_city", target_city)
-        p_industry = st.session_state.get("prospect_industry", target_industry)
-        p_rep = st.session_state.get("prospect_rep", assigned_rep)
+        p_city = st.session_state.get("generated_city", target_city)
+        p_industry = st.session_state.get("generated_industry", target_industry)
+        p_rep = st.session_state.get("generated_rep", assigned_rep)
 
         st.divider()
         st.markdown(f"### Generated Prospects — {p_industry} in {p_city}")
