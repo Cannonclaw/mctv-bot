@@ -235,10 +235,14 @@ with tab_deals:
 
             with a1:
                 stage_options = get_stage_options()
+                _cur_stage_idx = [
+                    i for i, (k, _) in enumerate(stage_options)
+                    if k == deal.get("stage", "prospect")
+                ]
                 new_stage = st.selectbox(
                     "Move to Stage",
                     [label for _, label in stage_options],
-                    index=[i for i, (k, _) in enumerate(stage_options) if k == deal.get("stage", "prospect")][0],
+                    index=_cur_stage_idx[0] if _cur_stage_idx else 0,
                     key=f"stage_{deal['id']}"
                 )
                 new_stage_key = [k for k, label in stage_options if label == new_stage][0]
