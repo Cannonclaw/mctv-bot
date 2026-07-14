@@ -77,18 +77,34 @@ def _reset_login_attempts(key: str):
 def _get_allowed_portal_emails() -> set:
     """Return the set of emails allowed to access the portal.
 
-    Reads from PORTAL_ALLOWED_EMAILS env var (comma-separated) if set,
-    otherwise defaults to the MCTV team.
+    Base set comes from the PORTAL_ALLOWED_EMAILS env var (comma-separated)
+    if set, otherwise the MCTV team. On top of that, every client that has
+    been invited to the portal (i.e. has a portal_user_id) is allowed —
+    otherwise a created advertiser/host account can never log in even though
+    its Supabase Auth user exists and its temp password was emailed.
     """
     env_val = os.environ.get("PORTAL_ALLOWED_EMAILS", "")
     if env_val.strip():
-        return {e.strip().lower() for e in env_val.split(",") if e.strip()}
-    # Default: team only
-    return {
-        "creed@mctvofms.com",
-        "mmc@mctvofms.com",
-        "swayze@mctvofms.com",
-    }
+        emails = {e.strip().lower() for e in env_val.split(",") if e.strip()}
+    else:
+        emails = {
+            "creed@mctvofms.com",
+            "mmc@mctvofms.com",
+            "swayze@mctvofms.com",
+        }
+
+    # Add every client that has an active portal account.
+    try:
+        from services.supabase_client import query_table
+
+        rows = query_table("clients", select="contact_email,portal_user_id") or []
+        for row in rows:
+            if row.get("portal_user_id") and row.get("contact_email"):
+                emails.add(row["contact_email"].strip().lower())
+    except Exception as e:  # fail safe — never lock out the team on a DB hiccup
+        print(f"[auth] Could not load portal client emails: {e}")
+
+    return emails
 
 
 # ── Team Auth ───────────────────────────────────────────────────────────────
