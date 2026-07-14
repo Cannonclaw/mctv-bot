@@ -381,6 +381,176 @@ def _query(entity: str, where: str = "", max_results: int = 1000) -> list[dict]:
     return []
 
 
+# ── Monthly Revenue / MRR ─────────────────────────────────────────────────────
+#
+# The daily briefing's "MRR" is sourced here. Two modes:
+#   mode="all"        -> the P&L's Total Income for the most recent full calendar
+#                        month: every revenue stream (advertising, Digital
+#                        Service / GBP, Screen Share, card fees, net of
+#                        chargebacks), each counted once. This is the default.
+#                        NOTE: a month with a one-time deal (e.g. a large NIL
+#                        sponsorship) will spike, because it is real revenue that
+#                        month even though it is not recurring.
+#   mode="recurring"  -> invoice-derived recurring advertising (advertisers
+#                        invoiced in 2+ of the trailing 3 months, summed at their
+#                        latest monthly amount, so one-off deals drop out) PLUS
+#                        recurring income booked directly to the P&L (Screen
+#                        Share Income). Stable across one-off months.
+
+# Recurring income booked directly to the P&L (via sales receipts / deposits),
+# so it never appears as a customer Invoice. Used by mode="recurring".
+RECURRING_PNL_INCOME_ACCOUNTS = ("Screen Share Income",)
+
+
+def _last_full_month() -> tuple[str, str]:
+    """(start, end) ISO dates for the most recent complete calendar month."""
+    today = date.today()
+    lm_end = today.replace(day=1) - timedelta(days=1)
+    lm_start = lm_end.replace(day=1)
+    return lm_start.isoformat(), lm_end.isoformat()
+
+
+def _find_pnl_row_amount(rows: list, account_name: str) -> float:
+    """Recursively find a P&L account row by name and return its period total."""
+    target = account_name.strip().lower()
+    for row in rows or []:
+        cols = row.get("ColData")
+        if cols and (cols[0].get("value", "") or "").strip().lower() == target:
+            try:
+                return float(cols[-1].get("value") or 0)
+            except (ValueError, TypeError):
+                return 0.0
+        sub = (row.get("Rows") or {}).get("Row", [])
+        if sub:
+            found = _find_pnl_row_amount(sub, account_name)
+            if found:
+                return found
+    return 0.0
+
+
+def _pnl_income_account_amount(account_name: str, start_date: str,
+                               end_date: str) -> float:
+    """Return one income account's total from the P&L report for a date range."""
+    try:
+        endpoint = (
+            f"reports/ProfitAndLoss?start_date={start_date}&end_date={end_date}"
+            "&accounting_method=Accrual&minorversion=65"
+        )
+        resp = _api_request("GET", endpoint)
+        if not resp:
+            return 0.0
+        rows = (resp.get("Rows") or {}).get("Row", [])
+        return _find_pnl_row_amount(rows, account_name)
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[quickbooks_service] P&L lookup for {account_name!r} failed: {e}",
+              flush=True)
+        return 0.0
+
+
+def _pnl_total_income(start_date: str, end_date: str) -> float:
+    """Total Income (all revenue streams) from the P&L for a date range."""
+    try:
+        endpoint = (
+            f"reports/ProfitAndLoss?start_date={start_date}&end_date={end_date}"
+            "&accounting_method=Accrual&minorversion=65"
+        )
+        resp = _api_request("GET", endpoint)
+        if not resp:
+            return 0.0
+        for section in (resp.get("Rows") or {}).get("Row", []):
+            if section.get("group") == "Income":
+                cols = (section.get("Summary") or {}).get("ColData", [])
+                if cols:
+                    try:
+                        return float(cols[-1].get("value") or 0)
+                    except (ValueError, TypeError):
+                        return 0.0
+        return 0.0
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[quickbooks_service] P&L Total Income lookup failed: {e}", flush=True)
+        return 0.0
+
+
+def _recurring_from_invoices(min_months: int, lookback_months: int) -> float:
+    """Recurring advertising from invoices: advertisers billed in >= ``min_months``
+    distinct months of the trailing window, summed at their latest monthly total.
+    One-off deals (billed once) drop out."""
+    today = date.today()
+    m = today.month - (lookback_months - 1)
+    y = today.year
+    while m <= 0:
+        m += 12
+        y -= 1
+    window_start = date(y, m, 1)
+
+    invoices = _query("Invoice", where=f"TxnDate >= '{window_start.isoformat()}'")
+
+    by_customer: dict[str, dict] = {}
+    for inv in invoices:
+        cust = (inv.get("CustomerRef") or {})
+        key = cust.get("value") or cust.get("name")
+        if not key:
+            continue
+        try:
+            txn = date.fromisoformat(inv.get("TxnDate", ""))
+        except (ValueError, TypeError):
+            continue
+        try:
+            amt = float(inv.get("TotalAmt", 0) or 0)
+        except (ValueError, TypeError):
+            amt = 0.0
+        rec = by_customer.setdefault(
+            key, {"months": set(), "latest_date": None, "latest_amt": 0.0}
+        )
+        rec["months"].add((txn.year, txn.month))
+        if rec["latest_date"] is None or txn >= rec["latest_date"]:
+            rec["latest_date"] = txn
+            rec["latest_amt"] = amt
+
+    return sum(
+        rec["latest_amt"]
+        for rec in by_customer.values()
+        if len(rec["months"]) >= min_months
+    )
+
+
+def get_recurring_revenue(mode: str = "all", min_months: int = 2,
+                          lookback_months: int = 3) -> float:
+    """Monthly revenue for the daily briefing, sourced from QuickBooks.
+
+    mode="all" (default): the P&L's Total Income for the most recent full
+        calendar month — every revenue stream at once (advertising, Digital
+        Service / GBP, Screen Share, card fees, net of chargebacks). Spikes in a
+        month with a one-time deal, because that is real revenue that month.
+
+    mode="recurring": invoice-derived recurring advertising (advertisers billed
+        in >= ``min_months`` of the trailing ``lookback_months``, at their latest
+        monthly amount, so one-offs drop out) plus recurring income booked
+        directly to the P&L (``RECURRING_PNL_INCOME_ACCOUNTS``, e.g. Screen
+        Share). Stable across one-off months.
+
+    Returns 0.0 if QuickBooks is not connected or on any error, so callers can
+    fall back to another MRR source.
+    """
+    if not is_connected():
+        return 0.0
+
+    try:
+        lm_start, lm_end = _last_full_month()
+        if mode == "recurring":
+            invoice_recurring = _recurring_from_invoices(min_months, lookback_months)
+            pnl_recurring = sum(
+                _pnl_income_account_amount(acct, lm_start, lm_end)
+                for acct in RECURRING_PNL_INCOME_ACCOUNTS
+            )
+            return round(invoice_recurring + pnl_recurring, 2)
+        # mode == "all"
+        return round(_pnl_total_income(lm_start, lm_end), 2)
+    except Exception as e:  # pragma: no cover - defensive; MRR must never crash the briefing
+        print(f"[quickbooks_service] get_recurring_revenue failed: {e}", flush=True)
+        return 0.0
+
+
 # ── Customer Sync ────────────────────────────────────────────────────────────
 
 def find_qb_customer(display_name: str) -> dict | None:
