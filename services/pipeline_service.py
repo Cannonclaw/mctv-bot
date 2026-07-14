@@ -164,8 +164,15 @@ def create_opportunity(opp_data: dict) -> dict | None:
 
 
 def get_all_opportunities(stage: str | None = None, city: str | None = None,
-                          assigned_rep: str | None = None) -> list[dict]:
-    """Get all pipeline opportunities with optional filters."""
+                          assigned_rep: str | None = None,
+                          deal_type: str | None = "advertiser") -> list[dict]:
+    """Get pipeline opportunities with optional filters.
+
+    Defaults to the advertiser (sales) pipeline. The host pipeline shares the
+    pipeline_opportunities table (deal_type='host') but uses a different stage
+    vocabulary (e.g. 'identified'), so mixing the two breaks the sales views.
+    Pass deal_type=None to fetch every deal type, or 'host' for host deals.
+    """
     endpoint = "pipeline_opportunities?select=*&order=updated_at.desc"
 
     if stage:
@@ -174,6 +181,8 @@ def get_all_opportunities(stage: str | None = None, city: str | None = None,
         endpoint += f"&city=eq.{city}"
     if assigned_rep:
         endpoint += f"&assigned_rep=eq.{assigned_rep}"
+    if deal_type:
+        endpoint += f"&deal_type=eq.{deal_type}"
 
     result = _sb_request("GET", endpoint)
     if result is not None:
@@ -187,6 +196,8 @@ def get_all_opportunities(stage: str | None = None, city: str | None = None,
         opps = [o for o in opps if (o.get("city") or "").lower() == city.lower()]
     if assigned_rep:
         opps = [o for o in opps if o.get("assigned_rep") == assigned_rep]
+    if deal_type:
+        opps = [o for o in opps if (o.get("deal_type") or "advertiser") == deal_type]
     return opps
 
 
