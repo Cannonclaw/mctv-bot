@@ -210,7 +210,7 @@ Return ONLY a valid JSON array of objects. No markdown, no explanation.
 Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry": "Fitness", "estimated_interest": "high", "why": "High foot traffic gym with long member visits", "website": "joesgym.com"}}]"""
 
                     body = json.dumps({
-                        "model": "claude-sonnet-4-20250514",
+                        "model": "claude-sonnet-5",
                         "max_tokens": 4000,
                         "messages": [{"role": "user", "content": prompt}],
                     }).encode("utf-8")

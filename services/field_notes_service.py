@@ -32,7 +32,7 @@ from supabase import create_client, Client
 logger = logging.getLogger("field_notes")
 
 BUCKET = "field-notes-audio"
-CLAUDE_MODEL = "claude-sonnet-4-6"
+CLAUDE_MODEL = "claude-sonnet-5"
 MAX_AUDIO_SECONDS = 600
 CUSTOMER_CANDIDATE_LIMIT = 200
 
