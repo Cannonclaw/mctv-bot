@@ -228,16 +228,36 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
                     with urllib.request.urlopen(req, timeout=60) as resp:
                         result = json.loads(resp.read().decode("utf-8"))
 
-                    text = result.get("content", [{}])[0].get("text", "[]")
+                    # Concatenate every text block in the response (newer
+                    # models may return more than one).
+                    blocks = result.get("content", []) or []
+                    text = "".join(
+                        b.get("text", "") for b in blocks if isinstance(b, dict)
+                    ).strip()
 
-                    # Parse JSON from response
-                    # Strip markdown code fences if present
-                    if "```" in text:
-                        text = text.split("```")[1]
-                        if text.startswith("json"):
-                            text = text[4:]
+                    # Pull the JSON array out of the response, tolerating a
+                    # markdown code fence or explanatory prose around it —
+                    # chattier models often prepend "Here are the prospects:".
+                    import re
 
-                    prospects = json.loads(text.strip())
+                    fence = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
+                    if fence:
+                        candidate = fence.group(1).strip()
+                    else:
+                        arr = re.search(r"\[.*\]", text, re.DOTALL)
+                        candidate = arr.group(0) if arr else text
+
+                    try:
+                        parsed = json.loads(candidate) if candidate else []
+                    except json.JSONDecodeError:
+                        parsed = []
+
+                    # Tolerate a {"prospects": [...]} wrapper shape.
+                    if isinstance(parsed, dict):
+                        parsed = parsed.get("prospects") or next(
+                            (v for v in parsed.values() if isinstance(v, list)), []
+                        )
+                    prospects = parsed if isinstance(parsed, list) else []
 
                     if prospects:
                         st.session_state["generated_prospects"] = prospects
@@ -247,9 +267,8 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
                         st.success(f"Found {len(prospects)} prospects!")
                     else:
                         st.warning("No prospects generated. Try again.")
-
-                except json.JSONDecodeError:
-                    st.error("Failed to parse AI response. Try again.")
+                        with st.expander("Show raw AI response (debug)"):
+                            st.code((text or "(empty response)")[:2000])
                 except Exception as e:
                     st.error(f"Research failed: {e}")
 
