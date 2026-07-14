@@ -27,7 +27,7 @@ from supabase import create_client, Client
 
 logger = logging.getLogger("tasks")
 
-CLAUDE_MODEL = "claude-sonnet-4-6"
+CLAUDE_MODEL = "claude-sonnet-5"
 
 # ---------------------------------------------------------------------------
 # Lazy clients

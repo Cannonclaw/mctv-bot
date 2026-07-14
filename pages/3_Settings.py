@@ -84,7 +84,7 @@ with tab_general:
     st.markdown("#### AI Model")
     model_options = {
         "claude-sonnet-4-5-20250929": "Sonnet 4.5 (Fast, cost-effective - recommended for most proposals)",
-        "claude-opus-4-6": "Opus 4.6 (Highest quality - for premium proposals)",
+        "claude-opus-4-8": "Opus 4.8 (Highest quality - for premium proposals)",
     }
     current_model = config["proposal_settings"].get("model", "claude-sonnet-4-5-20250929")
     selected_model = st.selectbox(
