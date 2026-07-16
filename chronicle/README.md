@@ -22,7 +22,7 @@ compiles one page:
 | Desk | Source | Beat |
 |---|---|---|
 | Gmail | Gmail MCP | Ole Miss, DOOH, Claude/Anthropic, action items, notable personal mail |
-| Work | Microsoft 365 + Google Calendar MCP | Client/prospect/team activity, action items, week's calendar (times in Central) |
+| Work | Microsoft 365 + Google Calendar MCP | Client/prospect/team activity, action items, week's calendar (Central), **and Sent Items — outbound proposals, decks, and outreach the publisher already sent** |
 | Projects | Local repo + GitHub MCP | Recent commits, open PRs/issues, repo task signals, suggested priorities |
 | News | WebSearch | Ole Miss football, DOOH industry, Claude Code/AI, north MS local business, sports business |
 | Capital | WebSearch | **Standing beat:** new business credit lines & credit cards suited to a small MS media/advertising LLC — fintech corporate cards (Brex, Ramp, Divvy/BILL, Mercury), 0% intro-APR small-business cards (Amex, Chase Ink, Capital One), and SBA / bank / revenue-based lines of credit (e.g. tied to the ~$9.7k QB MRR). Report new/changed offers, rates, approval odds, and fit. |
@@ -42,7 +42,9 @@ compiles one page:
 6. **The Works** — state of the MCTV Bot: shipping narrative, PR/issue
    stats, open checklist.
 7. **Prospect Intelligence** — names worth a call, from local and
-   sports-business news plus the work inbox.
+   sports-business news plus the work inbox. Include a **"Sent This Week"**
+   note summarizing the publisher's own outbound outreach (read from Sent
+   Items) so active pipeline motion shows up as movement, not silence.
 8. **The Almanac** — the week's merged calendar, then "looking ahead."
 9. **Colophon** — sourcing note.
 
@@ -81,6 +83,17 @@ edition must be verifiable. Specific rules:
   owner's to-dos, clients, deals, contracts, and collections. In particular,
   every `pending` row in `tasks` is a Docket item — fold them in, ranked by
   priority (`high` → HIGH pill) and due date, and check off completed ones.
+- **Reconcile the Docket against Sent mail before ranking it.** The `tasks`
+  board does NOT auto-close when the publisher emails the deliverable, so a
+  finished item can sit `pending` for days. Before writing The Docket, search
+  **Sent Items in both mailboxes** (Outlook `CREED@MCTVOFMS.COM` via the M365
+  MCP `folderName: "Sent Items"`, and Gmail `in:sent`) for every open
+  proposal / deck / renewal / contract task. If it already went out — a
+  matching recipient and sent date, with an attachment where a deck is
+  expected — mark it done and do NOT headline it as overdue. This exact miss
+  produced a wrong edition on 2026-07-16: the Old Dominick (sent Jul 14) and
+  Story Financial (sent Jul 13) decks were reported as still owed after they
+  had shipped, because the desks read the inbox but never the Sent folder.
 - **When a prior edition is proven wrong, print a Corrections & Amplifications
   box.** Don't silently edit history — own it on the page.
 - **Cross-check numbers.** Dollar figures, day-counts, screen counts, and
