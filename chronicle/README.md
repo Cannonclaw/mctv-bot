@@ -45,8 +45,15 @@ compiles one page:
    sports-business news plus the work inbox. Include a **"Sent This Week"**
    note summarizing the publisher's own outbound outreach (read from Sent
    Items) so active pipeline motion shows up as movement, not silence.
-8. **The Almanac** — the week's merged calendar, then "looking ahead."
-9. **Colophon** — sourcing note.
+8. **The Homestead** — standing section (added 2026-07-17 at the publisher's
+   request): the home renovation and related insurance claim, tracked until
+   the work is complete. Read the contractor (Paul Davis) and insurer
+   (Liberty Mutual) threads in Gmail — inbox AND Sent — each edition. Report:
+   what's settled, what's open, and a **days-since-last-reply counter for
+   every unanswered outbound thread** (silence is the story). Names, claim
+   numbers, and dollar figures stay in the edition only, never in this repo.
+9. **The Almanac** — the week's merged calendar, then "looking ahead."
+10. **Colophon** — sourcing note.
 
 ## Design tokens
 
