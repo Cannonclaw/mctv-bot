@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-07-17 — Self-Serve Rate Card
+
+- Self-serve agreement requests from mctvofms.com/rate-quote now surface in a Rate Card inbox (`contract_requests`), with shareable prefilled quote links and the staged Phase-1 pricing flip in `scripts/023_self_serve_rate_card.sql` (run part 2 only on Creed's go-ahead)
+
+---
+
 ## 2026-03-23 — Sales Pipeline Engine
 
 ### New Features

@@ -52,6 +52,13 @@ def venue_rates() -> list[dict[str, Any]]:
         r["rate_4wk"] = float(r["rate_4wk"] or 0)
         r["weekly_impressions"] = float(r["weekly_impressions"] or 0)
         r["loop_min"] = float(r["loop_min"] or 0)
+    # Defense-in-depth: apply the Phase-1 venue cap from rate_model_params even
+    # if the capped view flip hasn't run yet (harmless double-cap after it has),
+    # so tiering downstream always sees capped rates.
+    cap = model_params().get("venue_cap_4wk")
+    if cap:
+        for r in rows:
+            r["rate_4wk"] = min(r["rate_4wk"], float(cap))
     rows.sort(key=lambda r: r["rate_4wk"], reverse=True)
     return rows
 
