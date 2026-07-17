@@ -57,15 +57,21 @@ apply_tiers(rows)
 summary = market_rate_summary(rows)
 
 st.markdown("## \U0001F4B5 Rate Card")
+# cap/discount only exist after the Phase-1 flip (scripts/023 section 2) runs —
+# describing them earlier would contradict the uncapped rates shown below
+_cap_caption = (
+    f"capped ${params.get('venue_cap_4wk')}/venue · "
+    f"{params.get('volume_discount_pct', 20)}% volume discount at "
+    f"{params.get('volume_discount_screens', 10)}+ screens (custom builds). "
+    if params.get("venue_cap_4wk") else ""
+)
 st.caption(
     "OOH-style impression pricing, computed **live**: NTV360 traffic × "
     "exposures (dwell ÷ the venue's *actual* loop from the latest sweep) "
     "× screen coverage. "
     f"CPM **${params.get('cpm', 6)}** · exposure cap {params.get('exposure_cap', 6)}. "
     f"4-wk rate = max(${params.get('floor_4wk', 25)} floor, impr×CPM), "
-    f"capped ${params.get('venue_cap_4wk', 175)}/venue · "
-    f"{params.get('volume_discount_pct', 20)}% volume discount at "
-    f"{params.get('volume_discount_screens', 10)}+ screens (custom builds). "
+    + _cap_caption +
     "Knobs live in `rate_model_params`; venue inputs in `venue_rate_inputs`."
 )
 
@@ -192,6 +198,12 @@ if ql_biz.strip():
 st.code(QUOTE_BASE + "?" + "&".join(parts))
 st.caption("text or email this link — the client sees their quote pre-built "
            "and can sign self-serve.")
+st.warning(
+    "Prefilled links need the **v2.0** calculator live at mctvofms.com/rate-quote — "
+    "the old v1.6 page ignores them (opens blank). Check the page footer version "
+    "before sending links.",
+    icon="⚠️",
+)
 
 st.divider()
 
