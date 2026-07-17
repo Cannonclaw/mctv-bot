@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MCTV Advertising Agreement &amp; Payment Authorization</title>
+<style>
+  :root{
+    --navy:#1B1F3B; --gold:#C5A55A; --gold-d:#a8863f;
+    --ink:#20242e; --muted:#6b7180; --line:#c7ccd8; --line2:#e3e6ee;
+    --cream:#f6f3ea; --field:#fff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{background:#dfe2ea; color:var(--ink);
+    font-family:Arial,"Helvetica Neue",Helvetica,sans-serif; font-size:15px; line-height:1.35;}
+  .sheet{max-width:820px; margin:0 auto; background:#fff; min-height:100vh;
+    box-shadow:0 2px 24px rgba(0,0,0,.12);}
+
+  /* Header */
+  .band{background:var(--navy); color:#fff; padding:20px 30px 18px; position:relative; border-bottom:3px solid var(--gold);}
+  .band .kicker{font-size:10px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; font-weight:bold;}
+  .band h1{font-size:24px; font-weight:bold; margin-top:6px; line-height:1.08;}
+  .band .logo{position:absolute; top:20px; right:30px; height:38px;}
+
+  .content{padding:20px 30px 30px;}
+
+  .seclabel{font-size:11px; letter-spacing:2.4px; text-transform:uppercase; color:var(--gold-d);
+    font-weight:bold; border-bottom:1.4px solid var(--line); padding-bottom:5px; margin:22px 0 12px;
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:4px;}
+  .seclabel:first-child{margin-top:4px;}
+  .seclabel .r{font-size:10px; letter-spacing:1px; color:var(--muted); font-weight:normal;}
+
+  /* Inputs */
+  label.f{display:block;}
+  .f .fl{font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); font-weight:bold; margin-bottom:4px;}
+  input.i, textarea.i{width:100%; border:1.4px solid var(--line); background:var(--field); border-radius:6px;
+    padding:9px 11px; font-family:inherit; font-size:15px; color:var(--navy); font-weight:600;}
+  input.i:focus, textarea.i:focus{outline:none; border-color:var(--gold-d); box-shadow:0 0 0 3px rgba(197,165,90,.18);}
+  input.i::placeholder, textarea.i::placeholder{color:#aab0bd; font-weight:400;}
+  .frow{display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
+  .frow > *{flex:1; min-width:120px;}
+  .grow2{flex:2 !important;} .grow3{flex:3 !important;}
+  .prefix{position:relative;}
+  .prefix input.i{padding-left:22px;}
+  .prefix::before{content:"$"; position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); font-weight:700; pointer-events:none;}
+
+  /* Term options as tap cards */
+  .opts{display:flex; gap:12px; flex-wrap:wrap;}
+  .opts .opt{flex:1; min-width:210px; position:relative;}
+  .opts .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opts .opt label{display:block; border:2px solid var(--line); border-radius:9px; padding:14px 16px; cursor:pointer; background:#fff; height:100%; transition:border-color .12s, background .12s;}
+  .opts .opt label .ol{font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted); font-weight:bold;}
+  .opts .opt label .price{font-size:26px; font-weight:bold; color:var(--navy); line-height:1; margin-top:5px;}
+  .opts .opt label .price span{font-size:12px; color:var(--muted); font-weight:normal;}
+  .opts .opt label .bonus{font-size:12.5px; font-weight:bold; color:var(--gold-d); margin-top:8px;}
+  .opts .opt label .meta{font-size:11.5px; color:var(--ink); margin-top:5px;}
+  .opts .opt label .save{font-size:11.5px; color:var(--navy); margin-top:8px; padding-top:7px; border-top:1px dashed var(--line);}
+  .opts .opt label .save b{color:var(--gold-d);}
+  .opts .opt input:checked + label{border-color:var(--gold-d); background:#fbf7ec; box-shadow:0 0 0 3px rgba(197,165,90,.16);}
+  .opts .opt .ribbon{position:absolute; top:-9px; right:12px; background:var(--navy); color:var(--gold);
+    font-size:9px; font-weight:bold; letter-spacing:1px; padding:4px 9px; border-radius:5px; z-index:2;}
+
+  .fine{font-size:11px; color:var(--muted); line-height:1.5; margin-top:14px; background:#f7f8fa; border-left:3px solid var(--gold); padding:11px 14px; border-radius:0 6px 6px 0;}
+  .fine b{color:var(--navy);}
+
+  .pdivider{background:var(--navy); color:#fff; margin:24px -30px 0; padding:11px 30px;
+    font-size:12px; letter-spacing:2.4px; text-transform:uppercase; font-weight:bold;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;}
+  .pdivider .g{color:var(--gold); font-size:10px; letter-spacing:1px; font-weight:normal;}
+  .pbody{padding-top:16px;}
+
+  /* Payment method cards with radio */
+  .pm{display:flex; gap:14px; flex-wrap:wrap; margin-top:4px;}
+  .pm .card{flex:1; min-width:260px; border:2px solid var(--line); border-radius:9px; overflow:hidden;}
+  .pm .card .cap{padding:10px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;}
+  .pm .card.ach .cap{background:var(--navy); color:#fff;}
+  .pm .card.cc .cap{background:#efe7d4; color:var(--navy);}
+  .pm .card .cap .t{font-size:14px; font-weight:bold; display:flex; align-items:center; gap:9px;}
+  .pm .card .cap .badge{font-size:9px; font-weight:bold; letter-spacing:.6px; padding:3px 8px; border-radius:4px;}
+  .pm .card.ach .cap .badge{background:var(--gold); color:var(--navy);}
+  .pm .card.cc .cap .badge{background:var(--navy); color:var(--gold);}
+  .pm .card .dot{width:16px; height:16px; border-radius:50%; border:2px solid currentColor; position:relative; flex:0 0 auto;}
+  .pm .card input.pmradio{position:absolute; opacity:0; pointer-events:none;}
+  .pm .card input.pmradio:checked + .cap .dot::after{content:""; position:absolute; inset:3px; border-radius:50%; background:currentColor;}
+  .pm .card .cbody{padding:13px 14px 15px;}
+  .pm .card.selected{border-color:var(--gold-d); box-shadow:0 0 0 3px rgba(197,165,90,.16);}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .chip{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); border:1.4px solid var(--line); border-radius:20px; padding:6px 12px; cursor:pointer; user-select:none;}
+  .chip input{position:absolute; opacity:0; pointer-events:none;}
+  .chip .bx{width:14px; height:14px; border:1.6px solid var(--navy); border-radius:4px; display:inline-block; position:relative;}
+  .chip input:checked ~ .bx{background:var(--gold-d); border-color:var(--gold-d);}
+  .chip input:checked ~ .bx::after{content:"✓"; color:#fff; font-size:10px; position:absolute; top:-2px; left:1px; font-weight:bold;}
+  .chip.round .bx{border-radius:50%;}
+
+  .auth{font-size:11px; color:var(--muted); line-height:1.5; margin-top:16px;}
+  .auth b{color:var(--navy);}
+
+  /* Signature */
+  .sigwrap{margin-top:16px;}
+  .sigpad{position:relative; border:2px solid var(--line); border-radius:9px; background:#fffdf7; height:150px; overflow:hidden; touch-action:none;}
+  .sigpad canvas{display:block; width:100%; height:100%;}
+  .sigpad .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#c2c7d3; font-size:15px; letter-spacing:1px; pointer-events:none;}
+  .sigpad .base{position:absolute; left:18px; right:18px; bottom:34px; border-bottom:1.4px solid var(--line);}
+  .sigpad .xmark{position:absolute; left:18px; bottom:36px; color:var(--muted); font-size:18px; font-weight:bold; pointer-events:none;}
+  .sigmeta{display:flex; gap:14px; align-items:flex-end; margin-top:12px; flex-wrap:wrap;}
+  .sigmeta .f{flex:1; min-width:150px;}
+  .sigclear{background:none; border:1.4px solid var(--line); color:var(--muted); border-radius:7px; padding:8px 14px; font-size:13px; font-weight:bold; cursor:pointer; font-family:inherit;}
+
+  /* Toolbar */
+  .toolbar{position:sticky; bottom:0; background:rgba(27,31,59,.97); backdrop-filter:blur(4px); padding:12px 30px;
+    display:flex; gap:12px; align-items:center; justify-content:flex-end; border-top:2px solid var(--gold); flex-wrap:wrap;}
+  .toolbar .note{margin-right:auto; color:#c9cede; font-size:11px;}
+  .btn{font-family:inherit; font-size:15px; font-weight:bold; border-radius:8px; padding:12px 22px; cursor:pointer; border:none;}
+  .btn.ghost{background:transparent; color:#c9cede; border:1.5px solid #4a5070;}
+  .btn.gold{background:var(--gold); color:var(--navy);}
+  .btn.gold:active{background:var(--gold-d);}
+
+  .esign{font-size:10.5px; color:var(--muted); line-height:1.5; margin-top:14px; border-top:1px dashed var(--line); padding-top:10px;}
+
+  .foot{background:var(--navy); color:#c9cede; padding:12px 30px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:11px;}
+  .foot b{color:#fff;} .foot .g{color:var(--gold);}
+
+  /* Print / saved copy */
+  @page{size:letter; margin:0.35in;}
+  @media print{
+    html,body{background:#fff;}
+    .sheet{max-width:none; box-shadow:none; min-height:0;}
+    .toolbar{display:none !important;}
+    .band, .pdivider{ -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    input.i, textarea.i{border:none; border-bottom:1px solid #999; border-radius:0; box-shadow:none; padding:2px 2px; font-size:12px;}
+    .opts .opt label{padding:9px 11px;}
+    .sigpad{background:#fff;}
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .content{padding:14px 22px;}
+    .seclabel{margin:12px 0 8px;}
+    body{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet" id="sheet">
+
+  <div class="band">
+    <img class="logo" src="data:image/png;base64,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" alt="MCTV">
+    <div class="kicker">MCTV Elite Advertising · North Mississippi</div>
+    <h1>Advertising Agreement &amp; Payment Authorization</h1>
+  </div>
+
+  <div class="content">
+
+    <!-- CLIENT & PACKAGE -->
+    <div class="seclabel">The Agreement <span class="r">Complete with your MCTV representative</span></div>
+    <div class="frow">
+      <label class="f grow2"><span class="fl">Client / Business Name</span><input class="i" id="client" placeholder="Business name"></label>
+      <label class="f"><span class="fl">Authorized Signer</span><input class="i" id="signer" placeholder="Full name"></label>
+    </div>
+    <div class="frow">
+      <label class="f"><span class="fl">Market / City</span><input class="i" placeholder="e.g. Starkville, MS"></label>
+      <label class="f grow2"><span class="fl">Package / Screens</span><input class="i" placeholder="e.g. All 30 Starkville venues — full market"></label>
+      <label class="f"><span class="fl">Monthly Rate</span><span class="prefix"><input class="i" id="rate" inputmode="decimal" placeholder="0" value=""></span></label>
+    </div>
+
+    <!-- TERM -->
+    <div class="seclabel">Choose Your Term <span class="r">Prepay &amp; save — bonus months added free</span></div>
+    <div class="opts">
+      <div class="opt">
+        <input type="radio" name="term" id="t_m2m" value="m2m">
+        <label for="t_m2m">
+          <div class="ol">Month-to-Month</div>
+          <div class="price" data-price="m2m">$0<span>/mo</span></div>
+          <div class="bonus">&nbsp;</div>
+          <div class="meta">Billed monthly · cancel anytime with 30 days&rsquo; notice</div>
+          <div class="save" data-save="m2m">Standard flexible option</div>
+        </label>
+      </div>
+      <div class="opt">
+        <input type="radio" name="term" id="t_6" value="6">
+        <label for="t_6">
+          <div class="ol">6-Month Prepay</div>
+          <div class="price" data-price="6">$0<span> up front</span></div>
+          <div class="bonus">+ 7th month FREE</div>
+          <div class="meta" data-meta="6">7 months of service</div>
+          <div class="save" data-save="6">Prepay bonus</div>
+        </label>
+      </div>
+      <div class="opt">
+        <div class="ribbon">RECOMMENDED · BEST VALUE</div>
+        <input type="radio" name="term" id="t_12" value="12">
+        <label for="t_12">
+          <div class="ol">12-Month Prepay</div>
+          <div class="price" data-price="12">$0<span> up front</span></div>
+          <div class="bonus">+ 13th &amp; 14th months FREE</div>
+          <div class="meta" data-meta="12">14 months of service</div>
+          <div class="save" data-save="12">Best prepay bonus</div>
+        </label>
+      </div>
+    </div>
+
+    <div class="fine">
+      <b>Agreement.</b> The Client engages MCTV Elite Advertising to run its advertising across the venues in the package above at the rate shown. Creative production, quarterly content refreshes, full content ownership, and real-time NTV360 analytics are included at no additional charge. <b>This agreement renews monthly and remains in effect unless canceled with 30 days&rsquo; written notice.</b> MCTV may decline content that is unlawful or unsuitable for host venues. Governed by the laws of the State of Mississippi.
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="pdivider">Payment Information <span class="g">ACH — no fee · Card — +3.5% surcharge</span></div>
+    <div class="pbody">
+
+      <div class="frow">
+        <label class="f grow2"><span class="fl">Billing Contact Name</span><input class="i" placeholder="Name"></label>
+        <label class="f"><span class="fl">Phone</span><input class="i" inputmode="tel" placeholder="(000) 000-0000"></label>
+        <label class="f grow2"><span class="fl">Email</span><input class="i" inputmode="email" placeholder="name@email.com"></label>
+      </div>
+      <div class="frow">
+        <label class="f grow3"><span class="fl">Billing Address</span><input class="i" placeholder="Street address"></label>
+        <label class="f"><span class="fl">City</span><input class="i"></label>
+        <label class="f" style="max-width:90px;"><span class="fl">State</span><input class="i"></label>
+        <label class="f" style="max-width:120px;"><span class="fl">ZIP</span><input class="i" inputmode="numeric"></label>
+        <label class="f"><span class="fl">Amount Authorized</span><span class="prefix"><input class="i" id="amount" inputmode="decimal" placeholder="0.00"></span></label>
+      </div>
+
+      <div class="pm">
+        <div class="card ach" id="card-ach">
+          <input type="radio" name="pmethod" id="pm_ach" class="pmradio" value="ach">
+          <label class="cap" for="pm_ach"><span class="t"><span class="dot"></span> ACH · Bank Draft</span><span class="badge">PREFERRED · NO FEE</span></label>
+          <div class="cbody">
+            <div class="chips">
+              <label class="chip round"><input type="checkbox"><span class="bx"></span> Checking</label>
+              <label class="chip round"><input type="checkbox"><span class="bx"></span> Savings</label>
+            </div>
+            <div class="frow"><label class="f"><span class="fl">Bank Name</span><input class="i"></label><label class="f"><span class="fl">Name on Account</span><input class="i"></label></div>
+            <div class="frow" style="margin-bottom:0;"><label class="f"><span class="fl">Routing #</span><input class="i" inputmode="numeric"></label><label class="f"><span class="fl">Account #</span><input class="i" inputmode="numeric"></label></div>
+          </div>
+        </div>
+        <div class="card cc" id="card-cc">
+          <input type="radio" name="pmethod" id="pm_cc" class="pmradio" value="cc">
+          <label class="cap" for="pm_cc"><span class="t"><span class="dot"></span> Credit Card</span><span class="badge">+3.5% SURCHARGE</span></label>
+          <div class="cbody">
+            <div class="chips">
+              <label class="chip"><input type="checkbox"><span class="bx"></span> Visa</label>
+              <label class="chip"><input type="checkbox"><span class="bx"></span> Mastercard</label>
+              <label class="chip"><input type="checkbox"><span class="bx"></span> Amex</label>
+              <label class="chip"><input type="checkbox"><span class="bx"></span> Discover</label>
+            </div>
+            <div class="frow"><label class="f grow2"><span class="fl">Cardholder Name</span><input class="i"></label><label class="f grow2"><span class="fl">Card Number</span><input class="i" inputmode="numeric"></label></div>
+            <div class="frow" style="margin-bottom:0;"><label class="f"><span class="fl">Exp.</span><input class="i" placeholder="MM/YY"></label><label class="f"><span class="fl">CVV</span><input class="i" inputmode="numeric"></label><label class="f"><span class="fl">Billing ZIP</span><input class="i" inputmode="numeric"></label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth">
+        <b>Authorization.</b> By signing below, the undersigned authorizes MCTV Elite Advertising to charge the Amount Authorized above to the account provided for the selected term, in accordance with NACHA rules for ACH debits and applicable card-network rules. This agreement renews monthly and remains in effect until canceled with 30 days&rsquo; written notice. A $30 fee applies to returned/NSF transactions. The undersigned certifies they are an authorized user of the account listed and are authorized to bind the Client.
+      </div>
+
+      <!-- SIGNATURE -->
+      <div class="sigwrap">
+        <div class="sigpad" id="sigpad">
+          <div class="base"></div><div class="xmark">✕</div>
+          <div class="ph" id="sigph">Sign here with finger or stylus</div>
+          <canvas id="sigcanvas"></canvas>
+        </div>
+        <div class="sigmeta">
+          <label class="f"><span class="fl">Print Name</span><input class="i" id="printname"></label>
+          <label class="f" style="max-width:170px;"><span class="fl">Title</span><input class="i" placeholder="Owner / Authorized Rep"></label>
+          <label class="f" style="max-width:170px;"><span class="fl">Date</span><input class="i" id="sigdate"></label>
+          <button type="button" class="sigclear" id="clearsig">Clear signature</button>
+        </div>
+      </div>
+
+      <div class="esign">Electronic signatures are valid and enforceable under the Mississippi Uniform Electronic Transactions Act (Miss. Code &sect; 75-12-1 et seq.). By signing above, the parties agree to execute this agreement electronically; the signed copy has the same force as a handwritten signature.</div>
+
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><b>MCTV Digital, Inc.</b> · MCTV Elite Advertising · <span class="g">www.mctvofms.com</span></div>
+    <div>Account Manager: <b id="repname">Swayze Hollingsworth</b> <span class="g">· (662) 907-0404</span></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="note">Fill in the fields, select a term &amp; payment method, sign, then tap <b>Save / Print</b> to capture the signed copy (Save as PDF).</div>
+    <button type="button" class="btn ghost" id="resetbtn">Reset form</button>
+    <button type="button" class="btn gold" id="savebtn">Save / Print signed copy</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var fmt = new Intl.NumberFormat('en-US', {maximumFractionDigits:0});
+  var fmt2 = new Intl.NumberFormat('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var rate = document.getElementById('rate');
+  var amount = document.getElementById('amount');
+
+  function num(v){ v = parseFloat(String(v).replace(/[^0-9.]/g,'')); return isNaN(v)?0:v; }
+
+  function recalc(){
+    var r = num(rate.value);
+    var m2m = r, six = r*6, twelve = r*12;
+    var effSix = six/7, effTwelve = twelve/14;
+    setPrice('m2m', r? '$'+fmt.format(r) : '$0', '/mo');
+    setPrice('6', r? '$'+fmt.format(six) : '$0', ' up front');
+    setPrice('12', r? '$'+fmt.format(twelve) : '$0', ' up front');
+    setText('[data-meta="6"]', r? '7 months of service · ≈$'+fmt.format(effSix)+'/mo effective' : '7 months of service');
+    setText('[data-meta="12"]', r? '14 months of service · ≈$'+fmt.format(effTwelve)+'/mo effective' : '14 months of service');
+    setText('[data-save="6"]', r? 'You save $'+fmt.format(r)+' (one month free)' : 'Prepay bonus — 1 month free');
+    setText('[data-save="12"]', r? 'You save $'+fmt.format(r*2)+' (two months free)' : 'Prepay bonus — 2 months free');
+    syncAmount();
+  }
+  function setPrice(key, big, small){
+    var el = document.querySelector('.price[data-price="'+key+'"]');
+    if(el) el.innerHTML = big + '<span>'+small+'</span>';
+  }
+  function setText(sel, txt){ var el=document.querySelector(sel); if(el) el.textContent = txt; }
+
+  function selectedTerm(){ var el=document.querySelector('input[name="term"]:checked'); return el?el.value:null; }
+  function syncAmount(){
+    var r = num(rate.value), t = selectedTerm();
+    if(!t || !r) return;
+    var v = t==='m2m'? r : (t==='6'? r*6 : r*12);
+    amount.value = fmt2.format(v);
+  }
+  rate.addEventListener('input', recalc);
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="term"]'), function(el){ el.addEventListener('change', syncAmount); });
+
+  // payment method highlight
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="pmethod"]'), function(el){
+    el.addEventListener('change', function(){
+      document.getElementById('card-ach').classList.toggle('selected', document.getElementById('pm_ach').checked);
+      document.getElementById('card-cc').classList.toggle('selected', document.getElementById('pm_cc').checked);
+    });
+  });
+
+  // date default = today (locale)
+  try {
+    var d = new Date();
+    var s = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+    document.getElementById('sigdate').value = s;
+  } catch(e){}
+
+  // Signature pad
+  var pad = document.getElementById('sigpad');
+  var canvas = document.getElementById('sigcanvas');
+  var ph = document.getElementById('sigph');
+  var ctx, drawing=false, dirty=false, last=null;
+  function sizeCanvas(){
+    var rct = pad.getBoundingClientRect();
+    var ratio = window.devicePixelRatio || 1;
+    // preserve existing drawing
+    var prev = dirty ? canvas.toDataURL() : null;
+    canvas.width = Math.round(rct.width * ratio);
+    canvas.height = Math.round(rct.height * ratio);
+    ctx = canvas.getContext('2d');
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#12203a';
+    if(prev){ var img=new Image(); img.onload=function(){ ctx.drawImage(img,0,0,rct.width,rct.height); }; img.src=prev; }
+  }
+  function pos(e){
+    var rct = canvas.getBoundingClientRect();
+    var p = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    return {x:p.clientX-rct.left, y:p.clientY-rct.top};
+  }
+  function start(e){ drawing=true; last=pos(e); if(!dirty){dirty=true; ph.style.display='none';} e.preventDefault(); }
+  function move(e){ if(!drawing) return; var p=pos(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p; e.preventDefault(); }
+  function end(e){ drawing=false; }
+  canvas.addEventListener('pointerdown', start);
+  canvas.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', end);
+  // touch fallback
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+  document.getElementById('clearsig').addEventListener('click', function(){
+    ctx.clearRect(0,0,canvas.width,canvas.height); dirty=false; ph.style.display='';
+  });
+  window.addEventListener('resize', sizeCanvas);
+  setTimeout(sizeCanvas, 30);
+
+  // Persist typed values into attributes so they print reliably
+  function lockValues(){
+    Array.prototype.forEach.call(document.querySelectorAll('input.i, textarea.i'), function(el){ el.setAttribute('value', el.value); });
+  }
+  document.getElementById('savebtn').addEventListener('click', function(){ lockValues(); window.print(); });
+  document.getElementById('resetbtn').addEventListener('click', function(){
+    if(!confirm('Clear all fields and the signature for a new client?')) return;
+    Array.prototype.forEach.call(document.querySelectorAll('input.i, textarea.i'), function(el){ el.value=''; });
+    Array.prototype.forEach.call(document.querySelectorAll('input[type="radio"], input[type="checkbox"]'), function(el){ el.checked=false; });
+    document.getElementById('card-ach').classList.remove('selected');
+    document.getElementById('card-cc').classList.remove('selected');
+    ctx.clearRect(0,0,canvas.width,canvas.height); dirty=false; ph.style.display='';
+    try{ var d=new Date(); document.getElementById('sigdate').value=(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear(); }catch(e){}
+    recalc(); window.scrollTo(0,0);
+  });
+
+  recalc();
+})();
+</script>
+</body>
+</html>
