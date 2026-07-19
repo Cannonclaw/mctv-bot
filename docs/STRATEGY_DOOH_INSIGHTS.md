@@ -182,6 +182,23 @@ detail.
   programmatic DOOH: "During COVID an audit found over 80% of checked
   venues were indefinitely closed but still selling ad space on the major
   exchanges. Nobody was checking. We drive past our screens every week."
+- **Say it out loud — nobody else is.** The discussion's sharpest
+  observation: networks that *can* offer delivery assurance "aren't
+  talking about it," evidence of a disconnect between media companies and
+  where the buyer conversation actually is. The gap isn't just having
+  verification — it's marketing it. MCTV should state its delivery
+  standards everywhere a buyer looks: proposals, the website, contracts.
+  Being the network that talks about screens-on, venues-open, plays-logged
+  is a first-mover positioning win that costs nothing.
+- **The airport-network gold standard.** The discussion held up a major
+  airport network as the model: screens government-verified (FAA) to be
+  where they say they are, on and functional (they carry critical
+  messaging), physically secured, backed by first-party data. That is the
+  bar for credible place-based media. MCTV's local-scale version of each
+  element: venue partnerships give us first-party context (venue type,
+  foot traffic, clientele), our local team is the physical verification
+  layer, and indoor placement means secured, maintained screens. Frame it
+  as "airport-grade delivery standards at local scale."
 
 ## Insight 5 — The future: DOOH/CTV convergence, and owning what we are
 
@@ -191,6 +208,25 @@ detail.
 mobile products, the speaker sees a place for DOOH to own what it is,
 with **specific networks getting involved in the conversation** rather
 than being abstracted away by exchanges.
+
+Three further points from the closing discussion:
+
+- **DOOH's biggest problems are infrastructure and branding.** "I know
+  what a CTV ad is. What's a digital out-of-home?" The category term
+  covers everything from an enriched 1:1 experience in a private airport
+  lounge to "the screen in my local coffee roaster that's never been on."
+  The label itself confuses buyers.
+- **New formats take longer than everyone thinks.** The speaker's biggest
+  repeated mistake: underestimating adoption timelines for voice search,
+  AR, and similar "sounds great, remains in the future" technologies.
+  Autonomous-vehicle screens may eventually expand the market, but "I
+  don't know that that solves the problems for out-of-home."
+- **Watch Roku/BrightSign.** Roku owns BrightSign, the hardware player
+  behind ~2 million real-world screens, with a deliberate platform
+  strategy (integrating with hundreds of CMSs). A consumer brand like
+  Roku putting its name on real-world screens is one plausible answer to
+  DOOH's branding problem — and would reshape the landscape independent
+  networks operate in.
 
 **Why this matters for MCTV:** Convergence pressure will tempt venue
 networks to rebrand as pseudo-CTV to chase budgets — exactly the
@@ -206,14 +242,30 @@ buyers will trust with converged budgets.
 - **Never misdescribe the inventory.** We sell venue screens with real
   foot traffic — not "CTV," not "streaming." Clear labeling is a
   competitive weapon, not a limitation.
+- **Sell the concrete thing, not the category.** DOOH has a branding
+  problem; local business owners have it worse — "digital out-of-home"
+  means nothing to them. MCTV's client-facing language should stay
+  concrete: "your ad on 25 named screens in the gyms, restaurants, and
+  coffee shops your customers already visit." Reserve industry jargon for
+  agency conversations; audit proposal prompts (`config/prompts.json`)
+  to keep the diner-table voice free of category terms.
 - **Stay in the conversation.** "Specific networks getting involved" is
   the growth path: publish our screen counts, venue lists, and delivery
   standards so MCTV is legible to any regional agency or brand buyer
   planning across channels — the network that can answer all three buyer
   questions (know / plan / measure) wins the line item.
-- **Watch the in-car/new-format space** for local-scale opportunities,
-  but only where we can uphold the same transparency and delivery
-  standards as our owned venues.
+- **Fundamentals over futurism.** The discussion's hardest-won lesson is
+  that new formats (voice, AR, in-car) take far longer to hit mainstream
+  than expected. MCTV's edge compounds through boring fundamentals —
+  screens on, venues open, plays logged, results reported — not through
+  chasing formats. Watch the in-car/new-format space for local-scale
+  opportunities, but only where we can uphold the same transparency and
+  delivery standards as our owned venues.
+- **Landscape watch item: Roku/BrightSign.** If Roku turns BrightSign's
+  ~2M-screen footprint into a consumer-branded DOOH platform, buyer
+  expectations for independent networks (hardware, CMS integrations,
+  measurement APIs) will shift. No action needed now; revisit when
+  evaluating any screen-hardware or CMS decision.
 
 ---
 
@@ -230,6 +282,8 @@ buyers will trust with converged budgets.
 | 7 | Delivery Guarantee (dark-screen make-good) as stated product feature | `config/config.json` trust points, contract clause/value recap | Small |
 | 8 | Venue check-in / screen uptime checklist norm (auditable log) | Team norm; optionally a simple tracker in `3_Settings.py` or Supabase table | Medium |
 | 9 | "80% closed venues" anecdote + never-misdescribe-inventory rule in sales talk tracks | This doc → team norms | Small |
+| 10 | Publish delivery standards publicly ("screens on, venues open, plays logged") — nobody else is talking about it | Website/SEO content (`seo/`), proposal boilerplate | Small |
+| 11 | Jargon audit: keep client-facing copy concrete ("25 named screens in venues your customers visit"), no "DOOH"/category terms | `config/prompts.json` forbidden-words list + section prompts | Small |
 
 No application code has been changed yet — this document establishes the
 strategy; items above land as separate changes once approved.
