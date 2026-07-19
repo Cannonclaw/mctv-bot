@@ -64,6 +64,25 @@ a Didot/Bodoni stack, body is Georgia, utility is a condensed sans.
 Every edition carries art: a lead editorial cartoon (inline SVG, theme-aware), a spot cartoon above each Wire column, the Newsroom staff strip (grayscale team headshots from assets/team/ as base64 data URIs), and the MCTV logo in the colophon — see the ART comment block in template.html. Favicon is always 🗞️; artifact title format is
 `The Cannon Chronicle — <date>`.
 
+## The Radio Edition (standing, added 2026-07-19)
+
+Every edition also ships as audio — a 4–5 minute drive-friendly narration
+the publisher can play in the truck. After publishing the artifact:
+
+1. Write a ~750-word radio script from the edition: greeting/dateline →
+   front page → the Docket (numbered, punchy) → Homestead counters → Wire
+   in sixty seconds → Almanac (today + tomorrow) → sign-off ("Hotty Toddy,
+   and drive safe"). Spell out numbers and abbreviations for the ear
+   (e.g. "D M V", "ninety seven hundred dollars").
+2. Synthesize offline — cloud TTS hosts are blocked by the container proxy;
+   SVOX Pico (`pico2wave`, apt `libttspico-utils`) + `lameenc` (pip) is the
+   proven pipeline at 1.07x tempo, 64 kbps mono MP3.
+3. Deliver via SendUserFile alongside the paper, named
+   `CannonChronicleRadio_YYYY-MM-DD.mp3`, captioned with the run time.
+
+The container is ephemeral: reinstall `libttspico-utils` (apt) and
+`lameenc` (pip) whenever a fresh container starts.
+
 ## Rules for the daily job
 
 - Only report facts actually found; never fabricate stories, emails, or URLs.
