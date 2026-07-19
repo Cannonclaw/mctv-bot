@@ -5,10 +5,8 @@ integration, full-funnel planning, and measurement (transcribed audio,
 July 2026). This document translates those insights into concrete changes
 to MCTV Elite Advertising's operational norms, sales strategy, and product.
 
-**Status:** Living document. The source discussion was captured in part —
-the segment on delivery verification / QC (the "Moat/IAS for out-of-home"
-question) was cut off mid-answer and will be folded in when the remaining
-audio arrives.
+**Status:** Living document. Complete through the delivery-verification
+and future-of-DOOH segments of the source discussion.
 
 ---
 
@@ -142,23 +140,80 @@ ladder around them.
   strongest measurement artifacts from the flight (best QR month, lift
   anecdotes) as its opening argument.
 
-## Insight 4 — Delivery assurance (verification / "Moat for OOH") — PENDING
+## Insight 4 — Delivery assurance: "individual networks that solve these pain points ultimately win."
 
-The discussion turned to whether an equivalent of Moat/IAS exists for
-out-of-home — ensuring delivery and QC (broken screens, defaced ads). The
-answer was cut off mid-sentence ("it's less about the defaced things you
-might notice, it's a little bit more about…").
+**What was said:** Asked whether a Moat/IAS equivalent exists for
+out-of-home, the answer was: some independent companies verify impression
+delivery, but **"there is not a great solution for 'are the screens on?'"**
+The scary story: during COVID, a startup team pulled venue data from the
+Google Maps API and cross-checked it against major DOOH exchanges — **north
+of 80% of the venues were closed for an indefinite amount of time, yet
+their inventory was still listed as buyable** (e.g., the TouchTunes jukebox
+in the back corner of a shuttered restaurant). "It's things like that that
+kill the credibility of digital out-of-home. And for those reasons, I
+think it's going to be **individual networks that do a good job of solving
+for those pain points that ultimately win**."
 
-**What we can already act on:** MCTV's answer to delivery assurance is
-**proof-of-play**. NTV360 logs actual plays per screen. Operational norms:
+**Why this matters for MCTV:** That closing line is MCTV's thesis stated
+by the industry itself. Exchanges cannot guarantee a screen is on, a venue
+is open, or an ad actually ran. An owned, locally operated network can.
+MCTV is exactly the "individual network" this prediction says will win —
+if we treat delivery assurance as a core product promise, not a back-office
+detail.
 
-- Treat proof-of-play data as a first-class trust asset — mention it in
-  proposals ("every play is logged; your report shows exactly what ran,
-  where, and how many times").
-- Screen uptime is part of the product. A dark screen is undelivered
-  inventory; venue check-ins / uptime monitoring protect the promise.
+**Operational changes:**
 
-*To be completed when the remaining audio arrives.*
+- **Make a Delivery Guarantee an explicit product feature.** Proposals and
+  contracts should state it plainly: our team is local, we know every
+  venue personally, we know when a venue closes or a screen goes dark —
+  and a dark screen is undelivered inventory that gets made good (extended
+  flight time or credit). Candidate additions: a trust point in
+  `config/config.json`, a clause/value-recap line in
+  `generators/contract_generator.py`.
+- **Proof-of-play is a first-class trust asset.** NTV360 logs actual plays
+  per screen. Say so in proposals: "every play is logged; your report
+  shows exactly what ran, where, and how many times." No exchange
+  reseller can match that specificity.
+- **Screen uptime and venue liveness become tracked norms.** Regular venue
+  check-ins (screens on, venue open, placement visible), with issues
+  logged and resolved. Even a lightweight checklist beats the exchange
+  status quo — and the audit trail itself becomes sales collateral.
+- **Sales talk track — the 80% story.** When a prospect mentions
+  programmatic DOOH: "During COVID an audit found over 80% of checked
+  venues were indefinitely closed but still selling ad space on the major
+  exchanges. Nobody was checking. We drive past our screens every week."
+
+## Insight 5 — The future: DOOH/CTV convergence, and owning what we are
+
+**What was said:** DOOH is changing rapidly — new in-car experiences
+(Uber, rideshare), recurring questions about DOOH converging with CTV
+(the bar-screen example again). Looking at how early CTV blended with
+mobile products, the speaker sees a place for DOOH to own what it is,
+with **specific networks getting involved in the conversation** rather
+than being abstracted away by exchanges.
+
+**Why this matters for MCTV:** Convergence pressure will tempt venue
+networks to rebrand as pseudo-CTV to chase budgets — exactly the
+"glorified display ad on a bar TV" disconnect from Insight 1. The winning
+posture is the opposite: own what we are. MCTV is a venue-based screen
+network with verified physical audiences in five Mississippi markets. As
+category lines blur, the networks with a clear identity, clean delivery
+story (Insight 4), and clean measurement story (Insight 3) are the ones
+buyers will trust with converged budgets.
+
+**Operational norms:**
+
+- **Never misdescribe the inventory.** We sell venue screens with real
+  foot traffic — not "CTV," not "streaming." Clear labeling is a
+  competitive weapon, not a limitation.
+- **Stay in the conversation.** "Specific networks getting involved" is
+  the growth path: publish our screen counts, venue lists, and delivery
+  standards so MCTV is legible to any regional agency or brand buyer
+  planning across channels — the network that can answer all three buyer
+  questions (know / plan / measure) wins the line item.
+- **Watch the in-car/new-format space** for local-scale opportunities,
+  but only where we can uphold the same transparency and delivery
+  standards as our owned venues.
 
 ---
 
@@ -172,7 +227,9 @@ might notice, it's a little bit more about…").
 | 4 | Exposure → Response → Lift structure + measurement primer in traction reports | `generators/advertiser_report.py`, `2_Reports.py` input form | Medium |
 | 5 | Funnel-stage framing in proposal prompts | `config/prompts.json` (pricing/opportunity sections) | Small |
 | 6 | Proof-of-play language in proposals and contracts value recap | `config/prompts.json`, `generators/contract_generator.py` | Small |
-| 7 | Delivery-assurance norms (uptime, venue checks) | Pending remainder of audio | TBD |
+| 7 | Delivery Guarantee (dark-screen make-good) as stated product feature | `config/config.json` trust points, contract clause/value recap | Small |
+| 8 | Venue check-in / screen uptime checklist norm (auditable log) | Team norm; optionally a simple tracker in `3_Settings.py` or Supabase table | Medium |
+| 9 | "80% closed venues" anecdote + never-misdescribe-inventory rule in sales talk tracks | This doc → team norms | Small |
 
 No application code has been changed yet — this document establishes the
 strategy; items above land as separate changes once approved.
