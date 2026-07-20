@@ -187,17 +187,38 @@ else:
 
 ql_months = st.radio("Term (months)", [6, 12], horizontal=True, key="ql_months")
 ql_prepay = st.checkbox("Prepay the full term", key="ql_prepay")
-ql_biz = st.text_input("Business name (optional)", key="ql_biz")
+
+st.markdown("**Prefill the client's details** — every field you fill here is one "
+            "they don't type at signing (all optional).")
+_c1, _c2 = st.columns(2)
+with _c1:
+    ql_biz = st.text_input("Business name", key="ql_biz")
+    ql_email = st.text_input("Contact email", key="ql_email")
+with _c2:
+    ql_name = st.text_input("Contact name", key="ql_name")
+    ql_phone = st.text_input("Contact phone", key="ql_phone")
 
 parts.append(f"months={ql_months}")
 if ql_prepay:
     parts.append("prepay=1")
-if ql_biz.strip():
-    parts.append("biz=" + urllib.parse.quote(ql_biz.strip()))
+for _param, _val in (("biz", ql_biz), ("name", ql_name),
+                     ("email", ql_email), ("phone", ql_phone)):
+    if _val.strip():
+        parts.append(f"{_param}=" + urllib.parse.quote(_val.strip()))
 
-st.code(QUOTE_BASE + "?" + "&".join(parts))
-st.caption("text or email this link — the client sees their quote pre-built "
-           "and can sign self-serve.")
+query = "?" + "&".join(parts)
+
+st.markdown("\U0001F4C7 **Client quote card** — send this one. Clean prepared-quote "
+            "card: no builder to wade through, Accept & sign right there.")
+st.code(QUOTE_BASE + query + "&print=1")
+
+st.markdown("\U0001F527 **Full builder link** — for a client who wants to change "
+            "screens or term before signing.")
+st.code(QUOTE_BASE + query)
+
+st.caption("Text or email either link — the client sees their quote pre-built "
+           "and can sign self-serve. Contact details you prefill travel inside "
+           "the link, so send it only to that client.")
 st.warning(
     "Prefilled links need the **v2.0** calculator live at mctvofms.com/rate-quote — "
     "the old v1.6 page ignores them (opens blank). Check the page footer version "
