@@ -108,6 +108,162 @@ def scrape_website_text(url: str, max_chars: int = 8000) -> dict:
     return result
 
 
+def _fetch_html(url: str, timeout: int = 10) -> str:
+    """Fetch a URL and return decoded HTML, or '' on any failure."""
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        print(f"[web_scraper] Failed to fetch {url}: {e}")
+        return ""
+
+
+# Days + time-range patterns for business-hours extraction
+_DAY_PAT = (
+    r"(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)"
+    r"(?:day|sday|nesday|rsday|urday)?"
+)
+_TIME_PAT = r"\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)?"
+_HOURS_RE = re.compile(
+    rf"({_DAY_PAT}(?:\s*[-–—&,]\s*{_DAY_PAT})*[\s:]{{1,5}}"
+    rf"(?:{_TIME_PAT}\s*(?:-|–|—|to|until)\s*{_TIME_PAT}"
+    rf"|closed|open\s*24(?:\s*hours|/7)?))",
+    re.IGNORECASE,
+)
+
+
+def _extract_hours_candidates(text: str, max_lines: int = 14) -> list[str]:
+    """Pull business-hours-looking snippets out of plain text."""
+    seen = set()
+    out = []
+    for m in _HOURS_RE.finditer(text):
+        snippet = re.sub(r"\s+", " ", m.group(1)).strip()
+        key = snippet.lower()
+        if key not in seen:
+            seen.add(key)
+            out.append(snippet)
+        if len(out) >= max_lines:
+            break
+    return out
+
+
+def _find_info_page_links(html: str, base_url: str, max_links: int = 2) -> list[str]:
+    """Find same-site contact/about/hours page links in a homepage's HTML."""
+    keywords = ("contact", "about", "hours", "location", "visit", "find-us")
+    base_host = urlparse(base_url).netloc.lower().removeprefix("www.")
+
+    found = []
+    for m in re.finditer(r'href=["\']([^"\'#]+)["\']', html, re.IGNORECASE):
+        href = m.group(1).strip()
+        if not href or href.startswith(("mailto:", "tel:", "javascript:")):
+            continue
+        if not any(kw in href.lower() for kw in keywords):
+            continue
+        full = urljoin(base_url, href)
+        host = urlparse(full).netloc.lower().removeprefix("www.")
+        if host != base_host:
+            continue
+        if full.rstrip("/") == base_url.rstrip("/"):
+            continue
+        if full not in found:
+            found.append(full)
+        if len(found) >= max_links:
+            break
+    return found
+
+
+def scrape_business_info(url: str, max_extra_pages: int = 2) -> dict:
+    """Scrape a business website for contact details, hours, and socials.
+
+    Fetches the homepage plus up to `max_extra_pages` contact/about/hours
+    pages discovered from homepage links (falling back to common paths),
+    then aggregates everything found across pages.
+
+    Returns dict with keys:
+        title, description, headings, body_text, phone, phones, email,
+        emails, address, social_links, hours_candidates, jsonld,
+        pages_fetched
+    Empty dict if the homepage can't be reached.
+    """
+    if not url:
+        return {}
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    base = scrape_website_text(url)
+    if not base:
+        return {}
+
+    home_html = _fetch_html(url)
+    combined_text = base.get("body_text", "")
+    pages_fetched = [url]
+
+    # Discover contact/about pages from links; fall back to common paths
+    extra_urls = _find_info_page_links(home_html, url, max_links=max_extra_pages)
+    if not extra_urls:
+        extra_urls = [urljoin(url + "/", p) for p in ("contact", "contact-us", "about")]
+        extra_urls = extra_urls[:max_extra_pages]
+
+    phones, emails, socials = [], [], list(base.get("social_links", []))
+    if base.get("phone"):
+        phones.append(base["phone"])
+    if base.get("email"):
+        emails.append(base["email"])
+    address = base.get("address", "")
+
+    all_html = home_html
+    for extra in extra_urls:
+        info = scrape_website_text(extra, max_chars=4000)
+        if not info or not info.get("body_text"):
+            continue
+        pages_fetched.append(extra)
+        combined_text += "\n\n" + info["body_text"]
+        if info.get("phone") and info["phone"] not in phones:
+            phones.append(info["phone"])
+        if info.get("email") and info["email"] not in emails:
+            emails.append(info["email"])
+        if not address and info.get("address"):
+            address = info["address"]
+        for s in info.get("social_links", []):
+            if s not in socials:
+                socials.append(s)
+        all_html += "\n" + _fetch_html(extra)
+
+    # Structured data (schema.org LocalBusiness) often has phone + hours
+    jsonld = re.findall(
+        r'<script[^>]+application/ld\+json[^>]*>(.*?)</script>',
+        all_html, re.IGNORECASE | re.DOTALL,
+    )
+    jsonld = [j.strip()[:2000] for j in jsonld[:3]]
+
+    hours = _extract_hours_candidates(combined_text)
+    for block in jsonld:
+        for m in re.finditer(r'"openingHours[^"]*"\s*:\s*("(?:[^"]*)"|\[[^\]]*\])', block):
+            snippet = re.sub(r'[\[\]"]', " ", m.group(1))
+            snippet = re.sub(r"\s+", " ", snippet).strip()
+            if snippet and snippet.lower() not in {h.lower() for h in hours}:
+                hours.append(snippet)
+
+    return {
+        "title": base.get("title", ""),
+        "description": base.get("description", ""),
+        "headings": base.get("headings", []),
+        "body_text": combined_text[:12000],
+        "phone": phones[0] if phones else "",
+        "phones": phones,
+        "email": emails[0] if emails else "",
+        "emails": emails,
+        "address": address,
+        "social_links": socials,
+        "hours_candidates": hours,
+        "jsonld": jsonld,
+        "pages_fetched": pages_fetched,
+    }
+
+
 def scrape_website_images(url: str, max_images: int = 12) -> list[dict]:
     """Scrape a website for images and return info about each.
 

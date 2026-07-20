@@ -35,6 +35,11 @@ pages/                          # 13 internal + 8 portal pages
   10_Invoices.py                # Invoice generation and payment tracking
   11_Creative.py                # Creative request management
   12_Messaging.py               # SMS messaging (compose, templates, opt-in, history)
+  14_Pipeline.py                # Sales pipeline (stages, deals, enrichment, nurture,
+                                #   forecast, follow-up SLA, rep scoreboard)
+  15_Prospector.py              # Outbound prospector (AI prospect lists, batch add)
+  20_HostPipeline.py            # Host venue pipeline (deal_type='host', own stages)
+  21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -63,7 +68,14 @@ services/                       # Business logic and integrations
   docx_service.py               # Word document builder (1600+ lines, all branding)
   excel_parser.py               # NTV360 Excel report parser
   chart_service.py              # Matplotlib chart generation for reports
-  web_scraper.py                # Client website image scraper (stdlib only)
+  web_scraper.py                # Website scraper: images + text + multi-page
+                                #   business info (contact, hours, socials; stdlib only)
+  enrichment_service.py         # Website → prospect auto-fill (scraper + Claude
+                                #   structured extraction); merge_enrichment() diffing
+  pipeline_service.py           # Sales pipeline CRUD, stages, FOLLOW_UP_SLA,
+                                #   analytics, rep scoreboard (Supabase + local fallback)
+  nurture_service.py            # Automated email/SMS drip sequences for pipeline deals
+  leads_service.py              # Lead CRUD + scoring (intake form submissions)
   creatomate_service.py         # Creatomate video generation API
   supabase_client.py            # Supabase REST client (query, insert, update, delete)
   portal_service.py             # Portal business logic (clients, activity log)
@@ -119,6 +131,34 @@ Every generator includes these standard sections:
 - **ROI projection** — daily cost, CPM, impressions per dollar
 - **Social proof section** — network stats + trust points
 - **Team section** — headshot cards with contact info
+
+### Sales Pipeline System
+The team's most-used tool (`pages/14_Pipeline.py` + `services/pipeline_service.py`).
+Data lives in Supabase `pipeline_opportunities` + `pipeline_activity` with a local
+JSON fallback (`data/pipeline/`) when Supabase is unreachable.
+
+- **Stages** (with win probabilities): prospect 10% → outreach 15% → engaged 30% →
+  discovery 45% → proposal_sent 60% → negotiation 75% → contract_sent 90% → won/lost.
+  The host pipeline shares the table (`deal_type='host'`) but uses different stage
+  names — always filter by `deal_type`.
+- **Follow-up SLA** (`FOLLOW_UP_SLA` in pipeline_service): every stage entry
+  auto-schedules the next action (e.g. proposal_sent → follow up in 2 days).
+  `get_deals_needing_action()` flags overdue, unscheduled, and SLA-stale deals.
+- **Rep attribution**: shared team login means no per-user auth — the "Working as"
+  selector on the Pipeline page stamps `performed_by` on all activity, feeding
+  `get_rep_scoreboard()` (touches, $/touch, MRR won, overdue counts per rep).
+- **Website enrichment** (`services/enrichment_service.py`): Add Deal and Edit Deal
+  can scan a prospect's website — multi-page stdlib scrape
+  (`web_scraper.scrape_business_info`) + Claude structured extraction (Haiku,
+  `ENRICHMENT_MODEL` env override) → contact info, hours, address, socials, images.
+  Existing-deal merges fill blanks automatically; conflicts require per-field opt-in.
+  Enrichment columns (migration 023): `website`, `address`, `business_hours`,
+  `social_links`, `website_images`, `enrichment`.
+- **Hand-offs**: "Draft Proposal →" sets `st.session_state["prefill_proposal"]`
+  (same convention as Research page) and switches to the Proposals page.
+- **Perf rule**: the Pipeline page fetches `get_all_opportunities()` once per rerun
+  and passes the list into every tab and analytics helper (`opps=` params) — don't
+  add per-tab fetches.
 
 ### Contract System
 5 contract types, each with dedicated clause sets:
@@ -183,6 +223,10 @@ Per-section prompts use `{variable}` placeholders filled by `get_prompt_variable
 - `leads` — intake form submissions
 - `sms_messages` — SMS history
 - `sms_opt_ins` — SMS consent tracking
+- `pipeline_opportunities` — sales + host pipeline deals (stages, monthly_value,
+  follow-up dates, enrichment columns; see migration 008 + 013 + 023)
+- `pipeline_activity` — per-deal activity log (stage moves, calls, notes,
+  `performed_by` rep attribution)
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 
