@@ -355,6 +355,12 @@ def log_call(opp_id: str, notes: str = "", performed_by: str = "MCTV Bot"):
     _log_activity(opp_id, "call_logged", details=notes, performed_by=performed_by)
 
 
+def log_event(opp_id: str, action: str, details: str = "",
+              performed_by: str = "MCTV Bot"):
+    """Log an arbitrary activity event (e.g. 'value_updated' after an edit)."""
+    _log_activity(opp_id, action, details=details, performed_by=performed_by)
+
+
 # ── Lead Conversion ──────────────────────────────────────────────────────────
 
 def import_lead_to_pipeline(lead: dict, source: str = "intake_form") -> dict | None:
@@ -404,15 +410,19 @@ def import_lead_to_pipeline(lead: dict, source: str = "intake_form") -> dict | N
 
 # ── Pipeline Analytics ────────────────────────────────────────────────────────
 
-def get_pipeline_summary() -> dict:
+def get_pipeline_summary(opps: list[dict] | None = None) -> dict:
     """Get a summary of the pipeline for the dashboard.
+
+    Pass a pre-fetched opportunity list via `opps` to avoid a redundant
+    Supabase round-trip (the Pipeline page fetches once per rerun).
 
     Returns:
         Dict with total_opportunities, total_pipeline_value,
         weighted_pipeline_value, by_stage (counts + values),
         avg_deal_size, conversion_rate, deals_won_this_month, mrr_won.
     """
-    opps = get_all_opportunities()
+    if opps is None:
+        opps = get_all_opportunities()
 
     # Exclude lost/won from active pipeline
     active = [o for o in opps if o.get("stage") not in ("won", "lost")]
@@ -467,12 +477,14 @@ def get_pipeline_summary() -> dict:
     }
 
 
-def get_revenue_forecast(months: int = 3) -> list[dict]:
+def get_revenue_forecast(months: int = 3, opps: list[dict] | None = None) -> list[dict]:
     """Forecast revenue for the next N months based on weighted pipeline.
 
     Returns list of dicts: [{month, expected_mrr, best_case, worst_case}]
     """
-    active = [o for o in get_all_opportunities() if o.get("stage") not in ("won", "lost")]
+    if opps is None:
+        opps = get_all_opportunities()
+    active = [o for o in opps if o.get("stage") not in ("won", "lost")]
 
     forecast = []
     for i in range(months):
@@ -507,9 +519,10 @@ def get_revenue_forecast(months: int = 3) -> list[dict]:
     return forecast
 
 
-def get_deals_needing_action() -> list[dict]:
+def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
     """Get opportunities that need attention (overdue actions, stale deals)."""
-    opps = get_all_opportunities()
+    if opps is None:
+        opps = get_all_opportunities()
     today = date.today().isoformat()
     needs_action = []
 

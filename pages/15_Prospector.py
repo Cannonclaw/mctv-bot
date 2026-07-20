@@ -306,10 +306,12 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
                 disabled=disabled,
                 key=f"prospect_{i}"
             )
+            _site = prospect.get("website", "")
             st.caption(
                 f"Contact: {prospect.get('contact_name', 'Unknown')} | "
                 f"Interest: {interest} | "
-                f"Why: {prospect.get('why', 'N/A')}"
+                + (f"Website: {_site} | " if _site else "")
+                + f"Why: {prospect.get('why', 'N/A')}"
             )
 
             if checked and not disabled:
@@ -322,14 +324,24 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
                 ["Cold Outreach", "None"],
                 key="batch_nurture"
             )
+            enrich_on_add = st.checkbox(
+                "Scan each prospect's website on add — auto-fills phone, email, "
+                "hours, and address (a few seconds per prospect)",
+                value=False,
+                key="enrich_on_add",
+            )
 
             if st.button(f"Add {len(selected)} Prospect(s) to Pipeline", type="primary"):
+                from services.enrichment_service import enrich_from_website, normalize_url
+
                 added = 0
                 tier_info = TIERS[tier]
                 seq = "cold_outreach" if nurture == "Cold Outreach" else None
+                progress = st.progress(0.0) if enrich_on_add else None
 
-                for prospect in selected:
-                    opp = create_opportunity({
+                for idx, prospect in enumerate(selected):
+                    website = (prospect.get("website") or "").strip()
+                    opp_payload = {
                         "business_name": prospect.get("business_name", "Unknown"),
                         "contact_name": prospect.get("contact_name", ""),
                         "industry": prospect.get("industry", p_industry),
@@ -343,10 +355,33 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
                         "notes": prospect.get("why", ""),
                         "assigned_rep": p_rep,
                         "nurture_sequence": seq,
-                    })
+                    }
+                    if website:
+                        opp_payload["website"] = normalize_url(website)
+
+                    if enrich_on_add and website:
+                        progress.progress(
+                            idx / len(selected),
+                            text=f"Scanning {prospect.get('business_name', '')} website...",
+                        )
+                        enr = enrich_from_website(website, include_images=False)
+                        if enr.get("ok"):
+                            # Fill blanks only — never overwrite the AI-provided basics
+                            for field in ("contact_name", "contact_email",
+                                          "contact_phone", "address"):
+                                if not opp_payload.get(field) and enr.get(field):
+                                    opp_payload[field] = enr[field]
+                            if enr.get("business_hours"):
+                                opp_payload["business_hours"] = enr["business_hours"]
+                            if enr.get("social_links"):
+                                opp_payload["social_links"] = enr["social_links"]
+
+                    opp = create_opportunity(opp_payload)
                     if opp:
                         added += 1
 
+                if progress:
+                    progress.progress(1.0, text="Done!")
                 st.success(f"Added {added} prospect(s) to pipeline!")
                 del st.session_state["generated_prospects"]
                 st.rerun()
@@ -363,13 +398,13 @@ with tab_batch:
     batch_rep = st.selectbox("Assigned Rep", ["Mary Michael", "Creed", "Swayze"], key="batch_rep")
     batch_tier_sel = st.selectbox("Tier", list(TIERS.keys()), index=1, key="batch_tier_sel")
 
-    st.markdown("**Enter one business per line** (format: `Business Name | Contact Name | Phone | Email`)")
-    st.caption("Only business name is required. Phone and email are optional.")
+    st.markdown("**Enter one business per line** (format: `Business Name | Contact Name | Phone | Email | Website`)")
+    st.caption("Only business name is required. Contact, phone, email, and website are optional.")
 
     batch_text = st.text_area(
         "Business List",
         height=200,
-        placeholder="Joe's Restaurant | Joe Smith | 662-555-1234 | joe@email.com\nMain Street Salon | Jane Doe\nDowntown Fitness",
+        placeholder="Joe's Restaurant | Joe Smith | 662-555-1234 | joe@email.com | joesrestaurant.com\nMain Street Salon | Jane Doe\nDowntown Fitness",
         key="batch_text"
     )
 
@@ -386,12 +421,15 @@ with tab_batch:
         seq = seq_map.get(batch_nurture)
 
         added = 0
+        from services.enrichment_service import normalize_url
+
         for line in lines:
             parts = [p.strip() for p in line.split("|")]
             biz_name = parts[0] if len(parts) > 0 else ""
             contact = parts[1] if len(parts) > 1 else ""
             phone = parts[2] if len(parts) > 2 else ""
             email = parts[3] if len(parts) > 3 else ""
+            website = parts[4] if len(parts) > 4 else ""
 
             if not biz_name:
                 continue
@@ -401,6 +439,7 @@ with tab_batch:
                 "contact_name": contact,
                 "contact_phone": phone,
                 "contact_email": email,
+                "website": normalize_url(website) if website else "",
                 "industry": batch_industry,
                 "city": batch_city,
                 "source": "prospector",

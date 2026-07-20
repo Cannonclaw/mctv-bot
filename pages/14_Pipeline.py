@@ -8,7 +8,7 @@ with stage tracking, deal management, nurture sequences, and revenue analytics.
 """
 
 import streamlit as st
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from services.auth import check_team_auth
 
@@ -23,8 +23,11 @@ from services.pipeline_service import (
     get_all_opportunities, get_opportunity, create_opportunity,
     update_opportunity, delete_opportunity, advance_stage, mark_lost,
     get_pipeline_summary, get_revenue_forecast, get_deals_needing_action,
-    get_activity, log_note, log_call, import_lead_to_pipeline,
+    get_activity, log_note, log_call, log_event, import_lead_to_pipeline,
     get_stage_options,
+)
+from services.enrichment_service import (
+    enrich_from_website, merge_enrichment, format_hours, normalize_url,
 )
 from services.nurture_service import (
     get_available_sequences, start_sequence, stop_sequence,
@@ -89,7 +92,10 @@ st.markdown("""
 
 # ── KPI Dashboard ─────────────────────────────────────────────────────────────
 
-summary = get_pipeline_summary()
+# Fetch the pipeline ONCE per rerun — every tab below reuses this list
+# instead of making its own Supabase round-trip.
+all_opps = get_all_opportunities()
+summary = get_pipeline_summary(opps=all_opps)
 
 k1, k2, k3, k4, k5 = st.columns(5)
 k1.metric("Active Deals", summary["total_opportunities"])
@@ -115,8 +121,6 @@ with tab_pipeline:
     active_stages = {k: v for k, v in STAGES.items() if k not in ("won", "lost")}
 
     cols = st.columns(len(active_stages))
-
-    all_opps = get_all_opportunities()
 
     for col, (stage_key, stage_info) in zip(cols, sorted(active_stages.items(), key=lambda x: x[1]["order"])):
         with col:
@@ -173,13 +177,13 @@ with tab_deals:
     with f3:
         search = st.text_input("Search", placeholder="Business name...", key="deals_search")
 
-    # Get filtered deals
+    # Get filtered deals (filter the already-fetched list — no extra round-trip)
     stage_filter = None
     if filter_stage != "All":
         stage_filter = [k for k, v in STAGES.items() if v["label"] == filter_stage]
         stage_filter = stage_filter[0] if stage_filter else None
 
-    deals = get_all_opportunities(stage=stage_filter)
+    deals = [d for d in all_opps if d.get("stage") == stage_filter] if stage_filter else list(all_opps)
 
     if filter_city != "All":
         if filter_city == "Other":
@@ -209,8 +213,14 @@ with tab_deals:
                 st.markdown(f"**Contact:** {deal.get('contact_name', 'N/A')}")
                 st.markdown(f"**Email:** {deal.get('contact_email', 'N/A')}")
                 st.markdown(f"**Phone:** {deal.get('contact_phone', 'N/A')}")
+                if deal.get("website"):
+                    st.markdown(f"**Website:** [{deal['website']}]({deal['website']})")
                 st.markdown(f"**Industry:** {deal.get('industry', 'N/A')}")
                 st.markdown(f"**City:** {deal.get('city', 'N/A')}")
+                if deal.get("address"):
+                    st.markdown(f"**Address:** {deal['address']}")
+                if deal.get("business_hours"):
+                    st.markdown(f"**Hours:** {format_hours(deal['business_hours'])}")
                 st.markdown(f"**Source:** {deal.get('source', 'N/A')}")
                 st.markdown(f"**Rep:** {deal.get('assigned_rep', 'N/A')}")
 
@@ -292,6 +302,146 @@ with tab_deals:
                         st.warning("Marked as lost")
                         st.rerun()
 
+            # Edit deal — full contact/detail editing + website re-scan
+            with st.expander("Edit Deal"):
+                did = deal["id"]
+
+                # ── Website re-scan (outside the form — buttons can't live in one)
+                rc1, rc2 = st.columns([3, 1])
+                rescan_url = rc1.text_input(
+                    "Business Website",
+                    value=deal.get("website") or "",
+                    placeholder="www.example.com",
+                    key=f"edit_web_{did}",
+                )
+                rc2.markdown("<div style='height:1.7rem'></div>", unsafe_allow_html=True)
+                if rc2.button("Scan Site", key=f"rescan_{did}"):
+                    if not rescan_url.strip():
+                        st.warning("Enter a website URL first.")
+                    else:
+                        with st.spinner("Scanning website for contact info, hours, and photos..."):
+                            enr = enrich_from_website(rescan_url)
+                        if enr.get("ok"):
+                            st.session_state[f"enr_{did}"] = enr
+                        else:
+                            st.error(f"Scan failed: {enr.get('error') or 'no data found'}")
+                        st.rerun()
+
+                enr = st.session_state.get(f"enr_{did}")
+                if enr:
+                    merge = merge_enrichment(deal, enr)
+                    updates, conflicts = merge["updates"], merge["conflicts"]
+
+                    st.markdown("**Scan results**")
+                    if updates:
+                        st.markdown("Will fill these empty fields:")
+                        for field, val in updates.items():
+                            shown = format_hours(val) if field == "business_hours" else val
+                            if isinstance(shown, list):
+                                shown = ", ".join(str(v) for v in shown)
+                            st.caption(f"• {field.replace('_', ' ').title()}: {shown}")
+                    if conflicts:
+                        st.markdown("Conflicts — check any you want to **overwrite**:")
+                        for field, pair in conflicts.items():
+                            cur, new = pair["current"], pair["new"]
+                            if field == "business_hours":
+                                cur, new = format_hours(cur), format_hours(new)
+                            if isinstance(cur, list):
+                                cur = ", ".join(str(v) for v in cur)
+                            if isinstance(new, list):
+                                new = ", ".join(str(v) for v in new)
+                            st.checkbox(
+                                f"{field.replace('_', ' ').title()}: `{cur}` → `{new}`",
+                                key=f"conf_{did}_{field}",
+                            )
+                    if not updates and not conflicts:
+                        st.caption("Nothing new found — deal already matches the website.")
+
+                    scan_images = enr.get("images") or []
+                    if scan_images:
+                        st.markdown("**Photos found** — check any to save on this deal:")
+                        icols = st.columns(4)
+                        for i, img in enumerate(scan_images):
+                            with icols[i % 4]:
+                                st.image(img["url"], width='stretch')
+                                st.checkbox(
+                                    img.get("category", "photo"),
+                                    value=i < 4,
+                                    key=f"scanimg_{did}_{i}",
+                                )
+
+                    ap1, ap2 = st.columns([1, 1])
+                    if ap1.button("Apply Scan Results", type="primary", key=f"apply_{did}"):
+                        applied = dict(updates)
+                        for field in conflicts:
+                            if st.session_state.get(f"conf_{did}_{field}"):
+                                applied[field] = conflicts[field]["new"]
+                        applied["website"] = enr.get("website") or normalize_url(rescan_url)
+                        selected_imgs = [
+                            {"url": img["url"], "alt": img.get("alt", ""),
+                             "category": img.get("category", "")}
+                            for i, img in enumerate(scan_images)
+                            if st.session_state.get(f"scanimg_{did}_{i}")
+                        ]
+                        if selected_imgs:
+                            applied["website_images"] = selected_imgs
+                        applied["enrichment"] = {
+                            "pages_fetched": enr.get("pages_fetched", []),
+                            "claude_used": enr.get("claude_used", False),
+                            "scanned_at": datetime.now().isoformat(),
+                        }
+                        update_opportunity(did, applied)
+                        log_event(did, "value_updated",
+                                  details=f"Website scan applied: {', '.join(applied.keys())}")
+                        del st.session_state[f"enr_{did}"]
+                        st.success("Scan results applied!")
+                        st.rerun()
+                    if ap2.button("Discard Scan", key=f"discard_{did}"):
+                        del st.session_state[f"enr_{did}"]
+                        st.rerun()
+
+                st.markdown("---")
+
+                # ── Manual edit form
+                with st.form(f"edit_form_{did}"):
+                    e1, e2 = st.columns(2)
+                    with e1:
+                        e_contact = st.text_input("Contact Name", value=deal.get("contact_name") or "")
+                        e_email = st.text_input("Contact Email", value=deal.get("contact_email") or "")
+                        e_phone = st.text_input("Contact Phone", value=deal.get("contact_phone") or "")
+                        e_industry = st.text_input("Industry", value=deal.get("industry") or "")
+                        e_address = st.text_input("Address", value=deal.get("address") or "")
+                    with e2:
+                        e_city = st.text_input("City", value=deal.get("city") or "")
+                        _reps = ["Mary Michael", "Creed", "Swayze"]
+                        _rep_idx = _reps.index(deal["assigned_rep"]) if deal.get("assigned_rep") in _reps else 0
+                        e_rep = st.selectbox("Assigned Rep", _reps, index=_rep_idx)
+                        e_next = st.text_input("Next Action", value=deal.get("next_action") or "")
+                        _nd = deal.get("next_action_date")
+                        e_next_date = st.date_input(
+                            "Next Action Date",
+                            value=date.fromisoformat(_nd[:10]) if _nd else date.today() + timedelta(days=3),
+                        )
+                    e_notes = st.text_area("Notes", value=deal.get("notes") or "")
+
+                    if st.form_submit_button("Save Changes", type="primary"):
+                        update_opportunity(did, {
+                            "contact_name": e_contact,
+                            "contact_email": e_email,
+                            "contact_phone": e_phone,
+                            "industry": e_industry,
+                            "address": e_address,
+                            "city": e_city,
+                            "assigned_rep": e_rep,
+                            "next_action": e_next,
+                            "next_action_date": e_next_date.isoformat(),
+                            "notes": e_notes,
+                            "website": normalize_url(st.session_state.get(f"edit_web_{did}", deal.get("website") or "")),
+                        })
+                        log_event(did, "value_updated", details="Deal details edited")
+                        st.success("Deal updated!")
+                        st.rerun()
+
             # Activity history
             with st.expander("Activity History"):
                 activities = get_activity(deal["id"])
@@ -310,25 +460,89 @@ with tab_deals:
 
 with tab_add:
     st.markdown("### Add New Opportunity")
+    st.caption(
+        "Tip: enter the business website and hit **Scan Website** first — "
+        "contact info, hours, and photos fill in automatically."
+    )
+
+    # ── Website scan (outside the form so it can pre-fill it) ────────────
+    sc1, sc2 = st.columns([3, 1])
+    scan_url = sc1.text_input(
+        "Business Website",
+        placeholder="www.oxfordfloral.com",
+        key="add_scan_url",
+    )
+    sc2.markdown("<div style='height:1.7rem'></div>", unsafe_allow_html=True)
+    if sc2.button("Scan Website", type="secondary", key="add_scan_btn"):
+        if not scan_url.strip():
+            st.warning("Enter a website URL to scan.")
+        else:
+            with st.spinner("Scanning website for contact info, hours, and photos..."):
+                _enr = enrich_from_website(scan_url)
+            if _enr.get("ok"):
+                st.session_state["deal_enrichment"] = _enr
+                st.rerun()
+            else:
+                st.session_state.pop("deal_enrichment", None)
+                st.error(f"Could not scan that website: {_enr.get('error') or 'no data found'}")
+
+    enr = st.session_state.get("deal_enrichment") or {}
+    if enr:
+        pages_n = len(enr.get("pages_fetched", []))
+        st.success(
+            f"Scanned {pages_n} page(s) on {enr.get('website', '')} — "
+            "form pre-filled below. Review, adjust, then add."
+        )
+        with st.expander("What the scan found", expanded=False):
+            if enr.get("description"):
+                st.caption(enr["description"])
+            if enr.get("business_hours"):
+                st.markdown(f"**Hours:** {format_hours(enr['business_hours'])}")
+            if enr.get("social_links"):
+                st.markdown("**Social:** " + " • ".join(enr["social_links"][:5]))
+            if enr.get("address"):
+                st.markdown(f"**Address:** {enr['address']}")
+        if st.button("Clear scan", key="add_clear_scan"):
+            del st.session_state["deal_enrichment"]
+            st.rerun()
+
+    # Photos found — opt-in selection, saved on the deal for later use
+    enr_images = enr.get("images") or []
+    if enr_images:
+        st.markdown("**Photos found** — check any to save with this prospect:")
+        img_cols = st.columns(4)
+        for i, img in enumerate(enr_images):
+            with img_cols[i % 4]:
+                st.image(img["url"], width='stretch')
+                st.checkbox(
+                    img.get("category", "photo"),
+                    value=i < 4,
+                    key=f"add_img_{i}",
+                )
 
     with st.form("add_deal_form"):
         c1, c2 = st.columns(2)
 
+        _cities = ["Oxford", "Starkville", "Tupelo", "Columbus", "West Point", "Other"]
+        _enr_city = (enr.get("city") or "").strip().title()
+        _city_idx = _cities.index(_enr_city) if _enr_city in _cities else 0
+
         with c1:
-            biz_name = st.text_input("Business Name *")
-            contact_name = st.text_input("Contact Name")
-            contact_email = st.text_input("Contact Email")
-            contact_phone = st.text_input("Contact Phone")
-            industry = st.text_input("Industry")
+            biz_name = st.text_input("Business Name *", value=enr.get("title", "").split("|")[0].split("–")[0].strip() if enr else "")
+            contact_name = st.text_input("Contact Name", value=enr.get("contact_name", ""))
+            contact_email = st.text_input("Contact Email", value=enr.get("contact_email", ""))
+            contact_phone = st.text_input("Contact Phone", value=enr.get("contact_phone", ""))
+            industry = st.text_input("Industry", value=enr.get("industry", ""))
+            address = st.text_input("Address", value=enr.get("address", ""))
 
         with c2:
-            city = st.selectbox("City", ["Oxford", "Starkville", "Tupelo", "Columbus", "West Point", "Other"])
+            city = st.selectbox("City", _cities, index=_city_idx)
             source = st.selectbox("Source", ["manual", "intake_form", "prospector", "referral", "website", "cold_outreach"])
             tier = st.selectbox("Tier", list(TIERS.keys()), index=1)
             stage = st.selectbox("Initial Stage", [label for _, label in get_stage_options()], index=0)
             close_date = st.date_input("Expected Close Date", value=date.today() + timedelta(days=30))
 
-        notes = st.text_area("Notes")
+        notes = st.text_area("Notes", value=enr.get("description", ""))
 
         seq_options = {"None": None}
         seq_options.update({v["name"]: k for k, v in get_available_sequences().items()})
@@ -339,32 +553,69 @@ with tab_add:
         submitted = st.form_submit_button("Add to Pipeline", type="primary")
 
         if submitted and biz_name:
-            stage_key = [k for k, label in get_stage_options() if label == stage][0]
-            tier_info = TIERS[tier]
-
-            opp = create_opportunity({
-                "business_name": biz_name,
-                "contact_name": contact_name,
-                "contact_email": contact_email,
-                "contact_phone": contact_phone,
-                "industry": industry,
-                "city": city if city != "Other" else "",
-                "source": source,
-                "stage": stage_key,
-                "monthly_value": tier_info["monthly"],
-                "screen_count": tier_info["screens"],
-                "tier_name": tier,
-                "expected_close_date": close_date.isoformat(),
-                "notes": notes,
-                "assigned_rep": assigned,
-                "nurture_sequence": seq_options.get(nurture),
-            })
-
-            if opp:
-                st.success(f"Added {biz_name} to pipeline!")
-                st.rerun()
+            # Duplicate guard: warn once, add on second submit
+            _existing_names = {(o.get("business_name") or "").strip().lower() for o in all_opps}
+            _name_key = biz_name.strip().lower()
+            if _name_key in _existing_names and st.session_state.get("add_dup_ok") != _name_key:
+                st.session_state["add_dup_ok"] = _name_key
+                st.warning(
+                    f"**{biz_name}** is already in the pipeline. "
+                    "Click **Add to Pipeline** again to add it anyway."
+                )
             else:
-                st.error("Failed to create opportunity")
+                stage_key = [k for k, label in get_stage_options() if label == stage][0]
+                tier_info = TIERS[tier]
+
+                opp_payload = {
+                    "business_name": biz_name,
+                    "contact_name": contact_name,
+                    "contact_email": contact_email,
+                    "contact_phone": contact_phone,
+                    "industry": industry,
+                    "address": address,
+                    "city": city if city != "Other" else "",
+                    "source": source,
+                    "stage": stage_key,
+                    "monthly_value": tier_info["monthly"],
+                    "screen_count": tier_info["screens"],
+                    "tier_name": tier,
+                    "expected_close_date": close_date.isoformat(),
+                    "notes": notes,
+                    "assigned_rep": assigned,
+                    "nurture_sequence": seq_options.get(nurture),
+                }
+
+                if enr:
+                    opp_payload["website"] = enr.get("website") or normalize_url(scan_url)
+                    if enr.get("business_hours"):
+                        opp_payload["business_hours"] = enr["business_hours"]
+                    if enr.get("social_links"):
+                        opp_payload["social_links"] = enr["social_links"]
+                    selected_imgs = [
+                        {"url": img["url"], "alt": img.get("alt", ""),
+                         "category": img.get("category", "")}
+                        for i, img in enumerate(enr_images)
+                        if st.session_state.get(f"add_img_{i}")
+                    ]
+                    if selected_imgs:
+                        opp_payload["website_images"] = selected_imgs
+                    opp_payload["enrichment"] = {
+                        "pages_fetched": enr.get("pages_fetched", []),
+                        "claude_used": enr.get("claude_used", False),
+                        "scanned_at": datetime.now().isoformat(),
+                    }
+                elif scan_url.strip():
+                    opp_payload["website"] = normalize_url(scan_url)
+
+                opp = create_opportunity(opp_payload)
+
+                if opp:
+                    st.session_state.pop("deal_enrichment", None)
+                    st.session_state.pop("add_dup_ok", None)
+                    st.success(f"Added {biz_name} to pipeline!")
+                    st.rerun()
+                else:
+                    st.error("Failed to create opportunity")
         elif submitted:
             st.warning("Business name is required")
 
@@ -384,8 +635,7 @@ with tab_import:
             st.info("No leads found. New leads come in through the intake form.")
         else:
             # Filter out leads already in pipeline
-            existing_opps = get_all_opportunities()
-            existing_lead_ids = {o.get("lead_id") for o in existing_opps if o.get("lead_id")}
+            existing_lead_ids = {o.get("lead_id") for o in all_opps if o.get("lead_id")}
 
             available = [l for l in leads if l.get("id") not in existing_lead_ids
                         and l.get("status") != "closed"]
@@ -446,7 +696,7 @@ with tab_nurture:
 
     # Opportunities with active nurture sequences
     st.markdown("### Active Nurture Campaigns")
-    nurture_opps = [o for o in get_all_opportunities()
+    nurture_opps = [o for o in all_opps
                     if o.get("nurture_sequence") and o.get("stage") not in ("won", "lost")]
 
     if nurture_opps:
@@ -508,7 +758,7 @@ with tab_forecast:
     st.markdown("### Revenue Forecast")
     st.caption("Projected MRR from weighted pipeline over the next 3 months.")
 
-    forecast = get_revenue_forecast(months=3)
+    forecast = get_revenue_forecast(months=3, opps=all_opps)
 
     if forecast:
         cols = st.columns(len(forecast))
@@ -554,7 +804,7 @@ with tab_forecast:
 with tab_actions:
     st.markdown("### Deals Needing Attention")
 
-    action_items = get_deals_needing_action()
+    action_items = get_deals_needing_action(opps=all_opps)
 
     if action_items:
         for item in action_items:
