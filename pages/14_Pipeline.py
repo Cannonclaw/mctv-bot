@@ -19,12 +19,12 @@ if not check_team_auth():
 from services.team_ui import render_team_sidebar
 render_team_sidebar()
 from services.pipeline_service import (
-    STAGES, TIERS,
+    STAGES, TIERS, FOLLOW_UP_SLA,
     get_all_opportunities, get_opportunity, create_opportunity,
     update_opportunity, delete_opportunity, advance_stage, mark_lost,
     get_pipeline_summary, get_revenue_forecast, get_deals_needing_action,
     get_activity, log_note, log_call, log_event, import_lead_to_pipeline,
-    get_stage_options,
+    get_stage_options, get_rep_scoreboard,
 )
 from services.enrichment_service import (
     enrich_from_website, merge_enrichment, format_hours, normalize_url,
@@ -90,6 +90,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# ── Who's working ─────────────────────────────────────────────────────────────
+# Shared team login means no per-user identity — this selector attributes
+# every call, note, and stage move to the rep actually doing the work,
+# which feeds the Rep Scoreboard's productivity-to-revenue metrics.
+
+TEAM_REPS = ["Mary Michael", "Creed", "Swayze"]
+_hdr1, _hdr2 = st.columns([4, 1])
+with _hdr2:
+    active_rep = st.selectbox("Working as", TEAM_REPS, key="active_rep")
+
+
 # ── KPI Dashboard ─────────────────────────────────────────────────────────────
 
 # Fetch the pipeline ONCE per rerun — every tab below reuses this list
@@ -108,9 +119,9 @@ st.divider()
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
 
-tab_pipeline, tab_deals, tab_add, tab_import, tab_nurture, tab_forecast, tab_actions = st.tabs([
+tab_pipeline, tab_deals, tab_add, tab_import, tab_nurture, tab_forecast, tab_actions, tab_scoreboard = st.tabs([
     "Pipeline View", "All Deals", "Add Deal", "Import Leads",
-    "Nurture Center", "Forecast", "Action Items",
+    "Nurture Center", "Forecast", "Action Items", "Rep Scoreboard",
 ])
 
 
@@ -258,8 +269,15 @@ with tab_deals:
                 new_stage_key = [k for k, label in stage_options if label == new_stage][0]
                 if new_stage_key != deal.get("stage"):
                     if st.button("Move", key=f"move_{deal['id']}", type="primary"):
-                        advance_stage(deal["id"], new_stage_key)
-                        st.success(f"Moved to {new_stage}")
+                        advance_stage(deal["id"], new_stage_key, performed_by=active_rep)
+                        _sla = FOLLOW_UP_SLA.get(new_stage_key)
+                        if _sla:
+                            st.success(
+                                f"Moved to {new_stage} — follow-up auto-scheduled: "
+                                f"{_sla['action']} in {_sla['days']} day(s)"
+                            )
+                        else:
+                            st.success(f"Moved to {new_stage}")
                         st.rerun()
 
             with a2:
@@ -285,22 +303,53 @@ with tab_deals:
                 note_text = st.text_input("Add Note", key=f"note_{deal['id']}")
                 if note_text:
                     if st.button("Save Note", key=f"save_note_{deal['id']}"):
-                        log_note(deal["id"], note_text)
+                        log_note(deal["id"], note_text, performed_by=active_rep)
                         st.success("Note added")
                         st.rerun()
 
             with a4:
                 if st.button("Log Call", key=f"call_{deal['id']}"):
-                    log_call(deal["id"])
+                    log_call(deal["id"], performed_by=active_rep)
                     st.success("Call logged")
                     st.rerun()
 
                 if deal.get("stage") != "lost":
                     loss_reason = st.text_input("Loss reason", key=f"loss_{deal['id']}")
                     if st.button("Mark Lost", key=f"lost_{deal['id']}"):
-                        mark_lost(deal["id"], reason=loss_reason)
+                        mark_lost(deal["id"], reason=loss_reason, performed_by=active_rep)
                         st.warning("Marked as lost")
                         st.rerun()
+
+            # Quick send — hand this deal off to the proposal/contract tools
+            q1, q2, q3 = st.columns(3)
+            with q1:
+                if st.button("Draft Proposal →", key=f"prop_{deal['id']}"):
+                    _extra = []
+                    if deal.get("website"):
+                        _extra.append(f"Website: {deal['website']}")
+                    if deal.get("business_hours"):
+                        _extra.append(f"Hours: {format_hours(deal['business_hours'])}")
+                    if deal.get("notes"):
+                        _extra.append(f"Pipeline notes: {deal['notes']}")
+                    st.session_state["prefill_proposal"] = {
+                        "business_name": deal.get("business_name", ""),
+                        "industry": deal.get("industry", ""),
+                        "city": deal.get("city", ""),
+                        "contact_email": deal.get("contact_email", ""),
+                        "sales_rep": deal.get("assigned_rep", active_rep),
+                        "additional_notes": "\n".join(_extra),
+                        "website_url": deal.get("website", ""),
+                    }
+                    log_event(deal["id"], "proposal_generated",
+                              details="Proposal draft started from Pipeline",
+                              performed_by=active_rep)
+                    st.switch_page("pages/1_Proposals.py")
+            with q2:
+                if st.button("Create Contract →", key=f"contract_{deal['id']}"):
+                    st.switch_page("pages/9_Contracts.py")
+            with q3:
+                if st.button("Send SMS →", key=f"sms_{deal['id']}"):
+                    st.switch_page("pages/12_Messaging.py")
 
             # Edit deal — full contact/detail editing + website re-scan
             with st.expander("Edit Deal"):
@@ -392,7 +441,8 @@ with tab_deals:
                         }
                         update_opportunity(did, applied)
                         log_event(did, "value_updated",
-                                  details=f"Website scan applied: {', '.join(applied.keys())}")
+                                  details=f"Website scan applied: {', '.join(applied.keys())}",
+                                  performed_by=active_rep)
                         del st.session_state[f"enr_{did}"]
                         st.success("Scan results applied!")
                         st.rerun()
@@ -438,7 +488,8 @@ with tab_deals:
                             "notes": e_notes,
                             "website": normalize_url(st.session_state.get(f"edit_web_{did}", deal.get("website") or "")),
                         })
-                        log_event(did, "value_updated", details="Deal details edited")
+                        log_event(did, "value_updated", details="Deal details edited",
+                                  performed_by=active_rep)
                         st.success("Deal updated!")
                         st.rerun()
 
@@ -548,7 +599,8 @@ with tab_add:
         seq_options.update({v["name"]: k for k, v in get_available_sequences().items()})
         nurture = st.selectbox("Start Nurture Sequence", list(seq_options.keys()))
 
-        assigned = st.selectbox("Assigned Rep", ["Mary Michael", "Creed", "Swayze"])
+        _rep_default = TEAM_REPS.index(active_rep) if active_rep in TEAM_REPS else 0
+        assigned = st.selectbox("Assigned Rep", TEAM_REPS, index=_rep_default)
 
         submitted = st.form_submit_button("Add to Pipeline", type="primary")
 
@@ -803,6 +855,15 @@ with tab_forecast:
 
 with tab_actions:
     st.markdown("### Deals Needing Attention")
+    st.caption(
+        "The follow-up schedule is enforced automatically: every stage move "
+        "schedules the next touch, and deals land here the moment they slip. "
+        "Contact limits by stage — "
+        + " • ".join(
+            f"{STAGES[k]['label']}: {v['days']}d"
+            for k, v in FOLLOW_UP_SLA.items()
+        )
+    )
 
     action_items = get_deals_needing_action(opps=all_opps)
 
@@ -821,7 +882,7 @@ with tab_actions:
             c1, c2, c3 = st.columns(3)
             with c1:
                 if st.button("Log Call", key=f"action_call_{item['id']}"):
-                    log_call(item["id"])
+                    log_call(item["id"], performed_by=active_rep)
                     st.success("Call logged")
                     st.rerun()
             with c2:
@@ -843,3 +904,54 @@ with tab_actions:
 
     else:
         st.success("All caught up! No deals need immediate attention.")
+
+
+# ── Tab 8: Rep Scoreboard ────────────────────────────────────────────────────
+
+with tab_scoreboard:
+    st.markdown("### Rep Scoreboard — Activity to Revenue")
+    st.caption(
+        "Accountability at a glance: every call, note, and stage move is "
+        "attributed to the rep who did it (set **Working as** at the top of "
+        "the page). Touches over the last 30 days are tied directly to "
+        "revenue produced, so time spent working the pipeline shows up next "
+        "to the dollars it generates."
+    )
+
+    scoreboard = get_rep_scoreboard(opps=all_opps, days=30)
+
+    if not scoreboard:
+        st.info("No pipeline data yet — add deals to see the scoreboard.")
+    else:
+        import pandas as pd
+
+        df = pd.DataFrame([{
+            "Rep": r["rep"],
+            "Open Deals": r["open_deals"],
+            "Pipeline $/mo": f"${r['pipeline_value']:,.0f}",
+            "Weighted $/mo": f"${r['weighted_value']:,.0f}",
+            "Overdue": r["overdue"],
+            "No Follow-up": r["no_followup"],
+            "Avg Days Since Touch": r["avg_days_since_touch"],
+            "Touches (30d)": r["touches"],
+            "Touches/Deal": r["touches_per_deal"],
+            "MRR Won (Mo)": f"${r['mrr_won_month']:,.0f}",
+            "$ Won per Touch": f"${r['revenue_per_touch']:,.2f}",
+            "Win Rate": f"{r['win_rate']}%",
+        } for r in scoreboard])
+        st.dataframe(df, hide_index=True, width='stretch')
+
+        # Accountability flags — slipping reps called out by name
+        flagged = [r for r in scoreboard if r["overdue"] or r["no_followup"]]
+        if flagged:
+            st.markdown("#### Accountability Flags")
+            for r in flagged:
+                parts = []
+                if r["overdue"]:
+                    parts.append(f"{r['overdue']} overdue follow-up(s)")
+                if r["no_followup"]:
+                    parts.append(f"{r['no_followup']} deal(s) with no follow-up scheduled")
+                st.warning(f"**{r['rep']}** — {' and '.join(parts)}. "
+                           "See the Action Items tab to clear them.")
+        else:
+            st.success("Every open deal has a scheduled follow-up and nothing is overdue.")

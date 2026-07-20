@@ -42,6 +42,20 @@ TIERS = {
     "75+ Screens": {"screens": 75, "monthly": 1300},
 }
 
+# ── Follow-up SLA (accountability) ───────────────────────────────────────────
+# The strict follow-up schedule: max days between touches per stage, and the
+# default next action scheduled automatically whenever a deal enters a stage.
+# Every open deal always has a next action + date — no deal sits untouched.
+FOLLOW_UP_SLA = {
+    "prospect":      {"days": 7, "action": "Make first outreach"},
+    "outreach":      {"days": 3, "action": "Follow up on outreach"},
+    "engaged":       {"days": 3, "action": "Book discovery conversation"},
+    "discovery":     {"days": 2, "action": "Send proposal"},
+    "proposal_sent": {"days": 2, "action": "Follow up on proposal"},
+    "negotiation":   {"days": 1, "action": "Close the negotiation"},
+    "contract_sent": {"days": 1, "action": "Chase contract signature"},
+}
+
 
 # ── Supabase REST helpers ─────────────────────────────────────────────────────
 
@@ -146,6 +160,12 @@ def create_opportunity(opp_data: dict) -> dict | None:
     opp_data.setdefault("assigned_rep", "Mary Michael")
     opp_data.setdefault("created_at", now)
     opp_data.setdefault("updated_at", now)
+
+    # Accountability: every new deal starts with a scheduled follow-up
+    sla = FOLLOW_UP_SLA.get(opp_data["stage"])
+    if sla and not opp_data.get("next_action_date"):
+        opp_data["next_action"] = opp_data.get("next_action") or sla["action"]
+        opp_data["next_action_date"] = (date.today() + timedelta(days=sla["days"])).isoformat()
 
     # Try Supabase
     result = _sb_request("POST", "pipeline_opportunities", opp_data)
@@ -268,6 +288,13 @@ def advance_stage(opp_id: str, new_stage: str, performed_by: str = "MCTV Bot") -
         updates["probability"] = 100
     elif new_stage == "lost":
         updates["probability"] = 0
+
+    # Accountability: entering a stage automatically schedules that stage's
+    # follow-up per the SLA — reps never have to remember to set one.
+    sla = FOLLOW_UP_SLA.get(new_stage)
+    if sla:
+        updates["next_action"] = sla["action"]
+        updates["next_action_date"] = (date.today() + timedelta(days=sla["days"])).isoformat()
 
     result = update_opportunity(opp_id, updates)
 
@@ -520,35 +547,154 @@ def get_revenue_forecast(months: int = 3, opps: list[dict] | None = None) -> lis
 
 
 def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
-    """Get opportunities that need attention (overdue actions, stale deals)."""
+    """Get opportunities violating the follow-up schedule.
+
+    Flags, in priority order:
+      1. Overdue next action (with days overdue)
+      2. No follow-up scheduled at all (accountability rule: every open
+         deal must have a next action + date)
+      3. Untouched past the stage's SLA (per FOLLOW_UP_SLA)
+
+    Sorted by monthly value descending — biggest dollars first.
+    """
     if opps is None:
         opps = get_all_opportunities()
-    today = date.today().isoformat()
+    today = date.today()
+    today_iso = today.isoformat()
     needs_action = []
 
     for opp in opps:
-        if opp.get("stage") in ("won", "lost"):
+        stage = opp.get("stage")
+        if stage in ("won", "lost"):
             continue
 
+        sla = FOLLOW_UP_SLA.get(stage, {"days": 7, "action": "Follow up"})
         reason = None
 
-        # Overdue next action
         next_date = opp.get("next_action_date")
-        if next_date and next_date <= today:
-            reason = f"Overdue action: {opp.get('next_action', 'Follow up')}"
-
-        # Stale deal (no update in 7+ days)
-        elif opp.get("updated_at"):
-            updated = opp["updated_at"][:10]
-            stale_date = (date.today() - timedelta(days=7)).isoformat()
-            if updated <= stale_date:
-                reason = "No activity in 7+ days"
+        if next_date and next_date <= today_iso:
+            try:
+                overdue = (today - date.fromisoformat(next_date[:10])).days
+                when = f"{overdue} day(s) overdue" if overdue else "due today"
+            except ValueError:
+                when = "overdue"
+            reason = f"{when.capitalize()}: {opp.get('next_action', 'Follow up')}"
+        elif not next_date:
+            reason = f"No follow-up scheduled — set one ({sla['action']})"
+        else:
+            last_touch = (opp.get("last_contact_date")
+                          or opp.get("updated_at") or "")[:10]
+            sla_cutoff = (today - timedelta(days=sla["days"])).isoformat()
+            if last_touch and last_touch <= sla_cutoff:
+                reason = (f"No touch in {sla['days']}+ days — "
+                          f"{STAGES.get(stage, {}).get('label', stage)} deals "
+                          f"need contact every {sla['days']} day(s)")
 
         if reason:
             opp["_action_reason"] = reason
             needs_action.append(opp)
 
+    needs_action.sort(key=lambda o: -float(o.get("monthly_value", 0) or 0))
     return needs_action
+
+
+def get_all_activity(days: int = 30, limit: int = 1000) -> list[dict]:
+    """Get all pipeline activity across deals for the last N days."""
+    since = (date.today() - timedelta(days=days)).isoformat()
+    result = _sb_request(
+        "GET",
+        f"pipeline_activity?created_at=gte.{since}&order=created_at.desc&limit={limit}"
+    )
+    if result is not None:
+        return result
+
+    activity = _load_local_activity()
+    return [a for a in activity if (a.get("created_at") or "") >= since][:limit]
+
+
+def get_rep_scoreboard(opps: list[dict] | None = None, days: int = 30) -> list[dict]:
+    """Per-rep accountability and productivity-to-revenue metrics.
+
+    Ties activity (touches: calls, notes, emails, stage moves) directly to
+    revenue produced, and surfaces follow-up discipline per rep.
+
+    Returns one row per rep:
+        rep, open_deals, pipeline_value, weighted_value, overdue,
+        no_followup, avg_days_since_touch, touches, touches_per_deal,
+        mrr_won_month, revenue_per_touch, win_rate
+    """
+    if opps is None:
+        opps = get_all_opportunities()
+    activities = get_all_activity(days=days)
+    today = date.today()
+    month_start = today.replace(day=1).isoformat()
+
+    reps: dict[str, dict] = {}
+
+    def _rep(name: str) -> dict:
+        name = (name or "Unassigned").strip() or "Unassigned"
+        if name not in reps:
+            reps[name] = {
+                "rep": name, "open_deals": 0, "pipeline_value": 0.0,
+                "weighted_value": 0.0, "overdue": 0, "no_followup": 0,
+                "touches": 0, "mrr_won_month": 0.0,
+                "won_total": 0, "lost_total": 0, "_touch_ages": [],
+            }
+        return reps[name]
+
+    opp_to_rep = {}
+    for o in opps:
+        r = _rep(o.get("assigned_rep", ""))
+        opp_to_rep[o.get("id")] = r["rep"]
+        stage = o.get("stage")
+
+        if stage == "won":
+            r["won_total"] += 1
+            if (o.get("updated_at") or o.get("created_at") or "") >= month_start:
+                r["mrr_won_month"] += float(o.get("monthly_value", 0) or 0)
+        elif stage == "lost":
+            r["lost_total"] += 1
+        else:
+            r["open_deals"] += 1
+            value = float(o.get("monthly_value", 0) or 0)
+            r["pipeline_value"] += value
+            r["weighted_value"] += value * float(o.get("probability", 0) or 0) / 100
+
+            next_date = o.get("next_action_date")
+            if not next_date:
+                r["no_followup"] += 1
+            elif next_date <= today.isoformat():
+                r["overdue"] += 1
+
+            last_touch = (o.get("last_contact_date") or o.get("updated_at")
+                          or o.get("created_at") or "")[:10]
+            if last_touch:
+                try:
+                    r["_touch_ages"].append(
+                        (today - date.fromisoformat(last_touch)).days)
+                except ValueError:
+                    pass
+
+    # Attribute activity: by performer name when it matches a rep,
+    # otherwise by the deal's assigned rep (covers legacy 'MCTV Bot' rows)
+    for act in activities:
+        performer = (act.get("performed_by") or "").strip()
+        rep_name = performer if performer in reps else opp_to_rep.get(act.get("opportunity_id"))
+        if rep_name and rep_name in reps:
+            reps[rep_name]["touches"] += 1
+
+    rows = []
+    for r in reps.values():
+        ages = r.pop("_touch_ages")
+        r["avg_days_since_touch"] = round(sum(ages) / len(ages), 1) if ages else 0.0
+        r["touches_per_deal"] = round(r["touches"] / r["open_deals"], 1) if r["open_deals"] else 0.0
+        r["revenue_per_touch"] = round(r["mrr_won_month"] / r["touches"], 2) if r["touches"] else 0.0
+        decided = r["won_total"] + r["lost_total"]
+        r["win_rate"] = round(r["won_total"] / decided * 100) if decided else 0
+        rows.append(r)
+
+    rows.sort(key=lambda x: -x["pipeline_value"])
+    return rows
 
 
 def get_stage_options() -> list[tuple[str, str]]:
