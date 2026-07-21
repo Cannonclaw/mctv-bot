@@ -1,11 +1,8 @@
-// Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution,
-// or modification of this file is strictly prohibited.
-//
-// FNB × MCTV — "Grow With Us" story deck (12 slides, dark navy/gold)
-// Usage: npm install pptxgenjs && node build_story_deck.js
-//        → writes output/decks/FNB_GrowWithUs_Story_Deck.pptx
-// Regenerate art first if edited:  node render_art.js && node shot_product.js
+// FNB × MCTV — "Grow With Us" story deck, v4
+// Restructure per rep feedback: results/data first (slides 2-6), pitch second
+// (partners → ticker → Grove → ask). Starkville expansion cut — the play is
+// Oxford + Tupelo full-network + Market Ticker. 20-screen origin story added.
+// node build_deck2.js  → FNB_GrowWithUs_Story_Deck.pptx
 
 const path = require("path");
 const fs = require("fs");
@@ -30,7 +27,7 @@ const GROVE = "A6192E";
 const GROVEP = "FF8FA0";
 const FONT = "Arial";
 const W = 13.333, H = 7.5, M = 0.75;
-const AP = "’"; // typographic apostrophe
+const AP = "’";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
@@ -39,9 +36,12 @@ pres.title = "FNB × MCTV — Grow With Us";
 
 const logoWhite = path.join(ASSETS, "branding/mctv_logo_white.png");
 const LOGO_AR = 934 / 283;
-const BULLET = { characterCode: "25AA", indent: 14 };
+const FNB_MARK = path.join(S, "fnb_mark.png");    // 190x210 shield
+const GROVE_MARK = path.join(S, "grove_mark.png"); // 200x200 circle
+const FNB_AR = 190 / 210;
 
 const gsq = (s, x, y, sz) => s.addShape("rect", { x, y, w: sz || 0.14, h: sz || 0.14, fill: { color: GOLD } });
+const bullet = () => ({ characterCode: "25AA", indent: 14 });
 
 function header(s, kicker, title, opts = {}) {
   gsq(s, M, 0.62, 0.14);
@@ -58,11 +58,7 @@ function footer(s, n) {
     color: MUTE, charSpacing: 2, margin: 0 });
 }
 
-function darkSlide() {
-  const s = pres.addSlide();
-  s.background = { color: NAVY };
-  return s;
-}
+const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAVY }; return s; };
 
 // ── 1 · COVER ────────────────────────────────────────────────────────
 {
@@ -78,45 +74,7 @@ function darkSlide() {
     x: M, y: 6.55, w: 7.1, h: 0.35, fontFace: FONT, fontSize: 10, color: GOLD, charSpacing: 1.5, bold: true, margin: 0 });
 }
 
-// ── 2 · PARTNERS ─────────────────────────────────────────────────────
-{
-  const s = darkSlide();
-  header(s, "Our partners", "Two hometown names. One team.");
-
-  s.addText(`MCTV doesn${AP}t sell ad space to strangers. We build partnerships with the businesses that built these towns.`, {
-    x: M, y: 1.78, w: 10.2, h: 0.62, fontFace: FONT, fontSize: 14, color: ICE, margin: 0, lineSpacingMultiple: 1.25 });
-
-  s.addShape("roundRect", { x: M, y: 2.6, w: 5.85, h: 3.55, fill: { color: FNBNAVY }, rectRadius: 0.1, line: { color: GOLD, width: 1.5 } });
-  s.addText("FOUNDING PARTNER", { x: M + 0.4, y: 2.95, w: 5.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
-  s.addText("FNB OXFORD BANK", { x: M + 0.4, y: 3.3, w: 5.05, h: 0.55, fontFace: FONT, fontSize: 28, bold: true, color: WHITE, margin: 0 });
-  s.addShape("rect", { x: M + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GOLD } });
-  s.addText(`“North Mississippi${AP}s Friendly Neighborhood Bank”`, {
-    x: M + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GOLDB, margin: 0 });
-  s.addText([
-    { text: "Serving neighbors since 1910", options: { breakLine: true, bullet: BULLET, paraSpaceAfter: 8 } },
-    { text: "Headquartered on the historic Oxford Square", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Six locations — Oxford, Tupelo, Water Valley", options: { bullet: { characterCode: "25AA", indent: 14 } } },
-  ], { x: M + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
-
-  const gx = M + 6.1;
-  s.addShape("roundRect", { x: gx, y: 2.6, w: 5.85, h: 3.55, fill: { color: CARD }, rectRadius: 0.1, line: { color: GROVE, width: 1.5 } });
-  s.addText("COMMUNITY PARTNER", { x: gx + 0.4, y: 2.95, w: 5.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GROVEP, charSpacing: 4, margin: 0 });
-  s.addText("THE GROVE COLLECTIVE", { x: gx + 0.4, y: 3.3, w: 5.05, h: 0.55, fontFace: FONT, fontSize: 28, bold: true, color: WHITE, margin: 0 });
-  s.addShape("rect", { x: gx + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GROVE } });
-  s.addText(`Ole Miss${AP}s official NIL collective`, {
-    x: gx + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GROVEP, margin: 0 });
-  s.addText([
-    { text: "Funds 150+ Ole Miss student-athletes", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Across all 18 Rebel sports", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Keeping championship talent in Oxford", options: { bullet: { characterCode: "25AA", indent: 14 } } },
-  ], { x: gx + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
-
-  s.addText("This deck is the plan for what the three of us build next.", {
-    x: M, y: 6.5, w: 11.83, h: 0.4, align: "center", fontFace: FONT, fontSize: 13.5, italic: true, color: GOLDB, margin: 0 });
-  footer(s, 2);
-}
-
-// ── 3 · THE RESULTS ──────────────────────────────────────────────────
+// ── 2 · THE RESULTS ──────────────────────────────────────────────────
 {
   const s = darkSlide();
   header(s, "Your results · Jan 31 – Jul 20, 2026", `You trusted us with your name. Here${AP}s what happened.`);
@@ -127,7 +85,6 @@ function darkSlide() {
   s.addText("Source: NTV360 network analytics", {
     x: M + 0.05, y: 4.57, w: 7.0, h: 0.32, fontFace: FONT, fontSize: 11, color: MUTE, margin: 0 });
 
-  // companion stat fills the right half
   s.addShape("roundRect", { x: 9.0, y: 2.35, w: 3.58, h: 1.95, fill: { color: CARD2 }, rectRadius: 0.08, line: { color: GOLD, width: 1.25 } });
   s.addText("2,294", { x: 9.3, y: 2.62, w: 3.0, h: 0.85, fontFace: FONT, fontSize: 48, bold: true, color: WHITE, margin: 0 });
   s.addText("PLAYS A DAY, RAIN OR SHINE", { x: 9.3, y: 3.55, w: 3.0, h: 0.5, fontFace: FONT, fontSize: 10.5, bold: true, color: GOLDB, charSpacing: 2, margin: 0 });
@@ -144,10 +101,10 @@ function darkSlide() {
     s.addText(n, { x: x + 0.25, y: 5.35, w: 2.3, h: 0.6, fontFace: FONT, fontSize: 30, bold: true, color: WHITE, margin: 0 });
     s.addText(l.toUpperCase(), { x: x + 0.25, y: 6.0, w: 2.3, h: 0.5, fontFace: FONT, fontSize: 9.5, color: MUTE, charSpacing: 1.5, margin: 0 });
   });
-  footer(s, 3);
+  footer(s, 2);
 }
 
-// ── 4 · MOMENTS ──────────────────────────────────────────────────────
+// ── 3 · MOMENTS ──────────────────────────────────────────────────────
 {
   const s = darkSlide();
   header(s, "Where they saw you", "Your name became part of daily life.");
@@ -157,10 +114,10 @@ function darkSlide() {
   s.addImage({ path: path.join(S, "art_moments.png"), x: M, y: 2.62, w: iw, h: ih });
   s.addText("…and 61 more venues just like these, every day, all day.", {
     x: M, y: 6.72, w: 11.83, h: 0.35, align: "center", fontFace: FONT, fontSize: 12.5, italic: true, color: MUTE, margin: 0 });
-  footer(s, 4);
+  footer(s, 3);
 }
 
-// ── 5 · PROOF ────────────────────────────────────────────────────────
+// ── 4 · PROOF + the 20-screen story ──────────────────────────────────
 {
   const s = darkSlide();
   header(s, "The receipts", "Every venue, measured. These led the pack.");
@@ -204,17 +161,18 @@ function darkSlide() {
     s.addText(n, { x: mx + 0.3, y: y + 0.15, w: mw - 0.6, h: 0.32, fontFace: FONT, fontSize: 13, bold: true, color: GOLDB, charSpacing: 2, margin: 0 });
     s.addText(d, { x: mx + 0.3, y: y + 0.53, w: mw - 0.6, h: 0.5, fontFace: FONT, fontSize: 11.5, color: WHITE, margin: 0, lineSpacingMultiple: 1.1 });
   });
+  // the 20-screen origin story
   const gy = 2.05 + 2 * 1.45;
   s.addShape("roundRect", { x: mx, y: gy, w: mw, h: 1.8, fill: { color: FNBNAVY }, rectRadius: 0.07, line: { color: GOLD, width: 1.5 } });
-  s.addText("STARKVILLE", { x: mx + 0.3, y: gy + 0.2, w: mw - 0.6, h: 0.32, fontFace: FONT, fontSize: 13, bold: true, color: GOLDB, charSpacing: 2, margin: 0 });
-  s.addText("0 venues — the one market still missing your name.", {
-    x: mx + 0.3, y: gy + 0.58, w: mw - 0.6, h: 0.55, fontFace: FONT, fontSize: 12, color: WHITE, margin: 0, lineSpacingMultiple: 1.15 });
-  s.addText("30 MSU-country screens, ready when you are.", {
-    x: mx + 0.3, y: gy + 1.24, w: mw - 0.6, h: 0.42, fontFace: FONT, fontSize: 11, italic: true, color: ICE, margin: 0 });
-  footer(s, 5);
+  s.addText("3× WHAT YOU SIGNED FOR", { x: mx + 0.3, y: gy + 0.2, w: mw - 0.6, h: 0.32, fontFace: FONT, fontSize: 13, bold: true, color: GOLDB, charSpacing: 2, margin: 0 });
+  s.addText("FNB joined MCTV as a 20-screen partner. Today your ad plays across 65 venues.", {
+    x: mx + 0.3, y: gy + 0.58, w: mw - 0.6, h: 0.6, fontFace: FONT, fontSize: 12, color: WHITE, margin: 0, lineSpacingMultiple: 1.15 });
+  s.addText("Partners grow with us. That${AP}s the deal.".replace("${AP}", AP), {
+    x: mx + 0.3, y: gy + 1.28, w: mw - 0.6, h: 0.4, fontFace: FONT, fontSize: 11, italic: true, color: ICE, margin: 0 });
+  footer(s, 4);
 }
 
-// ── 6 · $0.59 ────────────────────────────────────────────────────────
+// ── 5 · $0.59 ────────────────────────────────────────────────────────
 {
   const s = darkSlide();
   header(s, "Your cost of attention", "All of that, for pennies per thousand people.");
@@ -239,20 +197,60 @@ function darkSlide() {
   });
   s.addText(`Same eyeballs — in rooms where ads can${AP}t be skipped or blocked.`, {
     x: rx, y: 5.7, w: rw, h: 0.4, fontFace: FONT, fontSize: 13, italic: true, color: ICE, margin: 0 });
-  footer(s, 6);
+  footer(s, 5);
 }
 
-// ── 7 · GROW WITH US MAP ─────────────────────────────────────────────
+// ── 6 · OWN BOTH TOWNS — the map ─────────────────────────────────────
 {
   const s = pres.addSlide();
   s.background = { path: path.join(S, "art_map.png") };
   gsq(s, M, 0.62, 0.14);
-  s.addText("GROW WITH US", { x: M + 0.26, y: 0.47, w: 9, h: 0.42, fontFace: FONT, fontSize: 12, color: GOLD, charSpacing: 3, bold: true, margin: 0, valign: "middle" });
-  s.addText("Your towns. Our screens.\nOne map to finish.", {
+  s.addText("THE NEXT STEP", { x: M + 0.26, y: 0.47, w: 9, h: 0.42, fontFace: FONT, fontSize: 12, color: GOLD, charSpacing: 3, bold: true, margin: 0, valign: "middle" });
+  s.addText("Your towns. Our screens.\nOwn them end to end.", {
     x: M, y: 0.95, w: 7.5, h: 1.5, fontFace: FONT, fontSize: 32, bold: true, color: WHITE, margin: 0 });
   s.addImage({ path: logoWhite, x: W - M - 1.15, y: 0.55, w: 1.15, h: 1.15 / LOGO_AR });
-  s.addText("125+ screens  ·  1.9M+ monthly impressions  ·  5 markets and growing", {
-    x: M, y: 6.55, w: 8.0, h: 0.4, fontFace: FONT, fontSize: 13, bold: true, color: GOLDB, margin: 0 });
+  s.addText("You started with 20 screens.\nYou outgrew them. The full network\nis 100 — every venue we run\nin Oxford and Tupelo.", {
+    x: M, y: 2.75, w: 3.9, h: 1.7, fontFace: FONT, fontSize: 13.5, bold: true, color: GOLDB, margin: 0, lineSpacingMultiple: 1.3 });
+  footer(s, 6);
+}
+
+// ── 7 · PARTNERS — sets up the sponsorship pitch ─────────────────────
+{
+  const s = darkSlide();
+  header(s, "Before the pitch", "Two hometown names. One team.");
+
+  s.addText("What comes next is a sponsorship — and who you sponsor matters as much as where. These are the names on it.", {
+    x: M, y: 1.78, w: 10.2, h: 0.62, fontFace: FONT, fontSize: 14, color: ICE, margin: 0, lineSpacingMultiple: 1.25 });
+
+  s.addShape("roundRect", { x: M, y: 2.6, w: 5.85, h: 3.55, fill: { color: FNBNAVY }, rectRadius: 0.1, line: { color: GOLD, width: 1.5 } });
+  s.addImage({ path: FNB_MARK, x: M + 4.55, y: 2.9, w: 0.95 * FNB_AR, h: 0.95 });
+  s.addText("FOUNDING PARTNER", { x: M + 0.4, y: 2.95, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
+  s.addText("FNB OXFORD BANK", { x: M + 0.4, y: 3.3, w: 4.1, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
+  s.addShape("rect", { x: M + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GOLD } });
+  s.addText(`“North Mississippi${AP}s Friendly Neighborhood Bank”`, {
+    x: M + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GOLDB, margin: 0 });
+  s.addText([
+    { text: "Serving neighbors since 1910", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Headquartered on the historic Oxford Square", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Six locations — Oxford, Tupelo, Water Valley", options: { bullet: bullet() } },
+  ], { x: M + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
+
+  const gx = M + 6.1;
+  s.addShape("roundRect", { x: gx, y: 2.6, w: 5.85, h: 3.55, fill: { color: CARD }, rectRadius: 0.1, line: { color: GROVE, width: 1.5 } });
+  s.addImage({ path: GROVE_MARK, x: gx + 4.55, y: 2.9, w: 0.95, h: 0.95 });
+  s.addText("COMMUNITY PARTNER", { x: gx + 0.4, y: 2.95, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GROVEP, charSpacing: 4, margin: 0 });
+  s.addText("THE GROVE COLLECTIVE", { x: gx + 0.4, y: 3.32, w: 4.1, h: 0.5, fontFace: FONT, fontSize: 19.5, bold: true, color: WHITE, margin: 0, valign: "middle" });
+  s.addShape("rect", { x: gx + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GROVE } });
+  s.addText(`Ole Miss${AP}s official NIL collective`, {
+    x: gx + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GROVEP, margin: 0 });
+  s.addText([
+    { text: "Funds 150+ Ole Miss student-athletes", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Across all 18 Rebel sports", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Keeping championship talent in Oxford", options: { bullet: bullet() } },
+  ], { x: gx + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
+
+  s.addText("Partner marks shown as placeholders pending final logo files.", {
+    x: M, y: 6.5, w: 11.83, h: 0.35, align: "center", fontFace: FONT, fontSize: 9.5, italic: true, color: MUTE, margin: 0 });
   footer(s, 7);
 }
 
@@ -263,7 +261,7 @@ function darkSlide() {
 
   s.addShape("roundRect", { x: M - 0.06, y: 1.99, w: 7.32, h: 4.24, fill: { color: "05070F" }, rectRadius: 0.05, line: { color: GOLD, width: 1.5 } });
   s.addImage({ path: path.join(S, "frame_product.png"), x: M, y: 2.05, w: 7.2, h: 4.05 });
-  s.addText("PRODUCT MOCK — FULL-MOTION DEMO READY TO SHOW TODAY", { x: M, y: 6.2, w: 7.2, h: 0.3, align: "center",
+  s.addText("PRODUCT MOCK WITH YOUR BRANDING — FULL-MOTION DEMO READY TODAY", { x: M, y: 6.2, w: 7.2, h: 0.3, align: "center",
     fontFace: FONT, fontSize: 9.5, color: MUTE, charSpacing: 2, margin: 0 });
 
   const rx = 8.35, rw = 4.25;
@@ -308,45 +306,49 @@ function darkSlide() {
   });
 
   s.addShape("roundRect", { x: M, y: 5.75, w: 11.83, h: 0.95, fill: { color: "2A1220" }, rectRadius: 0.08, line: { color: GROVE, width: 1 } });
+  s.addImage({ path: GROVE_MARK, x: M + 0.3, y: 5.92, w: 0.6, h: 0.6 });
   s.addText([
     { text: "On screen, in every rotation:  ", options: { bold: true, color: WHITE } },
     { text: "“FNB Oxford Bank — proud supporter of The Grove Collective and Ole Miss athletics.”", options: { italic: true, color: GROVEP } },
-  ], { x: M + 0.35, y: 5.75, w: 11.2, h: 0.95, fontFace: FONT, fontSize: 13.5, margin: 0, valign: "middle" });
+  ], { x: M + 1.1, y: 5.75, w: 10.4, h: 0.95, fontFace: FONT, fontSize: 13.5, margin: 0, valign: "middle" });
   footer(s, 9);
 }
 
-// ── 10 · THE ASK ─────────────────────────────────────────────────────
+// ── 10 · THE ASK — full network + ticker ─────────────────────────────
 {
   const s = darkSlide();
-  header(s, "The ask", "Two ways to grow with us.");
+  header(s, "The ask", "Own Oxford and Tupelo. All of it.");
 
   const cw = 5.765, x2 = M + cw + 0.3;
 
+  // flagship: market sponsor
   s.addShape("roundRect", { x: M, y: 2.0, w: cw, h: 4.35, fill: { color: FNBNAVY }, rectRadius: 0.1, line: { color: GOLD, width: 2 } });
+  s.addImage({ path: FNB_MARK, x: M + cw - 1.1, y: 2.25, w: 0.72 * FNB_AR, h: 0.72 });
   s.addText("FLAGSHIP", { x: M + 0.4, y: 2.28, w: 3.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
   s.addText("Market Sponsor", { x: M + 0.4, y: 2.6, w: cw - 0.8, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
   s.addText([
-    { text: "The Market Ticker, presented by FNB — exclusive", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "100 screens · Oxford + Tupelo · all day, every day", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Grove Collective give-back on every dollar", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Category lockout — no other bank on the ticker", options: { bullet: { characterCode: "25AA", indent: 14 } } },
+    { text: "The Market Ticker, presented by FNB — exclusive", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "100 screens · Oxford + Tupelo · all day, every day", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Grove Collective give-back on every dollar", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Category lockout — no other bank on the ticker", options: { bullet: bullet() } },
   ], { x: M + 0.4, y: 3.28, w: cw - 0.8, h: 1.75, fontFace: FONT, fontSize: 12, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
   s.addText("$3,000/mo", { x: M + 0.4, y: 5.18, w: 3.4, h: 0.7, fontFace: FONT, fontSize: 38, bold: true, color: GOLDB, margin: 0 });
   s.addText("mctvofms.com/market-sponsor", { x: M + 0.4, y: 5.92, w: cw - 0.8, h: 0.3, fontFace: FONT, fontSize: 11, color: ICE, margin: 0 });
 
+  // full network partner
   s.addShape("roundRect", { x: x2, y: 2.0, w: cw, h: 4.35, fill: { color: CARD2 }, rectRadius: 0.1, line: { color: "3A4271", width: 1.25 } });
-  s.addText("EXPANSION", { x: x2 + 0.4, y: 2.28, w: 3.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: ICE, charSpacing: 4, margin: 0 });
-  s.addText("Grow With Us Plan", { x: x2 + 0.4, y: 2.6, w: cw - 0.8, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
+  s.addText("UPGRADE", { x: x2 + 0.4, y: 2.28, w: 3.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: ICE, charSpacing: 4, margin: 0 });
+  s.addText("Full Network Partner", { x: x2 + 0.4, y: 2.6, w: cw - 0.8, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
   s.addText([
-    { text: "Starkville market, year-round — 30 MSU screens ($6,000)", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Holiday network saturation, Nov–Dec ($4,000)", options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: `All three of North Mississippi${AP}s population centers`, options: { breakLine: true, bullet: { characterCode: "25AA", indent: 14 }, paraSpaceAfter: 8 } },
-    { text: "Quarterly creative refresh included", options: { bullet: { characterCode: "25AA", indent: 14 } } },
+    { text: "Every screen we run in Oxford and Tupelo — 100 total", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Up from the 20-screen package you started on", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "1.9M+ monthly network impressions behind your name", options: { breakLine: true, bullet: bullet(), paraSpaceAfter: 8 } },
+    { text: "Rate locked for the full term — quarterly creative refresh included", options: { bullet: bullet() } },
   ], { x: x2 + 0.4, y: 3.28, w: cw - 0.8, h: 1.75, fontFace: FONT, fontSize: 12, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
-  s.addText("$10,000/yr", { x: x2 + 0.4, y: 5.18, w: 3.4, h: 0.7, fontFace: FONT, fontSize: 38, bold: true, color: WHITE, margin: 0 });
-  s.addText("Starkville + holiday sponsorship, bundled", { x: x2 + 0.4, y: 5.92, w: cw - 0.8, h: 0.3, fontFace: FONT, fontSize: 11, color: ICE, margin: 0 });
+  s.addText("$1,300/mo", { x: x2 + 0.4, y: 5.18, w: 3.4, h: 0.7, fontFace: FONT, fontSize: 38, bold: true, color: WHITE, margin: 0 });
+  s.addText("Standard full-network rate, held at today's pricing".replace("today's", `today${AP}s`), { x: x2 + 0.4, y: 5.92, w: cw - 0.8, h: 0.3, fontFace: FONT, fontSize: 11, color: ICE, margin: 0 });
 
-  s.addText(`Do both, and FNB owns North Mississippi${AP}s screens — every market, every season, one bank. Final terms with your MCTV rep.`, {
+  s.addText("Do both, and FNB owns both towns — every screen, every day, and the only bank on the ticker. Final terms with your MCTV rep.", {
     x: M, y: 6.6, w: 11.83, h: 0.4, align: "center", fontFace: FONT, fontSize: 12, italic: true, color: GOLDB, margin: 0 });
   footer(s, 10);
 }
@@ -358,16 +360,16 @@ function darkSlide() {
   const cards = [
     ["01", "The season is coming", "Football and back-to-school traffic hit in five weeks. Sponsors locked in now are on the wall when the crowds arrive — not after."],
     ["02", "Exclusive means one", "There is exactly one ticker sponsorship. Once a bank takes it, it${AP}s gone. We brought it to you first.".replace("${AP}", AP)],
-    ["03", "Momentum compounds", "Six months built real recognition — 392,395 plays${AP} worth. Expansion multiplies what you already own. Starting over later doesn${AP}t.".split("${AP}").join(AP)],
+    ["03", "You already outgrew 20 screens", "You signed for 20 and you${AP}re on 65 venues. Going full network locks in everything you${AP}ve built — at a rate that won${AP}t hold forever.".split("${AP}").join(AP)],
   ];
   cards.forEach(([n, h2, b], i) => {
     const x = M + i * 4.04;
     s.addShape("roundRect", { x, y: 2.15, w: 3.75, h: 3.45, fill: { color: CARD }, rectRadius: 0.08, line: { type: "none" } });
     s.addText(n, { x: x + 0.32, y: 2.43, w: 3.1, h: 0.68, fontFace: FONT, fontSize: 40, bold: true, color: GOLD, margin: 0 });
-    s.addText(h2, { x: x + 0.32, y: 3.18, w: 3.1, h: 0.4, fontFace: FONT, fontSize: 16, bold: true, color: WHITE, margin: 0 });
-    s.addText(b, { x: x + 0.32, y: 3.62, w: 3.1, h: 1.85, fontFace: FONT, fontSize: 11.5, color: ICE, margin: 0, lineSpacingMultiple: 1.25 });
+    s.addText(h2, { x: x + 0.32, y: 3.18, w: 3.1, h: 0.62, fontFace: FONT, fontSize: 15.5, bold: true, color: WHITE, margin: 0 });
+    s.addText(b, { x: x + 0.32, y: 3.84, w: 3.1, h: 1.65, fontFace: FONT, fontSize: 11.5, color: ICE, margin: 0, lineSpacingMultiple: 1.22 });
   });
-  s.addText("SEP 1 — KICKOFF, TICKER LIVE      ·      NOV 15 — HOLIDAY SATURATION      ·      JAN 1 — THREE MARKETS, ONE BANK", {
+  s.addText("SEP 1 — KICKOFF, TICKER LIVE      ·      NOV 15 — HOLIDAY TRAFFIC PEAKS      ·      JAN 1 — A FULL YEAR OF BOTH TOWNS, OWNED", {
     x: M, y: 6.3, w: 11.83, h: 0.4, align: "left", fontFace: FONT, fontSize: 11, bold: true, color: MUTE, charSpacing: 1.5, margin: 0 });
   footer(s, 11);
 }
@@ -379,7 +381,7 @@ function darkSlide() {
   gsq(s, M, 0.62, 0.14);
   s.addText("NEXT STEPS", { x: M + 0.26, y: 0.47, w: 9, h: 0.42, fontFace: FONT, fontSize: 12, color: GOLD, charSpacing: 3, bold: true, margin: 0, valign: "middle" });
   s.addText(`We${AP}re neighbors. Let${AP}s talk like it.`, { x: M, y: 0.92, w: 11.8, h: 0.7, fontFace: FONT, fontSize: 32, bold: true, color: WHITE, margin: 0 });
-  s.addText("Fifteen minutes over coffee on the Square. We'll walk the plan, answer everything, and your ads never stop playing while we do the paperwork.".replace("We'll", `We${AP}ll`), {
+  s.addText(`Fifteen minutes over coffee on the Square. We${AP}ll walk the plan, answer everything, and your ads never stop playing while we do the paperwork.`, {
     x: M, y: 1.78, w: 11.5, h: 0.6, fontFace: FONT, fontSize: 13.5, color: ICE, margin: 0, lineSpacingMultiple: 1.25 });
 
   const team = [

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1300px; height:620px; background:transparent; font-family:Arial,Helvetica,sans-serif;
+    display:flex; gap:60px; align-items:center; padding:10px 20px; }
+  .badge { display:flex; align-items:center; gap:26px; }
+  /* FNB shield mark */
+  .fnb-mark { width:190px; height:210px; position:relative; }
+  .fnb-mark svg { width:100%; height:100%; }
+  .fnb-words .n1 { color:#fff; font-size:64px; font-weight:bold; letter-spacing:2px; line-height:1.05; }
+  .fnb-words .n2 { color:#E3C57B; font-size:26px; letter-spacing:6px; font-weight:bold; margin-top:8px; }
+  .fnb-words .n3 { color:#c9cde0; font-size:17px; margin-top:10px; letter-spacing:1px; }
+  /* Grove circle mark */
+  .grove-mark { width:200px; height:200px; }
+  .grove-words .n1 { color:#fff; font-size:46px; font-weight:bold; letter-spacing:2px; line-height:1.1; }
+  .grove-words .n2 { color:#FF8FA0; font-size:20px; letter-spacing:4px; font-weight:bold; margin-top:8px; }
+</style></head><body>
+
+  <div class="badge" id="fnb">
+    <div class="fnb-mark">
+      <svg viewBox="0 0 200 220">
+        <defs>
+          <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#12406e"/><stop offset="1" stop-color="#0D2C54"/>
+          </linearGradient>
+        </defs>
+        <!-- shield -->
+        <path d="M100 6 L186 34 V118 C186 168 148 200 100 214 C52 200 14 168 14 118 V34 Z"
+          fill="url(#sh)" stroke="#C5A55A" stroke-width="6"/>
+        <path d="M100 22 L172 45 V116 C172 158 141 185 100 198 C59 185 28 158 28 116 V45 Z"
+          fill="none" stroke="rgba(197,165,90,.45)" stroke-width="2"/>
+        <!-- columns (bank) -->
+        <g fill="#E3C57B">
+          <rect x="52" y="78" width="12" height="52" rx="2"/>
+          <rect x="80" y="78" width="12" height="52" rx="2"/>
+          <rect x="108" y="78" width="12" height="52" rx="2"/>
+          <rect x="136" y="78" width="12" height="52" rx="2"/>
+          <path d="M44 70 L100 42 L156 70 Z"/>
+          <rect x="44" y="136" width="112" height="10" rx="3"/>
+        </g>
+        <text x="100" y="178" text-anchor="middle" fill="#E3C57B" font-family="Arial"
+          font-size="26" font-weight="bold" letter-spacing="4">1910</text>
+      </svg>
+    </div>
+    <div class="fnb-words">
+      <div class="n1">FNB</div>
+      <div class="n2">OXFORD BANK</div>
+      <div class="n3">North Mississippi's Friendly Neighborhood Bank</div>
+    </div>
+  </div>
+
+  <div class="badge" id="grove">
+    <div class="grove-mark">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="92" fill="#1A1F3D" stroke="#A6192E" stroke-width="6"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(166,25,46,.4)" stroke-width="2"/>
+        <!-- oak tree -->
+        <g>
+          <circle cx="100" cy="74" r="34" fill="#E3C57B"/>
+          <circle cx="70" cy="90" r="24" fill="#E3C57B"/>
+          <circle cx="130" cy="90" r="24" fill="#E3C57B"/>
+          <circle cx="84" cy="64" r="22" fill="#E3C57B"/>
+          <circle cx="116" cy="64" r="22" fill="#E3C57B"/>
+          <path d="M95 108 h10 v26 c8 -8 16 -10 22 -10 l-4 8 c-8 0 -13 4 -18 10 v14 h-10 v-20
+                   c-5 -6 -10 -9 -18 -9 l-4 -8 c8 0 15 3 22 9 Z" fill="#E3C57B"/>
+          <rect x="60" y="156" width="80" height="7" rx="3" fill="#A6192E"/>
+        </g>
+      </svg>
+    </div>
+    <div class="grove-words">
+      <div class="n1">THE GROVE<br>COLLECTIVE</div>
+      <div class="n2">OLE MISS NIL</div>
+    </div>
+  </div>
+
+</body></html>
