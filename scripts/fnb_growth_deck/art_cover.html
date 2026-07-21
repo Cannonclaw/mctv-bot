@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; overflow:hidden; font-family:Arial,Helvetica,sans-serif;
+    background: radial-gradient(1600px 1000px at 30% 20%, #26305e 0%, #151a38 45%, #0a0d1f 100%); }
+  .grain { position:absolute; inset:0; opacity:.35;
+    background-image: radial-gradient(rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 5px 5px; }
+  /* glowing billboard */
+  .screen { position:absolute; right:150px; top:200px; width:900px; height:520px;
+    background:#0b1026; border:14px solid #05070f; border-radius:10px;
+    box-shadow: 0 0 140px rgba(197,165,90,.38), 0 0 400px rgba(197,165,90,.16), 0 44px 80px rgba(0,0,0,.6);
+    transform: perspective(1600px) rotateY(-9deg) rotateX(1.5deg); overflow:hidden; }
+  .screen .inner { position:absolute; inset:0;
+    background: linear-gradient(150deg, #0d2c54 0%, #123a6e 60%, #0d2c54 100%);
+    display:flex; flex-direction:column; justify-content:center; padding:0 70px; }
+  .screen .glare { position:absolute; inset:0;
+    background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.10) 48%, transparent 56%); }
+  .screen .fnb { color:#fff; font-size:64px; font-weight:bold; letter-spacing:2px; }
+  .screen .bar { width:130px; height:8px; background:#C5A55A; margin:26px 0; }
+  .screen .tag { color:#E3C57B; font-size:27px; }
+  .screen .sub { color:#e8ebf5; font-size:23px; margin-top:14px; letter-spacing:1px; }
+  .screen .tick { position:absolute; bottom:0; left:0; right:0; height:64px; background:#0b0e1f;
+    border-top:3px solid #C5A55A; display:flex; align-items:center; padding:0 30px;
+    color:#c9cde0; font-size:22px; font-weight:bold; letter-spacing:1px; white-space:nowrap; }
+  .tick .up { color:#3ddc84; } .tick .sym { color:#fff; margin-left:26px; }
+  /* floor reflection */
+  .refl { position:absolute; right:150px; top:742px; width:900px; height:250px;
+    background: linear-gradient(180deg, rgba(197,165,90,.10), transparent 70%);
+    transform: perspective(1600px) rotateY(-9deg) rotateX(-3deg) scaleY(-.8); filter: blur(26px); opacity:.7; }
+  /* ambient light dots — a "venue at night" feel */
+  .dot { position:absolute; border-radius:50%; filter:blur(3px); }
+</style></head><body>
+  <div class="grain"></div>
+  <div class="refl"></div>
+  <div class="screen">
+    <div class="inner">
+      <div class="fnb">FNB OXFORD BANK</div>
+      <div class="bar"></div>
+      <div class="tag">North Mississippi's Friendly Neighborhood Bank</div>
+      <div class="sub">SINCE 1910 · OXFORD · TUPELO · WATER VALLEY</div>
+      <div class="tick"><span>DOW <span class="up">▲ 44,912</span></span><span class="sym">S&amp;P <span class="up">▲ 6,388</span></span><span class="sym" style="color:#E3C57B">PRESENTED BY FNB OXFORD BANK</span></div>
+      <div class="glare"></div>
+    </div>
+  </div>
+  <script>
+    // scatter warm bokeh dots on the left, like venue lights out of focus
+    const colors = ["rgba(197,165,90,", "rgba(227,197,123,", "rgba(120,140,220,"];
+    for (let i = 0; i < 26; i++) {
+      const d = document.createElement("div");
+      d.className = "dot";
+      const s = 6 + Math.random() * 26;
+      d.style.width = d.style.height = s + "px";
+      d.style.left = (Math.random() * 760) + "px";
+      d.style.top = (120 + Math.random() * 800) + "px";
+      d.style.background = colors[i % 3] + (0.12 + Math.random() * 0.3) + ")";
+      document.body.appendChild(d);
+    }
+  </script>
+</body></html>

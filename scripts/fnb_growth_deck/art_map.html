@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; overflow:hidden; font-family:Arial,Helvetica,sans-serif;
+    background: radial-gradient(1500px 950px at 55% 40%, #1e2547 0%, #12162e 55%, #0a0d1f 100%); }
+  svg { position:absolute; inset:0; }
+  .city { position:absolute; transform:translate(-50%,-50%); text-align:center; }
+  .halo { width:34px; height:34px; border-radius:50%; margin:0 auto;
+    box-shadow: 0 0 0 10px rgba(197,165,90,.12), 0 0 46px rgba(197,165,90,.55); background:#C5A55A; }
+  .halo.open { background:#fff; box-shadow: 0 0 0 12px rgba(255,255,255,.10), 0 0 60px rgba(255,255,255,.5);
+    animation:pulse 2.4s ease-in-out infinite; }
+  .halo.small { width:20px; height:20px; opacity:.75; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 22px rgba(255,255,255,.06), 0 0 70px rgba(255,255,255,.6);} }
+  .name { color:#fff; font-size:34px; font-weight:bold; letter-spacing:3px; margin-top:18px; }
+  .stat { color:#C5A55A; font-size:24px; font-weight:bold; margin-top:6px; letter-spacing:1px; }
+  .stat.open { color:#fff; }
+  .note { color:#8a90ad; font-size:19px; margin-top:4px; letter-spacing:2px; }
+</style></head><body>
+  <svg viewBox="0 0 1920 1080">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#C5A55A" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#C5A55A" stop-opacity=".25"/>
+      </linearGradient>
+    </defs>
+    <!-- connecting routes -->
+    <path d="M 730 450 Q 1030 370 1330 470" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <path d="M 730 450 Q 950 680 1250 790" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <path d="M 1330 470 Q 1380 660 1250 790" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <path d="M 1250 790 Q 1450 810 1640 840" fill="none" stroke="rgba(197,165,90,.35)" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+    <path d="M 1250 790 Q 1330 900 1430 955" fill="none" stroke="rgba(197,165,90,.35)" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+  </svg>
+  <div class="city" style="left:730px; top:450px;">
+    <div class="halo"></div><div class="name">OXFORD</div>
+    <div class="stat">75 SCREENS · FNB ACTIVE</div><div class="note">THE SQUARE · OLE MISS</div>
+  </div>
+  <div class="city" style="left:1330px; top:470px;">
+    <div class="halo"></div><div class="name">TUPELO</div>
+    <div class="stat">25 SCREENS · FNB ACTIVE</div><div class="note">NORTHEAST MS HUB</div>
+  </div>
+  <div class="city" style="left:1250px; top:790px;">
+    <div class="halo open"></div><div class="name">STARKVILLE</div>
+    <div class="stat open">30 SCREENS · OPEN FOR FNB</div><div class="note">MSU · GOLDEN TRIANGLE</div>
+  </div>
+  <div class="city" style="left:1640px; top:840px;">
+    <div class="halo small"></div><div class="name" style="font-size:26px;">COLUMBUS</div>
+    <div class="note">EXPANDING</div>
+  </div>
+  <div class="city" style="left:1430px; top:955px;">
+    <div class="halo small"></div><div class="name" style="font-size:26px;">WEST POINT</div>
+    <div class="note">EXPANDING</div>
+  </div>
+</body></html>
