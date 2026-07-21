@@ -237,10 +237,11 @@ const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAV
 
   const gx = M + 6.1;
   s.addShape("roundRect", { x: gx, y: 2.6, w: 5.85, h: 3.55, fill: { color: CARD }, rectRadius: 0.1, line: { color: GROVE, width: 1.5 } });
-  s.addImage({ path: GROVE_MARK, x: gx + 4.55, y: 2.9, w: 0.95, h: 0.95 });
-  s.addText("COMMUNITY PARTNER", { x: gx + 0.4, y: 2.95, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GROVEP, charSpacing: 4, margin: 0 });
-  s.addText("THE GROVE COLLECTIVE", { x: gx + 0.4, y: 3.32, w: 4.1, h: 0.5, fontFace: FONT, fontSize: 19.5, bold: true, color: WHITE, margin: 0, valign: "middle" });
-  s.addShape("rect", { x: gx + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GROVE } });
+  s.addText("COMMUNITY PARTNER", { x: gx + 0.4, y: 2.82, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GROVEP, charSpacing: 4, margin: 0 });
+  // Grove wordmark on white plate (dark-background display convention)
+  s.addShape("roundRect", { x: gx + 0.4, y: 3.18, w: 2.75, h: 0.92, fill: { color: WHITE }, rectRadius: 0.07, line: { type: "none" } });
+  s.addImage({ path: path.join(S, "grove_wordmark.png"), x: gx + 0.62, y: 3.33, w: 1.25 * (1920 / 940) * 0.55, h: 0.62 });
+  s.addText("THE GROVE COLLECTIVE", { x: gx + 3.35, y: 3.18, w: 2.2, h: 0.92, fontFace: FONT, fontSize: 13, bold: true, color: WHITE, margin: 0, valign: "middle", lineSpacingMultiple: 1.15 });
   s.addText(`Ole Miss${AP}s official NIL collective`, {
     x: gx + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GROVEP, margin: 0 });
   s.addText([
@@ -249,7 +250,7 @@ const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAV
     { text: "Keeping championship talent in Oxford", options: { bullet: bullet() } },
   ], { x: gx + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
 
-  s.addText("Partner marks shown as placeholders pending final logo files.", {
+  s.addText("Grove Collective mark recreated from brand reference · FNB mark is a placeholder pending their logo file.", {
     x: M, y: 6.5, w: 11.83, h: 0.35, align: "center", fontFace: FONT, fontSize: 9.5, italic: true, color: MUTE, margin: 0 });
   footer(s, 7);
 }
