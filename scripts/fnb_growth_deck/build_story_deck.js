@@ -223,10 +223,11 @@ const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAV
     x: M, y: 1.78, w: 10.2, h: 0.62, fontFace: FONT, fontSize: 14, color: ICE, margin: 0, lineSpacingMultiple: 1.25 });
 
   s.addShape("roundRect", { x: M, y: 2.6, w: 5.85, h: 3.55, fill: { color: FNBNAVY }, rectRadius: 0.1, line: { color: GOLD, width: 1.5 } });
-  s.addImage({ path: FNB_MARK, x: M + 4.55, y: 2.9, w: 0.95 * FNB_AR, h: 0.95 });
-  s.addText("FOUNDING PARTNER", { x: M + 0.4, y: 2.95, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
-  s.addText("FNB OXFORD BANK", { x: M + 0.4, y: 3.3, w: 4.1, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
-  s.addShape("rect", { x: M + 0.42, y: 3.95, w: 1.0, h: 0.07, fill: { color: GOLD } });
+  s.addText("FOUNDING PARTNER", { x: M + 0.4, y: 2.82, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
+  // FNB wordmark on white plate
+  s.addShape("roundRect", { x: M + 0.4, y: 3.18, w: 2.75, h: 0.92, fill: { color: WHITE }, rectRadius: 0.07, line: { type: "none" } });
+  s.addImage({ path: path.join(S, "fnb_navy.png"), x: M + 0.62, y: 3.35, w: 0.58 * (1488 / 425), h: 0.58 });
+  s.addText("FNB OXFORD BANK", { x: M + 3.35, y: 3.18, w: 2.2, h: 0.92, fontFace: FONT, fontSize: 13, bold: true, color: WHITE, margin: 0, valign: "middle", lineSpacingMultiple: 1.15 });
   s.addText(`“North Mississippi${AP}s Friendly Neighborhood Bank”`, {
     x: M + 0.4, y: 4.18, w: 5.05, h: 0.4, fontFace: FONT, fontSize: 13.5, italic: true, color: GOLDB, margin: 0 });
   s.addText([
@@ -250,7 +251,7 @@ const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAV
     { text: "Keeping championship talent in Oxford", options: { bullet: bullet() } },
   ], { x: gx + 0.4, y: 4.72, w: 5.05, h: 1.25, fontFace: FONT, fontSize: 12.5, color: ICE, margin: 0, lineSpacingMultiple: 1.1 });
 
-  s.addText("Grove Collective mark recreated from brand reference · FNB mark is a placeholder pending their logo file.", {
+  s.addText("Partner logos recreated as vector art from brand references — swap in source files before print production.", {
     x: M, y: 6.5, w: 11.83, h: 0.35, align: "center", fontFace: FONT, fontSize: 9.5, italic: true, color: MUTE, margin: 0 });
   footer(s, 7);
 }
@@ -324,7 +325,7 @@ const darkSlide = () => { const s = pres.addSlide(); s.background = { color: NAV
 
   // flagship: market sponsor
   s.addShape("roundRect", { x: M, y: 2.0, w: cw, h: 4.35, fill: { color: FNBNAVY }, rectRadius: 0.1, line: { color: GOLD, width: 2 } });
-  s.addImage({ path: FNB_MARK, x: M + cw - 1.1, y: 2.25, w: 0.72 * FNB_AR, h: 0.72 });
+  s.addImage({ path: path.join(S, "fnb_white.png"), x: M + cw - 1.75, y: 2.32, w: 0.38 * (1488 / 425), h: 0.38 });
   s.addText("FLAGSHIP", { x: M + 0.4, y: 2.28, w: 3.0, h: 0.3, fontFace: FONT, fontSize: 10, bold: true, color: GOLDB, charSpacing: 4, margin: 0 });
   s.addText("Market Sponsor", { x: M + 0.4, y: 2.6, w: cw - 0.8, h: 0.55, fontFace: FONT, fontSize: 26, bold: true, color: WHITE, margin: 0 });
   s.addText([
