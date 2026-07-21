@@ -1,0 +1,97 @@
+{
+  "client": "FNB Oxford Bank",
+  "client_short": "FNB",
+  "period": "January 31 – July 20, 2026",
+  "kpis": {
+    "total_plays": "392,395",
+    "active_venues": "65",
+    "screen_time": "3,788h",
+    "monthly_impressions": "1.4M+",
+    "network_cpm": "$0.59",
+    "avg_dwell": "56 min"
+  },
+  "top_venues": [
+    { "name": "Oxford Park Commission", "city": "Oxford", "plays": "49,379", "cpm": "$0.72" },
+    { "name": "Rebel Body Fitness", "city": "Oxford", "plays": "20,780", "cpm": "$2.33" },
+    { "name": "Amara Salon & Aesthetics", "city": "Oxford", "plays": "20,170", "cpm": "$2.80" },
+    { "name": "Texaco Lamar Express", "city": "Oxford", "plays": "17,439", "cpm": "$1.41" },
+    { "name": "Marathon South Lamar", "city": "Oxford", "plays": "14,647", "cpm": "$1.18" },
+    { "name": "Rainbow Cleaners", "city": "Oxford", "plays": "14,192", "cpm": "$6.27" },
+    { "name": "4 Corner's Chevron", "city": "Oxford", "plays": "12,121", "cpm": "$0.98" }
+  ],
+  "markets_current": [
+    { "name": "Oxford", "venues": 41, "plays": "339,061", "share": "86.4%" },
+    { "name": "Tupelo", "venues": 24, "plays": "53,334", "share": "13.6%" }
+  ],
+  "categories": [
+    { "name": "General", "pct": 22.6 },
+    { "name": "Restaurant & Bar", "pct": 21.7 },
+    { "name": "Salon & Beauty", "pct": 16.3 },
+    { "name": "Community & Ent.", "pct": 16.1 },
+    { "name": "Medical & Dental", "pct": 10.5 },
+    { "name": "Health & Fitness", "pct": 5.3 },
+    { "name": "All Others", "pct": 7.5 }
+  ],
+  "network": {
+    "total_screens": "125+",
+    "monthly_impressions": "1.9M+",
+    "markets": 5
+  },
+  "markets_all": [
+    { "name": "Oxford", "screens": 75, "status": "FNB ACTIVE" },
+    { "name": "Tupelo", "screens": 25, "status": "FNB ACTIVE" },
+    { "name": "Starkville", "screens": 30, "status": "OPEN FOR FNB" },
+    { "name": "Columbus", "screens": 2, "status": "EXPANDING" },
+    { "name": "West Point", "screens": 1, "status": "EXPANDING" }
+  ],
+  "sponsorships": [
+    {
+      "name": "MSU Bulldog Season",
+      "detail": "Starkville saturation through football season — Cotton District to The Junction.",
+      "screens": "30 screens · Sep–Dec",
+      "price": "$800/mo × 4",
+      "total": "$3,200"
+    },
+    {
+      "name": "Holiday Shopping",
+      "detail": "Network-wide saturation across Oxford, Starkville, and Tupelo — Black Friday through New Year.",
+      "screens": "130 screens · Nov–Dec",
+      "price": "$2,000/mo × 2",
+      "total": "$4,000",
+      "featured": true
+    },
+    {
+      "name": "Ole Miss Football Season",
+      "detail": "Own the Square through gameday season — home games, tailgates, watch parties.",
+      "screens": "75 screens · Aug–Dec",
+      "price": "$1,300/mo × 4",
+      "total": "$5,200"
+    }
+  ],
+  "plan": {
+    "items": [
+      {
+        "name": "Starkville Market — Year-Round",
+        "detail": "30 screens across the Golden Triangle, 12 months at the partner rate of $500/mo.",
+        "total": "$6,000"
+      },
+      {
+        "name": "Holiday Shopping Sponsorship",
+        "detail": "Network-wide saturation, all three markets, Black Friday through New Year. $2,000/mo × 2.",
+        "total": "$4,000"
+      }
+    ],
+    "total": "$10,000",
+    "gets": [
+      "Roughly 450,000 new impressions every month in Starkville",
+      "FNB present in all three of North Mississippi's key population centers",
+      "130-screen holiday saturation when spending peaks",
+      "Quarterly creative refresh — included at no charge"
+    ]
+  },
+  "team": [
+    { "name": "T. Creed Cannon", "title": "Owner / Managing Partner", "phone": "(601) 201-8202", "email": "creed@mctvofms.com", "photo": "creed_headshot.png" },
+    { "name": "Mary Michael Cannon", "title": "Owner / Managing Partner", "phone": "(662) 801-5677", "email": "mmc@mctvofms.com", "photo": "mary_michael_headshot.png" },
+    { "name": "Swayze Hollingsworth", "title": "Director of Sales", "phone": "(662) 907-0404", "email": "swayze@mctvofms.com", "photo": "swayze_headshot.png" }
+  ]
+}
