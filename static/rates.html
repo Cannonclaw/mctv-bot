@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCTV Elite Advertising — Rate Calculator</title>
+<style>
+  :root{
+    --navy:#0e1b2c; --navy2:#16283f; --gold:#e8a33d; --gold-dark:#c9861f;
+    --ink:#1c2733; --mut:#5b6b7c; --line:#e3e8ee; --bg:#f4f6f9; --card:#ffffff;
+    --green:#1e8e5a; --red:#c0392b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px}
+
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%);color:#fff;border-radius:14px;padding:26px 26px 22px;margin-bottom:18px}
+  .brandrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .logo{font-size:26px;font-weight:800;letter-spacing:.5px}
+  .logo span{color:var(--gold)}
+  .tagline{color:#c8d4e2;font-size:13px;margin-top:2px}
+  .quotemeta{text-align:right;font-size:12.5px;color:#c8d4e2}
+  .quotemeta b{color:#fff}
+  h1.pagetitle{font-size:20px;margin-top:16px;font-weight:700}
+  .pagesub{color:#c8d4e2;font-size:13.5px;margin-top:4px;max-width:720px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+  .card h2{font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .stepnum{background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  label.f{display:block;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:4px}
+  input[type=text],input[type=email],input[type=tel]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{flex:1;min-width:200px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:700;color:var(--mut);text-align:center}
+  .tab.active{border-color:var(--gold);color:var(--navy);background:#fdf6ea}
+  .tab small{display:block;font-weight:500;font-size:11.5px;margin-top:2px}
+
+  .pkggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:720px){.pkggrid{grid-template-columns:1fr}}
+  .pkg{border:2px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;text-align:center;background:#fff;position:relative}
+  .pkg.sel{border-color:var(--gold);background:#fdf6ea;box-shadow:0 2px 10px rgba(232,163,61,.25)}
+  .pkg .pname{font-weight:800;font-size:16px;color:var(--navy)}
+  .pkg .pprice{font-size:28px;font-weight:800;color:var(--navy);margin:8px 0 2px}
+  .pkg .pprice small{font-size:13px;color:var(--mut);font-weight:600}
+  .pkg .pplays{font-size:12.5px;color:var(--mut)}
+  .pkg .pdesc{font-size:12px;color:var(--mut);margin-top:8px}
+  .pkg .pick{margin-top:10px;font-size:12px;font-weight:700;color:var(--gold-dark)}
+  .pkg.sel .pick::before{content:"✓ "}
+  .popular{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:20px}
+
+  .terr-note{font-size:12.5px;color:var(--mut);margin:12px 0 6px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;background:#fff;font-weight:600;color:var(--mut)}
+  .chip.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  details.market{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  details.market summary{cursor:pointer;padding:12px 14px;font-weight:700;color:var(--navy);background:#f8fafc;display:flex;justify-content:space-between;align-items:center;list-style:none}
+  details.market summary::-webkit-details-marker{display:none}
+  summary .mcount{font-size:12px;color:var(--mut);font-weight:600}
+  .vlist{padding:6px 10px 10px}
+  .venue{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .venue:last-child{border-bottom:none}
+  .venue input{width:17px;height:17px;accent-color:var(--gold-dark);flex:none}
+  .vname{font-weight:600;flex:1;min-width:0}
+  .vname small{display:block;font-weight:500;color:var(--mut);font-size:11.5px}
+  .vstat{text-align:right;flex:none;width:118px}
+  .vrate{font-weight:800;color:var(--navy)}
+  .vimpr{font-size:11px;color:var(--mut)}
+  .selall{font-size:12px;color:var(--gold-dark);font-weight:700;cursor:pointer;background:none;border:none;padding:4px}
+
+  .termrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .termopt{border:2px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--mut);background:#fff}
+  .termopt.sel{border-color:var(--gold);color:var(--navy);background:#fdf6ea}
+  .prepay{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);margin-left:auto}
+  .prepay input{width:17px;height:17px;accent-color:var(--gold-dark)}
+
+  /* summary */
+  #summary .card{border:2px solid var(--navy)}
+  table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+  table.breakdown th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);padding:6px 8px;border-bottom:2px solid var(--line)}
+  table.breakdown th:last-child,table.breakdown td:last-child{text-align:right}
+  table.breakdown td{padding:7px 8px;border-bottom:1px solid var(--line)}
+  tr.total td{font-weight:800;font-size:15px;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;padding-top:10px}
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  @media(max-width:720px){.statrow{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .stat .sv{font-size:19px;font-weight:800;color:var(--navy)}
+  .stat .sl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+  .bonusnote{margin-top:10px;font-size:12.5px;color:var(--green);font-weight:700;display:none}
+
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .btn{flex:1;min-width:160px;padding:14px 18px;border:none;border-radius:10px;font-size:14.5px;font-weight:800;cursor:pointer;letter-spacing:.3px}
+  .btn.print{background:var(--navy);color:#fff}
+  .btn.accept{background:var(--green);color:#fff}
+  .btn.decline{background:#fff;color:var(--red);border:2px solid var(--red)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .hint{font-size:11.5px;color:var(--mut);margin-top:8px}
+
+  .fine{font-size:11.5px;color:var(--mut);margin:14px 0 30px;line-height:1.6}
+  footer.contact{background:var(--navy);color:#c8d4e2;border-radius:12px;padding:16px 20px;font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+  footer.contact b{color:#fff}
+  .empty{color:var(--mut);font-size:13px;font-style:italic;padding:8px 0}
+
+  /* print */
+  .printonly{display:none}
+  @media print{
+    body{background:#fff}
+    .noprint{display:none !important}
+    .printonly{display:block}
+    .card{border:none;padding:8px 0;margin-bottom:8px;page-break-inside:avoid}
+    header.hero{border-radius:0;padding:18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #summary .card{border:1px solid #999;padding:12px}
+    footer.contact{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .wrap{max-width:100%;padding:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="brandrow">
+    <div>
+      <div class="logo">MCTV <span>ELITE</span> ADVERTISING</div>
+      <div class="tagline">Indoor Digital Billboard Network • Oxford • Tupelo • Starkville / Golden Triangle</div>
+    </div>
+    <div class="quotemeta">
+      Quote Ref: <b id="qref">—</b><br>
+      Date: <b id="qdate">—</b><br>
+      Valid: <b id="qvalid">30 days</b>
+    </div>
+  </div>
+  <h1 class="pagetitle">Advertising Rate Calculator &amp; Instant Quote</h1>
+  <div class="pagesub">Pick a network package — or build your own screen network location-by-location — and get an instant cost breakdown. Print it, save it as a PDF, or accept right here and a copy goes to you and your MCTV rep.</div>
+</header>
+
+<section class="card noprint" id="step1">
+  <h2><span class="stepnum">1</span> Your Business Information</h2>
+  <div class="grid2">
+    <div><label class="f">Business Name *</label><input type="text" id="bizName" placeholder="e.g. Smith Family Dental"></div>
+    <div><label class="f">Contact Name *</label><input type="text" id="contactName" placeholder="First &amp; last name"></div>
+    <div><label class="f">Email *</label><input type="email" id="contactEmail" placeholder="you@business.com"></div>
+    <div><label class="f">Phone</label><input type="tel" id="contactPhone" placeholder="(662) 555-0100"></div>
+  </div>
+</section>
+
+<section class="card noprint" id="step2">
+  <h2><span class="stepnum">2</span> Choose Your Advertising</h2>
+  <div class="tabs">
+    <div class="tab active" id="tabPkg" onclick="setMode('pkg')">Network Packages<small>Best value — we place your ad on high-traffic screens</small></div>
+    <div class="tab" id="tabCustom" onclick="setMode('custom')">Build Your Own Network<small>Hand-pick exact locations, priced per venue</small></div>
+  </div>
+
+  <div id="pkgPane">
+    <div class="pkggrid" id="pkgGrid"></div>
+    <div class="terr-note">Which territories should your ads run in? (pick at least one)</div>
+    <div class="chips" id="terrChips"></div>
+  </div>
+
+  <div id="customPane" style="display:none">
+    <div class="terr-note">Check the locations you want. Each venue is priced by its real traffic, dwell time and screen count — rates shown per 4-week cycle.</div>
+    <div id="marketList"></div>
+  </div>
+</section>
+
+<section class="card noprint" id="step3">
+  <h2><span class="stepnum">3</span> Term</h2>
+  <div class="termrow">
+    <div class="termopt sel" data-months="6" onclick="setTerm(6)">6 Months<br><small>standard minimum</small></div>
+    <div class="termopt" data-months="12" onclick="setTerm(12)">12 Months<br><small>lock your rate</small></div>
+    <label class="prepay"><input type="checkbox" id="prepay" onchange="recalc()"> Prepay upfront → <span style="color:var(--green)">+1 month FREE</span></label>
+  </div>
+</section>
+
+<section id="summary">
+  <div class="card">
+    <h2><span class="stepnum">✓</span> Your Cost Breakdown</h2>
+    <div class="printonly" id="printHead" style="font-size:13px;margin-bottom:8px"></div>
+    <div id="breakdownArea"><div class="empty">Select a package or locations above to see your quote.</div></div>
+    <div class="statrow" id="statRow" style="display:none">
+      <div class="stat"><div class="sv" id="stScreens">0</div><div class="sl">Screens</div></div>
+      <div class="stat"><div class="sv" id="stImpr">0</div><div class="sl">Est. Impressions / 4 wks</div></div>
+      <div class="stat"><div class="sv" id="stPlays">0</div><div class="sl">Est. Ad Plays / mo</div></div>
+      <div class="stat"><div class="sv" id="stCPM">$0</div><div class="sl">Effective CPM</div></div>
+    </div>
+    <div class="bonusnote" id="bonusNote"></div>
+    <div class="btnrow noprint">
+      <button class="btn print" onclick="doPrint()">🖨 Print / Save as PDF</button>
+      <button class="btn accept" id="btnAccept" onclick="sendDecision('accept')">✓ Accept Quote</button>
+      <button class="btn decline" id="btnDecline" onclick="sendDecision('decline')">✗ Decline</button>
+    </div>
+    <div class="hint noprint">Accept or Decline records your decision with MCTV and opens a pre-filled email — just hit <b>Send</b> and a copy of this quote goes to your MCTV rep and to your own inbox. Use “Print / Save as PDF” and choose “Save as PDF” to keep an Adobe copy.</div>
+  </div>
+</section>
+
+<div class="fine">
+  Rates are quoted per 4-week advertising cycle per venue (network packages billed monthly). 6-month minimum term on all campaigns.
+  Impression estimates are modeled from each venue’s measured monthly foot traffic (NTV360 network data), average customer dwell time,
+  on-screen loop length and screen count; actual results vary. Quote valid for 30 days from the date shown. Creative production available —
+  ask your rep. Prepay bonus: pay the full term upfront and receive one additional month of advertising at no charge.
+</div>
+
+<footer class="contact">
+  <div><b>MCTV Elite Advertising</b> — your local indoor digital billboard network</div>
+  <div><b id="ftRep">—</b> • <span id="ftPhone">—</span> • <span id="ftEmail">—</span> • <span id="ftWeb">—</span></div>
+</footer>
+
+</div>
+
+<script>
+// ============================================================
+// MCTV RATE CALCULATOR — CONFIG & DATA
+// Pulled from the MCTV portal rate model (Supabase, July 2026
+// post 4-agent audit calibration). Edit values here to update.
+// ============================================================
+const CFG = {
+  cpm: 6,               // $ per 1,000 impressions
+  exposureCap: 6,       // max ad exposures per visit
+  crossScreenPct: 25,   // extra coverage per additional screen at a venue (%)
+  floor4wk: 25,         // minimum venue rate per 4 weeks ($)
+  fallbackLoopMin: 15,  // loop length (min) when a venue has no swept loop
+  weeksPerMonth: 4.345, // converts monthly traffic to weekly visits
+  playsPerScreenMo: 1440, // est. ad plays per screen per month
+  repName: "Creed Cannon",
+  repEmail: "creed@mctvofms.com",
+  repPhone: "601-405-5054",
+  website: "www.mctvofms.com",
+  quoteValidDays: 30,
+  submitUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/quote-submit" // logs accept/decline to the MCTV portal database
+};
+
+// Network packages (from MCTV contract tiers)
+const PACKAGES = [
+  { key: "p10", name: "10 Screens", screens: 10, monthly: 350, plays: "≈15,000 ad plays/mo" },
+  { key: "p20", name: "20 Screens", screens: 20, monthly: 500, plays: "≈30,000 ad plays/mo" },
+  { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" }
+];
+
+// Venue-type defaults (visits/day, days/week, dwell minutes)
+const TYPES = {
+  air:{label:"Airport Terminal",vpd:100,dpw:7,dwell:70},
+  asv:{label:"Auto Service & Collision",vpd:35,dpw:6,dwell:50},
+  aut:{label:"Auto Dealer",vpd:60,dpw:6,dwell:60},
+  bar:{label:"Bar & Nightlife",vpd:150,dpw:6,dwell:75},
+  cha:{label:"Chamber / Office Lobby",vpd:20,dpw:5,dwell:12},
+  cli:{label:"Medical Clinic",vpd:80,dpw:5,dwell:35},
+  cof:{label:"Coffee & Smoothie",vpd:180,dpw:7,dwell:20},
+  cop:{label:"Farm Co-op",vpd:90,dpw:6,dwell:15},
+  dcl:{label:"Dry Cleaner",vpd:60,dpw:6,dwell:5},
+  den:{label:"Dental",vpd:45,dpw:5,dwell:35},
+  gas:{label:"Gas & C-Store",vpd:450,dpw:7,dwell:4},
+  gol:{label:"Golf Course",vpd:60,dpw:7,dwell:35},
+  gym:{label:"Gym & Fitness",vpd:100,dpw:7,dwell:65},
+  hot:{label:"Hotel Lobby",vpd:120,dpw:7,dwell:8},
+  liq:{label:"Liquor & Wine",vpd:175,dpw:6,dwell:8},
+  nai:{label:"Nail Salon",vpd:45,dpw:7,dwell:55},
+  par:{label:"Parks & Recreation",vpd:250,dpw:7,dwell:60},
+  pha:{label:"Pharmacy",vpd:150,dpw:6,dwell:10},
+  prn:{label:"Print Shop",vpd:40,dpw:5,dwell:10},
+  pwn:{label:"Pawn Shop",vpd:45,dpw:6,dwell:15},
+  rest:{label:"Restaurant",vpd:175,dpw:6,dwell:40},
+  ret:{label:"Retail & Boutique",vpd:80,dpw:6,dwell:15},
+  rnk:{label:"Skating Rink",vpd:175,dpw:4,dwell:120},
+  sal:{label:"Salon & Barber",vpd:35,dpw:6,dwell:55},
+  shc:{label:"Shopping Center",vpd:400,dpw:7,dwell:25},
+  spa:{label:"MedSpa & Wellness",vpd:30,dpw:5,dwell:45},
+  tan:{label:"Tanning Salon",vpd:60,dpw:7,dwell:25},
+  urg:{label:"Urgent Care",vpd:55,dpw:7,dwell:40},
+  vet:{label:"Veterinary",vpd:55,dpw:6,dwell:30}
+};
+
+const MARKETS = {
+  oxford:    { label: "Oxford Territory" },
+  tupelo:    { label: "Tupelo Territory" },
+  starkville:{ label: "Starkville / Golden Triangle Territory" },
+  special:   { label: "Premium & Special Venues" }
+};
+
+// Venues: [market, name, city, screens, type, monthlyTraffic, dwellOverride, loopMinOverride, loopSeconds]
+const VENUES = [
+["oxford","4 Corner's Chevron (Chicken On A Stick)","Oxford",1,"gas",12546.5,null,null,739],
+["oxford","Amara Salon & Aesthetics","Oxford",2,"sal",2084,null,null,740],
+["oxford","B's Hickory Smoke BBQ","Oxford",1,"rest",5570.6,null,null,534],
+["oxford","Bep Haus","Oxford",1,"rest",null,null,null,439],
+["oxford","Booth's Barbeque and Yard","Oxford",1,"rest",5570.6,null,null,670],
+["oxford","Built Different Fitness","Oxford",1,"gym",null,null,null,406],
+["oxford","Cannon Chevrolet Buick Cadillac of Oxford","Oxford",1,"aut",3414.5,null,null,764],
+["oxford","Cannon Collision Center","Oxford",1,"asv",3414.5,null,null,734],
+["oxford","Casa Mexicana of Oxford","Oxford",1,"rest",5570.6,null,null,668],
+["oxford","El Charro Cocina & Cantina","Oxford",1,"rest",5570.6,null,null,835],
+["oxford","Element Hair Studio","Oxford",1,"sal",2084,null,null,704],
+["oxford","Finch & Kelly","Oxford",1,"ret",3855.6,null,null,774],
+["oxford","Internal Medicine Associates of Oxford","Oxford",2,"cli",3941.3,null,null,750],
+["oxford","James Food Center Post Office","Oxford",1,"gas",3838.2,null,null,724],
+["oxford","LandShark Seafood & Catfish","Oxford",1,"rest",5570.6,null,null,720],
+["oxford","Luxe Styling Studio","Oxford",1,"sal",2084,null,null,781],
+["oxford","Magnolia Wine & Spirits","Oxford",1,"liq",5947,null,null,624],
+["oxford","Marathon South Lamar","Oxford",1,"gas",12546.5,null,null,null],
+["oxford","Mississippi Asthma & Allergy Clinic, P.A.","Oxford",1,"cli",3941.3,null,null,840],
+["oxford","Nail E!","Oxford",2,"nai",2084,null,null,720],
+["oxford","Nail Thology","Oxford",2,"nai",2084,null,null,744],
+["oxford","Oxford Dental","Oxford",1,"den",3941.3,null,null,751],
+["oxford","Oxford Super Tan","Oxford",1,"tan",2084,null,null,799],
+["oxford","Oxford T-Shirt Co.","Oxford",1,"ret",3855.6,null,null,714],
+["oxford","Party in the Sip","Oxford",1,"ret",3855.6,null,null,695],
+["oxford","Rafters Music and Food","Oxford",1,"bar",4419.9,null,null,604],
+["oxford","Rainbow Cleaners","Oxford",1,"dcl",2117.1,null,null,619],
+["oxford","Rebel Body Fitness","Oxford",1,"gym",4786.5,null,null,424],
+["oxford","Rebel Yell Rooftop Bar","Oxford",1,"bar",3414.5,null,null,713],
+["oxford","RedMed Urgent Clinic of Oxford - Jackson Ave","Oxford",1,"urg",3838.2,null,null,790],
+["oxford","Revive Wellness of Oxford","Oxford",1,"spa",3941.3,null,null,720],
+["oxford","Right Track Medical Group - Oxford","Oxford",3,"cli",3941.3,null,null,751],
+["oxford","Rosati's Pizza","Oxford",1,"rest",5570.6,null,null,640],
+["oxford","Sip Oxford","Oxford",1,"cof",3855.6,null,null,786],
+["oxford","Southern Coop","Oxford",1,"rest",5570.6,null,null,655],
+["oxford","Stouts Carpet & Flooring","Oxford",1,"ret",3855.6,null,null,784],
+["oxford","Texaco Lamar Express","Oxford",1,"gas",12546.5,null,null,null],
+["oxford","The Blind Pig Pub","Oxford",1,"bar",5570.6,null,null,665],
+["oxford","The Children's Dental Center","Oxford",1,"den",3941.3,null,null,830],
+["oxford","The Oxford Growler","Oxford",1,"bar",5570.6,null,null,585],
+["oxford","The Velvet Ditch - Sports Bar & Seafood","Oxford",1,"bar",5570.6,120,null,null],
+["oxford","Uno Mas Tacos y Tequila Jackson Ave","Oxford",1,"rest",5570.6,null,null,644],
+["special","Oxford Park Commission","Oxford",5,"par",4419.9,180,24.48,null],
+["special","Oxford-Lafayette County Chamber of Commerce","Oxford",1,"cha",3414.5,null,17.83,null],
+["special","Starkville Parks and Recreation","Starkville",1,"par",null,null,13.97,null],
+["special","Tupelo Airport Authority","Tupelo",6,"air",null,null,10.12,null],
+["starkville","39759 Nutrition","Starkville",1,"cof",3855.6,null,null,940],
+["starkville","Arepas Coffee & Bar","Starkville",1,"cof",null,null,null,724],
+["starkville","Bennett Home Furniture & More","Starkville",1,"ret",3855.6,null,null,824],
+["starkville","BJ's Family Pharmacy","Starkville",1,"pha",3941.3,null,null,865],
+["starkville","Cannon Chevrolet GMC of West Point","West Point",1,"aut",3414.5,null,null,769],
+["starkville","Cellars Wine & Spirits","Starkville",1,"liq",5947,null,null,900],
+["starkville","Copy Cow","Starkville",1,"prn",3855.6,null,null,940],
+["starkville","Elm Lake Golf Course","Columbus",2,"gol",4419.9,null,null,900],
+["starkville","Hobie's Tiki Dawgs & Daqs","Starkville",1,"bar",5570.6,null,null,null],
+["starkville","Legends Hair Salon","Starkville",1,"sal",2084,null,null,900],
+["starkville","Little Magnolia Gifts & Apparel - Starkville","Starkville",1,"ret",3414.5,null,null,839],
+["starkville","Lucky Nails & Spa","Starkville",1,"nai",2084,null,null,829],
+["starkville","Magnolia Dermatology: Columbus Clinic","Columbus",1,"cli",null,null,null,485],
+["starkville","Mississippi Asthma & Allergy Clinic, PA - Starkville","Starkville",1,"cli",3941.3,null,null,865],
+["starkville","Mississippi Ice Daiquiri Shop","Starkville",1,"bar",5570.6,null,null,784],
+["starkville","Montgomery's Jewelry","Starkville",1,"ret",3855.6,null,null,940],
+["starkville","Oktibbeha County Co-op","Starkville",1,"cop",3855.6,null,null,769],
+["starkville","Revive Wellness Clinic - Starkville","Starkville",1,"spa",2418.3,null,null,880],
+["starkville","Right Track Medical Group - Starkville","Starkville",2,"cli",3941.3,null,null,865],
+["starkville","Skate Odyssey Inc","Starkville",1,"rnk",4419.9,null,null,749],
+["starkville","Skate Zone","Columbus",1,"rnk",null,null,null,440],
+["starkville","Starkvegas Pawnshop","Starkville",1,"pwn",3855.6,null,null,null],
+["starkville","Starkville Veterinary Hospital","Starkville",1,"vet",2418.3,null,null,925],
+["starkville","The Breakfast Club","Starkville",1,"rest",5570.6,null,null,829],
+["starkville","Two Brothers Smoked Meats","Starkville",3,"rest",5570.6,null,null,739],
+["starkville","Umi Japanese Steakhouse & Sushi Bar","Starkville",1,"rest",5570.6,null,null,739],
+["starkville","Uno Mas Tacos y Tequila Starkville","Starkville",3,"rest",5570.6,null,null,900],
+["starkville","William Wells Tire & Auto","Starkville",1,"asv",2156.3,null,null,880],
+["tupelo","662 Wine and Liquor","Tupelo",1,"liq",5947,null,null,963],
+["tupelo","Aaron Wash Beard Co","Tupelo",1,"sal",2084,null,null,963],
+["tupelo","All Shook Up Nutrition","Tupelo",1,"cof",5570.6,null,null,1023],
+["tupelo","Amsterdam Deli","Tupelo",1,"rest",null,null,null,744],
+["tupelo","Cardiology Associates of North Mississippi","Tupelo",1,"cli",3941.3,null,null,988],
+["tupelo","CrossFit Tupelo","Tupelo",1,"gym",null,null,null,888],
+["tupelo","Exceed Technologies","Tupelo",1,"cha",2117.1,null,null,1199],
+["tupelo","Her Gym","Tupelo",1,"gym",null,null,null,728],
+["tupelo","Hotel Tupelo","Tupelo",1,"hot",12843.2,null,null,958],
+["tupelo","Little Magnolia Gifts and Apparel","Tupelo",1,"ret",3855.6,null,null,963],
+["tupelo","Loaded Nutrition - Tupelo","Tupelo",1,"cof",5570.6,null,null,888],
+["tupelo","Midtown Pointe Shopping Center","Tupelo",1,"shc",3838.2,null,null,958],
+["tupelo","Mudcreek Wine and Spirit","Tupelo",1,"liq",5947,null,null,null],
+["tupelo","Nail E! Tupelo","Tupelo",1,"nai",2084,null,null,978],
+["tupelo","Oxford Urology - Tupelo","Tupelo",1,"cli",null,null,null,null],
+["tupelo","Pizza Doctor","Tupelo",1,"rest",5570.6,null,null,908],
+["tupelo","Premier Aesthetics","Tupelo",1,"spa",2418.3,null,null,958],
+["tupelo","Right Track Medical Group - Tupelo","Tupelo",1,"cli",3414.5,null,null,928],
+["tupelo","Second Skin Waxing","Tupelo",1,"sal",2084,null,null,913],
+["tupelo","Skate Zone in Tupelo","Tupelo",2,"rnk",4419.9,null,null,958],
+["tupelo","Sophia Misaki Beauty","Tupelo",1,"sal",4419.9,null,null,933],
+["tupelo","Style Society","Tupelo",1,"sal",2418.3,null,null,null],
+["tupelo","Tupelo River Coffee","Tupelo",1,"cof",6817.2,null,null,978],
+["tupelo","Tupelo Small Animal Hospital","Tupelo",1,"vet",2418.3,null,null,978],
+["tupelo","VIBE Aesthetics and Wellness","Tupelo",1,"spa",2418.3,null,null,979],
+["tupelo","VIBE Performance and Testosterone","Tupelo",1,"spa",3941.3,null,null,944]
+];
+
+// Rate model: exposures = min(cap, dwell/loop); coverage = 1+(screens-1)*cross%;
+// 4wk rate = max(floor, round5(weeklyImpressions*4/1000*cpm))
+function venueCalc(v){
+  const [,,,screens,type,traffic,dwellO,loopO,loopS] = v;
+  const t = TYPES[type];
+  const weeklyVisits = (traffic != null) ? traffic / CFG.weeksPerMonth : t.vpd * t.dpw;
+  const dwell = (dwellO != null) ? dwellO : t.dwell;
+  const loop = (loopO != null) ? loopO : (loopS != null ? loopS / 60 : CFG.fallbackLoopMin);
+  const exposures = Math.min(CFG.exposureCap, dwell / loop);
+  const coverage = 1 + (screens - 1) * CFG.crossScreenPct / 100;
+  const weeklyImpr = weeklyVisits * exposures * coverage;
+  const impr4wk = weeklyImpr * 4;
+  const rate = Math.max(CFG.floor4wk, Math.round(impr4wk / 1000 * CFG.cpm / 5) * 5);
+  return { rate, impr4wk: Math.round(impr4wk) };
+}
+</script>
+<script>
+// ===================== APP STATE =====================
+let mode = 'pkg';            // 'pkg' | 'custom'
+let selPkg = null;           // package key
+let selTerr = new Set();     // territories for package mode
+let selVenues = new Set();   // venue indexes for custom mode
+let termMonths = 6;
+
+const $ = id => document.getElementById(id);
+const fmt$ = n => '$' + n.toLocaleString('en-US');
+const fmtN = n => n.toLocaleString('en-US');
+
+// quote ref + dates
+const now = new Date();
+const qref = 'MCTV-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(Math.floor(1000+Math.random()*9000));
+$('qref').textContent = qref;
+$('qdate').textContent = now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+const validUntil = new Date(now.getTime() + CFG.quoteValidDays*86400000);
+$('qvalid').textContent = 'through ' + validUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+$('ftRep').textContent = CFG.repName;
+$('ftPhone').textContent = CFG.repPhone;
+$('ftEmail').textContent = CFG.repEmail;
+$('ftWeb').textContent = CFG.website;
+
+// ===================== RENDER: PACKAGES =====================
+function renderPackages(){
+  $('pkgGrid').innerHTML = PACKAGES.map((p,i)=>`
+    <div class="pkg ${selPkg===p.key?'sel':''}" onclick="pickPkg('${p.key}')">
+      ${i===1?'<div class="popular">MOST POPULAR</div>':''}
+      <div class="pname">${p.name}</div>
+      <div class="pprice">${fmt$(p.monthly)}<small>/mo</small></div>
+      <div class="pplays">${p.plays}</div>
+      <div class="pdesc">Your ad placed on ${p.screens} high-traffic screens across your chosen territories, rotating all day, every day.</div>
+      <div class="pick">${selPkg===p.key?'Selected':'Select this package'}</div>
+    </div>`).join('');
+  const terrs = ['oxford','tupelo','starkville'];
+  $('terrChips').innerHTML = terrs.map(t=>`
+    <div class="chip ${selTerr.has(t)?'sel':''}" onclick="toggleTerr('${t}')">${MARKETS[t].label.replace(' Territory','')}</div>`).join('');
+}
+function pickPkg(k){ selPkg = (selPkg===k? null : k); renderPackages(); recalc(); }
+function toggleTerr(t){ selTerr.has(t)?selTerr.delete(t):selTerr.add(t); renderPackages(); recalc(); }
+
+// ===================== RENDER: CUSTOM VENUES =====================
+function renderMarkets(){
+  const order = ['oxford','tupelo','starkville','special'];
+  $('marketList').innerHTML = order.map(mk=>{
+    const rows = VENUES.map((v,i)=>({v,i})).filter(x=>x.v[0]===mk);
+    if(!rows.length) return '';
+    const nSel = rows.filter(x=>selVenues.has(x.i)).length;
+    return `<details class="market" ${mk==='oxford'?'open':''}>
+      <summary>${MARKETS[mk].label}
+        <span class="mcount">${nSel? nSel+' selected · ':''}${rows.length} locations
+          <button class="selall" onclick="event.preventDefault();selectAll('${mk}')">select all</button>
+          <button class="selall" onclick="event.preventDefault();clearAll('${mk}')">clear</button>
+        </span>
+      </summary>
+      <div class="vlist">` + rows.map(({v,i})=>{
+        const c = venueCalc(v);
+        return `<label class="venue">
+          <input type="checkbox" ${selVenues.has(i)?'checked':''} onchange="toggleVenue(${i})">
+          <span class="vname">${v[1]}<small>${v[2]} • ${TYPES[v[4]].label} • ${v[3]} screen${v[3]>1?'s':''}</small></span>
+          <span class="vstat"><span class="vrate">${fmt$(c.rate)}</span><span style="font-size:11px;color:#5b6b7c">/4 wks</span><div class="vimpr">≈${fmtN(c.impr4wk)} impressions</div></span>
+        </label>`;
+      }).join('') + `</div></details>`;
+  }).join('');
+}
+function toggleVenue(i){ selVenues.has(i)?selVenues.delete(i):selVenues.add(i); renderMarkets(); recalc(); }
+function selectAll(mk){ VENUES.forEach((v,i)=>{ if(v[0]===mk) selVenues.add(i); }); renderMarkets(); recalc(); }
+function clearAll(mk){ VENUES.forEach((v,i)=>{ if(v[0]===mk) selVenues.delete(i); }); renderMarkets(); recalc(); }
+
+// ===================== MODE / TERM =====================
+function setMode(m){
+  mode = m;
+  $('tabPkg').classList.toggle('active', m==='pkg');
+  $('tabCustom').classList.toggle('active', m==='custom');
+  $('pkgPane').style.display = m==='pkg'?'':'none';
+  $('customPane').style.display = m==='custom'?'':'none';
+  recalc();
+}
+function setTerm(m){
+  termMonths = m;
+  document.querySelectorAll('.termopt').forEach(el=>el.classList.toggle('sel', +el.dataset.months===m));
+  recalc();
+}
+
+// ===================== QUOTE MODEL =====================
+// network-average impressions per screen per 4 weeks (from the venue rate model)
+const NET_IMPR_PER_SCREEN = (()=>{ let imp=0, scr=0; VENUES.forEach(v=>{ imp+=venueCalc(v).impr4wk; scr+=v[3]; }); return imp/scr; })();
+
+function currentQuote(){
+  const q = { lines:[], monthly:0, screens:0, impr:0, ok:false };
+  if(mode==='pkg' && selPkg){
+    const p = PACKAGES.find(x=>x.key===selPkg);
+    const terrs = [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','')).join(', ') || 'To be selected with your rep';
+    q.lines.push({name:`${p.name} Network Package`, detail:`Territories: ${terrs}`, screens:p.screens, amt:p.monthly});
+    q.monthly = p.monthly; q.screens = p.screens;
+    q.impr = Math.round(p.screens * NET_IMPR_PER_SCREEN); // network-average estimate
+    q.ok = true;
+  }
+  if(mode==='custom' && selVenues.size){
+    [...selVenues].sort((a,b)=>a-b).forEach(i=>{
+      const v = VENUES[i], c = venueCalc(v);
+      q.lines.push({name:v[1], detail:`${v[2]} • ${TYPES[v[4]].label} • ${v[3]} screen${v[3]>1?'s':''}`, screens:v[3], amt:c.rate, impr:c.impr4wk});
+      q.monthly += c.rate; q.screens += v[3]; q.impr += c.impr4wk;
+    });
+    q.ok = true;
+  }
+  if(q.ok){
+    q.plays = q.screens * CFG.playsPerScreenMo;
+    q.cpm = q.impr ? (q.monthly / (q.impr/1000)) : 0;
+    q.bonusMonths = $('prepay').checked ? 1 : 0;
+    q.termTotal = q.monthly * termMonths;
+    q.totalMonths = termMonths + q.bonusMonths;
+  }
+  return q;
+}
+
+// ===================== RENDER: SUMMARY =====================
+function recalc(){
+  const q = currentQuote();
+  const area = $('breakdownArea');
+  if(!q.ok){
+    area.innerHTML = '<div class="empty">Select a package or locations above to see your quote.</div>';
+    $('statRow').style.display='none'; $('bonusNote').style.display='none';
+    $('btnAccept').disabled = true; $('btnDecline').disabled = true;
+    return;
+  }
+  let html = '<table class="breakdown"><tr><th>Item</th><th>Details</th><th>Screens</th><th>Per 4 Wks / Mo</th></tr>';
+  q.lines.forEach(l=>{
+    html += `<tr><td><b>${l.name}</b></td><td style="color:#5b6b7c">${l.detail}</td><td style="text-align:center">${l.screens}</td><td>${fmt$(l.amt)}</td></tr>`;
+  });
+  html += `<tr class="total"><td>Monthly Total</td><td></td><td style="text-align:center">${q.screens}</td><td>${fmt$(q.monthly)}</td></tr>`;
+  html += `<tr><td colspan="3" style="font-weight:700">${termMonths}-Month Term Total${q.bonusMonths?` <span style="color:var(--green)">(+${q.bonusMonths} month free — ${q.totalMonths} months of advertising)</span>`:''}</td><td style="font-weight:800">${fmt$(q.termTotal)}</td></tr>`;
+  html += '</table>';
+  area.innerHTML = html;
+
+  $('statRow').style.display='';
+  $('stScreens').textContent = q.screens;
+  $('stImpr').textContent = fmtN(Math.round(q.impr));
+  $('stPlays').textContent = fmtN(q.plays);
+  $('stCPM').textContent = '$' + q.cpm.toFixed(2);
+
+  const bn = $('bonusNote');
+  if(q.bonusMonths){ bn.style.display=''; bn.style.color='var(--green)'; bn.textContent = `✓ Prepay bonus applied: pay ${fmt$(q.termTotal)} upfront and run ${q.totalMonths} months — your effective rate drops to ${fmt$(Math.round(q.termTotal/q.totalMonths))} /mo.`; }
+  else bn.style.display='none';
+
+  $('btnAccept').disabled = false; $('btnDecline').disabled = false;
+
+  $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value?', '+esc($('contactPhone').value):''})`;
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ===================== PRINT & EMAIL =====================
+function doPrint(){ recalc(); window.print(); }
+
+function quoteText(q, decision){
+  const b = [];
+  b.push(`MCTV ELITE ADVERTISING — QUOTE ${qref}`);
+  b.push(`Decision: ${decision==='accept'?'ACCEPTED ✓':'DECLINED ✗'}`);
+  b.push(`Date: ${now.toLocaleDateString('en-US')}`);
+  b.push('');
+  b.push(`Business: ${$('bizName').value||'—'}`);
+  b.push(`Contact: ${$('contactName').value||'—'} | ${$('contactEmail').value||'—'} | ${$('contactPhone').value||'—'}`);
+  b.push('');
+  b.push('--- SELECTION ---');
+  q.lines.forEach(l=>b.push(`• ${l.name} (${l.detail}) — ${l.screens} screen(s) — $${l.amt}/4wks`));
+  b.push('');
+  b.push('--- COST BREAKDOWN ---');
+  b.push(`Monthly total: $${q.monthly.toLocaleString()}`);
+  b.push(`Term: ${termMonths} months${q.bonusMonths?` + ${q.bonusMonths} month FREE (prepaid)`:''}`);
+  b.push(`Term total: $${q.termTotal.toLocaleString()}`);
+  b.push(`Screens: ${q.screens} | Est. impressions/4wks: ${Math.round(q.impr).toLocaleString()} | Est. ad plays/mo: ${q.plays.toLocaleString()} | Effective CPM: $${q.cpm.toFixed(2)}`);
+  b.push('');
+  b.push(decision==='accept'
+    ? 'Next step: your MCTV rep will send the agreement and creative onboarding.'
+    : 'Feedback (optional — tell us why or what would change your mind):');
+  b.push('');
+  b.push(`Quote valid through ${validUntil.toLocaleDateString('en-US')}.`);
+  b.push(`${CFG.repName} • ${CFG.repPhone} • ${CFG.repEmail} • ${CFG.website}`);
+  return b.join('\n');
+}
+
+async function sendDecision(decision){
+  const biz = $('bizName').value.trim(), name = $('contactName').value.trim(), email = $('contactEmail').value.trim();
+  if(!biz || !name || !email){ alert('Please fill in your Business Name, Contact Name and Email in Step 1 first.'); $('bizName').focus(); return; }
+  const q = currentQuote();
+  if(!q.ok) return;
+
+  // 1) Record the decision in the MCTV system (works even if the email below is never sent)
+  let logged = false;
+  if(CFG.submitUrl){
+    try{
+      const r = await fetch(CFG.submitUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+        quote_ref: qref, decision, business_name: biz, contact_name: name, contact_email: email,
+        contact_phone: $('contactPhone').value.trim(), mode, term_months: termMonths, prepay: $('prepay').checked,
+        monthly_total: q.monthly, term_total: q.termTotal, screens: q.screens, est_impressions: Math.round(q.impr),
+        selection: q.lines.map(l=>({item:l.name, detail:l.detail, screens:l.screens, rate:l.amt}))
+      })});
+      logged = r.ok;
+    }catch(e){ logged = false; }
+  }
+  const bn = $('bonusNote');
+  bn.style.display = '';
+  bn.style.color = logged ? 'var(--green)' : 'var(--red)';
+  bn.textContent = logged
+    ? (decision==='accept' ? '✓ Your acceptance has been recorded with MCTV. An email copy is opening now — just press Send.' : '✓ Your response has been recorded. An email copy is opening now — just press Send.')
+    : '⚠ Could not reach the MCTV system — please make sure to press Send on the email that opens so we receive your decision.';
+
+  // 2) Open a pre-filled email to the rep, CC the prospect
+  const subj = `${decision==='accept'?'ACCEPTED':'DECLINED'} — MCTV Advertising Quote ${qref} — ${biz}`;
+  const body = quoteText(q, decision);
+  window.location.href = `mailto:${encodeURIComponent(CFG.repEmail)}?cc=${encodeURIComponent(email)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+}
+
+// ===================== INIT =====================
+renderPackages();
+renderMarkets();
+recalc();
+</script>
+</body>
+</html>

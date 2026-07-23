@@ -17,4 +17,6 @@ RUN mkdir -p output/proposals output/reports output/emails output/videos output/
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# run_server.py registers the public /rates route, then runs app.py with
+# these exact flags. See server_routes.py.
+CMD ["python", "run_server.py"]

@@ -47,14 +47,17 @@ def _apply_streamlit_patches():
                         "skipping PWA Starlette patches")
         _star_routes = None
 
-    # .js extension whitelist
+    # .js + .html extension whitelist. .html is here so the public rate
+    # calculator stays reachable at /app/static/rates.html even if the
+    # /rates route in server_routes.py stops matching a future Streamlit.
+    # Only files we ship in static/ are servable, none of them user-supplied.
     if _asfh is not None and hasattr(_asfh, "SAFE_APP_STATIC_FILE_EXTENSIONS"):
         try:
-            js_exts = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js",)
-            _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = js_exts
+            safe_exts = _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS + (".js", ".html")
+            _asfh.SAFE_APP_STATIC_FILE_EXTENSIONS = safe_exts
             if _star_routes is not None and hasattr(_star_routes,
                                                      "SAFE_APP_STATIC_FILE_EXTENSIONS"):
-                _star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = js_exts
+                _star_routes.SAFE_APP_STATIC_FILE_EXTENSIONS = safe_exts
         except Exception as _e:
             logging.warning("Could not patch SAFE_APP_STATIC_FILE_EXTENSIONS: %s", _e)
 
