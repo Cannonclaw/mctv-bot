@@ -3,119 +3,225 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MCTV Elite Advertising — Rate Calculator</title>
+<title>MCTV Elite Advertising — Rate Quote</title>
 <style>
   :root{
-    --navy:#0e1b2c; --navy2:#16283f; --gold:#e8a33d; --gold-dark:#c9861f;
-    --ink:#1c2733; --mut:#5b6b7c; --line:#e3e8ee; --bg:#f4f6f9; --card:#ffffff;
-    --green:#1e8e5a; --red:#c0392b;
+    --navy:#0a1220;
+    --navy2:#121f33;
+    --gold:#d4a017;
+    --gold-light:#e8b923;
+    --ink:#1a2533;
+    --mut:#5a6a7a;
+    --line:#e2e8f0;
+    --bg:#f7f8fa;
+    --card:#ffffff;
+    --green:#15803d;
+    --red:#b91c1c;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
-  .wrap{max-width:1080px;margin:0 auto;padding:16px}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:12px 16px 40px}
 
-  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%);color:#fff;border-radius:14px;padding:26px 26px 22px;margin-bottom:18px}
-  .brandrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-  .logo{font-size:26px;font-weight:800;letter-spacing:.5px}
+  /* HEADER */
+  header.hero{
+    background:linear-gradient(145deg,var(--navy) 0%,var(--navy2) 100%);
+    color:#fff;border-radius:14px;padding:22px 24px 20px;margin-bottom:18px;
+    box-shadow:0 4px 20px rgba(10,18,32,0.25);
+  }
+  .brandrow{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .logo{font-size:26px;font-weight:800;letter-spacing:0.8px;line-height:1.1}
   .logo span{color:var(--gold)}
-  .tagline{color:#c8d4e2;font-size:13px;margin-top:2px}
-  .quotemeta{text-align:right;font-size:12.5px;color:#c8d4e2}
-  .quotemeta b{color:#fff}
-  h1.pagetitle{font-size:20px;margin-top:16px;font-weight:700}
-  .pagesub{color:#c8d4e2;font-size:13.5px;margin-top:4px;max-width:720px}
+  .tagline{color:#a8b8c8;font-size:13px;margin-top:5px;font-weight:500}
+  .quotemeta{text-align:right;font-size:12.5px;color:#a8b8c8;line-height:1.6}
+  .quotemeta b{color:#fff;font-weight:600}
+  h1.pagetitle{font-size:20px;margin-top:14px;font-weight:700;letter-spacing:-0.2px}
+  .pagesub{color:#a8b8c8;font-size:13.5px;margin-top:4px;max-width:720px}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
-  .card h2{font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  .stepnum{background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none}
+  /* CARDS */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,0.03);
+  }
+  .card h2{
+    font-size:13px;text-transform:uppercase;letter-spacing:1.1px;color:var(--navy);
+    margin-bottom:14px;display:flex;align-items:center;gap:9px;font-weight:700;
+  }
+  .stepnum{
+    background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none;
+  }
 
+  /* FORM */
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-  label.f{display:block;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:4px}
-  input[type=text],input[type=email],input[type=tel]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
-  input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  label.f{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:4px}
+  input[type=text],input[type=email],input[type=tel]{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;
+    transition:border .15s,box-shadow .15s;
+  }
+  input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,0.15)}
 
+  /* TABS */
   .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .tab{flex:1;min-width:200px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:700;color:var(--mut);text-align:center}
-  .tab.active{border-color:var(--gold);color:var(--navy);background:#fdf6ea}
-  .tab small{display:block;font-weight:500;font-size:11.5px;margin-top:2px}
+  .tab{
+    flex:1;min-width:200px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;
+    background:#fff;cursor:pointer;font-size:14px;font-weight:700;color:var(--mut);text-align:center;
+    transition:all .15s;
+  }
+  .tab:hover{border-color:#c5ced9}
+  .tab.active{border-color:var(--gold);color:var(--navy);background:#fdf8e8;box-shadow:0 2px 8px rgba(212,160,23,.12)}
+  .tab small{display:block;font-weight:500;font-size:11.5px;margin-top:3px;color:#7a8a9a}
 
+  /* PACKAGES */
   .pkggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media(max-width:720px){.pkggrid{grid-template-columns:1fr}}
-  .pkg{border:2px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;text-align:center;background:#fff;position:relative}
-  .pkg.sel{border-color:var(--gold);background:#fdf6ea;box-shadow:0 2px 10px rgba(232,163,61,.25)}
-  .pkg .pname{font-weight:800;font-size:16px;color:var(--navy)}
-  .pkg .pprice{font-size:28px;font-weight:800;color:var(--navy);margin:8px 0 2px}
-  .pkg .pprice small{font-size:13px;color:var(--mut);font-weight:600}
-  .pkg .pplays{font-size:12.5px;color:var(--mut)}
-  .pkg .pdesc{font-size:12px;color:var(--mut);margin-top:8px}
-  .pkg .pick{margin-top:10px;font-size:12px;font-weight:700;color:var(--gold-dark)}
+  @media(max-width:780px){.pkggrid{grid-template-columns:1fr}}
+  .pkg{
+    border:2px solid var(--line);border-radius:12px;padding:16px 14px;cursor:pointer;
+    text-align:center;background:#fff;position:relative;transition:all .15s;
+  }
+  .pkg:hover{border-color:#c5ced9}
+  .pkg.sel{border-color:var(--gold);background:#fdf8e8;box-shadow:0 3px 12px rgba(212,160,23,.18)}
+  .pkg .pname{font-weight:800;font-size:15px;color:var(--navy)}
+  .pkg .pprice{font-size:26px;font-weight:800;color:var(--navy);margin:8px 0 2px}
+  .pkg .pplays{font-size:12px;color:var(--mut)}
+  .pkg .pdesc{font-size:12.5px;color:#5b6b7c;margin-top:8px;line-height:1.4}
+  .pkg .pick{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--gold)}
   .pkg.sel .pick::before{content:"✓ "}
-  .popular{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:800;letter-spacing:1px;padding:2px 10px;border-radius:20px}
+  .popular{
+    position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    background:var(--gold);color:var(--navy);font-size:10px;font-weight:800;
+    letter-spacing:0.8px;padding:2px 10px;border-radius:20px;
+  }
 
-  .terr-note{font-size:12.5px;color:var(--mut);margin:12px 0 6px}
+  /* TERRITORIES */
+  .terr-note{font-size:13px;color:var(--mut);margin:12px 0 8px}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{border:1.5px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;background:#fff;font-weight:600;color:var(--mut)}
+  .chip{
+    border:1.5px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;
+    cursor:pointer;background:#fff;font-weight:600;color:var(--mut);transition:all .1s;
+  }
+  .chip:hover{border-color:#c5ced9}
   .chip.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
 
+  /* CUSTOM VENUES */
   details.market{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
-  details.market summary{cursor:pointer;padding:12px 14px;font-weight:700;color:var(--navy);background:#f8fafc;display:flex;justify-content:space-between;align-items:center;list-style:none}
+  details.market summary{
+    cursor:pointer;padding:11px 14px;font-weight:700;color:var(--navy);background:#f8fafc;
+    display:flex;justify-content:space-between;align-items:center;list-style:none;font-size:14px;
+  }
   details.market summary::-webkit-details-marker{display:none}
   summary .mcount{font-size:12px;color:var(--mut);font-weight:600}
   .vlist{padding:6px 10px 10px}
   .venue{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px dashed var(--line);font-size:13.5px}
   .venue:last-child{border-bottom:none}
-  .venue input{width:17px;height:17px;accent-color:var(--gold-dark);flex:none}
+  .venue input{width:17px;height:17px;accent-color:var(--gold);flex:none}
   .vname{font-weight:600;flex:1;min-width:0}
-  .vname small{display:block;font-weight:500;color:var(--mut);font-size:11.5px}
-  .vstat{text-align:right;flex:none;width:118px}
-  .vrate{font-weight:800;color:var(--navy)}
+  .vname small{display:block;font-weight:500;color:var(--mut);font-size:11.5px;margin-top:1px}
+  .vstat{text-align:right;flex:none;width:120px}
+  .vrate{font-weight:800;color:var(--navy);font-size:14px}
   .vimpr{font-size:11px;color:var(--mut)}
-  .selall{font-size:12px;color:var(--gold-dark);font-weight:700;cursor:pointer;background:none;border:none;padding:4px}
 
+  /* TERM */
   .termrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .termopt{border:2px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--mut);background:#fff}
-  .termopt.sel{border-color:var(--gold);color:var(--navy);background:#fdf6ea}
+  .termopt{
+    border:2px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;
+    font-size:14px;font-weight:700;color:var(--mut);background:#fff;transition:all .1s;
+  }
+  .termopt:hover{border-color:#c5ced9}
+  .termopt.sel{border-color:var(--gold);color:var(--navy);background:#fdf8e8}
   .prepay{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);margin-left:auto}
-  .prepay input{width:17px;height:17px;accent-color:var(--gold-dark)}
+  .prepay input{width:17px;height:17px;accent-color:var(--gold)}
 
-  /* summary */
+  /* SUMMARY */
   #summary .card{border:2px solid var(--navy)}
   table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
-  table.breakdown th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);padding:6px 8px;border-bottom:2px solid var(--line)}
+  table.breakdown th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);padding:7px 8px;border-bottom:2px solid var(--line)}
   table.breakdown th:last-child,table.breakdown td:last-child{text-align:right}
-  table.breakdown td{padding:7px 8px;border-bottom:1px solid var(--line)}
+  table.breakdown td{padding:8px;border-bottom:1px solid var(--line)}
   tr.total td{font-weight:800;font-size:15px;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;padding-top:10px}
+  
   .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
   @media(max-width:720px){.statrow{grid-template-columns:repeat(2,1fr)}}
   .stat{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
-  .stat .sv{font-size:19px;font-weight:800;color:var(--navy)}
+  .stat .sv{font-size:18px;font-weight:800;color:var(--navy)}
   .stat .sl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
-  .bonusnote{margin-top:10px;font-size:12.5px;color:var(--green);font-weight:700;display:none}
 
-  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-  .btn{flex:1;min-width:160px;padding:14px 18px;border:none;border-radius:10px;font-size:14.5px;font-weight:800;cursor:pointer;letter-spacing:.3px}
+  .bonusnote{margin-top:10px;font-size:13px;color:var(--green);font-weight:700;display:none}
+
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{
+    flex:1;min-width:150px;padding:13px 18px;border:none;border-radius:10px;
+    font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;transition:all .15s;
+  }
   .btn.print{background:var(--navy);color:#fff}
+  .btn.print:hover{background:#061018}
   .btn.accept{background:var(--green);color:#fff}
   .btn.decline{background:#fff;color:var(--red);border:2px solid var(--red)}
+  .btn.secondary{background:#f1f4f8;color:var(--ink);border:1px solid var(--line)}
   .btn:disabled{opacity:.45;cursor:not-allowed}
-  .hint{font-size:11.5px;color:var(--mut);margin-top:8px}
 
-  .fine{font-size:11.5px;color:var(--mut);margin:14px 0 30px;line-height:1.6}
-  footer.contact{background:var(--navy);color:#c8d4e2;border-radius:12px;padding:16px 20px;font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+  .hint{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5}
+  .fine{font-size:12px;color:var(--mut);margin:14px 0 20px;line-height:1.6}
+
+  footer.contact{
+    background:var(--navy);color:#a8b8c8;border-radius:12px;padding:14px 18px;
+    font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;
+  }
   footer.contact b{color:#fff}
-  .empty{color:var(--mut);font-size:13px;font-style:italic;padding:8px 0}
 
-  /* print */
+  .empty{color:var(--mut);font-size:13.5px;font-style:italic;padding:12px 0;text-align:center}
+  .info-box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px;font-size:13px;line-height:1.55}
+  .info-box h4{margin-bottom:6px;color:var(--navy)}
+
+  /* MOBILE (quote links get texted — phones are the primary surface) */
+  .mobilebar{display:none}
+  @media(max-width:640px){
+    /* 16px inputs stop iOS Safari's auto-zoom on focus */
+    input[type=text],input[type=email],input[type=tel],input[type=date]{font-size:16px}
+    .vstat{width:92px}
+    .vrate{font-size:13px}
+    .venue{gap:8px;padding:8px 2px}
+    .mobilebar.on{
+      display:flex;position:fixed;left:0;right:0;bottom:0;z-index:900;
+      background:var(--navy);color:#fff;padding:10px 14px;align-items:center;gap:10px;
+      box-shadow:0 -3px 14px rgba(10,18,32,.35);
+    }
+    .mobilebar .mb-amt{font-size:17px;font-weight:800}
+    .mobilebar .mb-sub{font-size:11px;color:#a8b8c8}
+    .mobilebar button{
+      margin-left:auto;background:var(--gold);color:var(--navy);border:none;border-radius:8px;
+      padding:9px 14px;font-size:13px;font-weight:800;cursor:pointer;flex:none;
+    }
+    body.has-mobilebar{padding-bottom:64px}
+  }
+
+  @media print{.mobilebar{display:none!important}}
+
+  /* QUOTE-CARD MODE (?print=1 on a quote link — clean client-facing card, no builder) */
+  body.quotecard #step1,body.quotecard #step2,body.quotecard #step3,
+  body.quotecard #compareCard,body.quotecard #howRates,body.quotecard .mobilebar{display:none!important}
+  body.quotecard .printonly{display:block}
+  body.quotecard.has-mobilebar{padding-bottom:0}
+
+  /* Agreement modal buttons: full-width on phones so the submit label doesn't cram
+     (!important — the buttons carry inline flex styles) */
+  @media(max-width:640px){
+    #agSubmit{flex:1 1 100%!important}
+    #agSubmit + .btn.secondary{flex:1 1 100%!important}
+  }
+
+  /* PRINT */
   .printonly{display:none}
   @media print{
-    body{background:#fff}
-    .noprint{display:none !important}
-    .printonly{display:block}
-    .card{border:none;padding:8px 0;margin-bottom:8px;page-break-inside:avoid}
-    header.hero{border-radius:0;padding:18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #summary .card{border:1px solid #999;padding:12px}
-    footer.contact{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:letter;margin:0.55in}
+    body{background:white;font-size:11.5pt}
+    .noprint,.card.noprint,button,.tabs,.chips,details,.prepay,.termopt,input{display:none!important}
+    .printonly{display:block!important}
     .wrap{max-width:100%;padding:0}
+    header.hero{background:#0a1220!important;border-radius:0;padding:16px 18px;margin-bottom:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #summary .card{border:2px solid #0a1220;padding:14px}
+    .statrow{grid-template-columns:repeat(4,1fr)}
+    footer.contact{background:#0a1220!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 </style>
 </head>
@@ -125,8 +231,8 @@
 <header class="hero">
   <div class="brandrow">
     <div>
-      <div class="logo">MCTV <span>ELITE</span> ADVERTISING</div>
-      <div class="tagline">Indoor Digital Billboard Network • Oxford • Tupelo • Starkville / Golden Triangle</div>
+      <div class="logo">MCTV <span>ELITE</span></div>
+      <div class="tagline">Indoor Digital Billboard Network · Oxford · Tupelo · Starkville</div>
     </div>
     <div class="quotemeta">
       Quote Ref: <b id="qref">—</b><br>
@@ -134,113 +240,160 @@
       Valid: <b id="qvalid">30 days</b>
     </div>
   </div>
-  <h1 class="pagetitle">Advertising Rate Calculator &amp; Instant Quote</h1>
-  <div class="pagesub">Pick a network package — or build your own screen network location-by-location — and get an instant cost breakdown. Print it, save it as a PDF, or accept right here and a copy goes to you and your MCTV rep.</div>
+  <h1 class="pagetitle">Advertising Rate Quote</h1>
+  <div class="pagesub">Select a network package or build your own. Instant professional quotes based on real traffic data.</div>
 </header>
 
 <section class="card noprint" id="step1">
-  <h2><span class="stepnum">1</span> Your Business Information</h2>
+  <h2><span class="stepnum">1</span> Business Information</h2>
   <div class="grid2">
-    <div><label class="f">Business Name *</label><input type="text" id="bizName" placeholder="e.g. Smith Family Dental"></div>
-    <div><label class="f">Contact Name *</label><input type="text" id="contactName" placeholder="First &amp; last name"></div>
-    <div><label class="f">Email *</label><input type="email" id="contactEmail" placeholder="you@business.com"></div>
-    <div><label class="f">Phone</label><input type="tel" id="contactPhone" placeholder="(662) 555-0100"></div>
+    <div><label class="f">Business Name *</label><input type="text" id="bizName" placeholder="e.g. Smith Family Dental" oninput="recalc()"></div>
+    <div><label class="f">Contact Name *</label><input type="text" id="contactName" placeholder="First & last name" oninput="recalc()"></div>
+    <div><label class="f">Email *</label><input type="email" id="contactEmail" placeholder="you@business.com" oninput="recalc()"></div>
+    <div><label class="f">Phone</label><input type="tel" id="contactPhone" placeholder="(662) 555-0100" oninput="recalc()"></div>
   </div>
 </section>
 
 <section class="card noprint" id="step2">
-  <h2><span class="stepnum">2</span> Choose Your Advertising</h2>
+  <h2><span class="stepnum">2</span> Choose Advertising</h2>
   <div class="tabs">
-    <div class="tab active" id="tabPkg" onclick="setMode('pkg')">Network Packages<small>Best value — we place your ad on high-traffic screens</small></div>
-    <div class="tab" id="tabCustom" onclick="setMode('custom')">Build Your Own Network<small>Hand-pick exact locations, priced per venue</small></div>
+    <div class="tab active" id="tabPkg" onclick="setMode('pkg')">Network Packages<br><small>Best value — high-traffic screens</small></div>
+    <div class="tab" id="tabCustom" onclick="setMode('custom')">Build Your Own<br><small>Hand-pick exact locations</small></div>
   </div>
 
   <div id="pkgPane">
     <div class="pkggrid" id="pkgGrid"></div>
-    <div class="terr-note">Which territories should your ads run in? (pick at least one)</div>
+    <div class="terr-note">Which territories? (select at least one)</div>
     <div class="chips" id="terrChips"></div>
   </div>
 
   <div id="customPane" style="display:none">
-    <div class="terr-note">Check the locations you want. Each venue is priced by its real traffic, dwell time and screen count — rates shown per 4-week cycle.</div>
+    <div class="terr-note">Check the locations you want. Rates shown per 4-week cycle.</div>
     <div id="marketList"></div>
   </div>
 </section>
 
 <section class="card noprint" id="step3">
-  <h2><span class="stepnum">3</span> Term</h2>
+  <h2><span class="stepnum">3</span> Term & Payment</h2>
   <div class="termrow">
-    <div class="termopt sel" data-months="6" onclick="setTerm(6)">6 Months<br><small>standard minimum</small></div>
-    <div class="termopt" data-months="12" onclick="setTerm(12)">12 Months<br><small>lock your rate</small></div>
-    <label class="prepay"><input type="checkbox" id="prepay" onchange="recalc()"> Prepay upfront → <span style="color:var(--green)">+1 month FREE</span></label>
+    <div class="termopt sel" data-months="6" onclick="setTerm(6)">6 Months<br><small>Standard minimum</small></div>
+    <div class="termopt" data-months="12" onclick="setTerm(12)">12 Months<br><small>Lock in rate</small></div>
+    <label class="prepay"><input type="checkbox" id="prepay" onchange="recalc()"> Prepay → <span style="color:var(--green);font-weight:700">6 mo = +1 free · 12 mo = +2 free</span></label>
   </div>
 </section>
+
+<div class="card noprint" id="compareCard" style="background:#fdf8e8;border-color:#e8d4a0">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <strong style="color:var(--navy)">Compare options</strong>
+      <span style="color:#6b5a3d;font-size:13px"> Package vs Custom side-by-side</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn secondary" id="btnCopyLink" onclick="copyQuoteLink()" style="flex:none;min-width:auto">🔗 Copy Quote Link</button>
+      <button class="btn secondary" id="btnCopyCard" onclick="copyQuoteLink(true)" style="flex:none;min-width:auto">📇 Copy Client Quote Card</button>
+      <button class="btn secondary" onclick="showComparison()" style="flex:none;min-width:auto">Compare</button>
+    </div>
+  </div>
+</div>
 
 <section id="summary">
   <div class="card">
-    <h2><span class="stepnum">✓</span> Your Cost Breakdown</h2>
-    <div class="printonly" id="printHead" style="font-size:13px;margin-bottom:8px"></div>
-    <div id="breakdownArea"><div class="empty">Select a package or locations above to see your quote.</div></div>
+    <h2><span class="stepnum">✓</span> Your Quote</h2>
+    <div class="printonly" style="font-size:12px;margin-bottom:10px" id="printHead"></div>
+    <div id="breakdownArea"><div class="empty">Select a package or venues above to generate your quote.</div></div>
+    
     <div class="statrow" id="statRow" style="display:none">
       <div class="stat"><div class="sv" id="stScreens">0</div><div class="sl">Screens</div></div>
-      <div class="stat"><div class="sv" id="stImpr">0</div><div class="sl">Est. Impressions / 4 wks</div></div>
-      <div class="stat"><div class="sv" id="stPlays">0</div><div class="sl">Est. Ad Plays / mo</div></div>
+      <div class="stat"><div class="sv" id="stImpr">0</div><div class="sl">Impressions / 4 wks</div></div>
+      <div class="stat"><div class="sv" id="stPlays">0</div><div class="sl">Ad Plays / mo</div></div>
       <div class="stat"><div class="sv" id="stCPM">$0</div><div class="sl">Effective CPM</div></div>
     </div>
+    
     <div class="bonusnote" id="bonusNote"></div>
+    
     <div class="btnrow noprint">
-      <button class="btn print" onclick="doPrint()">🖨 Print / Save as PDF</button>
-      <button class="btn accept" id="btnAccept" onclick="sendDecision('accept')">✓ Accept Quote</button>
-      <button class="btn decline" id="btnDecline" onclick="sendDecision('decline')">✗ Decline</button>
+      <button class="btn print" onclick="doPrint()">🖨 Print / Save PDF</button>
+      <button class="btn accept" id="btnAccept" onclick="sendDecision('accept')" disabled>✓ Accept Quote</button>
+      <button class="btn decline" id="btnDecline" onclick="sendDecision('decline')" disabled>✗ Decline</button>
     </div>
-    <div class="hint noprint">Accept or Decline records your decision with MCTV and opens a pre-filled email — just hit <b>Send</b> and a copy of this quote goes to your MCTV rep and to your own inbox. Use “Print / Save as PDF” and choose “Save as PDF” to keep an Adobe copy.</div>
+    <div class="hint noprint">Accepting opens a short plain-English agreement — pick a start date, sign with your typed name, done. We countersign and start your free ad design, typically within 1 business day.</div>
   </div>
 </section>
 
+<details class="card noprint" id="howRates" style="margin-top:4px">
+  <summary style="cursor:pointer;font-weight:700;color:var(--navy);padding:2px 0;font-size:14px">How rates are calculated</summary>
+  <div class="info-box">
+    <p><strong>Base formula:</strong> 4-week rate = max($25 minimum, impressions × $5 CPM), capped at $175 per venue</p>
+    <ul style="margin:8px 0 0 16px;line-height:1.6">
+      <li>Impressions from real venue traffic, dwell time, loop length & screen count</li>
+      <li>Cross-screen bonus: +25% for each extra screen at the same venue</li>
+      <li>Exposure capped at 6 ads per customer visit</li>
+      <li>Volume discount: 20% off list when your custom build includes 10+ screens</li>
+    </ul>
+  </div>
+</details>
+
 <div class="fine">
-  Rates are quoted per 4-week advertising cycle per venue (network packages billed monthly). 6-month minimum term on all campaigns.
-  Impression estimates are modeled from each venue’s measured monthly foot traffic (NTV360 network data), average customer dwell time,
-  on-screen loop length and screen count; actual results vary. Quote valid for 30 days from the date shown. Creative production available —
-  ask your rep. Prepay bonus: pay the full term upfront and receive one additional month of advertising at no charge.
+  Rates per 4-week cycle. 6-month minimum. Quote valid 30 days. Prepay: 6 months = +1 free month · 12 months = +2 free months.
 </div>
 
 <footer class="contact">
-  <div><b>MCTV Elite Advertising</b> — your local indoor digital billboard network</div>
-  <div><b id="ftRep">—</b> • <span id="ftPhone">—</span> • <span id="ftEmail">—</span> • <span id="ftWeb">—</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.0</span></div>
+  <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
+
+<div class="mobilebar noprint" id="mobileBar">
+  <div>
+    <div class="mb-amt" id="mbAmt">$0/mo</div>
+    <div class="mb-sub" id="mbSub"></div>
+  </div>
+  <button onclick="document.getElementById('summary').scrollIntoView({behavior:'smooth'})">Review quote ↓</button>
+</div>
 
 </div>
 
 <script>
-// ============================================================
-// MCTV RATE CALCULATOR — CONFIG & DATA
-// Pulled from the MCTV portal rate model (Supabase, July 2026
-// post 4-agent audit calibration). Edit values here to update.
-// ============================================================
+/* ============================================================
+   MCTV RATE CALCULATOR v2.0 — Self-Serve Contracts
+   (v1.7 pricing: $5 CPM · $175/venue soft-cap · 20% volume discount at 10+ screens)
+   NEW: shareable quote links (?pkg= / ?v= prefill) · Accept → signed
+   agreement request → contract-initiate edge function → CRM pipeline
+   Easy to update section at the top
+   ============================================================ */
+
+// ========== EASY TO UPDATE SECTION ==========
+// Change rates, packages, or add venues here.
+// Everything else is automatic.
+
 const CFG = {
-  cpm: 6,               // $ per 1,000 impressions
-  exposureCap: 6,       // max ad exposures per visit
-  crossScreenPct: 25,   // extra coverage per additional screen at a venue (%)
-  floor4wk: 25,         // minimum venue rate per 4 weeks ($)
-  fallbackLoopMin: 15,  // loop length (min) when a venue has no swept loop
-  weeksPerMonth: 4.345, // converts monthly traffic to weekly visits
-  playsPerScreenMo: 1440, // est. ad plays per screen per month
+  cpm: 5,                    // $ per 1,000 impressions
+  exposureCap: 6,
+  crossScreenPct: 25,
+  floor4wk: 25,
+  venueCap4wk: 175,          // soft-cap per venue per 4 weeks
+  volumeDiscountScreens: 10, // custom selections this size get the volume discount
+  volumeDiscountPct: 20,     // 20% off list when >=10 screens
+  fallbackLoopMin: 15,
+  weeksPerMonth: 4.345,
+  playsPerScreenMo: 1440,
   repName: "Creed Cannon",
   repEmail: "creed@mctvofms.com",
   repPhone: "601-405-5054",
   website: "www.mctvofms.com",
   quoteValidDays: 30,
-  submitUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/quote-submit" // logs accept/decline to the MCTV portal database
+  submitUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/quote-submit",
+  contractUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/contract-initiate",
+  agreementVersion: "SSA-2026-07"
 };
 
-// Network packages (from MCTV contract tiers)
+// Packages (easy to edit monthly prices)
 const PACKAGES = [
   { key: "p10", name: "10 Screens", screens: 10, monthly: 350, plays: "≈15,000 ad plays/mo" },
   { key: "p20", name: "20 Screens", screens: 20, monthly: 500, plays: "≈30,000 ad plays/mo" },
   { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" }
 ];
 
-// Venue-type defaults (visits/day, days/week, dwell minutes)
+// Venue types (for rate calculation)
 const TYPES = {
   air:{label:"Airport Terminal",vpd:100,dpw:7,dwell:70},
   asv:{label:"Auto Service & Collision",vpd:35,dpw:6,dwell:50},
@@ -276,13 +429,14 @@ const TYPES = {
 const MARKETS = {
   oxford:    { label: "Oxford Territory" },
   tupelo:    { label: "Tupelo Territory" },
-  starkville:{ label: "Starkville / Golden Triangle Territory" },
+  starkville:{ label: "Starkville / Golden Triangle" },
   special:   { label: "Premium & Special Venues" }
 };
 
-// Venues: [market, name, city, screens, type, monthlyTraffic, dwellOverride, loopMinOverride, loopSeconds]
+// ========== VENUES (add new ones at the bottom of the list) ==========
+// Format: [market, "Name", "City", screens, type, traffic, dwellOverride, loopOverride, loopSeconds]
 const VENUES = [
-["oxford","4 Corner's Chevron (Chicken On A Stick)","Oxford",1,"gas",12546.5,null,null,739],
+["oxford","4 Corner's Chevron (Chicken On A Stick)","Oxford",2,"gas",12546.5,null,null,739],
 ["oxford","Amara Salon & Aesthetics","Oxford",2,"sal",2084,null,null,740],
 ["oxford","B's Hickory Smoke BBQ","Oxford",1,"rest",5570.6,null,null,534],
 ["oxford","Bep Haus","Oxford",1,"rest",null,null,null,439],
@@ -383,12 +537,16 @@ const VENUES = [
 ["tupelo","VIBE Aesthetics and Wellness","Tupelo",1,"spa",2418.3,null,null,979],
 ["tupelo","VIBE Performance and Testosterone","Tupelo",1,"spa",3941.3,null,null,944]
 ];
+// ========== END EASY TO UPDATE SECTION ==========
 
-// Rate model: exposures = min(cap, dwell/loop); coverage = 1+(screens-1)*cross%;
-// 4wk rate = max(floor, round5(weeklyImpressions*4/1000*cpm))
+// Stable venue slugs for shareable links (derived from names; edits to names change links)
+const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const VSLUG = VENUES.map(v => slugify(v[1]));
+
+// Rate calculation engine
 function venueCalc(v){
   const [,,,screens,type,traffic,dwellO,loopO,loopS] = v;
-  const t = TYPES[type];
+  const t = TYPES[type] || {vpd:50,dpw:6,dwell:30};
   const weeklyVisits = (traffic != null) ? traffic / CFG.weeksPerMonth : t.vpd * t.dpw;
   const dwell = (dwellO != null) ? dwellO : t.dwell;
   const loop = (loopO != null) ? loopO : (loopS != null ? loopS / 60 : CFG.fallbackLoopMin);
@@ -396,227 +554,611 @@ function venueCalc(v){
   const coverage = 1 + (screens - 1) * CFG.crossScreenPct / 100;
   const weeklyImpr = weeklyVisits * exposures * coverage;
   const impr4wk = weeklyImpr * 4;
-  const rate = Math.max(CFG.floor4wk, Math.round(impr4wk / 1000 * CFG.cpm / 5) * 5);
-  return { rate, impr4wk: Math.round(impr4wk) };
+  let rate = Math.max(CFG.floor4wk, Math.round(impr4wk / 1000 * CFG.cpm / 5) * 5);
+  rate = Math.min(rate, CFG.venueCap4wk); // soft-cap
+  return { rate, impr4wk: Math.round(impr4wk), listRate: rate };
 }
-</script>
-<script>
-// ===================== APP STATE =====================
-let mode = 'pkg';            // 'pkg' | 'custom'
-let selPkg = null;           // package key
-let selTerr = new Set();     // territories for package mode
-let selVenues = new Set();   // venue indexes for custom mode
+
+// State
+let mode = 'pkg';
+let selPkg = null;
+let selTerr = new Set();
+let selVenues = new Set();
 let termMonths = 6;
 
 const $ = id => document.getElementById(id);
 const fmt$ = n => '$' + n.toLocaleString('en-US');
 const fmtN = n => n.toLocaleString('en-US');
 
-// quote ref + dates
 const now = new Date();
 const qref = 'MCTV-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(Math.floor(1000+Math.random()*9000));
 $('qref').textContent = qref;
 $('qdate').textContent = now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
 const validUntil = new Date(now.getTime() + CFG.quoteValidDays*86400000);
 $('qvalid').textContent = 'through ' + validUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-$('ftRep').textContent = CFG.repName;
-$('ftPhone').textContent = CFG.repPhone;
-$('ftEmail').textContent = CFG.repEmail;
-$('ftWeb').textContent = CFG.website;
 
-// ===================== RENDER: PACKAGES =====================
+// Render functions
 function renderPackages(){
   $('pkgGrid').innerHTML = PACKAGES.map((p,i)=>`
     <div class="pkg ${selPkg===p.key?'sel':''}" onclick="pickPkg('${p.key}')">
-      ${i===1?'<div class="popular">MOST POPULAR</div>':''}
+      ${i===1 ? '<div class="popular">MOST POPULAR</div>' : ''}
       <div class="pname">${p.name}</div>
       <div class="pprice">${fmt$(p.monthly)}<small>/mo</small></div>
       <div class="pplays">${p.plays}</div>
-      <div class="pdesc">Your ad placed on ${p.screens} high-traffic screens across your chosen territories, rotating all day, every day.</div>
-      <div class="pick">${selPkg===p.key?'Selected':'Select this package'}</div>
+      <div class="pdesc">Your ad on ${p.screens} high-traffic screens across chosen territories.</div>
+      <div class="pick">${selPkg===p.key ? 'Selected' : 'Select this package'}</div>
     </div>`).join('');
   const terrs = ['oxford','tupelo','starkville'];
-  $('terrChips').innerHTML = terrs.map(t=>`
-    <div class="chip ${selTerr.has(t)?'sel':''}" onclick="toggleTerr('${t}')">${MARKETS[t].label.replace(' Territory','')}</div>`).join('');
+  $('terrChips').innerHTML = terrs.map(t => `
+    <div class="chip ${selTerr.has(t)?'sel':''}" onclick="toggleTerr('${t}')">${MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')}</div>`).join('');
 }
-function pickPkg(k){ selPkg = (selPkg===k? null : k); renderPackages(); recalc(); }
-function toggleTerr(t){ selTerr.has(t)?selTerr.delete(t):selTerr.add(t); renderPackages(); recalc(); }
 
-// ===================== RENDER: CUSTOM VENUES =====================
+function pickPkg(k){ selPkg = (selPkg === k ? null : k); renderPackages(); recalc(); }
+function toggleTerr(t){ selTerr.has(t) ? selTerr.delete(t) : selTerr.add(t); renderPackages(); recalc(); }
+
 function renderMarkets(){
   const order = ['oxford','tupelo','starkville','special'];
-  $('marketList').innerHTML = order.map(mk=>{
-    const rows = VENUES.map((v,i)=>({v,i})).filter(x=>x.v[0]===mk);
+  $('marketList').innerHTML = order.map(mk => {
+    const rows = VENUES.map((v,i)=>({v,i})).filter(x => x.v[0] === mk);
     if(!rows.length) return '';
-    const nSel = rows.filter(x=>selVenues.has(x.i)).length;
+    const nSel = rows.filter(x => selVenues.has(x.i)).length;
     return `<details class="market" ${mk==='oxford'?'open':''}>
       <summary>${MARKETS[mk].label}
-        <span class="mcount">${nSel? nSel+' selected · ':''}${rows.length} locations
-          <button class="selall" onclick="event.preventDefault();selectAll('${mk}')">select all</button>
-          <button class="selall" onclick="event.preventDefault();clearAll('${mk}')">clear</button>
+        <span class="mcount">${nSel ? nSel+' selected · ' : ''}${rows.length} locations
+          <button style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer" onclick="event.preventDefault();selectAll('${mk}')">all</button>
+          <button style="margin-left:4px;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer" onclick="event.preventDefault();clearAll('${mk}')">clear</button>
         </span>
       </summary>
-      <div class="vlist">` + rows.map(({v,i})=>{
+      <div class="vlist">` + rows.map(({v,i}) => {
         const c = venueCalc(v);
         return `<label class="venue">
           <input type="checkbox" ${selVenues.has(i)?'checked':''} onchange="toggleVenue(${i})">
-          <span class="vname">${v[1]}<small>${v[2]} • ${TYPES[v[4]].label} • ${v[3]} screen${v[3]>1?'s':''}</small></span>
-          <span class="vstat"><span class="vrate">${fmt$(c.rate)}</span><span style="font-size:11px;color:#5b6b7c">/4 wks</span><div class="vimpr">≈${fmtN(c.impr4wk)} impressions</div></span>
+          <span class="vname">${v[1]}<small>${v[2]} • ${TYPES[v[4]]?.label || v[4]} • ${v[3]} screen${v[3]>1?'s':''}</small></span>
+          <span class="vstat"><span class="vrate">${fmt$(c.rate)}</span><span style="font-size:11px;color:#5b6b7c">/4 wks</span><div class="vimpr">≈${fmtN(c.impr4wk)} impr</div></span>
         </label>`;
       }).join('') + `</div></details>`;
   }).join('');
 }
-function toggleVenue(i){ selVenues.has(i)?selVenues.delete(i):selVenues.add(i); renderMarkets(); recalc(); }
-function selectAll(mk){ VENUES.forEach((v,i)=>{ if(v[0]===mk) selVenues.add(i); }); renderMarkets(); recalc(); }
-function clearAll(mk){ VENUES.forEach((v,i)=>{ if(v[0]===mk) selVenues.delete(i); }); renderMarkets(); recalc(); }
 
-// ===================== MODE / TERM =====================
+function toggleVenue(i){ selVenues.has(i)?selVenues.delete(i):selVenues.add(i); renderMarkets(); recalc(); }
+function selectAll(mk){ VENUES.forEach((v,i)=>{if(v[0]===mk) selVenues.add(i);}); renderMarkets(); recalc(); }
+function clearAll(mk){ VENUES.forEach((v,i)=>{if(v[0]===mk) selVenues.delete(i);}); renderMarkets(); recalc(); }
+
 function setMode(m){
   mode = m;
   $('tabPkg').classList.toggle('active', m==='pkg');
   $('tabCustom').classList.toggle('active', m==='custom');
-  $('pkgPane').style.display = m==='pkg'?'':'none';
-  $('customPane').style.display = m==='custom'?'':'none';
+  $('pkgPane').style.display = m==='pkg' ? '' : 'none';
+  $('customPane').style.display = m==='custom' ? '' : 'none';
   recalc();
 }
+
 function setTerm(m){
   termMonths = m;
-  document.querySelectorAll('.termopt').forEach(el=>el.classList.toggle('sel', +el.dataset.months===m));
+  document.querySelectorAll('.termopt').forEach(el => el.classList.toggle('sel', +el.dataset.months === m));
   recalc();
 }
 
-// ===================== QUOTE MODEL =====================
-// network-average impressions per screen per 4 weeks (from the venue rate model)
-const NET_IMPR_PER_SCREEN = (()=>{ let imp=0, scr=0; VENUES.forEach(v=>{ imp+=venueCalc(v).impr4wk; scr+=v[3]; }); return imp/scr; })();
+// Quote engine
+const NET_IMPR_PER_SCREEN = (() => { 
+  let imp=0, scr=0; 
+  VENUES.forEach(v => { const c=venueCalc(v); imp += c.impr4wk; scr += v[3]; }); 
+  return imp/scr || 800; 
+})();
 
 function currentQuote(){
-  const q = { lines:[], monthly:0, screens:0, impr:0, ok:false };
+  const q = { lines:[], monthly:0, screens:0, impr:0, listSum:0, discount:0, ok:false };
   if(mode==='pkg' && selPkg){
     const p = PACKAGES.find(x=>x.key===selPkg);
-    const terrs = [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','')).join(', ') || 'To be selected with your rep';
+    const terrs = [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')).join(', ') || 'To be selected';
     q.lines.push({name:`${p.name} Network Package`, detail:`Territories: ${terrs}`, screens:p.screens, amt:p.monthly});
     q.monthly = p.monthly; q.screens = p.screens;
-    q.impr = Math.round(p.screens * NET_IMPR_PER_SCREEN); // network-average estimate
+    q.impr = Math.round(p.screens * NET_IMPR_PER_SCREEN);
     q.ok = true;
   }
   if(mode==='custom' && selVenues.size){
-    [...selVenues].sort((a,b)=>a-b).forEach(i=>{
+    let listSum = 0;
+    [...selVenues].sort((a,b)=>a-b).forEach(i => {
       const v = VENUES[i], c = venueCalc(v);
-      q.lines.push({name:v[1], detail:`${v[2]} • ${TYPES[v[4]].label} • ${v[3]} screen${v[3]>1?'s':''}`, screens:v[3], amt:c.rate, impr:c.impr4wk});
-      q.monthly += c.rate; q.screens += v[3]; q.impr += c.impr4wk;
+      q.lines.push({name:v[1], detail:`${v[2]} • ${TYPES[v[4]]?.label||v[4]} • ${v[3]} screen${v[3]>1?'s':''}`, screens:v[3], amt:c.rate, impr:c.impr4wk});
+      listSum += c.rate; q.screens += v[3]; q.impr += c.impr4wk;
     });
+    q.listSum = listSum;
+    if(q.screens >= CFG.volumeDiscountScreens){
+      q.discount = Math.round(listSum * CFG.volumeDiscountPct / 100);
+      q.monthly = listSum - q.discount;
+    } else {
+      q.monthly = listSum;
+      q.discount = 0;
+    }
     q.ok = true;
   }
   if(q.ok){
     q.plays = q.screens * CFG.playsPerScreenMo;
     q.cpm = q.impr ? (q.monthly / (q.impr/1000)) : 0;
-    q.bonusMonths = $('prepay').checked ? 1 : 0;
+    // Correct prepay: 6 mo = +1, 12 mo = +2
+    q.bonusMonths = $('prepay').checked ? (termMonths === 12 ? 2 : 1) : 0;
     q.termTotal = q.monthly * termMonths;
     q.totalMonths = termMonths + q.bonusMonths;
   }
   return q;
 }
 
-// ===================== RENDER: SUMMARY =====================
 function recalc(){
   const q = currentQuote();
   const area = $('breakdownArea');
+  
   if(!q.ok){
-    area.innerHTML = '<div class="empty">Select a package or locations above to see your quote.</div>';
-    $('statRow').style.display='none'; $('bonusNote').style.display='none';
-    $('btnAccept').disabled = true; $('btnDecline').disabled = true;
+    area.innerHTML = '<div class="empty">Select a network package or specific venues above to generate your quote.</div>';
+    $('statRow').style.display='none';
+    $('bonusNote').style.display='none';
+    $('btnAccept').disabled = true;
+    $('btnDecline').disabled = true;
+    $('mobileBar').classList.remove('on');
+    document.body.classList.remove('has-mobilebar');
     return;
   }
-  let html = '<table class="breakdown"><tr><th>Item</th><th>Details</th><th>Screens</th><th>Per 4 Wks / Mo</th></tr>';
-  q.lines.forEach(l=>{
+
+  $('mbAmt').textContent = fmt$(q.monthly) + '/mo';
+  $('mbSub').textContent = q.screens + ' screens' + (q.discount ? ' · volume discount applied' : '');
+  $('mobileBar').classList.add('on');
+  document.body.classList.add('has-mobilebar');
+  
+  let html = '<table class="breakdown"><tr><th>Item</th><th>Details</th><th>Screens</th><th>Per 4 Wks</th></tr>';
+  q.lines.forEach(l => {
     html += `<tr><td><b>${l.name}</b></td><td style="color:#5b6b7c">${l.detail}</td><td style="text-align:center">${l.screens}</td><td>${fmt$(l.amt)}</td></tr>`;
   });
+  if(q.discount){
+    html += `<tr><td colspan="3" style="text-align:right;color:#5b6b7c">List subtotal</td><td>${fmt$(q.listSum)}</td></tr>`;
+    html += `<tr><td colspan="3" style="text-align:right;color:var(--green);font-weight:700">Volume discount — ${CFG.volumeDiscountPct}% off for ${CFG.volumeDiscountScreens}+ screens</td><td style="color:var(--green);font-weight:700">−${fmt$(q.discount)}</td></tr>`;
+  }
   html += `<tr class="total"><td>Monthly Total</td><td></td><td style="text-align:center">${q.screens}</td><td>${fmt$(q.monthly)}</td></tr>`;
-  html += `<tr><td colspan="3" style="font-weight:700">${termMonths}-Month Term Total${q.bonusMonths?` <span style="color:var(--green)">(+${q.bonusMonths} month free — ${q.totalMonths} months of advertising)</span>`:''}</td><td style="font-weight:800">${fmt$(q.termTotal)}</td></tr>`;
+  html += `<tr><td colspan="3" style="font-weight:700">${termMonths}-Month Term Total${q.bonusMonths ? ` <span style="color:var(--green)">(+${q.bonusMonths} month${q.bonusMonths>1?'s':''} FREE — ${q.totalMonths} months total)</span>` : ''}</td><td style="font-weight:800">${fmt$(q.termTotal)}</td></tr>`;
   html += '</table>';
   area.innerHTML = html;
 
-  $('statRow').style.display='';
+  $('statRow').style.display = '';
   $('stScreens').textContent = q.screens;
   $('stImpr').textContent = fmtN(Math.round(q.impr));
   $('stPlays').textContent = fmtN(q.plays);
   $('stCPM').textContent = '$' + q.cpm.toFixed(2);
 
   const bn = $('bonusNote');
-  if(q.bonusMonths){ bn.style.display=''; bn.style.color='var(--green)'; bn.textContent = `✓ Prepay bonus applied: pay ${fmt$(q.termTotal)} upfront and run ${q.totalMonths} months — your effective rate drops to ${fmt$(Math.round(q.termTotal/q.totalMonths))} /mo.`; }
-  else bn.style.display='none';
+  if(q.bonusMonths){
+    bn.style.display = '';
+    bn.textContent = `✓ Prepay bonus: Pay ${fmt$(q.termTotal)} upfront for ${q.totalMonths} months (effective ${fmt$(Math.round(q.termTotal/q.totalMonths))}/mo).`;
+  } else bn.style.display = 'none';
 
-  $('btnAccept').disabled = false; $('btnDecline').disabled = false;
+  $('btnAccept').disabled = false;
+  $('btnDecline').disabled = false;
 
-  $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value?', '+esc($('contactPhone').value):''})`;
+  $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value ? ', ' + esc($('contactPhone').value) : ''})`;
 }
-function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// ===================== PRINT & EMAIL =====================
+function esc(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function showComparison(){
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px';
+  container.innerHTML = `
+    <div style="background:white;border-radius:14px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h2 style="margin:0;color:#0a1220;font-size:18px">Compare Options</h2>
+        <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px">
+          <h3 style="margin:0 0 10px;font-size:15px">📦 Network Package</h3>
+          <div id="cmp-pkg"></div>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px">
+          <h3 style="margin:0 0 10px;font-size:15px">📍 Custom Venues</h3>
+          <div id="cmp-custom"></div>
+        </div>
+      </div>
+      <div id="cmp-tip" style="display:none;margin-top:14px;background:#fdf8e8;border:1px solid #e8d4a0;border-radius:10px;padding:12px;font-size:13.5px;line-height:1.5;color:#4a3f28"></div>
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn secondary" onclick="this.closest('div').parentElement.remove()" style="min-width:auto">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(container);
+
+  const pkgEl = container.querySelector('#cmp-pkg');
+  if (selPkg) {
+    const p = PACKAGES.find(x => x.key === selPkg);
+    pkgEl.innerHTML = `<div style="font-size:17px;font-weight:700">${p.name}</div>
+      <div style="font-size:24px;font-weight:800;margin:6px 0">${fmt$(p.monthly)}/mo</div>
+      <div style="color:#5a6a7a;font-size:13px">Territories: ${[...selTerr].map(t=>MARKETS[t].label).join(', ') || 'Any'}</div>`;
+  } else pkgEl.innerHTML = `<div style="color:#5a6a7a;font-style:italic">No package selected</div>`;
+
+  const custEl = container.querySelector('#cmp-custom');
+  let custFinal = null, custScr = 0;
+  if (selVenues.size > 0) {
+    let tot = 0, scr = 0;
+    let html = '';
+    [...selVenues].forEach(i => {
+      const v = VENUES[i], c = venueCalc(v);
+      tot += c.rate; scr += v[3];
+      html += `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${v[1]}</span><b>${fmt$(c.rate)}</b></div>`;
+    });
+    let disc = 0, fin = tot;
+    if (scr >= CFG.volumeDiscountScreens) {
+      disc = Math.round(tot * CFG.volumeDiscountPct / 100);
+      fin = tot - disc;
+    }
+    custFinal = fin; custScr = scr;
+    let footer = `<div style="border-top:1px solid #e2e8f0;margin-top:8px;padding-top:8px">`;
+    if (disc) {
+      footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#5a6a7a"><span>List total</span><span>${fmt$(tot)}/mo</span></div>`;
+      footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#15803d;font-weight:700"><span>Volume discount (${CFG.volumeDiscountPct}% — ${CFG.volumeDiscountScreens}+ screens)</span><span>−${fmt$(disc)}</span></div>`;
+    }
+    footer += `<div style="display:flex;justify-content:space-between;font-weight:800;margin-top:4px"><span>Total</span><span>${fmt$(fin)}/mo · ${scr} screens</span></div></div>`;
+    custEl.innerHTML = html + footer;
+  } else custEl.innerHTML = `<div style="color:#5a6a7a;font-style:italic">No custom venues selected</div>`;
+
+  const tipEl = container.querySelector('#cmp-tip');
+  if (custFinal != null) {
+    const near = PACKAGES.reduce((b,p) => Math.abs(p.screens - custScr) < Math.abs(b.screens - custScr) ? p : b, PACKAGES[0]);
+    if (custFinal > near.monthly) {
+      tipEl.innerHTML = `💡 <b>Insight:</b> the ${near.name} Network Package runs ${fmt$(near.monthly)}/mo — our best value. A custom build costs more because you hand-pick exact premium locations.`;
+    } else {
+      tipEl.innerHTML = `💡 <b>Insight:</b> your custom build at ${fmt$(custFinal)}/mo is right in line with the ${near.name} Network Package (${fmt$(near.monthly)}/mo) — either way you're getting our best pricing.`;
+    }
+    tipEl.style.display = '';
+  }
+}
+
 function doPrint(){ recalc(); window.print(); }
 
 function quoteText(q, decision){
   const b = [];
   b.push(`MCTV ELITE ADVERTISING — QUOTE ${qref}`);
-  b.push(`Decision: ${decision==='accept'?'ACCEPTED ✓':'DECLINED ✗'}`);
+  b.push(`Decision: ${decision==='accept' ? 'ACCEPTED ✓' : 'DECLINED ✗'}`);
   b.push(`Date: ${now.toLocaleDateString('en-US')}`);
   b.push('');
-  b.push(`Business: ${$('bizName').value||'—'}`);
-  b.push(`Contact: ${$('contactName').value||'—'} | ${$('contactEmail').value||'—'} | ${$('contactPhone').value||'—'}`);
+  b.push('CLIENT INFO');
+  b.push(`Business: ${$('bizName').value || '—'}`);
+  b.push(`Contact: ${$('contactName').value || '—'}`);
+  b.push(`Email: ${$('contactEmail').value || '—'}`);
+  b.push(`Phone: ${$('contactPhone').value || '—'}`);
   b.push('');
-  b.push('--- SELECTION ---');
-  q.lines.forEach(l=>b.push(`• ${l.name} (${l.detail}) — ${l.screens} screen(s) — $${l.amt}/4wks`));
+  b.push('SELECTION');
+  q.lines.forEach(l => b.push(`• ${l.name} (${l.detail}) — ${l.screens} screen(s) — $${l.amt}/4 weeks`));
   b.push('');
-  b.push('--- COST BREAKDOWN ---');
+  b.push('COST SUMMARY');
+  if(q.discount){
+    b.push(`List subtotal: $${q.listSum.toLocaleString()}`);
+    b.push(`Volume discount (${CFG.volumeDiscountPct}% for ${CFG.volumeDiscountScreens}+ screens): -$${q.discount.toLocaleString()}`);
+  }
   b.push(`Monthly total: $${q.monthly.toLocaleString()}`);
-  b.push(`Term: ${termMonths} months${q.bonusMonths?` + ${q.bonusMonths} month FREE (prepaid)`:''}`);
-  b.push(`Term total: $${q.termTotal.toLocaleString()}`);
-  b.push(`Screens: ${q.screens} | Est. impressions/4wks: ${Math.round(q.impr).toLocaleString()} | Est. ad plays/mo: ${q.plays.toLocaleString()} | Effective CPM: $${q.cpm.toFixed(2)}`);
+  b.push(`Term: ${termMonths} months${q.bonusMonths ? ` + ${q.bonusMonths} free month(s) for prepay` : ''}`);
+  b.push(`Term total (paid): $${q.termTotal.toLocaleString()}`);
+  b.push(`Total months of advertising: ${q.totalMonths}`);
+  b.push(`Screens: ${q.screens}`);
+  b.push(`Est. impressions per 4 weeks: ${Math.round(q.impr).toLocaleString()}`);
+  b.push(`Effective CPM: $${q.cpm.toFixed(2)}`);
   b.push('');
-  b.push(decision==='accept'
-    ? 'Next step: your MCTV rep will send the agreement and creative onboarding.'
-    : 'Feedback (optional — tell us why or what would change your mind):');
+  if(decision==='accept'){
+    b.push('NEXT STEPS');
+    b.push('1. Creed will send a simple agreement');
+    b.push('2. Creative assets will be collected / produced');
+    b.push('3. Campaign will go live on the selected screens');
+  } else {
+    b.push('FEEDBACK (optional)');
+    b.push('(Client can type notes here before sending)');
+  }
   b.push('');
-  b.push(`Quote valid through ${validUntil.toLocaleDateString('en-US')}.`);
+  b.push(`Quote valid through ${validUntil.toLocaleDateString('en-US')}`);
   b.push(`${CFG.repName} • ${CFG.repPhone} • ${CFG.repEmail} • ${CFG.website}`);
   return b.join('\n');
 }
 
+function basePayload(q, decision){
+  return {
+    quote_ref: qref,
+    decision,
+    business_name: $('bizName').value.trim(),
+    contact_name: $('contactName').value.trim(),
+    contact_email: $('contactEmail').value.trim(),
+    contact_phone: $('contactPhone').value.trim(),
+    mode,
+    term_months: termMonths,
+    prepay: $('prepay').checked,
+    monthly_total: q.monthly,
+    term_total: q.termTotal,
+    screens: q.screens,
+    est_impressions: Math.round(q.impr),
+    selection: q.lines.map(l => ({item:l.name, detail:l.detail, screens:l.screens, rate:l.amt})),
+    quote_link: buildQuoteLink(),
+    timestamp: new Date().toISOString()
+  };
+}
+
 async function sendDecision(decision){
-  const biz = $('bizName').value.trim(), name = $('contactName').value.trim(), email = $('contactEmail').value.trim();
-  if(!biz || !name || !email){ alert('Please fill in your Business Name, Contact Name and Email in Step 1 first.'); $('bizName').focus(); return; }
   const q = currentQuote();
   if(!q.ok) return;
 
-  // 1) Record the decision in the MCTV system (works even if the email below is never sent)
+  // Accept collects contact details inside the agreement modal, so a client who
+  // opened a shared quote-card link can sign in one flow — no bounce back to Step 1,
+  // which would blow away card mode. Just open the agreement.
+  if(decision === 'accept'){ openAgreement(q); return; }
+
+  // Decline still needs contact basics for the follow-up email.
+  const biz = $('bizName').value.trim(), name = $('contactName').value.trim(), email = $('contactEmail').value.trim();
+  if(!biz || !name || !email){
+    // Card mode hides the contact form — bring it back before asking for the fields
+    if(document.body.classList.contains('quotecard')) exitCardMode();
+    alert('Please fill in Business Name, Contact Name, and Email first.');
+    $('bizName').focus(); return;
+  }
+
+  // Decline path — record + optional feedback email
+  $('btnAccept').disabled = true;
+  $('btnDecline').disabled = true;
   let logged = false;
   if(CFG.submitUrl){
     try{
-      const r = await fetch(CFG.submitUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
-        quote_ref: qref, decision, business_name: biz, contact_name: name, contact_email: email,
-        contact_phone: $('contactPhone').value.trim(), mode, term_months: termMonths, prepay: $('prepay').checked,
-        monthly_total: q.monthly, term_total: q.termTotal, screens: q.screens, est_impressions: Math.round(q.impr),
-        selection: q.lines.map(l=>({item:l.name, detail:l.detail, screens:l.screens, rate:l.amt}))
-      })});
+      const r = await fetch(CFG.submitUrl, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(basePayload(q, 'decline'))
+      });
       logged = r.ok;
     }catch(e){ logged = false; }
   }
   const bn = $('bonusNote');
   bn.style.display = '';
-  bn.style.color = logged ? 'var(--green)' : 'var(--red)';
-  bn.textContent = logged
-    ? (decision==='accept' ? '✓ Your acceptance has been recorded with MCTV. An email copy is opening now — just press Send.' : '✓ Your response has been recorded. An email copy is opening now — just press Send.')
-    : '⚠ Could not reach the MCTV system — please make sure to press Send on the email that opens so we receive your decision.';
-
-  // 2) Open a pre-filled email to the rep, CC the prospect
-  const subj = `${decision==='accept'?'ACCEPTED':'DECLINED'} — MCTV Advertising Quote ${qref} — ${biz}`;
-  const body = quoteText(q, decision);
-  window.location.href = `mailto:${encodeURIComponent(CFG.repEmail)}?cc=${encodeURIComponent(email)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  bn.style.color = 'var(--mut)';
+  bn.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:8px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">Response recorded</div>
+      <div style="font-size:13px;color:#5a6a7a">An email is opening. Feel free to add any feedback before sending.</div>
+    </div>`;
+  const subj = `DECLINED — MCTV Quote ${qref} — ${biz}`;
+  window.location.href = `mailto:${encodeURIComponent(CFG.repEmail)}?cc=${encodeURIComponent(email)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(quoteText(q, 'decline'))}`;
 }
 
-// ===================== INIT =====================
+// ===== Self-serve agreement flow =====
+function firstOfNextMonth(){
+  const d = new Date();
+  const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  return n.toISOString().slice(0, 10);
+}
+
+function openAgreement(q){
+  const sel = (mode === 'pkg')
+    ? `${PACKAGES.find(p => p.key === selPkg).name} Network Package${selTerr.size ? ' — ' + [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')).join(', ') : ''}`
+    : `${selVenues.size} hand-picked location${selVenues.size>1?'s':''} (${q.screens} screens)`;
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:13.5px"><span style="color:#5a6a7a">${l}</span><b style="text-align:right">${v}</b></div>`;
+  const ov = document.createElement('div');
+  ov.id = 'agOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px';
+  ov.innerHTML = `
+    <div style="background:white;border-radius:14px;max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:22px" id="agBox">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h2 style="margin:0;color:#0a1220;font-size:18px">Advertising Agreement Request</h2>
+        <button onclick="document.getElementById('agOverlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
+      </div>
+      <div style="font-size:12.5px;color:#5a6a7a;margin-bottom:12px">Quote ${qref} · MCTV Elite Advertising</div>
+      <div style="font-size:12.5px;font-weight:700;color:#0a1220;margin:2px 0 6px">Your details</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div><label class="f">Business name *</label><input type="text" id="agBiz" placeholder="Business name"></div>
+        <div><label class="f">Contact name *</label><input type="text" id="agName" placeholder="First &amp; last name"></div>
+        <div><label class="f">Email *</label><input type="email" id="agEmail" placeholder="you@business.com"></div>
+        <div><label class="f">Phone</label><input type="tel" id="agPhone" placeholder="(662) 555-0100"></div>
+      </div>
+      ${row('Selection', sel)}
+      ${row('Monthly total', fmt$(q.monthly) + (q.discount ? ` <span style="color:#15803d;font-size:12px">(incl. −${fmt$(q.discount)} volume discount)</span>` : ''))}
+      ${row('Term', termMonths + ' months' + (q.bonusMonths ? ` + ${q.bonusMonths} FREE (prepay)` : ''))}
+      ${row('Est. impressions / 4 wks', fmtN(Math.round(q.impr)))}
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0 4px">
+        <label style="font-size:13px;font-weight:600;color:#5a6a7a;flex:none">Requested start date</label>
+        <input type="date" id="agStart" value="${firstOfNextMonth()}" min="${new Date().toISOString().slice(0,10)}" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+      </div>
+      <details open style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12.5px;line-height:1.55;color:#3d4a5a">
+        <summary style="cursor:pointer;font-weight:700;color:#0a1220;font-size:13px">Terms (plain English — 30-second read)</summary>
+        <ol style="margin:8px 0 2px 16px">
+          <li>MCTV runs your ad on the selected screens for the term above, billed monthly at the monthly total shown.</li>
+          <li>6-month minimum term. After the minimum, either side may cancel with 30 days' written notice. 12-month terms lock your quoted rate.</li>
+          <li>Prepay bonus months (if selected) are added free at the end of the paid term.</li>
+          <li>MCTV designs and produces your ad at no extra cost; you provide brand assets and approve the creative before it airs.</li>
+          <li>First invoice is sent after you approve your creative; payment is due at the start of each monthly cycle.</li>
+          <li>This request becomes a binding agreement when countersigned by MCTV — we countersign and send your copy, typically within 1 business day.</li>
+        </ol>
+        <div style="margin-top:6px;color:#5a6a7a">MCTV Digital, Inc. d/b/a MCTV Elite Advertising · ${CFG.repName} · ${CFG.repPhone}</div>
+      </details>
+      <input type="text" id="agWebsite" name="company_website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;height:1px;width:1px;opacity:0" aria-hidden="true">
+      <label style="display:block;font-size:12.5px;font-weight:600;color:#5a6a7a;margin:10px 0 4px">Sign by typing your full name</label>
+      <input type="text" id="agSig" placeholder="Your full legal name" style="width:100%;padding:11px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:'Segoe Script','Brush Script MT',cursive">
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#3d4a5a;margin:10px 0 14px;line-height:1.45">
+        <input type="checkbox" id="agAuth" style="width:16px;height:16px;margin-top:1px;accent-color:#d4a017;flex:none">
+        I'm authorized to enter this agreement on behalf of my business, and the details above are correct.
+      </label>
+      <div id="agErr" style="display:none;color:#b91c1c;font-size:13px;font-weight:600;margin-bottom:10px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn accept" id="agSubmit" style="flex:2">✒ Sign & Submit Agreement Request</button>
+        <button class="btn secondary" onclick="document.getElementById('agOverlay').remove()" style="flex:1;min-width:100px">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  // Prefill contact fields via .value (injection-safe — never interpolate user text into attributes)
+  document.getElementById('agBiz').value = $('bizName').value;
+  document.getElementById('agName').value = $('contactName').value;
+  document.getElementById('agEmail').value = $('contactEmail').value;
+  document.getElementById('agPhone').value = $('contactPhone').value;
+  document.getElementById('agSubmit').onclick = () => submitAgreement(q);
+  // Focus the first empty required field; if contact info is already filled, jump to the signature
+  const firstEmpty = ['agBiz','agName','agEmail'].map(id => document.getElementById(id)).find(el => !el.value.trim());
+  (firstEmpty || document.getElementById('agSig')).focus();
+}
+
+async function submitAgreement(q){
+  const err = document.getElementById('agErr');
+  const showErr = (m, focusId) => { err.style.display=''; err.textContent = m; const f = focusId && document.getElementById(focusId); if(f) f.focus(); };
+
+  // Contact details are captured in the modal so a client on a shared quote-card link
+  // can complete everything in one place. Validate, then persist into the page so the
+  // payload, follow-up email, and printout all stay consistent.
+  const biz = document.getElementById('agBiz').value.trim();
+  const cname = document.getElementById('agName').value.trim();
+  const cemail = document.getElementById('agEmail').value.trim();
+  const cphone = document.getElementById('agPhone').value.trim();
+  if(biz.length < 2){ return showErr('Please enter your business name.', 'agBiz'); }
+  if(cname.length < 2){ return showErr('Please enter your name.', 'agName'); }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cemail)){ return showErr('Please enter a valid email so we can send your agreement copy.', 'agEmail'); }
+  $('bizName').value = biz; $('contactName').value = cname; $('contactEmail').value = cemail; $('contactPhone').value = cphone;
+
+  const sig = document.getElementById('agSig').value.trim();
+  const auth = document.getElementById('agAuth').checked;
+  const start = document.getElementById('agStart').value;
+  if(sig.length < 3){ return showErr('Please type your full name to sign.', 'agSig'); }
+  if(!auth){ return showErr('Please check the authorization box.'); }
+  err.style.display = 'none';
+  const btn = document.getElementById('agSubmit');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const payload = {
+    ...basePayload(q, 'accept'),
+    start_date: start,
+    signed_name: sig,
+    authorized: true,
+    agreement_version: CFG.agreementVersion,
+    company_website: document.getElementById('agWebsite').value
+  };
+
+  let ok = false, ref = qref;
+  try{
+    const r = await fetch(CFG.contractUrl, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json().catch(() => ({}));
+    ok = r.ok && j.ok;
+    if(j.ref) ref = j.ref;
+  }catch(e){ ok = false; }
+
+  if(ok){
+    $('btnAccept').disabled = true;
+    $('btnDecline').disabled = true;
+    const bn = $('bonusNote');
+    bn.style.display = '';
+    bn.style.color = 'var(--green)';
+    bn.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;margin-top:8px;font-size:13.5px">✓ Agreement request <b>${ref}</b> submitted ${new Date().toLocaleString()} — signed ${esc(sig)}.</div>`;
+    document.getElementById('agBox').innerHTML = `
+      <div style="text-align:center;padding:8px 4px">
+        <div style="font-size:42px;line-height:1">🤝</div>
+        <h2 style="color:#0a1220;font-size:20px;margin:10px 0 4px">You're on the board!</h2>
+        <div style="font-size:14px;color:#3d4a5a;line-height:1.6;max-width:440px;margin:0 auto">
+          Agreement request <b>${ref}</b> is in. Here's what happens next:<br><br>
+          <b>1.</b> ${CFG.repName} countersigns &amp; emails your copy (typically within 1 business day)<br>
+          <b>2.</b> We design your ad — free — and send it for your approval<br>
+          <b>3.</b> Your campaign goes live on ${start ? new Date(start + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric'}) : 'your start date'}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center">
+          <button class="btn print" style="min-width:auto" onclick="document.getElementById('agOverlay').remove();doPrint()">🖨 Print / Save Quote</button>
+          <a class="btn secondary" style="min-width:auto;text-decoration:none;display:inline-flex;align-items:center" href="mailto:${encodeURIComponent(CFG.repEmail)}?subject=${encodeURIComponent('Signed agreement copy — ' + ref)}&body=${encodeURIComponent(quoteText(q,'accept') + '\n\nSigned: ' + sig + '\nStart date: ' + start + '\nAgreement: ' + CFG.agreementVersion)}">✉ Email me a copy</a>
+          <button class="btn secondary" style="min-width:auto" onclick="document.getElementById('agOverlay').remove()">Done</button>
+        </div>
+      </div>`;
+  } else {
+    btn.disabled = false; btn.textContent = '✒ Sign & Submit Agreement Request';
+    err.style.display = '';
+    err.innerHTML = `Couldn't reach our server — your signature was NOT recorded. Please try again, or <a href="mailto:${encodeURIComponent(CFG.repEmail)}?subject=${encodeURIComponent('ACCEPTED — MCTV Quote ' + qref)}&body=${encodeURIComponent(quoteText(q,'accept') + '\n\nSigned: ' + sig + '\nStart date: ' + start)}" style="color:#b91c1c">email us your acceptance</a> and we'll take it from there.`;
+  }
+}
+
+// Shareable quote links — read prefill params
+function applyParams(){
+  const P = new URLSearchParams(location.search);
+  let touched = false;
+  if(P.get('pkg') && PACKAGES.some(p => p.key === P.get('pkg'))){
+    mode = 'pkg'; selPkg = P.get('pkg'); touched = true;
+    (P.get('terr')||'').split(',').forEach(t => { if(MARKETS[t] && t !== 'special') selTerr.add(t); });
+  }
+  if(P.get('v')){
+    const want = P.get('v').split('.').filter(Boolean);
+    VSLUG.forEach((s,i) => { if(want.includes(s)) selVenues.add(i); });
+    if(selVenues.size){ mode = 'custom'; touched = true; }
+    if(want.length && selVenues.size < want.length){
+      const box = document.createElement('div');
+      box.className = 'card';
+      box.style.cssText = 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:13.5px;font-weight:600';
+      box.textContent = selVenues.size
+        ? 'Heads up: part of this quote link is out of date — some locations could not be preselected. Double-check the list below or call ' + CFG.repPhone + '.'
+        : 'This quote link looks out of date — please call ' + CFG.repPhone + ' or build a fresh quote below.';
+      const wrap = document.querySelector('.wrap');
+      wrap.insertBefore(box, wrap.children[1]);
+    }
+  }
+  const m = parseInt(P.get('months'), 10);
+  if(m === 6 || m === 12){ termMonths = m; touched = true; }
+  if(P.get('prepay') === '1'){ $('prepay').checked = true; touched = true; }
+  if(P.get('biz')) $('bizName').value = P.get('biz').slice(0,120);
+  if(P.get('name')) $('contactName').value = P.get('name').slice(0,120);
+  if(P.get('email')) $('contactEmail').value = P.get('email').slice(0,160);
+  if(P.get('phone')) $('contactPhone').value = P.get('phone').slice(0,40);
+  if(touched){
+    $('tabPkg').classList.toggle('active', mode==='pkg');
+    $('tabCustom').classList.toggle('active', mode==='custom');
+    $('pkgPane').style.display = mode==='pkg' ? '' : 'none';
+    $('customPane').style.display = mode==='custom' ? '' : 'none';
+    document.querySelectorAll('.termopt').forEach(el => el.classList.toggle('sel', +el.dataset.months === termMonths));
+    if(P.get('print') === '1') enterCardMode();
+    else setTimeout(() => $('summary').scrollIntoView({behavior:'smooth', block:'start'}), 400);
+  }
+}
+
+// Quote-card mode: a ?print=1 quote link renders as a clean client-facing quote card
+const DEFAULT_PAGESUB = document.querySelector('.pagesub').textContent;
+function enterCardMode(){
+  document.body.classList.add('quotecard');
+  document.querySelector('.pagesub').textContent = 'Your prepared quote is below — review it, then accept & sign in under a minute.';
+  const box = document.createElement('div');
+  box.id = 'cardModeBar';
+  box.className = 'card noprint';
+  box.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fdf8e8;border-color:#e8d4a0';
+  box.innerHTML = `<div style="font-size:13.5px;color:#4a3f28"><b style="color:var(--navy)">Prepared quote</b> — put together for you by your MCTV rep.</div>
+    <button class="btn secondary" style="flex:none;min-width:auto" onclick="exitCardMode()">✎ Customize this quote</button>`;
+  document.querySelector('.wrap').insertBefore(box, $('summary'));
+  window.scrollTo(0, 0);
+}
+function exitCardMode(){
+  document.body.classList.remove('quotecard');
+  document.querySelector('.pagesub').textContent = DEFAULT_PAGESUB;
+  const b = document.getElementById('cardModeBar'); if(b) b.remove();
+  history.replaceState(null, '', location.pathname + location.search.replace(/[?&]print=1/,'').replace(/^&/,'?'));
+  $('step2').scrollIntoView({behavior:'smooth'});
+}
+
+// Shareable quote links — build one from current state
+function buildQuoteLink(){
+  const P = new URLSearchParams();
+  if(mode === 'pkg' && selPkg){
+    P.set('pkg', selPkg);
+    if(selTerr.size) P.set('terr', [...selTerr].join(','));
+  } else if(mode === 'custom' && selVenues.size){
+    P.set('v', [...selVenues].sort((a,b)=>a-b).map(i => VSLUG[i]).join('.'));
+  } else return null;
+  P.set('months', termMonths);
+  if($('prepay').checked) P.set('prepay', '1');
+  if($('bizName').value.trim()) P.set('biz', $('bizName').value.trim());
+  return location.origin + location.pathname + '?' + P.toString();
+}
+
+async function copyQuoteLink(card){
+  let link = buildQuoteLink();
+  const btn = card ? $('btnCopyCard') : $('btnCopyLink');
+  const orig = card ? '📇 Copy Client Quote Card' : '🔗 Copy Quote Link';
+  if(!link){ btn.textContent = 'Select a package or venues first'; setTimeout(()=>btn.textContent=orig, 1800); return; }
+  if(card) link += '&print=1';
+  try{ await navigator.clipboard.writeText(link); btn.textContent = card ? '✓ Card link copied — send it' : '✓ Link copied — text or email it'; }
+  catch(e){ window.prompt('Copy this quote link:', link); btn.textContent = orig; return; }
+  setTimeout(()=>btn.textContent=orig, 2200);
+}
+
+// Init
 renderPackages();
 renderMarkets();
+applyParams();
 recalc();
 </script>
 </body>
