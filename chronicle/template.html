@@ -1,0 +1,401 @@
+<title>The Cannon Chronicle — {DATE}</title>
+<style>
+  :root {
+    --paper: #F2EDE3;
+    --paper-raised: #EBE3D2;
+    --ink: #1C1A16;
+    --ink-soft: #57503F;
+    --rule: #C7BCA4;
+    --rule-strong: #1C1A16;
+    --cardinal: #A3122E;
+    --powder: #4E6E8A;
+    --font-display: 'Didot', 'Bodoni MT', 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-body: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --font-util: 'Avenir Next Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #17150F;
+      --paper-raised: #201D14;
+      --ink: #E9E1CE;
+      --ink-soft: #A79D85;
+      --rule: #3C3729;
+      --rule-strong: #E9E1CE;
+      --cardinal: #E0596B;
+      --powder: #8FAEC6;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F2EDE3; --paper-raised: #EBE3D2; --ink: #1C1A16; --ink-soft: #57503F;
+    --rule: #C7BCA4; --rule-strong: #1C1A16; --cardinal: #A3122E; --powder: #4E6E8A;
+  }
+  :root[data-theme="dark"] {
+    --paper: #17150F; --paper-raised: #201D14; --ink: #E9E1CE; --ink-soft: #A79D85;
+    --rule: #3C3729; --rule-strong: #E9E1CE; --cardinal: #E0596B; --powder: #8FAEC6;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 20px;
+  }
+  .sheet { max-width: 1080px; margin: 0 auto; padding: 28px 0 60px; }
+  a { color: var(--powder); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  a:hover, a:focus-visible { color: var(--cardinal); border-bottom-color: var(--cardinal); }
+  a:focus-visible { outline: 2px solid var(--cardinal); outline-offset: 2px; }
+  h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+  p { margin: 0 0 0.75em; }
+
+  /* ---------- Masthead ---------- */
+  .folio {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    font-family: var(--font-util); font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-soft);
+    border-top: 3px solid var(--rule-strong); border-bottom: 1px solid var(--rule-strong);
+    padding: 6px 2px;
+  }
+  .masthead { text-align: center; padding: 26px 0 14px; }
+  .masthead h1 {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 8.5vw, 92px);
+    font-weight: 700; letter-spacing: 0.01em; line-height: 1;
+  }
+  .masthead .tagline {
+    font-family: var(--font-body); font-style: italic; color: var(--ink-soft);
+    font-size: 15px; margin-top: 10px;
+  }
+  .vitals {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    border-top: 1px solid var(--rule-strong); border-bottom: 3px double var(--rule-strong);
+    margin-top: 16px;
+  }
+  .vitals div {
+    font-family: var(--font-util); font-size: 12.5px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 8px 18px; color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .vitals b { color: var(--cardinal); font-weight: 700; }
+
+  /* ---------- Section furniture ---------- */
+  section { margin-top: 44px; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 14px;
+    border-bottom: 2px solid var(--rule-strong); padding-bottom: 6px; margin-bottom: 18px;
+  }
+  .sec-head .kicker {
+    font-family: var(--font-util); font-weight: 700; font-size: 15px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--cardinal);
+  }
+  .sec-head .kicker::before { content: "■ "; font-size: 11px; vertical-align: 2px; }
+  .sec-head .sub { font-style: italic; color: var(--ink-soft); font-size: 14px; }
+
+  .byline {
+    font-family: var(--font-util); font-size: 11.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-soft); margin: 4px 0 10px;
+  }
+  .brief h4 { font-size: 17px; line-height: 1.25; margin-bottom: 4px; }
+  .brief p { font-size: 14.5px; margin-bottom: 4px; }
+  .brief .src { font-family: var(--font-util); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .brief { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .brief:last-child { border-bottom: none; }
+
+  /* ---------- Front page ---------- */
+  .front { display: grid; grid-template-columns: 7fr 4fr; gap: 0 32px; }
+  .front .lead { padding-right: 32px; border-right: 1px solid var(--rule); }
+  .lead h2 {
+    font-family: var(--font-display); font-size: clamp(30px, 4.5vw, 44px);
+    line-height: 1.08; font-weight: 700;
+  }
+  .lead .deck { font-style: italic; font-size: 18px; color: var(--ink-soft); margin: 10px 0 2px; line-height: 1.4; }
+  .lead p { font-size: 16px; }
+  .lead .drop::first-letter {
+    font-family: var(--font-display); font-size: 3.2em; float: left;
+    line-height: 0.85; padding: 4px 8px 0 0; color: var(--cardinal); font-weight: 700;
+  }
+  .side-story { border-bottom: 1px solid var(--rule); padding-bottom: 16px; margin-bottom: 16px; }
+  .side-story:last-child { border-bottom: none; margin-bottom: 0; }
+  .side-story h3 { font-family: var(--font-display); font-size: 22px; line-height: 1.15; margin-bottom: 6px; }
+  .side-story p { font-size: 14.5px; }
+
+  /* ---------- Docket ---------- */
+  .docket { list-style: none; margin: 0; padding: 0; counter-reset: docket; }
+  .docket li {
+    counter-increment: docket;
+    display: grid; grid-template-columns: 44px 64px 1fr; gap: 14px; align-items: start;
+    padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 15px;
+  }
+  .docket li::before {
+    content: counter(docket, decimal-leading-zero);
+    font-family: var(--font-display); font-size: 22px; color: var(--ink-soft);
+    line-height: 1.1; font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    font-family: var(--font-util); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; text-align: center;
+    padding: 3px 0; margin-top: 3px; border: 1px solid currentColor;
+  }
+  .pill.high { color: var(--cardinal); }
+  .pill.med  { color: var(--powder); }
+  .pill.low  { color: var(--ink-soft); }
+  .docket b { font-weight: 700; }
+  .docket .why { color: var(--ink-soft); font-size: 13.5px; display: block; margin-top: 1px; }
+
+  /* ---------- Ledger (goals) ---------- */
+  .goals { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; }
+  .goal { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .goal h4 { font-size: 16.5px; margin-bottom: 3px; }
+  .goal h4 .n { font-family: var(--font-display); color: var(--cardinal); margin-right: 8px; }
+  .goal p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+
+  /* ---------- Wire ---------- */
+  .wire { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 30px; }
+  .wire .col { border-right: 1px solid var(--rule); padding-right: 30px; }
+  .wire .col:last-child { border-right: none; padding-right: 0; }
+  .col-head {
+    font-family: var(--font-util); font-weight: 700; font-size: 13px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--powder);
+    border-bottom: 1px solid var(--rule-strong); padding-bottom: 5px; margin-bottom: 4px;
+  }
+
+  /* ---------- Works / two-col ---------- */
+  .two-col { display: grid; grid-template-columns: 3fr 2fr; gap: 0 36px; }
+  .two-col .primary { border-right: 1px solid var(--rule); padding-right: 36px; }
+  .works p, .works li { font-size: 15px; }
+  .works ul { padding-left: 20px; margin: 0 0 0.75em; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 24px; margin: 14px 0 18px; }
+  .stat { border-top: 3px solid var(--cardinal); padding-top: 6px; min-width: 120px; }
+  .stat .num { font-family: var(--font-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-family: var(--font-util); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-top: 3px; }
+
+  /* ---------- Almanac ---------- */
+  .almanac .day { display: grid; grid-template-columns: 150px 1fr; gap: 18px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .almanac .day:last-child { border-bottom: none; }
+  .almanac .d { font-family: var(--font-util); font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; padding-top: 2px; }
+  .almanac .d small { display: block; font-weight: 400; color: var(--ink-soft); letter-spacing: 0.06em; }
+  .almanac ul { list-style: none; margin: 0; padding: 0; font-size: 14.5px; }
+  .almanac li { padding: 2px 0; }
+  .almanac .t { font-family: var(--font-util); font-size: 12.5px; color: var(--cardinal); font-weight: 700; letter-spacing: 0.04em; margin-right: 8px; font-variant-numeric: tabular-nums; }
+
+  .callout {
+    background: var(--paper-raised); border-left: 4px solid var(--cardinal);
+    padding: 14px 18px; margin: 16px 0; font-size: 14.5px;
+  }
+  .callout .byline { margin-top: 0; }
+
+  /* ---------- Colophon ---------- */
+  .colophon {
+    margin-top: 56px; border-top: 3px double var(--rule-strong); padding-top: 14px;
+    font-family: var(--font-util); font-size: 12px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-soft); text-align: center; line-height: 2;
+  }
+
+  @media (max-width: 860px) {
+    .front, .wire, .two-col, .goals { grid-template-columns: 1fr; }
+    .front .lead, .wire .col, .two-col .primary { border-right: none; padding-right: 0; }
+    .wire .col { border-bottom: 1px solid var(--rule-strong); padding-bottom: 18px; margin-bottom: 18px; }
+    .wire .col:last-child { border-bottom: none; }
+    .almanac .day { grid-template-columns: 1fr; gap: 4px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .sheet { animation: settle 0.5s ease-out; }
+    @keyframes settle { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  }
+
+  /* ---------- Art ---------- */
+  .cartoon { margin: 20px 0 4px; padding: 14px 14px 10px; border: 1.5px solid var(--ink); background: var(--paper-raised); }
+  .cartoon svg { display: block; width: 100%; height: auto; }
+  .cartoon figcaption { font-style: italic; font-size: 13.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
+  figure.cartoon { margin-left: 0; margin-right: 0; }
+  .spot { display: block; margin: 12px auto 4px; height: 66px; }
+  .staff { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; text-align: center; padding: 6px 0 4px; }
+  .staff img { width: 108px; height: 108px; object-fit: cover; border-radius: 50%; border: 2px solid var(--ink); filter: grayscale(1) contrast(1.05); display: block; margin: 0 auto 8px; }
+  .staff b { display: block; font-size: 15px; }
+  .staff span { font-family: var(--font-util); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+  .colophon img.pub-logo { height: 26px; vertical-align: middle; margin: 6px 0 2px; }
+  .logo-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .logo-light { display: none; }
+    .logo-dark { display: inline; }
+    .staff img { filter: grayscale(1) contrast(1.0) brightness(0.95); }
+  }
+  :root[data-theme="light"] .logo-light { display: inline; }
+  :root[data-theme="light"] .logo-dark { display: none; }
+  :root[data-theme="dark"] .logo-light { display: none; }
+  :root[data-theme="dark"] .logo-dark { display: inline; }
+</style>
+
+<!--
+  THE CANON CHRONICLE — edition skeleton.
+  The daily job fills every {PLACEHOLDER} and repeats the marked blocks as
+  needed. Section order and CSS classes must not change. No edition content
+  is committed to this repo.
+-->
+
+<!--
+  ART (required in every edition):
+  1. LEAD EDITORIAL CARTOON — a <figure class="cartoon"> with a hand-drawn-style
+     inline SVG (flat shapes, stroke var(--ink), accents var(--cardinal)/var(--powder),
+     fills var(--paper)/var(--paper-raised) so it adapts to dark mode) lampooning the
+     day's lead story, plus an italic one-line figcaption. Place at the end of the lead.
+  2. WIRE SPOT CARTOONS — one small <svg class="spot" viewBox="0 0 120 70"> above each
+     Wire column head (Ole Miss pennant+football / a YOUR AD HERE screen / a robot
+     with a newspaper — vary them day to day).
+  3. THE NEWSROOM — before the colophon, a .staff strip with the three headshots from
+     assets/team/ (creed, mary_michael, swayze), downscaled to ~150px wide JPEG and
+     embedded as base64 data URIs (CSP blocks external images). Roles: Publisher &
+     Editor-in-Chief / Creative Desk / Sales Desk.
+  4. COLOPHON LOGO — assets/branding/mctv_logo_on_light.png + _on_dark.png embedded as
+     data URIs with classes pub-logo logo-light / logo-dark (theme swap handled in CSS).
+-->
+<div class="sheet">
+
+  <div class="folio">
+    <span>Vol. {VOLUME} &middot; No. {NUMBER}</span>
+    <span>Oxford, Mississippi</span>
+    <span>{WEEKDAY}, {MONTH} {DAY}, {YEAR}</span>
+  </div>
+
+  <header class="masthead">
+    <h1>The Cannon Chronicle</h1>
+    <div class="tagline">Printed daily for T. Creed Cannon &mdash; covering the desk, the network, and the Grove.</div>
+    <div class="vitals">
+      <!-- 4-6 key numbers of the day: <div><b>NUM</b> label</div> -->
+    </div>
+  </header>
+
+  <section>
+    <div class="front">
+      <div class="lead">
+        <h2>{LEAD_HEADLINE}</h2>
+        <p class="deck">{LEAD_DECK}</p>
+        <p class="byline">{DESK} &middot; {SOURCE_NOTE}</p>
+        <p class="drop">{LEAD_BODY_FIRST_PARAGRAPH}</p>
+        <p>{LEAD_BODY}</p>
+      </div>
+      <div>
+        <!-- one or two side stories -->
+        <div class="side-story">
+          <h3>{SIDE_HEADLINE}</h3>
+          <p class="byline">{DESK} &middot; {DATE}</p>
+          <p>{SIDE_BODY}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">The Docket</span>
+      <span class="sub">Today&rsquo;s to-do, ranked by the editor. Order is the priority.</span>
+    </div>
+    <ol class="docket">
+      <!-- repeat; pill class one of high|med|low -->
+      <li><span class="pill high">High</span><span><b>{TASK}</b><span class="why">{WHY_IT_MATTERS}</span></span></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">The Ledger</span>
+      <span class="sub">Standing goals &mdash; the season-long campaign, ranked.</span>
+    </div>
+    <div class="goals">
+      <div>
+        <!-- goals I..V -->
+        <div class="goal"><h4><span class="n">I.</span>{GOAL}</h4><p>{GOAL_DETAIL}</p></div>
+      </div>
+      <div>
+        <!-- goals VI..X -->
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">The Wire</span>
+      <span class="sub">Dispatches from the three beats that matter.</span>
+    </div>
+    <div class="wire">
+      <div class="col">
+        <div class="col-head">Ole Miss Football</div>
+        <!-- 4-6 briefs -->
+        <div class="brief"><h4>{HEADLINE}</h4><p>{SUMMARY}</p><span class="src">{DATE} &middot; <a href="{URL}">{SOURCE}</a></span></div>
+      </div>
+      <div class="col">
+        <div class="col-head">Out-of-Home</div>
+      </div>
+      <div class="col">
+        <div class="col-head">Claude Code &amp; AI</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="works">
+    <div class="sec-head">
+      <span class="kicker">The Works</span>
+      <span class="sub">State of the MCTV Bot &mdash; the shop floor report.</span>
+    </div>
+    <div class="two-col">
+      <div class="primary">
+        <p class="byline">Projects Desk &middot; Cannonclaw/mctv-bot</p>
+        <p>{SHIPPING_NARRATIVE}</p>
+      </div>
+      <div>
+        <div class="stat-row">
+          <div class="stat"><div class="num">{N}</div><div class="lbl">{STAT_LABEL}</div></div>
+        </div>
+        <div class="callout">
+          <p class="byline">{CALLOUT_LABEL}</p>
+          {CALLOUT_BODY}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Prospect Intelligence</span>
+      <span class="sub">Names worth a call, from the local wire and the sports-business pages.</span>
+    </div>
+    <div class="wire">
+      <div class="col"><!-- briefs --></div>
+      <div class="col"><!-- briefs --></div>
+      <div class="col"><!-- briefs; include a "Sent This Week" brief summarizing the publisher's own outbound outreach, read from Sent Items --></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">The Homestead</span>
+      <span class="sub">The home renovation &amp; claim, tracked to completion.</span>
+    </div>
+    <!-- two-col: narrative of what moved/what's silent (with days-since-reply
+         counters from the Gmail record, inbox + Sent) on the left; .stat-row
+         silence counters + a "Where things stand" settled/open callout on the
+         right. Personal details live in editions only, never this template. -->
+    <div class="two-col">
+      <div class="primary"><!-- narrative --></div>
+      <div><!-- stats + callout --></div>
+    </div>
+  </section>
+
+  <section class="almanac">
+    <div class="sec-head">
+      <span class="kicker">The Almanac</span>
+      <span class="sub">The week ahead, both calendars merged. All times Central.</span>
+    </div>
+    <!-- repeat per day; end with a "Looking ahead" row -->
+    <div class="day"><div class="d">{DAY_LABEL}<small>{DAY_NOTE}</small></div><ul>
+      <li><span class="t">{TIME}</span>{EVENT}</li>
+    </ul></div>
+  </section>
+
+  <footer class="colophon">
+    The Cannon Chronicle &middot; Compiled by four desks: Gmail, the work inbox, sent mail &amp; calendars, the MCTV Bot repository, and the open web.<br>
+    {SOURCING_NOTE} Next edition: tomorrow morning.
+  </footer>
+
+</div>
