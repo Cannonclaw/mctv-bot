@@ -15,6 +15,7 @@ from services.auth import require_portal_auth, get_portal_user
 from services.portal_service import update_client
 from services.supabase_client import reset_password
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
+from services.partner_access import render_partner_banner, assert_writable, is_demo_session
 from services.config_service import load_config
 
 st.set_page_config(
@@ -30,6 +31,7 @@ require_portal_auth()
 user = get_portal_user()
 render_portal_sidebar(user)
 client = load_portal_client(user)
+render_partner_banner(user)
 
 client_id = client.get("id", "")
 
@@ -59,6 +61,7 @@ with st.form("profile_form"):
                              value=client.get("city", ""))
 
     if st.form_submit_button("Save Changes", type="primary", width='stretch'):
+        assert_writable("edit this profile")
         # Field validation
         if not contact_name or not contact_name.strip():
             st.error("Contact name cannot be empty.")
@@ -108,6 +111,7 @@ st.caption(
 )
 
 if st.button("Send Password Reset Email", type="primary", width='stretch'):
+    assert_writable("change this account's password")
     email = user.get("email", "")
     if email:
         with st.spinner("Sending reset link..."):

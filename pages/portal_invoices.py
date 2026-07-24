@@ -14,6 +14,7 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 from services.auth import require_portal_auth, get_portal_user
 from services.supabase_client import query_table
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
+from services.partner_access import render_partner_banner, assert_writable, is_demo_session
 
 st.set_page_config(
     page_title="Invoices - MCTV Client Portal",
@@ -28,6 +29,7 @@ require_portal_auth()
 user = get_portal_user()
 render_portal_sidebar(user)
 client = load_portal_client(user)
+render_partner_banner(user)
 
 client_id = client.get("id", "")
 

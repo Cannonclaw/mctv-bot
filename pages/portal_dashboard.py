@@ -13,7 +13,11 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import (
     require_portal_auth, get_portal_user, get_portal_role,
-    is_portal_advertiser, is_portal_host,
+    is_portal_advertiser, is_portal_host, log_portal_event,
+)
+from services.partner_access import (
+    PARTNER_ROLE, resolve_access, render_partner_banner, is_demo_session,
+    require_terms_acceptance,
 )
 from services.portal_service import (
     get_client_by_user_id, get_client_dashboard, get_host_dashboard,
@@ -40,7 +44,10 @@ render_portal_sidebar(user)
 
 # ── Load Dashboard Data ────────────────────────────────────────────────────
 
-is_admin = role in ("admin", "sales_rep")
+# The admin bypass below skips the client-linkage check, so a partner account
+# must never be able to reach it — partner is read-only evaluation access and
+# is always tied to its own demo client row.
+is_admin = role in ("admin", "sales_rep") and role != PARTNER_ROLE
 
 _data_load_error = False
 
@@ -50,6 +57,19 @@ except Exception as e:
     print(f"[portal_dashboard] Failed to load client: {e}")
     client = None
     _data_load_error = True
+
+# This page doesn't go through load_portal_client(), so resolve read-only
+# partner state and record the visit here.
+if client:
+    st.session_state["_portal_client_id"] = client.get("id", "")
+    resolve_access(user, client)
+    # Evaluation accounts must accept the terms before seeing anything.
+    require_terms_acceptance(user)
+    if not st.session_state.get("_pv_logged_portal_dashboard"):
+        st.session_state["_pv_logged_portal_dashboard"] = True
+        log_portal_event("portal_page_view", entity_type="page",
+                         details={"page": "portal_dashboard",
+                                  "client": client.get("business_name", "")})
 
 if not client and not is_admin:
     if _data_load_error:
@@ -81,6 +101,8 @@ cstatus = client.get("status", "active") if client else "active"
 
 
 # ── Header ──────────────────────────────────────────────────────────────────
+
+render_partner_banner(user)
 
 st.markdown(f"## Welcome, {user.get('full_name', 'there')}")
 
