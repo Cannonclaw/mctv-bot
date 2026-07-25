@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — Ten Thousand Strong (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        flash,
+      } from "../lib/scene.js";
+
+      /* SPOT 02 — "TEN THOUSAND STRONG"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The membership-drive spot. One number counts up while the bowl fills
+         underneath it, so the goal is felt rather than read. Ends on the ask.
+
+           0.0 - 2.9   ONE FAN CAN'T BUILD A ROSTER.   <- a single silhouette
+           2.9 - 9.4   counter races 0 -> 10,000, crowd fills
+           9.4 - 12.0  TEN THOUSAND CAN.
+          12.0 - 15.0  Lockup + CTA + MCTV endcard
+
+         PHOTO SLOTS (see README):
+           crowd-wide  1920x1080 full bleed, behind the count
+           lock-band   1920x520  behind the closing lockup            */
+
+      const GOAL = 10000;
+      const CUTS = [2.9, 9.4, 12.0];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotCrowd = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+          });
+          slotCrowd.dataset.slot = "crowd-wide";
+          bindPhoto(slotCrowd, window.PHOTOS?.["crowd-wide"], "50% 40%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 30514, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ------------------------------------------ beat 1: the one --- */
+          /* A single lit figure, alone in a dark bowl. The whole argument
+             for the spot is that this shape cannot do it by itself. */
+          const solo = el("div", null, stage, {
+            position: "absolute",
+            left: "952px",
+            top: "700px",
+            width: "26px",
+            height: "39px",
+            borderRadius: "13px 13px 5px 5px",
+            background: "rgba(255,248,226,0.95)",
+            boxShadow: "0 0 60px rgba(255,240,200,0.65)",
+            zIndex: "6",
+          });
+
+          const beat1 = el("div", "center", stage, {
+            zIndex: 20,
+            justifyContent: "flex-start",
+            paddingTop: "300px",
+          });
+          const l1 = el("div", "headline", beat1, {
+            fontSize: "132px",
+            color: "var(--white)",
+          });
+          const c1 = splitChars(l1, "ONE FAN CAN'T");
+          const l1b = el("div", "headline", beat1, {
+            fontSize: "132px",
+            color: "var(--powder)",
+          });
+          const c1b = splitChars(l1b, "BUILD A ROSTER.");
+
+          /* --------------------------------------- beat 2: the counter -- */
+          const counterWrap = el("div", "center", stage, {
+            zIndex: 22,
+            justifyContent: "flex-start",
+            paddingTop: "232px",
+          });
+          const countKicker = el("div", "kicker", counterWrap);
+          countKicker.textContent = "REBEL NATION, SIGNING UP";
+          const countRow = el("div", null, counterWrap, {
+            display: "flex",
+            marginTop: "18px",
+          });
+          /* Six fixed-width cells so the digits never reflow while racing.
+             Cell width is set per frame from the character it holds, because
+             the comma moves left as the number grows. */
+          const digits = [];
+          for (let i = 0; i < 6; i++) {
+            const cell = el("div", "headline", countRow, {
+              fontSize: "300px",
+              color: "var(--white)",
+              width: "180px",
+              textAlign: "center",
+              lineHeight: "0.92",
+            });
+            digits.push(cell);
+          }
+          const countRule = el("div", "rule", counterWrap, {
+            width: "780px",
+            marginTop: "18px",
+          });
+          const countSub = el("div", "sub", counterWrap, {
+            fontSize: "46px",
+            marginTop: "30px",
+            color: "var(--powder)",
+          });
+          countSub.textContent = "MEMBERS. THAT'S THE GOAL.";
+
+          /* ------------------------------------------------- beat 3 ---- */
+          const beat3 = el("div", "center", stage, { zIndex: 24 });
+          const l3 = el("div", "headline", beat3, {
+            fontSize: "210px",
+            color: "var(--white)",
+          });
+          const c3 = splitChars(l3, "TEN THOUSAND");
+          const l3b = el("div", "headline", beat3, {
+            fontSize: "210px",
+            color: "var(--red-hot)",
+          });
+          const c3b = splitChars(l3b, "CAN.");
+
+          /* -------------------------------------------------- lockup --- */
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "280px",
+            height: "520px",
+            zIndex: "25",
+          });
+          slotLock.dataset.slot = "lock-band";
+          bindPhoto(slotLock, window.PHOTOS?.["lock-band"], "50% 42%");
+
+          const lock = el("div", "center", stage, { zIndex: 26 });
+          const lockKicker = el("div", "kicker", lock);
+          lockKicker.textContent = "OLE MISS EXCLUSIVE NIL";
+          const lockName = el("div", "headline", lock, {
+            fontSize: "156px",
+            marginTop: "20px",
+            color: "var(--white)",
+          });
+          lockName.textContent = "THE GROVE";
+          const lockName2 = el("div", "headline", lock, {
+            fontSize: "156px",
+            color: "var(--red-hot)",
+          });
+          lockName2.textContent = "COLLECTIVE";
+          const lockRule = el("div", "rule", lock, {
+            width: "620px",
+            marginTop: "30px",
+            background: "var(--powder)",
+          });
+          const lockCta = el("div", "sub", lock, {
+            fontSize: "48px",
+            marginTop: "30px",
+          });
+          lockCta.textContent = "BE ONE OF THE TEN THOUSAND";
+          const lockUrl = el("div", "fine", lock, {
+            fontSize: "38px",
+            marginTop: "18px",
+            color: "var(--powder)",
+            letterSpacing: "0.14em",
+          });
+          lockUrl.textContent = "THEGROVECOLLECTIVE.COM";
+
+          const end = endcard(stage, { at: 12.4 });
+          const hit = flash(stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* The count window. Racing early, settling late — a linear ramp
+               reads like a spreadsheet, this reads like momentum. */
+            const cp = seg(t, 2.9, 8.4);
+            const value = Math.round(GOAL * ease.outQuint(cp));
+            const str = value.toLocaleString("en-US").padStart(6, " ");
+            for (let i = 0; i < 6; i++) {
+              const ch = str[i] ?? "";
+              if (digits[i].textContent === ch) continue;
+              digits[i].textContent = ch;
+              /* A comma needs a fraction of a digit's width; a leading blank
+                 collapses entirely so the number stays optically centred. */
+              digits[i].style.width =
+                ch === "," ? "78px" : ch === " " ? "0px" : "180px";
+            }
+
+            const power = clamp(seg(t, 2.9, 7.0));
+            lights.seek(t, power * 0.9);
+            air.seek(t, power);
+
+            /* The bowl fills in lockstep with the number. */
+            const fill = clamp(seg(t, 2.9, 8.8));
+            const energy = lerp(0.3, 1, clamp(seg(t, 7.6, 9.8)));
+            bowl.seek(t, fill, energy);
+            bowl.node.style.opacity = String(1 - seg(t, 12.6, 13.4) * 0.5);
+
+            slotCrowd.style.opacity = String(
+              clamp(seg(t, 2.9, 4.2) * 0.8 - seg(t, 12.0, 12.6) * 0.8)
+            );
+            slotCrowd.style.transform = `scale(${tw(t, 0, 15, 1.05, 1.15, ease.linear)})`;
+
+            /* ---- beat 1 --------------------------------------------- */
+            const b1 = band(t, 0.3, 2.9, 0.3);
+            beat1.style.opacity = String(b1);
+            c1.forEach((ch, i) => {
+              const p = seg(t, 0.3 + i * 0.03, 0.85 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c1b.forEach((ch, i) => {
+              const p = seg(t, 0.75 + i * 0.028, 1.3 + i * 0.028);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            /* The lone figure pulses, then is swallowed by the crowd. */
+            solo.style.opacity = String(
+              clamp(seg(t, 0.5, 1.2) - seg(t, 2.9, 3.5))
+            );
+            solo.style.transform = `scale(${1 + Math.sin(t * 3.4) * 0.09})`;
+
+            /* ---- beat 2: counter ------------------------------------ */
+            const b2 = band(t, 2.9, 9.4, 0.22);
+            counterWrap.style.opacity = String(b2);
+            /* Digits sit slightly larger while racing, settling as it lands. */
+            const settle = ease.back(seg(t, 8.0, 8.9));
+            countRow.style.transform = `scale(${lerp(0.94, 1.0, settle)})`;
+            countRule.style.transform = `scaleX(${ease.out(seg(t, 8.3, 9.0))})`;
+            countSub.style.opacity = String(seg(t, 8.5, 9.1));
+
+            /* ---- beat 3 --------------------------------------------- */
+            const b3 = band(t, 9.4, 12.0, 0.2);
+            beat3.style.opacity = String(b3);
+            const punch = ease.back(seg(t, 9.4, 10.1));
+            c3.forEach((ch, i) => {
+              const p = seg(t, 9.4 + i * 0.025, 9.9 + i * 0.025);
+              ch.style.transform = `translate3d(0, ${lerp(80, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c3b.forEach((ch, i) => {
+              const p = seg(t, 10.0 + i * 0.04, 10.55 + i * 0.04);
+              ch.style.transform = `scale(${lerp(1.6, 1, ease.back(p))})`;
+              ch.style.opacity = String(p);
+            });
+            beat3.style.transform = `scale(${lerp(0.98, 1, punch)})`;
+
+            /* ---- lockup --------------------------------------------- */
+            const bl = seg(t, 12.0, 12.5);
+            lock.style.opacity = String(bl);
+            slotLock.style.opacity = String(bl * 0.75);
+            slotLock.style.transform = `scale(${tw(t, 12.0, 15, 1.04, 1.1, ease.linear)})`;
+            lockName.style.transform = `translate3d(0, ${tw(t, 12.0, 12.7, 55, 0, ease.out)}px, 0)`;
+            lockName2.style.transform = `translate3d(0, ${tw(t, 12.1, 12.8, 55, 0, ease.out)}px, 0)`;
+            lockRule.style.transform = `scaleX(${ease.out(seg(t, 12.5, 13.1))})`;
+            lockCta.style.opacity = String(seg(t, 12.8, 13.3));
+            lockUrl.style.opacity = String(seg(t, 13.1, 13.6));
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>

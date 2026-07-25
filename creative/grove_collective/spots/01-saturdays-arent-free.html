@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — Saturdays Aren't Free (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        flash,
+      } from "../lib/scene.js";
+
+      /* SPOT 01 — "SATURDAYS AREN'T FREE"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The price spot. Runs the whole idea down to one number and holds on
+         it. Built for a muted screen across a dining room: four short lines,
+         nothing that needs to be read twice.
+
+           0.0 - 3.0   SATURDAYS AREN'T FREE.
+           3.0 - 5.4   REBEL NATION PAYS FOR THEM.
+           5.4 - 9.2   $21 A MONTH.            <- the number is the hero
+           9.2 - 11.9  THAT'S THE WHOLE ASK.   <- crowd at full roar
+          11.9 - 15.0  Lockup + CTA + MCTV endcard
+
+         PHOTO SLOTS (see README):
+           hero-wide   1920x1080 full bleed, behind beats 1-2
+           hero-lock   1920x620  behind the closing lockup            */
+
+      const CUTS = [3.0, 5.4, 9.2, 11.9];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotWide = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+          });
+          slotWide.dataset.slot = "hero-wide";
+          bindPhoto(slotWide, window.PHOTOS?.["hero-wide"], "50% 38%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 7412, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ------------------------------------------------ beats 1 & 2 -- */
+          const beat1 = el("div", "center", stage, { zIndex: 20 });
+          const l1 = el("div", "headline", beat1, {
+            fontSize: "196px",
+            color: "var(--white)",
+          });
+          const c1 = splitChars(l1, "SATURDAYS");
+          const l1b = el("div", "headline", beat1, {
+            fontSize: "196px",
+            color: "var(--red-hot)",
+            marginTop: "6px",
+          });
+          const c1b = splitChars(l1b, "AREN'T FREE.");
+
+          const beat2 = el("div", "center", stage, { zIndex: 20 });
+          const l2 = el("div", "headline", beat2, {
+            fontSize: "150px",
+            color: "var(--white)",
+          });
+          l2.textContent = "REBEL NATION";
+          const l2b = el("div", "headline", beat2, {
+            fontSize: "150px",
+            color: "var(--powder)",
+            marginTop: "4px",
+          });
+          l2b.textContent = "PAYS FOR THEM.";
+
+          /* --------------------------------------------- beat 3: the $21 -- */
+          const beat3 = el("div", "center", stage, { zIndex: 22 });
+          const priceWrap = el("div", null, beat3, {
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "center",
+          });
+          const dollar = el("div", "headline", priceWrap, {
+            fontSize: "150px",
+            color: "var(--red-hot)",
+            marginTop: "44px",
+            marginRight: "10px",
+          });
+          dollar.textContent = "$";
+          const price = el("div", "headline", priceWrap, {
+            fontSize: "460px",
+            color: "var(--white)",
+            lineHeight: "0.8",
+          });
+          price.textContent = "21";
+          const priceSub = el("div", "sub", beat3, {
+            fontSize: "58px",
+            marginTop: "26px",
+            color: "var(--powder)",
+          });
+          priceSub.textContent = "A MONTH";
+          const priceRule = el("div", "rule", beat3, {
+            width: "460px",
+            marginTop: "34px",
+          });
+
+          /* ------------------------------------------------- beat 4 ---- */
+          const beat4 = el("div", "center", stage, { zIndex: 22 });
+          const l4 = el("div", "headline", beat4, {
+            fontSize: "172px",
+            color: "var(--white)",
+          });
+          const c4 = splitChars(l4, "THAT'S THE WHOLE ASK.");
+
+          /* -------------------------------------------------- lockup --- */
+          const lock = el("div", "center", stage, { zIndex: 24 });
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "230px",
+            height: "620px",
+            zIndex: "23",
+          });
+          slotLock.dataset.slot = "hero-lock";
+          bindPhoto(slotLock, window.PHOTOS?.["hero-lock"], "50% 40%");
+
+          const lockKicker = el("div", "kicker", lock);
+          lockKicker.textContent = "OLE MISS EXCLUSIVE NIL";
+          const lockName = el("div", "headline", lock, {
+            fontSize: "168px",
+            marginTop: "22px",
+            color: "var(--white)",
+          });
+          lockName.textContent = "THE GROVE";
+          const lockName2 = el("div", "headline", lock, {
+            fontSize: "168px",
+            color: "var(--red-hot)",
+          });
+          lockName2.textContent = "COLLECTIVE";
+          const lockRule = el("div", "rule", lock, {
+            width: "620px",
+            marginTop: "34px",
+            background: "var(--powder)",
+          });
+          const lockCta = el("div", "sub", lock, {
+            fontSize: "50px",
+            marginTop: "34px",
+            color: "var(--white)",
+          });
+          lockCta.textContent = "MEMBERSHIPS FROM $21 / MONTH";
+          const lockUrl = el("div", "fine", lock, {
+            fontSize: "38px",
+            marginTop: "20px",
+            color: "var(--powder)",
+            letterSpacing: "0.14em",
+          });
+          lockUrl.textContent = "THEGROVECOLLECTIVE.COM";
+
+          const end = endcard(stage, { at: 12.3 });
+          const hit = flash(stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* House lights come up under the number and stay up. */
+            const power = clamp(
+              seg(t, 0.4, 2.2) * 0.45 + seg(t, 5.4, 7.4) * 0.55
+            );
+            lights.seek(t, power);
+            air.seek(t, power);
+
+            /* The bowl fills as the argument lands, then roars on beat 4. */
+            const fill = clamp(seg(t, 1.0, 3.0) * 0.3 + seg(t, 5.4, 9.6) * 0.7);
+            const energy = lerp(0.35, 1, clamp(seg(t, 8.6, 10.2)));
+            bowl.seek(t, fill, energy);
+            bowl.node.style.opacity = String(1 - seg(t, 12.6, 13.4) * 0.45);
+
+            /* Backdrop slot: slow push-in the whole way, out at the lockup. */
+            slotWide.style.opacity = String(
+              (0.85 - seg(t, 11.9, 12.5) * 0.85).toFixed(4)
+            );
+            slotWide.style.transform = `scale(${tw(t, 0, 15, 1.06, 1.16, ease.linear)})`;
+
+            /* ---- beat 1 --------------------------------------------- */
+            const b1 = band(t, 0.35, 3.0, 0.3);
+            beat1.style.opacity = String(b1);
+            /* Characters drop in on a stagger — the type does the shouting. */
+            c1.forEach((ch, i) => {
+              const p = seg(t, 0.35 + i * 0.035, 0.95 + i * 0.035);
+              ch.style.transform = `translate3d(0, ${lerp(
+                120,
+                0,
+                ease.back(p)
+              )}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c1b.forEach((ch, i) => {
+              const p = seg(t, 0.95 + i * 0.03, 1.5 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(
+                120,
+                0,
+                ease.back(p)
+              )}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            beat1.style.transform = `scale(${tw(t, 0.35, 3.0, 1, 1.05, ease.linear)})`;
+
+            /* ---- beat 2 --------------------------------------------- */
+            const b2 = band(t, 3.0, 5.4, 0.22);
+            beat2.style.opacity = String(b2);
+            l2.style.transform = `translate3d(${tw(t, 3.0, 3.7, -90, 0, ease.out)}px, 0, 0)`;
+            l2b.style.transform = `translate3d(${tw(t, 3.15, 3.85, 90, 0, ease.out)}px, 0, 0)`;
+
+            /* ---- beat 3: the number --------------------------------- */
+            const b3 = band(t, 5.4, 9.2, 0.24);
+            beat3.style.opacity = String(b3);
+            /* Hard overshoot punch — this is the frame people remember. */
+            const punch = ease.back(seg(t, 5.4, 6.15));
+            price.style.transform = `scale(${lerp(0.55, 1, punch)})`;
+            dollar.style.transform = `scale(${lerp(0.55, 1, ease.back(seg(t, 5.55, 6.3)))})`;
+            priceSub.style.opacity = String(seg(t, 6.3, 6.8));
+            priceRule.style.transform = `scaleX(${ease.out(seg(t, 6.5, 7.2))})`;
+            /* A slow breathe keeps the hold alive for three full seconds. */
+            beat3.style.transform = `scale(${1 + Math.sin(t * 1.6) * 0.006})`;
+
+            /* ---- beat 4 --------------------------------------------- */
+            const b4 = band(t, 9.2, 11.9, 0.2);
+            beat4.style.opacity = String(b4);
+            c4.forEach((ch, i) => {
+              const p = seg(t, 9.2 + i * 0.022, 9.62 + i * 0.022);
+              ch.style.transform = `translate3d(0, ${lerp(60, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+
+            /* ---- lockup --------------------------------------------- */
+            const bl = seg(t, 11.9, 12.4);
+            lock.style.opacity = String(bl);
+            slotLock.style.opacity = String(bl * 0.8);
+            slotLock.style.transform = `scale(${tw(t, 11.9, 15, 1.04, 1.1, ease.linear)})`;
+            lockName.style.transform = `translate3d(0, ${tw(t, 11.9, 12.6, 60, 0, ease.out)}px, 0)`;
+            lockName2.style.transform = `translate3d(0, ${tw(t, 12.0, 12.7, 60, 0, ease.out)}px, 0)`;
+            lockRule.style.transform = `scaleX(${ease.out(seg(t, 12.4, 13.0))})`;
+            lockCta.style.opacity = String(seg(t, 12.7, 13.2));
+            lockUrl.style.opacity = String(seg(t, 13.0, 13.5));
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>

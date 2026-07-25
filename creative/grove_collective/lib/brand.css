@@ -1,0 +1,293 @@
+/* MCTV Digital, Inc. — Proprietary.
+   Grove Collective campaign — shared design tokens and canvas primitives.
+
+   Every spot is a fixed 1920x1080 canvas scaled to fit its container. Nothing
+   here is responsive on purpose: these render to fixed-resolution video files,
+   not to a browser viewport. */
+
+@font-face {
+  font-family: "Anton";
+  src: url("../fonts/anton.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Oswald";
+  src: url("../fonts/oswald-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Oswald";
+  src: url("../fonts/oswald-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+
+:root {
+  /* Ole Miss / Grove Collective palette.
+     PLACEHOLDER VALUES — swap for the collective's exact brand hexes before air. */
+  --navy: #0a1733;
+  --navy-deep: #050c1d;
+  --navy-lift: #16274f;
+  --red: #ce1126;
+  --red-hot: #e8243a;
+  --powder: #a5c8e1;
+  --cream: #f4f1ea;
+  --white: #ffffff;
+
+  /* MCTV house colors, for the endcard only. */
+  --mctv-navy: #1b1f3b;
+  --mctv-gold: #c5a55a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+/* The canvas is always laid out at exactly 1920x1080 and then transform-scaled.
+   Rendering sets the viewport to 1920x1080 so the scale resolves to 1. */
+#stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center center;
+  /* Not a flat fill: the base already carries a lit centre and a cool falloff
+     so even an unlit frame has somewhere for the eye to go. */
+  background: radial-gradient(
+      ellipse 90% 70% at 50% 34%,
+      rgba(40, 78, 145, 0.55) 0%,
+      transparent 70%
+    ),
+    linear-gradient(to bottom, #142a55 0%, #0a1733 46%, #050c1d 100%);
+  overflow: hidden;
+  font-family: "Oswald", "Liberation Sans", sans-serif;
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- layers -- */
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Stadium light rig. Two banks of hard flares that sweep across the frame.
+   Drives the "night game" read without a single photograph. */
+.lightbank {
+  position: absolute;
+  width: 900px;
+  height: 1600px;
+  top: -260px;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 0%,
+    rgba(220, 235, 255, 0.5) 0%,
+    rgba(165, 200, 225, 0.22) 28%,
+    rgba(120, 160, 210, 0.07) 55%,
+    transparent 72%
+  );
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+/* Ground haze so the crowd sits in atmosphere instead of on a flat plate. */
+.haze {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 520px;
+  background: linear-gradient(
+    to top,
+    rgba(20, 45, 90, 0.72) 0%,
+    rgba(20, 45, 90, 0.28) 45%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 78% 68% at 50% 48%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 82%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+  pointer-events: none;
+}
+
+/* Fine broadcast grain. Kept subtle — indoor screens are bright and crush
+   texture, so anything heavier just reads as noise. */
+.grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.05;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------ typography -- */
+
+.kicker {
+  font-family: "Oswald", sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--powder);
+}
+
+.headline {
+  font-family: "Anton", "Liberation Sans", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.015em;
+}
+
+.sub {
+  font-family: "Oswald", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.fine {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Centered stacks are used constantly — every spot is a lockup sequence. */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.rule {
+  height: 7px;
+  background: var(--red);
+  transform-origin: center center;
+}
+
+/* --------------------------------------------------------- photo slots  -- */
+
+/* Photo slots are the whole point of the build: every spot has named, sized
+   openings that take the collective's own photography. With no image bound
+   they fall back to a designed field treatment, so an unfilled spot still
+   looks deliberate instead of broken. See README for the slot manifest. */
+.photo-slot {
+  position: absolute;
+  overflow: hidden;
+  background-color: var(--navy-lift);
+  background-image: var(--img, none);
+  background-size: cover;
+  background-position: var(--focal, 50% 42%);
+  will-change: transform, opacity;
+}
+
+/* Empty-state treatment: diagonal field weave + inner glow. Only paints when
+   no --img has been bound to the slot. */
+.photo-slot:not([data-filled])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      -52deg,
+      rgba(165, 200, 225, 0.09) 0px,
+      rgba(165, 200, 225, 0.09) 2px,
+      transparent 2px,
+      transparent 22px
+    ),
+    radial-gradient(
+      ellipse 70% 70% at 50% 38%,
+      rgba(165, 200, 225, 0.16),
+      transparent 70%
+    );
+}
+
+/* A slot that sits as a band inside the frame rather than full bleed needs
+   its edges feathered, or it reads as a pasted-in rectangle — especially
+   while empty. */
+.photo-slot--band {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 16%,
+    #000 84%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 16%,
+    #000 84%,
+    transparent 100%
+  );
+}
+
+/* Every filled photo gets graded toward the palette so mixed-source
+   photography still cuts together as one campaign. */
+.photo-slot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+      to top,
+      rgba(5, 12, 29, 0.88) 0%,
+      rgba(5, 12, 29, 0.25) 45%,
+      rgba(5, 12, 29, 0.1) 100%
+    ),
+    linear-gradient(to right, rgba(10, 23, 51, 0.45), transparent 60%);
+}
+
+/* --------------------------------------------------------------- endcard -- */
+
+.endcard-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 96px;
+  background: var(--mctv-navy);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+}
+
+.mctv-mark {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: 0.3em;
+  color: var(--mctv-gold);
+  text-transform: uppercase;
+}
