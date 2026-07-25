@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — First Saturday (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        flash,
+      } from "../lib/scene.js";
+
+      /* SPOT 04 — "FIRST SATURDAY"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The hype spot. No price, no tiers, no ask — just the town, the
+         lights and the date. This is the one that runs early and often to
+         warm the market up; 01-03 do the converting once it has.
+
+           0.0 - 3.4   IT'S BEEN QUIET IN OXFORD.  <- banks snap on one by one
+           3.4 - 6.4   NOT FOR MUCH LONGER.        <- the bowl floods
+           6.4 - 10.6  SEPT 12 / FIRST SATURDAY IN THE GROVE   <- the hero
+          10.6 - 15.0  Lockup + MCTV endcard
+
+         THE DATE: Sept 12 vs Charlotte is Ole Miss's first home game of 2026
+         and the first Saturday the Grove is open. The season opener (Sept 5
+         or 6 vs Louisville) is deliberately not used — it is a neutral-site
+         game in Nashville and the exact day was still unconfirmed. Change
+         GAME_DATE below and re-render if the client wants a different date.
+
+         PHOTO SLOTS (see README):
+           grove-wide  1920x1080 full bleed — the Grove itself, tents up
+           lock-band   1920x520  behind the closing lockup                */
+
+      const GAME_DATE = { short: "SEPT 12", line: "FIRST SATURDAY IN THE GROVE" };
+      const CUTS = [3.4, 6.4, 10.6];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotWide = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+          });
+          slotWide.dataset.slot = "grove-wide";
+          bindPhoto(slotWide, window.PHOTOS?.["grove-wide"], "50% 42%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 91226, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ------------------------------------------------- beat 1 ---- */
+          const beat1 = el("div", "center", stage, { zIndex: 20 });
+          const l1 = el("div", "headline", beat1, {
+            fontSize: "158px",
+            color: "var(--white)",
+          });
+          const c1 = splitChars(l1, "IT'S BEEN QUIET");
+          const l1b = el("div", "headline", beat1, {
+            fontSize: "158px",
+            color: "var(--powder)",
+            marginTop: "4px",
+          });
+          const c1b = splitChars(l1b, "IN OXFORD.");
+
+          /* ------------------------------------------------- beat 2 ---- */
+          const beat2 = el("div", "center", stage, { zIndex: 20 });
+          const l2 = el("div", "headline", beat2, {
+            fontSize: "186px",
+            color: "var(--white)",
+          });
+          const c2 = splitChars(l2, "NOT FOR");
+          const l2b = el("div", "headline", beat2, {
+            fontSize: "186px",
+            color: "var(--red-hot)",
+            marginTop: "2px",
+          });
+          const c2b = splitChars(l2b, "MUCH LONGER.");
+
+          /* --------------------------------------- beat 3: the date ---- */
+          const dateCard = el("div", "center", stage, { zIndex: 24 });
+          const dateRule = el("div", "rule", dateCard, {
+            width: "300px",
+            marginBottom: "40px",
+            background: "var(--powder)",
+          });
+          const dateBig = el("div", "headline", dateCard, {
+            fontSize: "300px",
+            color: "var(--white)",
+            lineHeight: "0.86",
+          });
+          const cDate = splitChars(dateBig, GAME_DATE.short);
+          const dateLine = el("div", "sub", dateCard, {
+            fontSize: "56px",
+            marginTop: "34px",
+            color: "var(--powder)",
+          });
+          dateLine.textContent = GAME_DATE.line;
+
+          /* -------------------------------------------------- lockup --- */
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "270px",
+            height: "540px",
+            zIndex: "25",
+          });
+          slotLock.dataset.slot = "lock-band";
+          bindPhoto(slotLock, window.PHOTOS?.["lock-band"], "50% 42%");
+
+          const lock = el("div", "center", stage, { zIndex: 26 });
+          const lockName = el("div", "headline", lock, {
+            fontSize: "172px",
+            color: "var(--white)",
+          });
+          lockName.textContent = "THE GROVE";
+          const lockName2 = el("div", "headline", lock, {
+            fontSize: "172px",
+            color: "var(--red-hot)",
+          });
+          lockName2.textContent = "COLLECTIVE";
+          const lockRule = el("div", "rule", lock, {
+            width: "640px",
+            marginTop: "34px",
+            background: "var(--powder)",
+          });
+          /* No price and no tier on this one — the only ask is to show up. */
+          const lockCta = el("div", "sub", lock, {
+            fontSize: "52px",
+            marginTop: "34px",
+          });
+          lockCta.textContent = "REBEL NATION, FALL IN.";
+          const lockUrl = el("div", "fine", lock, {
+            fontSize: "38px",
+            marginTop: "20px",
+            color: "var(--powder)",
+            letterSpacing: "0.14em",
+          });
+          lockUrl.textContent = "THEGROVECOLLECTIVE.COM";
+
+          const end = endcard(stage, { at: 11.0 });
+          const hit = flash(stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* Banks snap on one at a time across the opening line — an empty
+               stadium waking up, rather than a fade. */
+            const bankPower = [
+              seg(t, 0.5, 0.62),
+              seg(t, 1.25, 1.37),
+              seg(t, 2.0, 2.12),
+              seg(t, 2.7, 2.82),
+            ];
+            const power = clamp(0.34 + seg(t, 3.4, 6.4) * 0.66);
+            lights.seek(t, power, bankPower);
+            air.seek(t, power);
+
+            /* Empty at the open, floods on beat 2, roars from there. */
+            const fill = clamp(seg(t, 3.5, 6.6));
+            const energy = lerp(0.3, 1, clamp(seg(t, 5.6, 7.4)));
+            bowl.seek(t, fill, energy);
+            bowl.node.style.opacity = String(1 - seg(t, 11.4, 12.2) * 0.5);
+
+            slotWide.style.opacity = String(clamp(0.8 - seg(t, 10.6, 11.2) * 0.8));
+            slotWide.style.transform = `scale(${tw(t, 0, 15, 1.06, 1.16, ease.linear)})`;
+
+            /* ---- beat 1 --------------------------------------------- */
+            const b1 = band(t, 0.6, 3.4, 0.3);
+            beat1.style.opacity = String(b1);
+            c1.forEach((ch, i) => {
+              const p = seg(t, 0.6 + i * 0.03, 1.15 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(50, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c1b.forEach((ch, i) => {
+              const p = seg(t, 1.1 + i * 0.03, 1.65 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(50, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+
+            /* ---- beat 2 --------------------------------------------- */
+            const b2 = band(t, 3.4, 6.4, 0.22);
+            beat2.style.opacity = String(b2);
+            c2.forEach((ch, i) => {
+              const p = seg(t, 3.4 + i * 0.03, 3.95 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c2b.forEach((ch, i) => {
+              const p = seg(t, 3.9 + i * 0.028, 4.45 + i * 0.028);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+
+            /* ---- beat 3: the date, held long ------------------------ */
+            const b3 = band(t, 6.4, 10.6, 0.24);
+            dateCard.style.opacity = String(b3);
+            dateRule.style.transform = `scaleX(${ease.out(seg(t, 6.5, 7.1))})`;
+            cDate.forEach((ch, i) => {
+              /* Each character punches in with overshoot, left to right. */
+              const p = ease.back(seg(t, 6.55 + i * 0.075, 7.15 + i * 0.075));
+              ch.style.transform = `scale(${lerp(0.35, 1, p)})`;
+              ch.style.opacity = String(clamp(p * 1.4));
+            });
+            dateLine.style.opacity = String(seg(t, 7.7, 8.3));
+            /* A slow breathe keeps the four-second hold alive. */
+            dateCard.style.transform = `scale(${1 + Math.sin(t * 1.5) * 0.007})`;
+
+            /* ---- lockup --------------------------------------------- */
+            const bl = seg(t, 10.6, 11.1);
+            lock.style.opacity = String(bl);
+            slotLock.style.opacity = String(bl * 0.75);
+            slotLock.style.transform = `scale(${tw(t, 10.6, 15, 1.04, 1.1, ease.linear)})`;
+            lockName.style.transform = `translate3d(0, ${tw(t, 10.6, 11.3, 60, 0, ease.out)}px, 0)`;
+            lockName2.style.transform = `translate3d(0, ${tw(t, 10.7, 11.4, 60, 0, ease.out)}px, 0)`;
+            lockRule.style.transform = `scaleX(${ease.out(seg(t, 11.1, 11.7))})`;
+            lockCta.style.opacity = String(seg(t, 11.4, 11.9));
+            lockUrl.style.opacity = String(seg(t, 11.7, 12.2));
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>

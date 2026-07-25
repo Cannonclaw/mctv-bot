@@ -8,6 +8,11 @@ network ahead of the 2026 football season.
 | 01 | `01-saturdays-arent-free` | "Saturdays aren't free." → **$21 a month** | General market. The workhorse. |
 | 02 | `02-ten-thousand-strong` | Counter races 0 → **10,000 members** | The membership drive itself. |
 | 03 | `03-ten-dollar-student` | "$10 a month" vs. two coffees | **Oxford only** — student conversion. |
+| 04 | `04-first-saturday` | "It's been quiet in Oxford." → **Sept 12** | Awareness. No price, no ask. |
+
+Run 04 first and heavily to warm the market up, then let 01–03 do the
+converting. It is the only spot with no price in it, which is what makes it
+safe to run before pricing is confirmed.
 
 ## Format
 
@@ -75,6 +80,7 @@ module runs:
 | `crowd-wide` | 02 | 1920x1080 | Packed stands. The busier the better. |
 | `lock-band` | 02, 03 | 1920x520 | Members / tailgate scene. |
 | `student-wide` | 03 | 1920x1080 | Student section, night game. |
+| `grove-wide` | 04 | 1920x1080 | The Grove itself, tents up, people arriving. |
 
 Slots are cropped with `background-size: cover` and a default focal point
 around 40% height (faces sit high in most crowd shots). Override per photo
@@ -100,8 +106,14 @@ with a slow push-in and loses roughly 10% at the edges.
       image, or likeness, which is deliberate: that is exactly the permission
       an NIL collective cannot casually extend. Any photography added to the
       slots needs the same clearance the client would need for its own channels.
+- [ ] **The date in spot 04.** It reads **Sept 12** — Ole Miss's first home
+      game of 2026 (Charlotte) and the first Saturday the Grove is open. The
+      season opener on Sept 5 or 6 was deliberately not used: it is a
+      neutral-site game against Louisville in Nashville, and the exact day was
+      still unconfirmed. To change it, edit `GAME_DATE` at the top of
+      `spots/04-first-saturday.html` and re-render.
 - [ ] **Market plan.** Spot 03 is student-targeted and should not leave Oxford.
-      Spot 01 travels anywhere. Consider holding all three out of the
+      Spots 01 and 04 travel anywhere. Consider holding all four out of the
       Starkville market entirely — see below.
 
 ## A note on Starkville

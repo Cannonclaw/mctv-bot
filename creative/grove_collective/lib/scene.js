@@ -59,19 +59,26 @@ export function stadiumLights(parent) {
   });
 
   return {
-    seek(t, power = 1) {
-      for (const b of banks) {
+    /**
+     * @param {number} power overall 0..1 house-light level
+     * @param {number[]} [bankPower] optional per-bank multipliers, one per
+     *   bank left to right. Pass these to snap banks on one at a time — an
+     *   empty stadium coming to life is a beat you can only get this way.
+     */
+    seek(t, power = 1, bankPower = null) {
+      banks.forEach((b, i) => {
         /* A slow drift keeps the flares alive between beats without ever
            calling attention to itself. */
         const drift = Math.sin(t * 0.55 + b.phase) * 46;
         const bloom = 0.78 + Math.sin(t * 1.25 + b.phase * 1.7) * 0.18;
-        b.node.style.opacity = clamp(power * bloom, 0, 1);
+        const p = power * (bankPower ? clamp(bankPower[i] ?? 1) : 1);
+        b.node.style.opacity = clamp(p * bloom, 0, 1);
         b.node.style.transform = `translate3d(${drift}px, 0, 0) scaleX(${lerp(
           0.82,
           1.08,
-          power
+          p
         )})`;
-      }
+      });
       for (const s of shafts) {
         const flick = 0.66 + Math.sin(t * 0.9 + s.phase) * 0.24;
         s.node.style.opacity = String(clamp(power * flick));
