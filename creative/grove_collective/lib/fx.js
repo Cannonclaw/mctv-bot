@@ -2,9 +2,9 @@
    Grove Collective campaign — hype effects layer.
 
    Everything in here exists to make a beat HIT: confetti on the payoff, a
-   stadium wave rolling through the crowd, red pompoms snapping up on the
-   roar, and a broadcast impact hit on cuts. All deterministic — seeded
-   randomness only, pure functions of t — so renders stay reproducible. */
+   broadcast impact hit on cuts (radial pop + chromatic split + camera kick),
+   pennant bunting, red shockwaves. All deterministic — seeded randomness
+   only, pure functions of t — so renders stay reproducible. */
 
 import { el, rng, clamp, seg, lerp, ease } from "./spot-engine.js";
 
@@ -74,14 +74,26 @@ export function confetti(parent, { at = 6.0, seed = 99, count = 130, zIndex = 30
 /* ------------------------------------------------------------ impact hit -- */
 
 /**
- * Broadcast impact on cuts: a white pop plus a 4-frame chromatic split and a
- * one-frame scale jolt on the whole stage. Replaces the plain flash — same
- * call signature, much harder hit.
+ * Broadcast impact on cuts: radial white pop with a red bleed at the edge,
+ * a 4-frame chromatic split, and a physical camera kick (scale jolt + shake
+ * translate via the --jolt / --shakeX / --shakeY hooks on #stage).
+ *
+ * Cuts may be plain numbers or `{ t, color: 'red', k: 1.4 }` — `color:'red'`
+ * makes the pop hit Ole Miss red (the money moment), `k` scales strength.
  */
 export function impact(stage, parent) {
-  const pop = el("div", "layer", parent, {
+  const popWhite = el("div", "layer", parent, {
     zIndex: 55,
-    background: "#fff",
+    background:
+      "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(232,36,58,0.45) 60%, transparent 82%)",
+    opacity: "0",
+    mixBlendMode: "screen",
+    pointerEvents: "none",
+  });
+  const popRed = el("div", "layer", parent, {
+    zIndex: 55,
+    background:
+      "radial-gradient(circle at 50% 50%, rgba(255,120,134,0.9) 0%, rgba(232,36,58,0.75) 55%, transparent 82%)",
     opacity: "0",
     mixBlendMode: "screen",
     pointerEvents: "none",
@@ -99,19 +111,67 @@ export function impact(stage, parent) {
 
   return {
     seek(t, cuts = []) {
-      let flash = 0, split = 0;
+      let white = 0, red = 0, split = 0, kick = 0, ks = 0;
       for (const c of cuts) {
-        if (t >= c && t < c + 0.22) flash = Math.max(flash, Math.pow(1 - (t - c) / 0.22, 2.6) * 0.85);
-        if (t >= c && t < c + 0.14) split = Math.max(split, 1 - (t - c) / 0.14);
+        const ct = typeof c === "number" ? c : c.t;
+        const k = typeof c === "number" ? 1 : c.k ?? 1;
+        const isRed = typeof c !== "number" && c.color === "red";
+        if (t >= ct && t < ct + 0.12) {
+          const v = Math.pow(1 - (t - ct) / 0.12, 3) * 0.55 * k;
+          if (isRed) red = Math.max(red, v * 1.25);
+          else white = Math.max(white, v);
+        }
+        if (t >= ct && t < ct + 0.14) {
+          split = Math.max(split, (1 - (t - ct) / 0.14) * k);
+        }
+        if (t >= ct && t < ct + 0.2) {
+          const decay = Math.pow(1 - (t - ct) / 0.2, 2) * k;
+          if (decay > kick) {
+            kick = decay;
+            ks = t - ct;
+          }
+        }
       }
-      pop.style.opacity = String(flash);
-      ghostR.style.opacity = String(split * 0.55);
-      ghostB.style.opacity = String(split * 0.55);
+      popWhite.style.opacity = String(clamp(white));
+      popRed.style.opacity = String(clamp(red));
+      ghostR.style.opacity = String(clamp(split * 0.55));
+      ghostB.style.opacity = String(clamp(split * 0.55));
       ghostR.style.transform = `translate3d(${split * 14}px, 0, 0)`;
       ghostB.style.transform = `translate3d(${-split * 14}px, 0, 0)`;
-      /* One sharp jolt into the cut, settling within ~5 frames. */
-      const jolt = 1 + split * 0.012;
-      stage.style.setProperty("--jolt", jolt);
+      /* Physical hit: scale jolt plus a decaying lateral shake. */
+      stage.style.setProperty("--jolt", String(1 + kick * 0.035));
+      stage.style.setProperty("--shakeX", `${Math.sin(ks * 140) * 6 * kick}px`);
+      stage.style.setProperty("--shakeY", `${Math.cos(ks * 110) * 4 * kick}px`);
+    },
+  };
+}
+
+/* ------------------------------------------------------------ shockwave  -- */
+
+/** A red ring that detonates outward from a point — put it under a number. */
+export function shockwave(parent, { at, x = 960, y = 540, zIndex = 21 } = {}) {
+  const node = el("div", null, parent, {
+    position: "absolute",
+    left: `${x - 300}px`,
+    top: `${y - 300}px`,
+    width: "600px",
+    height: "600px",
+    border: "3px solid rgba(232,36,58,0.9)",
+    borderRadius: "50%",
+    opacity: "0",
+    zIndex: String(zIndex),
+    pointerEvents: "none",
+    willChange: "transform, opacity",
+  });
+  return {
+    seek(t) {
+      const p = seg(t, at, at + 0.65);
+      if (p <= 0 || p >= 1) {
+        node.style.opacity = "0";
+        return;
+      }
+      node.style.opacity = String((1 - p) * 0.9);
+      node.style.transform = `scale(${lerp(0.2, 2.6, ease.out(p))})`;
     },
   };
 }
@@ -160,55 +220,6 @@ export function pennants(parent, { y = 54, seed = 7, zIndex = 28 } = {}) {
       layer.style.opacity = String(on);
       for (const f of flags) {
         f.node.style.transform = `rotate(${Math.sin(t * 1.8 + f.phase) * 7}deg)`;
-      }
-    },
-  };
-}
-
-/* ------------------------------------------------------------- crowd fx  -- */
-
-/**
- * Wave + pompom upgrade for a crowd built by scene.js `crowd()`. Wraps its
- * seek: `crowdFx(bowl).seek(t, fill, energy, wave)` where `wave` 0..1 sends
- * a stadium wave rolling left-to-right through the bowl, and at high energy
- * roughly one in nine silhouettes flashes Ole Miss red — pompoms up.
- *
- * Implemented here (not in scene.js) so the base bowl stays untouched for
- * any spot that wants the quiet version.
- */
-export function crowdFx(bowl, { seed = 5150 } = {}) {
-  const rand = rng(seed);
-  /* Peek at the bowl's people via its layer children — scene.js appends one
-     node per person in order, so index-stable decoration is safe. */
-  const nodes = Array.from(bowl.node.children);
-  const deco = nodes.map((node) => ({
-    node,
-    x: parseFloat(node.style.left) || 0,
-    pom: rand() < 0.11,
-    phase: rand() * Math.PI * 2,
-  }));
-
-  return {
-    seek(t, fill, energy, wave = 0) {
-      bowl.seek(t, fill, energy);
-      if (wave <= 0 && energy < 0.85) return;
-      for (const d of deco) {
-        if (d.node.style.opacity === "0") continue;
-        let lift = 0;
-        if (wave > 0) {
-          /* The wave: a gaussian bump sweeping x across the frame. */
-          const center = lerp(-300, 2220, wave);
-          const dx = (d.x - center) / 260;
-          lift = Math.exp(-dx * dx) * 26;
-        }
-        if (lift > 1 || (d.pom && energy >= 0.85)) {
-          const shake = d.pom ? Math.sin(t * 9 + d.phase) * 3 : 0;
-          d.node.style.transform = `translate3d(${shake}px, ${-(lift + (d.pom ? 6 : 0))}px, 0)`;
-          if (d.pom && energy >= 0.85) {
-            d.node.style.background = "#e8243a";
-            d.node.style.boxShadow = "0 0 18px rgba(232,36,58,0.6)";
-          }
-        }
       }
     },
   };
