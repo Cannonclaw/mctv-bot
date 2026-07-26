@@ -15,7 +15,7 @@ import { el, rng, clamp, seg, lerp, ease } from "./spot-engine.js";
  * configured `at` second and are gone ~2.6s later. Red / powder / cream
  * rectangles with tumble — reads as a stadium celebration, not a birthday.
  */
-export function confetti(parent, { at = 6.0, seed = 99, count = 130, zIndex = 30 } = {}) {
+export function confetti(parent, { at = 6.0, seed = 99, count = 130, zIndex = 30, width = 1920, originY = 1120 } = {}) {
   const layer = el("div", "layer", parent, { zIndex, pointerEvents: "none" });
   const rand = rng(seed);
   const colors = ["#e8243a", "#a5c8e1", "#f4f1ea", "#ce1126", "#ffffff"];
@@ -61,7 +61,7 @@ export function confetti(parent, { at = 6.0, seed = 99, count = 130, zIndex = 30
         /* Ballistic arc with gravity; drag eases the horizontal run. */
         const drag = 1 - Math.min(a * 0.35, 0.72);
         const x = p.x0 + p.vx * a * drag;
-        const y = 1120 + p.vy * a + 1750 * a * a;
+        const y = originY + p.vy * a + 1750 * a * a;
         const rot = p.spin * a;
         const flutter = Math.sin(a * p.tumble * 3.1) /* paper flip */;
         p.node.style.opacity = String(clamp(1 - seg(a, p.life - 0.5, p.life)));
@@ -183,7 +183,7 @@ export function shockwave(parent, { at, x = 960, y = 540, zIndex = 21 } = {}) {
  * bunting. Subtle sway; used on the lockup so the close feels like the
  * tailgate, not a title card.
  */
-export function pennants(parent, { y = 54, seed = 7, zIndex = 28 } = {}) {
+export function pennants(parent, { y = 54, seed = 7, zIndex = 28, width = 1920 } = {}) {
   const layer = el("div", null, parent, {
     position: "absolute", left: "0", right: "0", top: "0",
     height: "140px", zIndex, pointerEvents: "none",
@@ -193,7 +193,7 @@ export function pennants(parent, { y = 54, seed = 7, zIndex = 28 } = {}) {
   const flags = [];
   const n = 26;
   for (let i = 0; i < n; i++) {
-    const x = (i + 0.5) * (1920 / n);
+    const x = (i + 0.5) * (width / n);
     const c = colors[i % colors.length];
     const node = el("div", null, layer, {
       position: "absolute",

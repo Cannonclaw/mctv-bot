@@ -9,6 +9,7 @@ network ahead of the 2026 football season.
 | 02 | `02-ten-thousand-strong` | Counter races 0 → **10,000 members** | The membership drive itself. |
 | 03 | `03-ten-dollar-student` | "$10 a month" vs. two coffees | **Oxford only** — student conversion. |
 | 04 | `04-first-saturday` | "It's been quiet in Oxford." → **Sept 12** | Awareness. No price, no ask. |
+| 90 | `90-first-saturday-social` | Spot 04 re-staged **vertical (1080x1920)** | The collective's own Reels/Stories/TikTok. |
 
 Run 04 first and heavily to warm the market up, then let 01–03 do the
 converting. It is the only spot with no price in it, which is what makes it
@@ -16,8 +17,11 @@ safe to run before pricing is confirmed.
 
 ## Format
 
-Every spot renders at **1920x1080, 30fps, 15.000s, H.264** — the spec in
+Broadcast spots render at **1920x1080, 30fps, 15.000s, H.264** — the spec in
 `config/config.json` under `creatomate.resolution` / `duration_seconds`.
+Spot 90 declares its own canvas (**1080x1920** vertical) via the `width` /
+`height` options on `Spot`; `render.mjs` and `frames.mjs` read the canvas
+from the spot, so no flags are needed.
 
 **These are built silent.** MCTV's indoor screens run muted, so nothing in the
 creative depends on audio: no voiceover beats, no music-synced cuts, and every

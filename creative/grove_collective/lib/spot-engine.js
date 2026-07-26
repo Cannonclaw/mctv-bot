@@ -92,12 +92,17 @@ export class Spot {
    * @param {object} opts
    * @param {number} opts.duration seconds of finished runtime
    * @param {number} opts.fps frame rate the spot is authored and exported at
+   * @param {number} opts.width canvas width — 1920 for the screen network,
+   *   1080 for vertical social cuts
+   * @param {number} opts.height canvas height
    * @param {(stage: HTMLElement) => (t: number) => void} opts.build
    *   Builds the DOM once and returns the per-frame paint function.
    */
-  constructor({ duration = 15, fps = 30, build }) {
+  constructor({ duration = 15, fps = 30, width = 1920, height = 1080, build }) {
     this.duration = duration;
     this.fps = fps;
+    this.width = width;
+    this.height = height;
     this.build = build;
     this.seekFn = null;
   }
@@ -105,12 +110,17 @@ export class Spot {
   mount() {
     const stage = document.getElementById("stage");
     this.stage = stage;
+    stage.style.width = `${this.width}px`;
+    stage.style.height = `${this.height}px`;
     this.seekFn = this.build(stage);
 
     /* Scale the fixed canvas to whatever box it has been dropped into. The
-       renderer sizes the viewport to 1920x1080, so this resolves to 1 there. */
+       renderer sizes the viewport to the canvas, so this resolves to 1. */
     const fit = () => {
-      const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      const s = Math.min(
+        window.innerWidth / this.width,
+        window.innerHeight / this.height
+      );
       stage.style.setProperty("--fit", s);
     };
     fit();
@@ -120,6 +130,8 @@ export class Spot {
     window.__seek = (t) => this.seekFn(t);
     window.__duration = this.duration;
     window.__fps = this.fps;
+    window.__w = this.width;
+    window.__h = this.height;
 
     this.seekFn(0);
 

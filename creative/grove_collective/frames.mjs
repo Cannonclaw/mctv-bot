@@ -112,6 +112,13 @@ for (const file of files) {
   });
   await page.goto(`http://127.0.0.1:${port}/spots/${file}`, { waitUntil: "load" });
   await page.waitForFunction("window.__ready === true", { timeout: 30000 });
+  /* The spot declares its own canvas (vertical social cuts are 1080x1920). */
+  const w = (await page.evaluate("window.__w")) ?? 1920;
+  const h = (await page.evaluate("window.__h")) ?? 1080;
+  await page.setViewportSize({
+    width: Math.round(w * scale),
+    height: Math.round(h * scale),
+  });
 
   for (const t of times) {
     await page.evaluate((s) => window.__seek(s), t);

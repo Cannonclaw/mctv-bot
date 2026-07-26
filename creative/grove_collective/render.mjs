@@ -144,6 +144,10 @@ async function renderSpot(browser, port, file, ffmpeg) {
   await page.waitForFunction("window.__ready === true", { timeout: 30000 });
 
   const duration = await page.evaluate("window.__duration");
+  /* The spot declares its own canvas (vertical social cuts are 1080x1920). */
+  const w = (await page.evaluate("window.__w")) ?? 1920;
+  const h = (await page.evaluate("window.__h")) ?? 1080;
+  await page.setViewportSize({ width: w, height: h });
   const total = Math.round(duration * FPS);
 
   const enc = spawn(ffmpeg, [
