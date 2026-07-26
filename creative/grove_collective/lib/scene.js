@@ -271,9 +271,10 @@ export function crowd(parent, { seed = 20260725, rows = 26, zIndex = 3 } = {}) {
           continue;
         }
 
-        /* Empty-seat architecture: flat dim navy, no motion. */
+        /* Empty-seat architecture: flat dim navy, no motion. Bright enough
+           to read as a stadium from across a room, not a blank frame. */
         if (dormant > on) {
-          p.node.style.opacity = String(0.085 * dormant);
+          p.node.style.opacity = String(0.13 * dormant);
           p.node.style.background = "#1a2c55";
           p.node.style.boxShadow = "none";
           p.node.style.transform = "none";
@@ -393,9 +394,13 @@ export function lockup(parent, { at, kicker = "OLE MISS EXCLUSIVE NIL", cta, url
   name2.textContent = "COLLECTIVE";
   const rule = el("div", "rule", node, {
     width: "620px",
+    height: "10px",
     marginTop: "30px",
     background: "var(--powder)",
     transformOrigin: "left center",
+    /* A 7px hairline vanished at dining-room distance — the rule is part
+       of the brand event, so it has to survive the room. */
+    boxShadow: "0 3px 16px rgba(5,12,29,0.7)",
   });
   const ctaEl = el("div", "sub", node, {
     fontSize: "48px",

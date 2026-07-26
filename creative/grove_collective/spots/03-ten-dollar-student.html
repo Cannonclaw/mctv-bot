@@ -131,6 +131,18 @@
           });
           holdNum.textContent = "10";
 
+          const ledgerScrim = el("div", null, stage, {
+            position: "absolute",
+            left: "0",
+            top: "160px",
+            bottom: "160px",
+            width: "1050px",
+            zIndex: "21",
+            background:
+              "linear-gradient(to right, rgba(5,12,29,0.72) 55%, transparent)",
+            opacity: "0",
+            pointerEvents: "none",
+          });
           const listWrap = el("div", null, stage, {
             position: "absolute",
             left: "150px",
@@ -140,8 +152,9 @@
             textAlign: "left",
           });
           const listKicker = el("div", "sub", listWrap, {
-            fontSize: "40px",
-            color: "var(--powder)",
+            fontSize: "46px",
+            fontWeight: "700",
+            color: "var(--white)",
             marginBottom: "30px",
           });
           listKicker.textContent = "WHAT THAT BUYS";
@@ -256,6 +269,7 @@
             /* ---- beat 2: ledger + persistent price ------------------- */
             const b2 = band(t, 2.2, 8.6, 0.2);
             listWrap.style.opacity = String(b2);
+            ledgerScrim.style.opacity = String(b2);
             holdPrice.style.opacity = String(b2);
             listKicker.style.opacity = String(seg(t, 2.3, 2.7));
             lines.forEach((line, i) => {
@@ -272,7 +286,7 @@
               )}px, 0, 0) scale(${lerp(1, 0.92, strikeP)})`;
               line.strike.style.transform = `scaleX(${ease.out(strikeP)})`;
               /* Dead lines recede hard so the live one always dominates. */
-              line.label.style.opacity = String(lerp(1, 0.18, strikeP));
+              line.label.style.opacity = String(lerp(1, 0.32, strikeP));
             });
 
             /* ---- beat 3 --------------------------------------------- */

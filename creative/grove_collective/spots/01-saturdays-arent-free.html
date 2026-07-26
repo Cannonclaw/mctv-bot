@@ -27,7 +27,7 @@
         endcard,
         lockup,
       } from "../lib/scene.js";
-      import { impact, shockwave } from "../lib/fx.js";
+      import { impact } from "../lib/fx.js";
 
       /* SPOT 01 — "SATURDAYS AREN'T FREE"  :15 / 1920x1080 / silent
          ------------------------------------------------------------------
@@ -36,7 +36,7 @@
          nothing that needs to be read twice.
 
          Punch-up: opener anchored lower-left (campaign layout 'open--left'),
-         $21 slams in from oversized with a red hit + shockwave + bank snaps,
+         $21 slams in from oversized with a red hit + bank snaps,
          beat 4 lands on a red slab wipe in the lower third, and the world
          runs hot — environment floor up, red ignition on the payoffs.
 
@@ -132,22 +132,25 @@
             transformOrigin: "30% 80%",
           });
           price.textContent = "21";
+          /* "A MONTH" is the offer's other half — it rides a navy chip so
+             it survives the crowd instead of sinking into it. */
           const sideCol = el("div", null, priceWrap, {
             marginLeft: "44px",
-            marginBottom: "72px",
+            marginBottom: "104px",
+            background: "rgba(5, 12, 29, 0.62)",
+            padding: "20px 28px 24px",
           });
           const priceSub = el("div", "sub", sideCol, {
-            fontSize: "58px",
-            color: "var(--powder)",
+            fontSize: "64px",
+            fontWeight: "700",
+            color: "var(--white)",
           });
           priceSub.textContent = "A MONTH";
           const priceRule = el("div", "rule", sideCol, {
             width: "300px",
-            marginTop: "22px",
+            marginTop: "20px",
             transformOrigin: "left center",
           });
-
-          const wave = shockwave(stage, { at: 5.4, x: 700, y: 560 });
 
           /* --------------------- beat 4: red slab, lower third, roaring -- */
           const slab = el("div", null, stage, {
@@ -273,7 +276,6 @@
             dollar.style.transform = `scale(${tw(t, 5.45, 5.8, 1.55, 1, ease.outQuint)})`;
             priceSub.style.opacity = String(seg(t, 5.9, 6.3));
             priceRule.style.transform = `scaleX(${ease.out(seg(t, 6.05, 6.6))})`;
-            wave.seek(t);
             /* A slow breathe keeps the hold alive for three full seconds. */
             beat3.style.transform = `scale(${1 + Math.sin(t * 1.6) * 0.006})`;
 
