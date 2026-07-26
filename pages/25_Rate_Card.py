@@ -272,6 +272,56 @@ st.caption(
     "quote card, and in-page e-signing all work. Send away."
 )
 
+st.divider()
+
+# ── Print-ready sales collateral ─────────────────────────────────────────────
+# These PDFs are generated in OneDrive\mctv-rate-quote\sales\ (the market
+# sheets by _build-rate-sheets.js, which mirrors the public calculator's
+# venue/rate config) and copied into assets/sales/. If venues or rates
+# change, regenerate there and re-copy — these are snapshots, not live.
+
+_SALES_DIR = Path(__file__).parent.parent / "assets" / "sales"
+
+st.markdown("### \U0001F4C4 Print-Ready Sales Collateral")
+st.caption(
+    "Grab the right leave-behind without digging through shared drives. The "
+    "market sheets list every in-market screen at the public tool's locked "
+    "Phase-1 rates (\\$5 CPM / \\$175 venue cap) — the same numbers your "
+    "client sees at mctvofms.com/rate-quote, so they're always safe to hand "
+    "out. Every client-facing piece carries the scannable QR straight to the "
+    "self-serve tool."
+)
+
+
+def _collateral_button(col, fname: str, label: str, help_text: str) -> None:
+    fp = _SALES_DIR / fname
+    if fp.exists():
+        col.download_button(label, data=fp.read_bytes(), file_name=fname,
+                            mime="application/pdf", width="stretch",
+                            help=help_text)
+    else:
+        col.button(label, disabled=True, width="stretch",
+                   help="Missing from assets/sales/ — regenerate in "
+                        "OneDrive mctv-rate-quote/sales and re-copy.")
+
+
+_m1, _m2, _m3 = st.columns(3)
+_collateral_button(_m1, "rate-sheet-oxford.pdf", "\U0001F4C4 Oxford rate sheet",
+                   "55 screens / 44 venues, each at its exact 4-week rate. 2 pages.")
+_collateral_button(_m2, "rate-sheet-tupelo.pdf", "\U0001F4C4 Tupelo rate sheet",
+                   "33 screens / 27 venues, each at its exact 4-week rate. 1 page.")
+_collateral_button(_m3, "rate-sheet-starkville.pdf", "\U0001F4C4 Starkville rate sheet",
+                   "35 screens / 29 venues, each at its exact 4-week rate. 1 page.")
+
+_o1, _o2 = st.columns(2)
+_collateral_button(_o1, "rate-card-onepager.pdf", "\U0001F5FA Network one-pager",
+                   "Whole-network overview: packages, prepay bonus, how to buy. "
+                   "Client-facing, 1 page.")
+_collateral_button(_o2, "objection-handling-cheatsheet.pdf",
+                   "\U0001F6E1 Objection cheat sheet — INTERNAL",
+                   "10 objections with grounded rebuttals. For reps only — "
+                   "do NOT hand to clients.")
+
 # The public tool is on locked Phase-1 pricing ($5 CPM / $175 venue cap); this
 # page follows `rate_model_params`, which only gains those knobs when the flip
 # in scripts/023 section 2 runs. Until then a rep reading rates off this page
@@ -286,8 +336,9 @@ if not params.get("venue_cap_4wk"):
         "The public calculator (the page your client actually signs on) uses "
         "locked Phase-1 pricing: **\\$5 CPM, \\$175/venue 4-wk cap, 20% volume "
         "discount at 10+ screens** — so it quotes *lower* than the a la carte "
-        "rates in the tabs below. Quote from a quote link above, not from this "
-        "table, until the flip is run (`scripts/023_self_serve_rate_card.sql` "
+        "rates in the tabs below. Quote from a quote link or a market rate "
+        "sheet above, not from this table, until the flip is run "
+        "(`scripts/023_self_serve_rate_card.sql` "
         "section 2). Flat package prices (\\$350 / \\$500 / \\$800 / \\$1,300) "
         "are unaffected either way.",
         icon="⚠️",
