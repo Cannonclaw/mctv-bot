@@ -69,7 +69,8 @@ body {
   left: 50%;
   width: 1920px;
   height: 1080px;
-  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  /* --jolt is a one-frame impact kick driven by fx.js on cuts. */
+  transform: translate(-50%, -50%) scale(calc(var(--fit, 1) * var(--jolt, 1)));
   transform-origin: center center;
   /* Not a flat fill: the base already carries a lit centre and a cool falloff
      so even an unlit frame has somewhere for the eye to go. */
