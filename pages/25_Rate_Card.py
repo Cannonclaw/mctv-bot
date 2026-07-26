@@ -208,23 +208,90 @@ for _param, _val in (("biz", ql_biz), ("name", ql_name),
 
 query = "?" + "&".join(parts)
 
+card_link = QUOTE_BASE + query + "&print=1"
+builder_link = QUOTE_BASE + query
+
 st.markdown("\U0001F4C7 **Client quote card** — send this one. Clean prepared-quote "
             "card: no builder to wade through, Accept & sign right there.")
-st.code(QUOTE_BASE + query + "&print=1")
+st.code(card_link)
+
+# One-tap send — open the rep's own mail/SMS app with the card link already written
+# into the message, so there's nothing to copy and no app-switch-then-paste step.
+_first_name = ql_name.strip().split()[0] if ql_name.strip() else "there"
+_email_subject = "Your MCTV advertising quote"
+_email_body = (
+    f"Hi {_first_name},\n\n"
+    "Here's your prepared MCTV Elite Advertising quote. Review the screens and "
+    "pricing, and you can accept and sign right on the page:\n\n"
+    f"{card_link}\n\n"
+    "Reply here with any questions.\n\n"
+    "— MCTV Elite Advertising"
+)
+_sms_body = f"Your MCTV quote is ready — review & sign here: {card_link}"
+
+_send_l, _send_r = st.columns(2)
+with _send_l:
+    if ql_email.strip():
+        st.link_button(
+            "\U0001F4E7 Email this quote",
+            "mailto:" + ql_email.strip()
+            + "?subject=" + urllib.parse.quote(_email_subject)
+            + "&body=" + urllib.parse.quote(_email_body),
+            width="stretch",
+        )
+    else:
+        st.button("\U0001F4E7 Email this quote", disabled=True,
+                  width="stretch",
+                  help="Add the contact email above to enable one-tap email.")
+with _send_r:
+    _sms_num = re.sub(r"[^\d+]", "", ql_phone)
+    if _sms_num:
+        st.link_button(
+            "\U0001F4AC Text this quote",
+            "sms:" + _sms_num + "?&body=" + urllib.parse.quote(_sms_body),
+            width="stretch",
+        )
+    else:
+        st.button("\U0001F4AC Text this quote", disabled=True,
+                  width="stretch",
+                  help="Add the contact phone above to enable one-tap text.")
+st.caption("These open your own mail or messaging app with the quote-card link "
+           "already in the message — one tap to send, nothing to copy. Email works "
+           "on desktop and phone; text works from your phone.")
 
 st.markdown("\U0001F527 **Full builder link** — for a client who wants to change "
             "screens or term before signing.")
-st.code(QUOTE_BASE + query)
+st.code(builder_link)
 
 st.caption("Text or email either link — the client sees their quote pre-built "
            "and can sign self-serve. Contact details you prefill travel inside "
            "the link, so send it only to that client.")
-st.warning(
-    "Prefilled links need the **v2.0** calculator live at mctvofms.com/rate-quote — "
-    "the old v1.6 page ignores them (opens blank). Check the page footer version "
-    "before sending links.",
-    icon="⚠️",
+st.caption(
+    "✅ The **v2.0** self-serve calculator is live at both mctvofms.com/rate-quote "
+    "and bot.mctvofms.com/rates (deployed 2026-07-23) — prefilled links, the "
+    "quote card, and in-page e-signing all work. Send away."
 )
+
+# The public tool is on locked Phase-1 pricing ($5 CPM / $175 venue cap); this
+# page follows `rate_model_params`, which only gains those knobs when the flip
+# in scripts/023 section 2 runs. Until then a rep reading rates off this page
+# quotes MORE than the page their client signs on — so say so, loudly. The
+# warning disappears by itself the moment the flip lands.
+# Dollar signs are escaped (\$) so Streamlit's markdown can't pair them up and
+# swallow the run between two amounts as LaTeX — this block carries six of them.
+if not params.get("venue_cap_4wk"):
+    st.warning(
+        "**Rates below are pre-flip — they do not match the client-facing tool.** "
+        f"This page is still on \\${params.get('cpm', 6)} CPM with no venue cap. "
+        "The public calculator (the page your client actually signs on) uses "
+        "locked Phase-1 pricing: **\\$5 CPM, \\$175/venue 4-wk cap, 20% volume "
+        "discount at 10+ screens** — so it quotes *lower* than the a la carte "
+        "rates in the tabs below. Quote from a quote link above, not from this "
+        "table, until the flip is run (`scripts/023_self_serve_rate_card.sql` "
+        "section 2). Flat package prices (\\$350 / \\$500 / \\$800 / \\$1,300) "
+        "are unaffected either way.",
+        icon="⚠️",
+    )
 
 st.divider()
 
