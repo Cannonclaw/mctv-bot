@@ -289,7 +289,8 @@ st.caption(
     "Phase-1 rates (\\$5 CPM / \\$175 venue cap) — the same numbers your "
     "client sees at mctvofms.com/rate-quote, so they're always safe to hand "
     "out. Every client-facing piece carries the scannable QR straight to the "
-    "self-serve tool."
+    "self-serve tool. Not sure *which* screens to pitch a prospect? Start with "
+    "the audience plays sheet."
 )
 
 
@@ -313,11 +314,17 @@ _collateral_button(_m2, "rate-sheet-tupelo.pdf", "\U0001F4C4 Tupelo rate sheet",
 _collateral_button(_m3, "rate-sheet-starkville.pdf", "\U0001F4C4 Starkville rate sheet",
                    "35 screens / 29 venues, each at its exact 4-week rate. 1 page.")
 
-_o1, _o2 = st.columns(2)
+_o1, _o2, _o3 = st.columns(3)
 _collateral_button(_o1, "rate-card-onepager.pdf", "\U0001F5FA Network one-pager",
                    "Whole-network overview: packages, prepay bonus, how to buy. "
                    "Client-facing, 1 page.")
-_collateral_button(_o2, "objection-handling-cheatsheet.pdf",
+_collateral_button(_o2, "audience-plays.pdf",
+                   "\U0001F3AF Audience plays — INTERNAL",
+                   "10 advertiser types (home services, banks, dental, "
+                   "restaurants...) with the venue mix to pitch each one, its "
+                   "screen count by market, and a script. For reps only — "
+                   "2 pages.")
+_collateral_button(_o3, "objection-handling-cheatsheet.pdf",
                    "\U0001F6E1 Objection cheat sheet — INTERNAL",
                    "10 objections with grounded rebuttals. For reps only — "
                    "do NOT hand to clients.")
