@@ -22,7 +22,8 @@ compiles one page:
 | Desk | Source | Beat |
 |---|---|---|
 | Gmail | Gmail MCP | Ole Miss, DOOH, Claude/Anthropic, action items, notable personal mail |
-| Work | Microsoft 365 + Google Calendar MCP | Client/prospect/team activity, action items, week's calendar (Central), **and Sent Items — outbound proposals, decks, and outreach the publisher already sent** |
+| Work | Microsoft 365 MCP (Outlook mail **and Outlook calendar**) | Client/prospect/team activity, action items, and **the week's schedule — read the Outlook work calendar (`outlook_calendar_search`), which is the publisher's primary calendar and holds the entire business week** (meetings, sales touchpoints, bank/lender calls, travel days). Times are Central. Also **Sent Items — outbound proposals, decks, and outreach the publisher already sent** |
+| Personal cal | Google Calendar MCP | **Personal only** — tennis, family, counseling-adjacent, social events. Never the source of truth for the work week; merge into the Almanac as personal items, clearly. Do not report a work meeting "missing from the calendar" based on Google alone — check Outlook first |
 | Projects | Local repo + GitHub MCP | Recent commits, open PRs/issues, repo task signals, suggested priorities |
 | News | WebSearch | Ole Miss football, DOOH industry, Claude Code/AI, north MS local business, sports business |
 | Capital | WebSearch | **Standing beat:** new business credit lines & credit cards suited to a small MS media/advertising LLC — fintech corporate cards (Brex, Ramp, Divvy/BILL, Mercury), 0% intro-APR small-business cards (Amex, Chase Ink, Capital One), and SBA / bank / revenue-based lines of credit (e.g. tied to the ~$9.7k QB MRR). Report new/changed offers, rates, approval odds, and fit. |
@@ -52,7 +53,11 @@ compiles one page:
    what's settled, what's open, and a **days-since-last-reply counter for
    every unanswered outbound thread** (silence is the story). Names, claim
    numbers, and dollar figures stay in the edition only, never in this repo.
-9. **The Almanac** — the week's merged calendar, then "looking ahead."
+9. **The Almanac** — the week's schedule, **built primarily from the Outlook work
+   calendar** (the publisher runs their whole business week there), with personal
+   Google Calendar items merged in and labeled. Then "looking ahead." Never claim a
+   meeting "isn't on the calendar" without checking Outlook first — that error ran
+   for several editions before the publisher caught it (Jul 27, 2026).
 10. **Colophon** — sourcing note.
 
 ## Design tokens
