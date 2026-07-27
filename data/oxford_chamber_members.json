@@ -1,0 +1,186 @@
+{
+  "checked_at": "2026-07-27",
+  "source": "Oxford-Lafayette County Chamber of Commerce online directory (business.oxfordms.com / oxfordms.chambermaster.com), verified via web search",
+  "members": {
+    "4 Corner's Chevron (Chicken On A Stick)": {
+      "member": false,
+      "evidence": ""
+    },
+    "Amara Salon & Aesthetics": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/amara-salon-10219"
+    },
+    "B's Hickory Smoke BBQ": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/b-s-hickory-smoked-b-b-q-oxford-127"
+    },
+    "Bep Haus": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/members/member/bep-haus-oxford-10831"
+    },
+    "Booth's Barbeque and Yard": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/members/member/booth-s-barbeque-5126"
+    },
+    "Built Different Fitness": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/built-different-fitness-llc-10788"
+    },
+    "Cannon Chevrolet Buick Cadillac of Oxford": {
+      "member": true,
+      "evidence": "Via parent Cannon Motor Company, LLC listing at same address: https://business.oxfordms.com/list/member/cannon-motor-company-llc-153"
+    },
+    "Cannon Collision Center": {
+      "member": true,
+      "evidence": "Via parent Cannon Motor Company, LLC listing at same address: https://business.oxfordms.com/list/member/cannon-motor-company-llc-153"
+    },
+    "Casa Mexicana of Oxford": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/casa-mexicana-of-oxford-10727"
+    },
+    "El Charro Cocina & Cantina": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/el-charro-cocina-cantina-oxford-8490"
+    },
+    "Element Hair Studio": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/element-hair-studio-10620"
+    },
+    "Finch & Kelly": {
+      "member": false,
+      "evidence": ""
+    },
+    "Internal Medicine Associates of Oxford": {
+      "member": false,
+      "evidence": ""
+    },
+    "James Food Center Post Office": {
+      "member": false,
+      "evidence": ""
+    },
+    "LandShark Seafood & Catfish": {
+      "member": false,
+      "evidence": ""
+    },
+    "Little Bambini Children's Boutique": {
+      "member": false,
+      "evidence": ""
+    },
+    "Luxe Styling Studio": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/luxe-styling-studio-4134"
+    },
+    "Magnolia Wine & Spirits": {
+      "member": true,
+      "evidence": "http://oxfordms.chambermaster.com/list/member/magnolia-wine-and-spirits-2779"
+    },
+    "MARATHON South Lamar": {
+      "member": false,
+      "evidence": ""
+    },
+    "Mississippi Asthma & Allergy Clinic, P.A.": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/members/member/mississippi-asthma-allergy-clinic-10610"
+    },
+    "Nail E!": {
+      "member": true,
+      "evidence": "Chamber directory entry (2580 Jackson Ave W) via site-restricted search of business.oxfordms.com"
+    },
+    "Nail Thology": {
+      "member": false,
+      "evidence": ""
+    },
+    "Oxford Dental": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/oxford-dental-clinic-oxford-988"
+    },
+    "Oxford Park Commission": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/oxford-park-commission-4038"
+    },
+    "Oxford Super Tan": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/oxford-super-tan-10585"
+    },
+    "Oxford T-Shirt Co.": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/oxford-t-shirt-co-llc-1051"
+    },
+    "Oxford-Lafayette County Chamber of Commerce": {
+      "member": true,
+      "evidence": "The chamber itself (299 Jackson Ave W)"
+    },
+    "Party in the Sip": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/party-in-the-sip-llc-10501"
+    },
+    "Rafters Music and Food": {
+      "member": true,
+      "evidence": "Listed as 'Rafters On The Square' (same phone): https://business.oxfordms.com/list/member/rafters-on-the-square-10444"
+    },
+    "Rainbow Cleaners": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/rainbow-cleaners-1607"
+    },
+    "Rebel Body Fitness": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/rebel-body-fitness-oxford-3959"
+    },
+    "Rebel Yell Rooftop Bar": {
+      "member": false,
+      "evidence": ""
+    },
+    "RedMed Urgent Clinic of Oxford - Jackson Ave": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/redmed-of-oxford-llc-oxford-1774"
+    },
+    "Revive Wellness of Oxford": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/members/member/revive-wellness-clinic-of-oxford-oxford-10633"
+    },
+    "Right Track Medical Group - Oxford": {
+      "member": true,
+      "evidence": "https://oxfordms.chambermaster.com/list/member/right-track-medical-group-oxford-4177"
+    },
+    "Rosati's Pizza": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/rosatis-pizza-oxford-5870"
+    },
+    "Sip Oxford": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/oxford-sip-oxford-4284"
+    },
+    "Southern Coop": {
+      "member": false,
+      "evidence": ""
+    },
+    "Stouts Carpet & Flooring": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/stout-s-carpet-inc-843"
+    },
+    "Texaco lamar express": {
+      "member": false,
+      "evidence": ""
+    },
+    "The Blind Pig Pub": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/the-blind-pig-oxford-1716/"
+    },
+    "The Children's Dental Center": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/children-s-dental-center-195"
+    },
+    "The Oxford Growler": {
+      "member": false,
+      "evidence": ""
+    },
+    "The Velvet Ditch - Sports bar & Seafood": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/the-velvet-ditch-daiquiris-n-sports-bar-w-seafood-10737"
+    },
+    "Uno Mas Tacos y Tequila Jackson Ave": {
+      "member": true,
+      "evidence": "https://business.oxfordms.com/list/member/uno-mas-tacos-y-tequila-4324"
+    }
+  }
+}
