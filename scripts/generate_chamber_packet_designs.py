@@ -207,6 +207,25 @@ body { background: #DDDDDD; }
 .grove img { width: 0.95in; height: auto; flex: none; display: block; }
 .grove .g-txt { font-size: 7.3pt; line-height: 1.4; color: rgba(255,255,255,0.82); }
 .grove .g-txt b { color: %(gold)s; font-weight: 600; }
+/* team — compact strip on the navy band */
+.team-strip { display: flex; gap: 13pt; margin-top: 9pt; padding-top: 9pt;
+  border-top: 0.6pt solid rgba(255,255,255,0.18); }
+.tm { display: flex; align-items: center; gap: 6pt; flex: 1; }
+.tm img { width: 0.36in; height: 0.36in; border-radius: 50%%; object-fit: cover;
+  border: 0.8pt solid %(gold)s; flex: none; display: block; }
+.tm .t-name { font-size: 7.2pt; font-weight: 700; color: #FFFFFF; }
+.tm .t-title { font-size: 5.6pt; letter-spacing: 0.09em; text-transform: uppercase;
+  color: rgba(255,255,255,0.60); margin-top: 0.5pt; }
+.tm .t-c { font-size: 6.1pt; color: rgba(255,255,255,0.82); margin-top: 2pt; }
+/* team — larger block on light background */
+.team-full { display: flex; gap: 20pt; margin-top: 10pt; }
+.tf { flex: 1; }
+.tf img { width: 0.62in; height: 0.62in; border-radius: 50%%; object-fit: cover;
+  border: 1pt solid %(gold)s; display: block; margin-bottom: 5pt; }
+.tf .f-name { font-size: 8.6pt; font-weight: 700; color: %(navy)s; }
+.tf .f-title { font-size: 6.2pt; letter-spacing: 0.1em; text-transform: uppercase;
+  color: %(muted)s; margin-top: 1.5pt; }
+.tf .f-c { font-size: 7.4pt; line-height: 1.5; color: %(ink)s; margin-top: 4pt; }
 /* Print-ready wrapper: media box carries bleed + crop-mark zone */
 .sheet { position: relative; width: %(media_w).4fin; height: %(media_h).4fin;
   background: %(paper)s; margin: 0 auto; }
@@ -242,6 +261,42 @@ def grove_block_html() -> str:
         'NIL revenue share and sponsorship packages available upon request.</div>'
         "</div>"
     )
+
+
+def _photo_data_uri(rel_path: str) -> str:
+    path = PROJECT_ROOT / rel_path
+    if not path.exists():
+        return ""
+    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+
+
+def team_strip_html(config: dict) -> str:
+    """Compact team row with headshots + direct contacts, for the navy band."""
+    cards = []
+    for m in config.get("team", []):
+        img = _photo_data_uri(m.get("photo", ""))
+        photo = f'<img src="{img}" alt="{esc(m["name"])}"/>' if img else ""
+        cards.append(
+            f'<div class="tm">{photo}<div><div class="t-name">{esc(m["name"])}</div>'
+            f'<div class="t-title">{esc(m["title"])}</div>'
+            f'<div class="t-c">{esc(m["phone"])} &nbsp;·&nbsp; {esc(m["email"])}</div>'
+            "</div></div>"
+        )
+    return f'<div class="team-strip">{"".join(cards)}</div>'
+
+
+def team_block_html(config: dict) -> str:
+    """Larger team block for a light background."""
+    cards = []
+    for m in config.get("team", []):
+        img = _photo_data_uri(m.get("photo", ""))
+        photo = f'<img src="{img}" alt="{esc(m["name"])}"/>' if img else ""
+        cards.append(
+            f'<div class="tf">{photo}<div class="f-name">{esc(m["name"])}</div>'
+            f'<div class="f-title">{esc(m["title"])}</div>'
+            f'<div class="f-c">{esc(m["phone"])}<br/>{esc(m["email"])}</div></div>'
+        )
+    return f'<div class="team-full">{"".join(cards)}</div>'
 
 
 def wrap_for_print(canvas_html: str, label: str) -> str:
@@ -424,17 +479,17 @@ def build_one_sheet_html(config: dict, rate: float, screens: int,
       <div class="obs">
         <div class="ob"><div class="o-num">01</div>
           <div class="o-title">{savings_pct}% below our published rates</div>
-          <div class="o-body">Standard pricing runs ${anchor["cost_per_screen"]:.0f} per screen.
-          Chamber members pay ${per_screen:.2f} &mdash; a bigger network than our
-          {money(config["pricing"]["elite_tiers"][1]["monthly_rate"])} tier, for {money(rate)}.</div></div>
+          <div class="o-body">Standard is ${anchor["cost_per_screen"]:.0f} a screen. Members pay
+          ${per_screen:.2f} &mdash; a bigger network than our
+          {money(config["pricing"]["elite_tiers"][1]["monthly_rate"])} tier.</div></div>
         <div class="ob"><div class="o-num">02</div>
           <div class="o-title">A {dwell}-minute audience</div>
-          <div class="o-body">Your ad plays {plays_hr}&times; an hour, {hours} hours a day, in rooms
-          people actually sit in &mdash; not a glance at highway speed.</div></div>
+          <div class="o-body">{plays_hr}&times; an hour, {hours} hours a day, in rooms people
+          sit in &mdash; not a 60 mph glance.</div></div>
         <div class="ob"><div class="o-num">03</div>
           <div class="o-title">It can&rsquo;t be skipped</div>
-          <div class="o-body">No scroll, no channel change, no recycling bin &mdash; and every
-          play is counted in the NTV360 dashboard.</div></div>
+          <div class="o-body">No scroll, no channel change, no recycling bin. Every
+          play counted in NTV360.</div></div>
       </div>
     </div>
   </div>
@@ -442,10 +497,11 @@ def build_one_sheet_html(config: dict, rate: float, screens: int,
   <div class="footband"><div class="fb-inner">
     <div class="fb-line">The bottom line: <b>${daily_cost:.2f} a day</b> puts your business in
     {screens} rooms, {monthly_plays:,} times a month. Every dollar buys
-    <b>~{per_dollar:,.0f} impressions</b> &mdash; print buys ~{1000 / p_hi:,.0f}&ndash;{1000 / p_lo:,.0f}.</div>
-    <div class="fb-sub">Chamber members only &middot; Screens are limited and first come, first served.</div>
+    <b>~{per_dollar:,.0f} impressions</b> &mdash; print buys ~{1000 / p_hi:,.0f}&ndash;{1000 / p_lo:,.0f}. <span style="color:rgba(255,255,255,0.62);">Chamber members only &mdash; screens are limited.</span></div>
     {grove_block_html()}
-    <div class="contact"><span><b>MCTV Elite Advertising</b> &nbsp;&middot;&nbsp; {esc(config["company"]["tagline"])}</span>
+    {team_strip_html(config)}
+    <div class="contact" style="margin-top:9pt;padding-top:8pt;border-top:0.6pt solid rgba(255,255,255,0.18);">
+    <span><b>MCTV Elite Advertising</b> &nbsp;&middot;&nbsp; {esc(config["company"]["tagline"])}</span>
     <span>{esc(config["company"]["website"])}</span></div>
   </div></div>
 </div>
@@ -617,6 +673,11 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int,
     <div style="margin-top: 16pt;">
       <div class="sec-title">Included with every Chamber deal</div>
       <div class="incl">{trust_html}</div>
+    </div>
+
+    <div style="margin-top: 15pt;">
+      <div class="sec-title">Your MCTV team</div>
+      {team_block_html(config)}
       <div class="srcnote">Chamber membership cross-checked against the Oxford-Lafayette County
       Chamber of Commerce online directory (business.oxfordms.com){f" on {checked}" if checked else ""}.
       Impressions estimated from NTV360 venue traffic. Screen counts as of the latest network sync.</div>
