@@ -114,6 +114,45 @@ def find_benchmark(config: dict, medium: str) -> dict:
     return {}
 
 
+# ── Print geometry (US Letter) ────────────────────────────────────────────
+TRIM_W, TRIM_H = 8.5, 11.0      # finished size, inches
+BLEED = 0.125                    # art extends this far past trim
+MARK_ZONE = 0.25                 # room outside the bleed for crop marks
+OUTER = BLEED + MARK_ZONE        # trim box offset inside the media box
+MEDIA_W = TRIM_W + 2 * OUTER
+MEDIA_H = TRIM_H + 2 * OUTER
+MARK_LEN = 0.1875                # crop mark length
+SIDE_MARGIN = 0.62               # content margin inside trim
+
+
+def crop_marks_html() -> str:
+    """Eight hairline crop marks, offset from trim by the bleed amount."""
+    marks = []
+    for x_edge, y_edge in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        tx = OUTER if x_edge == 0 else OUTER + TRIM_W   # trim line, x
+        ty = OUTER if y_edge == 0 else OUTER + TRIM_H   # trim line, y
+        # Horizontal mark: sits on the trim's y, runs outward from the bleed edge
+        hx = (tx - BLEED - MARK_LEN) if x_edge == 0 else (tx + BLEED)
+        marks.append(
+            f'<div class="cmark" style="left:{hx:.4f}in;top:{ty:.4f}in;'
+            f'width:{MARK_LEN}in;border-top:0.25pt solid #000;"></div>'
+        )
+        # Vertical mark: sits on the trim's x, runs outward from the bleed edge
+        vy = (ty - BLEED - MARK_LEN) if y_edge == 0 else (ty + BLEED)
+        marks.append(
+            f'<div class="cmark" style="left:{tx:.4f}in;top:{vy:.4f}in;'
+            f'height:{MARK_LEN}in;border-left:0.25pt solid #000;"></div>'
+        )
+    return "".join(marks)
+
+
+def slug_html(label: str) -> str:
+    return (
+        f'<div class="slug">{esc(label)} &nbsp;·&nbsp; TRIM {TRIM_W}&Prime; &times; {TRIM_H}&Prime;'
+        f' &nbsp;·&nbsp; BLEED {BLEED}&Prime; &nbsp;·&nbsp; CROP MARKS SHOWN &nbsp;·&nbsp; RGB &mdash; CONVERT TO CMYK</div>'
+    )
+
+
 BASE_CSS = """
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #DDDDDD; }
@@ -136,9 +175,9 @@ body { background: #DDDDDD; }
 .headline { font-family: 'Playfair Display', serif; font-weight: 800;
   color: %(navy)s; margin-top: 7pt; }
 .deck { font-size: 9.2pt; line-height: 1.55; color: %(muted)s; font-weight: 400; }
-.statband { display: flex; margin-top: 18pt; border-top: 2.2pt solid %(gold)s;
+.statband { display: flex; margin-top: 13pt; border-top: 2.2pt solid %(gold)s;
   border-bottom: 0.6pt solid %(hairline)s; background: %(cream)s; }
-.stat { flex: 1; padding: 12pt 4pt 11pt; text-align: center; }
+.stat { flex: 1; padding: 10pt 4pt 9pt; text-align: center; }
 .stat + .stat { border-left: 0.6pt solid %(hairline)s; }
 .stat .num { font-family: 'Playfair Display', serif; font-weight: 700;
   font-size: 21pt; color: %(navy)s; }
@@ -153,15 +192,58 @@ body { background: #DDDDDD; }
 .sec-sub { font-size: 7.6pt; color: %(muted)s; margin-top: 3pt; }
 .footband { position: absolute; left: 0; right: 0; bottom: 0;
   background: %(navy)s; color: #FFFFFF; }
-.footband .fb-inner { padding: 16pt 0.62in 14pt; }
+.footband .fb-inner { padding: 13pt 0.62in 12pt; }
 .contact { display: flex; justify-content: space-between; align-items: center;
   font-size: 6.8pt; letter-spacing: 0.12em; text-transform: uppercase;
   color: rgba(255,255,255,0.72); }
 .contact b { color: %(gold)s; font-weight: 600; }
+.grove { display: flex; align-items: center; gap: 12pt; margin-top: 9pt;
+  padding-top: 8pt; border-top: 0.6pt solid rgba(255,255,255,0.18); }
+.grove img { width: 0.95in; height: auto; flex: none; display: block; }
+.grove .g-txt { font-size: 7.3pt; line-height: 1.4; color: rgba(255,255,255,0.82); }
+.grove .g-txt b { color: %(gold)s; font-weight: 600; }
+/* Print-ready wrapper: media box carries bleed + crop-mark zone */
+.sheet { position: relative; width: %(media_w).4fin; height: %(media_h).4fin;
+  background: %(paper)s; margin: 0 auto; }
+.sheet .page-canvas { position: absolute; left: %(outer).4fin; top: %(outer).4fin;
+  overflow: visible; margin: 0; }
+.cmark { position: absolute; }
+.slug { position: absolute; left: %(slug_x).4fin; bottom: 0.055in;
+  font-family: 'Inter', sans-serif; font-size: 4.6pt; letter-spacing: 0.08em;
+  color: #000000; white-space: nowrap; }
 """ % {
     "paper": PAPER, "ink": INK, "navy": NAVY, "gold": GOLD, "muted": MUTED,
     "hairline": HAIRLINE, "cream": CREAM, "gold_dk": "#A8873F",
+    "media_w": MEDIA_W, "media_h": MEDIA_H, "outer": OUTER,
+    "slug_x": OUTER + 1.0,
 }
+
+# In print mode the navy footer band must run off the trimmed edge.
+BLEED_CSS = """
+.sheet .footband { left: -%(bleed).4fin; right: -%(bleed).4fin; bottom: -%(bleed).4fin; }
+.sheet .footband .fb-inner { padding-left: %(pad).4fin; padding-right: %(pad).4fin;
+  padding-bottom: calc(14pt + %(bleed).4fin); }
+""" % {"bleed": BLEED, "pad": SIDE_MARGIN + BLEED}
+
+
+def grove_block_html() -> str:
+    """Grove Collective lockup + NIL availability line for the navy footer band."""
+    logo = PROJECT_ROOT / "assets" / "branding" / "grove_collective_white.png"
+    data = base64.b64encode(logo.read_bytes()).decode("ascii")
+    return (
+        '<div class="grove">'
+        f'<img src="data:image/png;base64,{data}" alt="The Grove Collective"/>'
+        '<div class="g-txt"><b>Official partner of The Grove Collective.</b><br/>'
+        'NIL revenue share and sponsorship packages available upon request.</div>'
+        "</div>"
+    )
+
+
+def wrap_for_print(canvas_html: str, label: str) -> str:
+    """Wrap a trim-size canvas in a media box with crop marks and a slug line."""
+    return (
+        f'<div class="sheet">{crop_marks_html()}{canvas_html}{slug_html(label)}</div>'
+    )
 
 
 def masthead_html() -> str:
@@ -173,7 +255,8 @@ def masthead_html() -> str:
     )
 
 
-def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
+def build_one_sheet_html(config: dict, rate: float, screens: int,
+                         print_ready: bool = False) -> str:
     network = config["network"]
     plays_hr = network["plays_per_hour"]
     hours = network["hours_per_day"]
@@ -229,11 +312,11 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
     out_min = out_b.get("monthly_cost", "$1,500 - $4,000").split(" - ")[0]
 
     css = f"""
-.headline {{ font-size: 30pt; line-height: 1.08; }}
+.headline {{ font-size: 27pt; line-height: 1.06; }}
 .headline .gold {{ color: {GOLD}; }}
-.deck {{ margin-top: 8pt; max-width: 5.9in; }}
-.chart {{ margin-top: 10pt; }}
-.brow {{ display: flex; align-items: center; gap: 8pt; margin-top: 5.4pt; }}
+.deck {{ margin-top: 6pt; max-width: 5.9in; }}
+.chart {{ margin-top: 8pt; }}
+.brow {{ display: flex; align-items: center; gap: 8pt; margin-top: 4.4pt; }}
 .bname {{ width: 1.28in; font-size: 7.6pt; font-weight: 500; color: {INK};
   text-align: right; flex: none; }}
 .btrack {{ flex: 1; }}
@@ -243,23 +326,23 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
 .bval {{ width: 1.18in; flex: none; font-size: 7.3pt; font-weight: 600;
   color: {MUTED}; font-variant-numeric: tabular-nums; }}
 .brow.mctv .bname, .brow.mctv .bval {{ font-weight: 700; color: {NAVY}; }}
-.trio {{ display: flex; gap: 10pt; margin-top: 10pt; }}
+.trio {{ display: flex; gap: 10pt; margin-top: 8pt; }}
 .tcard {{ flex: 1; border: 0.6pt solid {HAIRLINE}; border-top: 2.2pt solid {BAR_NAVY};
-  padding: 10pt 11pt 11pt; background: {PAPER}; }}
+  padding: 8pt 10pt 9pt; background: {PAPER}; }}
 .tcard.gold {{ border-top-color: {GOLD}; background: {CREAM}; }}
 .tcard .t-med {{ font-size: 6.6pt; font-weight: 700; letter-spacing: 0.16em;
   text-transform: uppercase; color: {MUTED}; }}
 .tcard .t-num {{ font-family: 'Playfair Display', serif; font-weight: 700;
   font-size: 16.5pt; color: {NAVY}; margin-top: 5pt; }}
 .tcard .t-note {{ font-size: 7.2pt; color: {MUTED}; line-height: 1.45; margin-top: 4pt; }}
-.obs {{ display: flex; gap: 14pt; margin-top: 10pt; }}
+.obs {{ display: flex; gap: 14pt; margin-top: 7pt; }}
 .ob {{ flex: 1; }}
 .ob .o-num {{ font-family: 'Playfair Display', serif; font-style: italic;
   font-weight: 400; font-size: 13pt; color: {GOLD}; }}
 .ob .o-title {{ font-size: 8.2pt; font-weight: 700; color: {NAVY}; margin-top: 2pt; }}
 .ob .o-body {{ font-size: 7.4pt; line-height: 1.5; color: {MUTED}; margin-top: 3pt; }}
 .footband .fb-line {{ font-family: 'Playfair Display', serif; font-weight: 700;
-  font-size: 12.6pt; line-height: 1.35; color: #FFFFFF; }}
+  font-size: 11.8pt; line-height: 1.32; color: #FFFFFF; }}
 .footband .fb-line b {{ color: {GOLD}; font-weight: 700; }}
 .footband .fb-sub {{ margin-top: 6pt; font-size: 7.4pt; color: rgba(255,255,255,0.66); }}
 .footband .contact {{ margin-top: 11pt; padding-top: 9pt;
@@ -283,14 +366,14 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
       <div class="stat"><div class="num">${cpm:.2f}</div><div class="lbl">Cost per 1,000 Impressions</div></div>
     </div>
 
-    <div style="margin-top: 17pt;">
+    <div style="margin-top: 12pt;">
       <div class="sec-title">The price of this audience, channel by channel</div>
       <div class="sec-sub">Monthly cost to buy {imps:,.0f} impressions at each channel&rsquo;s typical CPM
       (industry benchmarks; bars show the midpoint).</div>
       <div class="chart">{"".join(bar_rows)}</div>
     </div>
 
-    <div style="margin-top: 15pt;">
+    <div style="margin-top: 11pt;">
       <div class="sec-title">What the same {money(rate)} buys</div>
       <div class="trio">
         <div class="tcard"><div class="t-med">Print / Newspaper</div>
@@ -307,7 +390,7 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
       </div>
     </div>
 
-    <div style="margin-top: 15pt;">
+    <div style="margin-top: 11pt;">
       <div class="sec-title">Worth knowing</div>
       <div class="obs">
         <div class="ob"><div class="o-num">01</div>
@@ -332,11 +415,17 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
     {screens} rooms, {monthly_plays:,} times a month. Every dollar buys
     <b>~{per_dollar:,.0f} impressions</b> &mdash; print buys ~{1000 / p_hi:,.0f}&ndash;{1000 / p_lo:,.0f}.</div>
     <div class="fb-sub">Chamber members only &middot; Screens are limited and first come, first served.</div>
+    {grove_block_html()}
     <div class="contact"><span><b>MCTV Elite Advertising</b> &nbsp;&middot;&nbsp; {esc(config["company"]["tagline"])}</span>
     <span>{esc(config["company"]["website"])}</span></div>
   </div></div>
 </div>
 """
+
+    if print_ready:
+        body = wrap_for_print(body, "MCTV Chamber Deal One-Sheet")
+
+    page_w, page_h = (MEDIA_W, MEDIA_H) if print_ready else (TRIM_W, TRIM_H)
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
@@ -348,8 +437,10 @@ def build_one_sheet_html(config: dict, rate: float, screens: int) -> str:
 {font_css()}
 {BASE_CSS}
 {css}
-@page {{ size: 8.5in 11in; margin: 0; }}
-@media print {{ body {{ background: none; }} .page-canvas {{ margin: 0; }} }}
+{BLEED_CSS if print_ready else ""}
+@page {{ size: {page_w}in {page_h}in; margin: 0; }}
+@media print {{ body {{ background: none; }}
+  .page-canvas, .sheet {{ margin: 0; }} }}
 </style></head><body>{body}</body></html>"""
 
 
@@ -378,7 +469,8 @@ def venue_entry_html(v: dict) -> str:
     )
 
 
-def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> str:
+def build_location_sheet_html(config: dict, rate: float, screens_deal: int,
+                              print_ready: bool = False) -> str:
     venues = load_oxford_venues()
     membership = json.loads(MEMBERS_PATH.read_text(encoding="utf-8"))
     status = membership.get("members", {})
@@ -404,7 +496,8 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
   background: {CREAM}; border: 0.5pt solid {GOLD}; border-radius: 6pt;
   vertical-align: 1pt; }}
 .v-meta {{ font-size: 6.8pt; color: {MUTED}; margin-top: 1.6pt; }}
-.member-mark {{ color: {GOLD}; }}
+.dia-mark {{ display: inline-block; width: 5pt; height: 5pt;
+  background: {GOLD}; transform: rotate(45deg); margin-right: 2pt; }}
 .count {{ font-family: 'Playfair Display', serif; font-style: italic;
   font-weight: 400; font-size: 11pt; color: {GOLD}; text-transform: none;
   letter-spacing: 0; }}
@@ -420,7 +513,8 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
   margin-top: 10pt; }}
 .incl .ip {{ display: flex; gap: 7pt; align-items: baseline;
   padding-bottom: 8pt; border-bottom: 0.5pt solid {HAIRLINE}; }}
-.incl .ip .dia {{ color: {GOLD}; font-size: 7pt; flex: none; }}
+.incl .ip .dia {{ width: 4.4pt; height: 4.4pt; background: {GOLD};
+  transform: rotate(45deg); flex: none; margin-top: 3pt; }}
 .incl .ip .it {{ font-size: 8pt; line-height: 1.5; color: {INK}; font-weight: 500; }}
 .footband .fb-line {{ font-family: 'Playfair Display', serif; font-weight: 700;
   font-size: 12.2pt; line-height: 1.35; color: #FFFFFF; }}
@@ -432,7 +526,7 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
     member_entries = "".join(venue_entry_html(v) for v in members)
     other_entries = "".join(venue_entry_html(v) for v in others)
     trust_html = "".join(
-        f'<div class="ip"><span class="dia">&#9670;</span>'
+        f'<div class="ip"><span class="dia"></span>'
         f'<span class="it">{esc(point)}</span></div>'
         for point in config.get("social_proof", {}).get("trust_points", [])
     )
@@ -455,8 +549,8 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
       <div class="stat"><div class="num">{len(members)}</div><div class="lbl">Chamber Member Venues</div></div>
     </div>
 
-    <div style="margin-top: 15pt;">
-      <div class="sec-title"><span class="member-mark">&#9670;</span> Chamber member venues
+    <div style="margin-top: 11pt;">
+      <div class="sec-title"><span class="dia-mark"></span> Chamber member venues
         <span class="count">{len(members)} venues &middot; {member_screens} screens</span></div>
       <div class="cols">{member_entries}</div>
     </div>
@@ -503,11 +597,19 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
   <div class="footband"><div class="fb-inner">
     <div class="fb-line">One flat rate. <b>{len(venues)} rooms</b> across Oxford &mdash;
     <b>{len(members)} of them fellow Chamber members.</b></div>
+    {grove_block_html()}
     <div class="contact"><span><b>MCTV Elite Advertising</b> &nbsp;&middot;&nbsp; {esc(config["company"]["tagline"])}</span>
     <span>{esc(config["company"]["website"])}</span></div>
   </div></div>
 </div>
 """
+
+    if print_ready:
+        page1 = wrap_for_print(page1, "MCTV Oxford Location Sheet &mdash; Page 1 (front)")
+        page2 = wrap_for_print(page2, "MCTV Oxford Location Sheet &mdash; Page 2 (back)")
+
+    page_w, page_h = (MEDIA_W, MEDIA_H) if print_ready else (TRIM_W, TRIM_H)
+    break_sel = ".sheet" if print_ready else ".page-canvas"
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
@@ -519,12 +621,107 @@ def build_location_sheet_html(config: dict, rate: float, screens_deal: int) -> s
 {font_css()}
 {BASE_CSS}
 {css}
-@page {{ size: 8.5in 11in; margin: 0; }}
+{BLEED_CSS if print_ready else ""}
+@page {{ size: {page_w}in {page_h}in; margin: 0; }}
 @media print {{ body {{ background: none; }}
-  .page-canvas {{ margin: 0; page-break-after: always; }}
-  .page-canvas:last-child {{ page-break-after: auto; }}
+  .page-canvas, .sheet {{ margin: 0; }}
+  {break_sel} {{ page-break-after: always; }}
+  {break_sel}:last-child {{ page-break-after: auto; }}
   .page-canvas + .page-canvas {{ margin-top: 0; }} }}
 </style></head><body>{page1}{page2}</body></html>"""
+
+
+PRINT_INSTRUCTIONS = """MCTV ELITE ADVERTISING - CHAMBER PACKET
+PRINT SPECIFICATION / RELEASE NOTES
+================================================================
+
+CONTACT
+  T. Creed Cannon, Managing Partner
+  MCTV Digital, Inc.  |  601-201-8202  |  www.mctvofms.com
+  Please confirm receipt and send a proof before running.
+
+FILES SUPPLIED (press-ready PDF)
+  1. MCTV_Chamber_Deal_One_Sheet_PRINT.pdf
+       1 page  |  print SINGLE-SIDED (4/0)
+  2. MCTV_Chamber_Oxford_Location_Sheet_PRINT.pdf
+       2 pages |  print DOUBLE-SIDED (4/4), head-to-head
+       Page 1 = front, Page 2 = back. Both pages are one sheet of paper.
+
+  These two pieces are inserted into the same Chamber presentation packet,
+  so please keep stock and finish identical between them.
+
+SIZE & GEOMETRY
+  Finished / trim size .... {trim_w}" x {trim_h}" (US Letter), portrait
+  Document size ........... {media_w}" x {media_h}"
+  Bleed ................... {bleed}" on all four sides
+  Crop marks .............. included, hairline, offset {bleed}" from trim
+  Safety / live area ...... all live copy sits at least 0.4" inside trim
+
+  The dark navy band at the foot of the page is a full-bleed element -
+  it intentionally runs off the left, right, and bottom trim edges.
+
+  A small slug line sits at the bottom of each page outside the trim
+  (file name, trim, bleed). It trims off and must NOT appear on the
+  finished piece. If your workflow prefers files without the slug or
+  marks, let us know and we will re-export.
+
+COLOR
+  Files are supplied in RGB. Please convert to CMYK using your standard
+  profile (US Web Coated SWOP or GRACoL 2013), relative colorimetric.
+
+  Brand colors - match to these values on a calibrated proof. The CMYK
+  figures are a STARTING POINT ONLY; the hex value is authoritative:
+    MCTV Navy ....... {navy}   deep rich navy, must not read washed
+                                 or purple; a rich build around
+                                 300% total ink is preferred
+    MCTV Gold ....... {gold}   warm antique gold, not yellow/brassy
+    Warm cream ...... {cream}   very light panel tint - please confirm
+                                 it holds and does not blow out to white
+  The navy covers a large solid area. Please watch for banding and
+  mottling in the footer band.
+
+FONTS
+  Fully embedded subsets, no substitutions required:
+    Playfair Display (headlines, figures)
+    Inter (body, labels)
+  Both are SIL Open Font License; embedding and printing are permitted.
+  No fonts need to be supplied separately. Nothing is outlined - if your
+  RIP prefers outlines, tell us and we will re-export with type converted.
+
+IMAGES & LOGOS
+  All artwork is embedded in the PDF. No linked files.
+  The Grove Collective logo is placed at approximately 2,300 ppi at final
+  size (well above the 300 ppi minimum) and carries an alpha channel.
+  Vector EPS/AI of that logo is available on request if your prepress
+  department would rather place vector art.
+
+STOCK & FINISHING (recommendation - confirm before running)
+  Stock ......... 100 lb gloss or silk text, or 80 lb silk cover for a
+                  heavier leave-behind. We are open to your house stock.
+  Coating ....... optional gloss or satin aqueous
+  Finishing ..... flat, trim only. No folds, scores, drilling, or binding.
+  Quantity ...... _____________ (to be confirmed)
+
+PROOFING
+  Please provide a hard-copy contract proof (or a PDF proof plus a press
+  check) before the full run. We specifically want to see:
+    - the navy footer band for evenness and correct depth
+    - the gold accents for warmth
+    - small reversed white type in the footer band for fill-in
+    - the Grove Collective logo for clean edges against the navy
+
+Questions on any of the above - call Creed at 601-201-8202.
+"""
+
+
+def write_print_instructions() -> Path:
+    text = PRINT_INSTRUCTIONS.format(
+        trim_w=TRIM_W, trim_h=TRIM_H, media_w=MEDIA_W, media_h=MEDIA_H,
+        bleed=BLEED, navy=NAVY, gold=GOLD, cream=CREAM,
+    )
+    path = OUTPUT_DIR / "MCTV_Chamber_Packet_PRINT_INSTRUCTIONS.txt"
+    path.write_text(text, encoding="utf-8")
+    return path
 
 
 def find_chromium(explicit: str = None) -> str:
@@ -552,15 +749,26 @@ def main():
     parser.add_argument("--screens", type=int, default=25)
     parser.add_argument("--chromium", default=None, help="Path to Chromium binary")
     parser.add_argument("--html-only", action="store_true", help="Skip PDF rendering")
+    parser.add_argument("--no-print-ready", action="store_true",
+                        help="Skip the bleed/crop-mark press versions")
     args = parser.parse_args()
 
     config = load_config()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     docs = {
-        "MCTV_Chamber_Deal_One_Sheet_Design": build_one_sheet_html(config, args.rate, args.screens),
-        "MCTV_Chamber_Oxford_Location_Sheet_Design": build_location_sheet_html(config, args.rate, args.screens),
+        "MCTV_Chamber_Deal_One_Sheet_Design":
+            build_one_sheet_html(config, args.rate, args.screens),
+        "MCTV_Chamber_Oxford_Location_Sheet_Design":
+            build_location_sheet_html(config, args.rate, args.screens),
     }
+    if not args.no_print_ready:
+        docs.update({
+            "MCTV_Chamber_Deal_One_Sheet_PRINT":
+                build_one_sheet_html(config, args.rate, args.screens, print_ready=True),
+            "MCTV_Chamber_Oxford_Location_Sheet_PRINT":
+                build_location_sheet_html(config, args.rate, args.screens, print_ready=True),
+        })
 
     chromium = None if args.html_only else find_chromium(args.chromium)
     for name, html in docs.items():
@@ -571,6 +779,9 @@ def main():
             pdf_path = OUTPUT_DIR / f"{name}.pdf"
             render_pdf(chromium, html_path, pdf_path)
             print(f"PDF:  {pdf_path}")
+
+    if not args.no_print_ready:
+        print(f"SPEC: {write_print_instructions()}")
 
 
 if __name__ == "__main__":
