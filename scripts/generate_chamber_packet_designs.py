@@ -169,7 +169,12 @@ body { background: #DDDDDD; }
   color: %(navy)s; }
 .masthead .brand .amp { color: %(gold)s; }
 .masthead .prog { font-size: 6.6pt; font-weight: 600; letter-spacing: 0.18em;
-  color: %(muted)s; text-transform: uppercase; }
+  color: %(muted)s; text-transform: uppercase; line-height: 1.35; text-align: right; }
+.masthead .mh-right { display: flex; align-items: center; gap: 9pt; }
+.masthead .mh-right .ch-logo { height: 0.42in; width: auto; display: block;
+  max-width: 1.5in; object-fit: contain; }
+.masthead .mh-right .prog { padding-left: 9pt;
+  border-left: 0.6pt solid %(hairline)s; }
 .kicker { margin-top: 22pt; font-size: 7.2pt; font-weight: 700;
   letter-spacing: 0.24em; color: %(gold_dk)s; text-transform: uppercase; }
 .headline { font-family: 'Playfair Display', serif; font-weight: 800;
@@ -246,11 +251,35 @@ def wrap_for_print(canvas_html: str, label: str) -> str:
     )
 
 
+# Oxford-Lafayette County Chamber mark. Drop the supplied artwork here as a
+# full-colour or dark logo on a transparent background; it co-brands the
+# masthead. If the file is absent the masthead falls back to text only, so the
+# packet still builds.
+CHAMBER_LOGO = PROJECT_ROOT / "assets" / "branding" / "oxford_chamber.png"
+
+
+def chamber_logo_html() -> str:
+    if not CHAMBER_LOGO.exists():
+        return ""
+    data = base64.b64encode(CHAMBER_LOGO.read_bytes()).decode("ascii")
+    return (
+        f'<img class="ch-logo" src="data:image/png;base64,{data}" '
+        'alt="Oxford-Lafayette County Chamber of Commerce"/>'
+    )
+
+
 def masthead_html() -> str:
+    logo = chamber_logo_html()
+    right = (
+        f'<div class="mh-right">{logo}'
+        '<div class="prog">Chamber Partner<br/>Program &middot; 2026</div></div>'
+        if logo else
+        '<div class="prog">Chamber Partner Program &middot; 2026</div>'
+    )
     return (
         '<div class="masthead">'
         '<div class="brand">MCTV <span class="amp">ELITE</span> ADVERTISING</div>'
-        '<div class="prog">Chamber Partner Program &middot; 2026</div>'
+        f'{right}'
         "</div>"
     )
 
