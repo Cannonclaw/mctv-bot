@@ -97,6 +97,46 @@ class ExclusivityInput:
 
 
 @dataclass
+class RealEstateBoardInput:
+    """Input data for a Real Estate Feeds Board proposal.
+
+    The board is a dynamic creative format, not a static ad: agent/brokerage
+    branding plus rotating listings plus a market mortgage-rate strip. Four
+    sell modes share one generator because the board itself is the same
+    product -- only who pays for it (and the disclosure burden) changes.
+
+    board_mode is one of:
+      "agent"     -- one agent buys their own board
+      "brokerage" -- firm-level buy, usually with category exclusivity
+      "cosponsor" -- agent + lender split one board (RESPA-sensitive)
+      "lender"    -- lender-branded rate board (Reg Z / TILA-sensitive)
+    """
+    business_name: str
+    contact_name: str
+    contact_email: str = ""
+    board_mode: str = "agent"
+    brokerage_name: str = ""
+    city: str = "Oxford"
+    selected_markets: list = field(default_factory=lambda: ["Oxford"])
+    board_tier: int = 0            # index into config real_estate_board.tiers
+    monthly_rate: float = 0.0      # 0 = show tier table instead of a set rate
+    listing_count: int = 0         # 0 = use the tier default
+    agent_count: int = 1           # agents featured (brokerage mode)
+    include_exclusivity: bool = False
+    exclusive_category: str = "Real Estate"
+    # Lender co-sponsorship. lender_share_pct splits the SAME board between
+    # two separately-invoiced parties -- see the generator's _compliance
+    # section for why that split is stated explicitly in the document.
+    lender_name: str = ""
+    lender_contact: str = ""
+    lender_nmls_id: str = ""
+    lender_share_pct: float = 0.0
+    show_rate_strip: bool = True
+    sales_rep: str = "T. Creed Cannon"
+    additional_notes: str = ""
+
+
+@dataclass
 class RenewalInput:
     """Input data for a Renewal/Upgrade proposal."""
     business_name: str

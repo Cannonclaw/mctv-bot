@@ -56,6 +56,7 @@ generators/                     # Document generators
   multi_brand_bundle.py         # Multi-business owner bundle (Buy 2 Get 1 Free)
   venue_partner.py              # Revenue-share venue partnership
   category_exclusivity.py       # Industry lockout proposal
+  real_estate_board.py          # Real estate feeds board (4 sell modes)
   renewal_upgrade.py            # Existing client renewal/upgrade
   advertiser_report.py          # Advertiser traction report (NTV360 data)
   venue_report.py               # Venue partner report
@@ -159,6 +160,30 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
 - **Perf rule**: the Pipeline page fetches `get_all_opportunities()` once per rerun
   and passes the list into every tab and analytics helper (`opps=` params) — don't
   add per-tab fetches.
+
+### Real Estate Feeds Board
+A dynamic board format sold to agents, brokerages, and lenders
+(`generators/real_estate_board.py`, config under `real_estate_board`). Agent or
+brokerage branding holds every frame, listings rotate one at a time, and a
+market mortgage-rate strip sits in a fixed corner.
+
+- **Four sell modes** share one generator (`board_mode`): `agent`, `brokerage`,
+  `cosponsor` (agent + lender split one board), `lender` (lender-branded board).
+- **Mode drives sections.** `get_prompt_variables()` latches `self._mode` before
+  `get_sections()` runs — that ordering is load-bearing. The two lender modes add
+  a `_compliance` section.
+- **The compliance section is not boilerplate.** Agent/lender co-marketing is
+  regulated under RESPA Section 8, and putting a rate next to a lender's name
+  pulls the board into TILA / Reg Z advertising-disclosure territory. The
+  proposal states the cost split, the separate invoicing, and the lender display
+  rules on the page so the deal isn't improvised later. Don't strip it out.
+- **Cosponsor pricing** renders a split table: each party's share, each
+  separately invoiced by MCTV. Neither party is ever billed through the other.
+- **Rate strip** is Freddie Mac PMMS (weekly, free, citable), shown with source
+  and date. `staleness_days` governs a hide-when-stale rule — a board quoting an
+  old rate is worse than one with no rate.
+- Pricing is above standard tiers (dynamic content + optional category
+  exclusivity premium, `exclusivity_premium_pct`).
 
 ### Contract System
 5 contract types, each with dedicated clause sets:
