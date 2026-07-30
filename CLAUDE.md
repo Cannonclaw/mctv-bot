@@ -23,7 +23,7 @@ app.py                          # Entry point — three-tier login, nav, brandin
 
 pages/                          # 13 internal + 8 portal pages
   0_Intake.py                   # Public lead intake form (no auth)
-  1_Proposals.py                # Proposal generation UI (6 types)
+  1_Proposals.py                # Proposal generation UI (7 types)
   2_Reports.py                  # Traction report generation (advertiser + venue)
   3_Settings.py                 # Config viewer, action items checklist
   4_Leads.py                    # Lead management (scoring, bulk actions, follow-ups)
@@ -40,6 +40,8 @@ pages/                          # 13 internal + 8 portal pages
   15_Prospector.py              # Outbound prospector (AI prospect lists, batch add)
   20_HostPipeline.py            # Host venue pipeline (deal_type='host', own stages)
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
+  24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
+                                #   per screen, reconciliation, dark content
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -50,7 +52,7 @@ pages/                          # 13 internal + 8 portal pages
   portal_terms.py               # Terms of service
 
 generators/                     # Document generators
-  base_proposal.py              # Abstract base class (all 6 proposals inherit this)
+  base_proposal.py              # Abstract base class (all 7 proposals inherit this)
   elite_advertiser.py           # Flagship 5-6 page scannable proposal
   host_media_kit.py             # Free screen hosting pitch
   multi_brand_bundle.py         # Multi-business owner bundle (Buy 2 Get 1 Free)
@@ -77,6 +79,11 @@ services/                       # Business logic and integrations
                                 #   analytics, rep scoreboard (Supabase + local fallback)
   nurture_service.py            # Automated email/SMS drip sequences for pipeline deals
   leads_service.py              # Lead CRUD + scoring (intake form submissions)
+  loop_inventory_service.py     # Reads the n-compass whitelist sweep (screen_loops,
+                                #   dark_content) — measured loop length per screen
+  screen_inventory_service.py   # Manual book of record: what creative plays where
+                                #   (loop_items + per-screen overrides), plus the two
+                                #   reconciliations (vs sweep, vs Encompass export)
   creatomate_service.py         # Creatomate video generation API
   supabase_client.py            # Supabase REST client (query, insert, update, delete)
   portal_service.py             # Portal business logic (clients, activity log)
@@ -118,7 +125,7 @@ output/                         # Generated files (gitignored)
 ## Architecture
 
 ### Generator Pattern (Proposals)
-All 6 proposal generators inherit from `BaseProposal` (ABC):
+All 7 proposal generators inherit from `BaseProposal` (ABC):
 1. `get_sections()` — returns ordered `(section_key, title)` tuples
 2. `get_prompt_variables()` — extracts template variables from input data
 3. `build_section()` — dispatches to per-section builder methods
@@ -185,6 +192,47 @@ market mortgage-rate strip sits in a fixed corner.
 - Pricing is above standard tiers (dynamic content + optional category
   exclusivity premium, `exclusivity_premium_pct`).
 
+### Screen Inventory & Loop Tracking
+`pages/24_Loop_Inventory.py` covers two halves of the same question, in four tabs:
+**Screens**, **Inventory**, **Reconcile**, **Dark content**.
+
+- **Measured side** (`loop_inventory_service` → `screen_loops`, `dark_content`):
+  loaded by the n-compass per-screen whitelist sweep. Key model fact: playlist
+  content is license-whitelisted, so a screen's real loop is the sum of the
+  playlist items whitelisted to its license — NOT the playlist's row-sum. This
+  side knows *how long* each screen's loop runs, not *what's in it*.
+- **Book of record** (`screen_inventory_service` → `loop_items`,
+  `loop_item_screens`, migration 024): entered by hand. One row per creative per
+  market. Items are **run-of-network** by default — every screen in the market —
+  and only exceptions get typed in via `loop_item_screens`
+  (`mode='exclude'` pulls a spot off one venue, e.g. category exclusivity;
+  `mode='include'` puts a non-ROn spot on specific screens, e.g. a host promo).
+  `license_id NULL` on an override applies it to every screen at the venue;
+  a license-specific row beats the venue-wide one. This mirrors n-compass
+  (one playlist per market + per-license whitelist) and keeps entry to dozens of
+  rows instead of thousands.
+- **Expected loop** for a screen = active ROn items not excluded from it, plus
+  items explicitly included on it. `expected_by_screen()` computes it;
+  `inventory_summary()["base_loop_seconds"]` is the ROn total, which is what a
+  screen with no exceptions should run.
+- **Reconcile vs sweep** (`reconcile_sweep()`): expected item count / loop seconds
+  vs what the sweep measured, per screen, with a tolerance slider. A negative
+  `count_delta` means the screen runs more than the books know about.
+- **Reconcile vs Encompass** (`reconcile_plays()`): upload the NTV360 **content
+  report** (the format with a row per creative per host — `parse_excel` handles
+  it) and join on `(venue_name, file_name)`. Surfaces booked-but-not-airing,
+  airing-but-not-tracked, and tracked-but-playing-nowhere. `seed_from_plays()`
+  bootstraps the inventory from an export so nobody starts at a blank page.
+- **Name matching**: `normalize()` lowercases, strips punctuation and video file
+  extensions, and collapses whitespace — the three systems spell venues and files
+  differently. Venues missing from an export entirely are deliberately excluded
+  from the findings (that's a screen-health question, see `18_ScreenHealth.py`).
+- Sweep rows prefixed `CROSS-MARKET:` / `ORPHAN:` / `NOTE:` are sweep annotations,
+  not real screens — `is_diagnostic()` filters them out of expected loop math.
+- **Perf rule**: the page fetches items, overrides, and screens once per rerun and
+  passes them into every tab (`items=` / `overrides=` / `screens=` params) — same
+  convention as the Pipeline page.
+
 ### Contract System
 5 contract types, each with dedicated clause sets:
 - **Advertiser** (8 clauses) — standard advertising partnership
@@ -239,7 +287,8 @@ System prompt enforces:
 Per-section prompts use `{variable}` placeholders filled by `get_prompt_variables()`. Word limits reduced ~20% from initial versions for tighter copy.
 
 ### Database (Supabase)
-8 tables with RLS policies:
+Core tables (all RLS-enabled; migrations live in `scripts/0NN_*.sql` and are
+applied by hand in the Supabase SQL editor):
 - `clients` — business info, contact details, portal credentials
 - `contracts` — contract records with lifecycle status
 - `invoices` — billing and payment tracking
@@ -252,6 +301,14 @@ Per-section prompts use `{variable}` placeholders filled by `get_prompt_variable
   follow-up dates, enrichment columns; see migration 008 + 013 + 023)
 - `pipeline_activity` — per-deal activity log (stage moves, calls, notes,
   `performed_by` rep attribution)
+- `screen_loops` — per-license measured loop length + item count, one row per
+  screen per sweep date (loaded by the n-compass whitelist sweep)
+- `dark_content` — playlist items whitelisted to zero licenses, with revenue context
+- `loop_items` — the manual inventory: one creative per market (migration 024).
+  `(market, lower(file_name))` is unique, so the same file can live in two markets
+  but not twice in one
+- `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
+  (migration 024); cascades on item delete
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 
