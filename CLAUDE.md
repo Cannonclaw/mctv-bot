@@ -42,6 +42,7 @@ pages/                          # 13 internal + 8 portal pages
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
+  26_Boards.py                  # Real estate feeds boards + listings, rate health
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -79,6 +80,8 @@ services/                       # Business logic and integrations
                                 #   analytics, rep scoreboard (Supabase + local fallback)
   nurture_service.py            # Automated email/SMS drip sequences for pipeline deals
   leads_service.py              # Lead CRUD + scoring (intake form submissions)
+  rates_service.py              # Freddie Mac PMMS fetch + cache + staleness rule
+  board_service.py              # Real estate board + listings CRUD; render_payload()
   loop_inventory_service.py     # Reads the n-compass whitelist sweep (screen_loops,
                                 #   dark_content) — measured loop length per screen
   screen_inventory_service.py   # Manual book of record: what creative plays where
@@ -115,6 +118,7 @@ scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)
   fix_rls_policies.sql          # RLS policy audit/fix
   apply_updates.sql             # Schema migration script
+  fetch_rates.py                # Daily PMMS fetch cron -> market_rates
   contract_flow_test.py         # Contract lifecycle test
   integration_test.py           # Full integration test
 
@@ -191,6 +195,30 @@ market mortgage-rate strip sits in a fixed corner.
   old rate is worse than one with no rate.
 - Pricing is above standard tiers (dynamic content + optional category
   exclusivity premium, `exclusivity_premium_pct`).
+
+**The board itself** (what plays on screen) is separate from the proposal that
+sells it. Migration 025 adds `market_rates`, `boards`, `board_listings`.
+
+- **Two URLs, on purpose** (`server_routes.py`): `/board/<slug>` is the static
+  shell, `/board/<slug>.json` is the payload it polls every 5 min. The shell
+  never touches the database, so a Supabase outage leaves boards rendering
+  last-known-good instead of blanking. Same Tornado + ASGI double-patch as
+  `/rates`; `_resolve()` is shared so the two stacks can't drift.
+- **Rates are cached, never fetched from a screen.** `scripts/fetch_rates.py`
+  (daily Render cron) pulls the weekly observation into `market_rates`;
+  `rates_service.parse_rate_csv()` is a tolerant parser that keys off column
+  position, not header names — both publishers have renamed columns before.
+- **The staleness rule lives in the payload, not the template.**
+  `rate_for_display()` returns None past the window and `render_payload()` then
+  omits the `rate` key entirely. A template bug cannot resurrect an old number
+  because there is nothing to render.
+- **Lender name and NMLS ID travel together or not at all.** `render_payload()`
+  drops lender branding (and logs) when either is missing, and only emits it for
+  `cosponsor`/`lender` modes. This is the disclosure promise the proposal makes.
+- **Listings are agent-supplied**, never MLS/IDX — those feeds carry display
+  rules that don't contemplate third-party digital signage.
+- `pages/26_Boards.py` manages boards and listings, and surfaces rate-feed
+  health at the top because a stale feed silently hides the strip network-wide.
 
 ### Screen Inventory & Loop Tracking
 `pages/24_Loop_Inventory.py` covers two halves of the same question, in four tabs:
@@ -309,6 +337,13 @@ applied by hand in the Supabase SQL editor):
   but not twice in one
 - `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
   (migration 024); cascades on item delete
+- `market_rates` — cached weekly mortgage-rate observations (migration 025).
+  `week_ending` is the source's publication date, not the fetch time, so
+  staleness is judged on the data's age rather than on whether the cron ran
+- `boards` — one row per sold real estate board: slug, mode, branding, lender
+  identifiers, theme (migration 025). `lower(slug)` is unique — it's the public URL
+- `board_listings` — the properties that rotate on a board (migration 025);
+  cascades on board delete. Agent-supplied only, never MLS/IDX
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 
