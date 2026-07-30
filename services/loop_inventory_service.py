@@ -37,13 +37,20 @@ TARGET_SECONDS = 900  # 15:00 loop target (4 plays/hr)
 _sb: Client | None = None
 
 
-def _supabase() -> Client:
+def _supabase() -> Client | None:
+    """Client for the sweep tables, or None when Supabase isn't configured.
+
+    Callers treat None as "no sweep data" so a missing env var shows the page's
+    empty state instead of taking the whole page down with a KeyError.
+    """
     global _sb
     if _sb is None:
-        _sb = create_client(
-            os.environ["SUPABASE_URL"],
-            os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_KEY"],
-        )
+        url = os.environ.get("SUPABASE_URL")
+        key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+               or os.environ.get("SUPABASE_KEY"))
+        if not url or not key:
+            return None
+        _sb = create_client(url, key)
     return _sb
 
 
@@ -53,8 +60,11 @@ def _supabase() -> Client:
 
 def latest_sweep_date() -> str | None:
     """Most recent swept_at across all markets, as an ISO date string."""
+    client = _supabase()
+    if client is None:
+        return None
     res = (
-        _supabase()
+        client
         .table("screen_loops")
         .select("swept_at")
         .order("swept_at", desc=True)
@@ -67,11 +77,14 @@ def latest_sweep_date() -> str | None:
 
 def screen_loops(swept_at: str | None = None) -> list[dict[str, Any]]:
     """All screen rows for one sweep date (the latest sweep by default)."""
+    client = _supabase()
+    if client is None:
+        return []
     day = swept_at or latest_sweep_date()
     if day is None:
         return []
     res = (
-        _supabase()
+        client
         .table("screen_loops")
         .select("*")
         .eq("swept_at", day)
@@ -104,7 +117,10 @@ def market_summary(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 def dark_content(include_closed: bool = False) -> list[dict[str, Any]]:
     """Dark items (whitelisted to 0 screens). Open findings only by default."""
-    q = _supabase().table("dark_content").select("*")
+    client = _supabase()
+    if client is None:
+        return []
+    q = client.table("dark_content").select("*")
     if not include_closed:
         q = q.eq("status", "open")
     rows = (q.execute().data) or []
