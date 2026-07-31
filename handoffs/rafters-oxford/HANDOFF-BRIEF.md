@@ -118,8 +118,9 @@ like the room actually looks — but plan for the constraints:
   selected set is the single highest-leverage step before anything gets designed.
 - **Crowd energy is the asset.** Wide room shots and crowd-in-motion frames are what a static
   design cannot fake. Prioritize those over detail shots.
-- **Check faces.** These are patrons on a Friday and Saturday night. Confirm with Blake what the
-  venue's stance is on recognizable faces in MCTV-distributed content before anything ships.
+- **Faces are cleared.** Usage rights are confirmed, including recognizable patrons — no per-photo
+  clearance needed before shipping. Still apply normal judgment: skip frames where someone is
+  visibly impaired or otherwise would not want to be the face of the venue.
 - **Shoot list the gaps.** Two late-night sessions is one mood. If the content plan needs daytime,
   food, staff, or empty-room hero frames, those will need a second shoot.
 
@@ -128,17 +129,23 @@ like the room actually looks — but plan for the constraints:
 1. Cull to a working set of 30–40 across both sessions, weighted toward wide crowd frames.
 2. Grade that set to a single consistent look.
 3. Build the rotation concepts against the 94.6-minute dwell — plan a set of spots, not one spot.
-4. Bring concepts back before production so the venue-partner angle can be checked with Blake.
+4. Bring concepts back for internal review before production.
 
 ---
 
 ## 6. Open items
 
-- [ ] Confirm photo usage rights and the venue's position on recognizable patrons.
-- [ ] Confirm whether Rafters wants venue-facing content (promoting Rafters on its own screen),
-      advertiser-facing content, or both.
+- [x] **Photo usage rights — cleared.** MCTV has permission to use this packet, including frames
+      with recognizable patrons. Confirmed by Creed Cannon, 2026-07-31. Not a blocker for design.
 - [ ] Confirm the Ole Miss home matchup for the Sept 27–28 2024 weekend if game-day framing is used.
 - [ ] Decide whether a daytime / food / empty-room shoot is needed to round out the library.
+
+### Working assumption on content direction
+
+Rafters is a **screen host / venue partner**, so this package is scoped to **venue-facing content**
+— content promoting Rafters that runs on Rafters' own screen. Advertiser-facing work for Rafters
+as a paying advertiser would be a separate brief. Flag it if that assumption is wrong; it changes
+what gets built.
 
 ---
 
