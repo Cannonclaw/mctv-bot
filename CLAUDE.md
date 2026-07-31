@@ -23,7 +23,7 @@ app.py                          # Entry point — three-tier login, nav, brandin
 
 pages/                          # 13 internal + 8 portal pages
   0_Intake.py                   # Public lead intake form (no auth)
-  1_Proposals.py                # Proposal generation UI (6 types)
+  1_Proposals.py                # Proposal generation UI (7 types)
   2_Reports.py                  # Traction report generation (advertiser + venue)
   3_Settings.py                 # Config viewer, action items checklist
   4_Leads.py                    # Lead management (scoring, bulk actions, follow-ups)
@@ -42,6 +42,7 @@ pages/                          # 13 internal + 8 portal pages
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
+  26_Boards.py                  # Real estate feeds boards + listings, rate health
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -52,12 +53,13 @@ pages/                          # 13 internal + 8 portal pages
   portal_terms.py               # Terms of service
 
 generators/                     # Document generators
-  base_proposal.py              # Abstract base class (all 6 proposals inherit this)
+  base_proposal.py              # Abstract base class (all 7 proposals inherit this)
   elite_advertiser.py           # Flagship 5-6 page scannable proposal
   host_media_kit.py             # Free screen hosting pitch
   multi_brand_bundle.py         # Multi-business owner bundle (Buy 2 Get 1 Free)
   venue_partner.py              # Revenue-share venue partnership
   category_exclusivity.py       # Industry lockout proposal
+  real_estate_board.py          # Real estate feeds board (4 sell modes)
   renewal_upgrade.py            # Existing client renewal/upgrade
   advertiser_report.py          # Advertiser traction report (NTV360 data)
   venue_report.py               # Venue partner report
@@ -78,6 +80,8 @@ services/                       # Business logic and integrations
                                 #   analytics, rep scoreboard (Supabase + local fallback)
   nurture_service.py            # Automated email/SMS drip sequences for pipeline deals
   leads_service.py              # Lead CRUD + scoring (intake form submissions)
+  rates_service.py              # Freddie Mac PMMS fetch + cache + staleness rule
+  board_service.py              # Real estate board + listings CRUD; render_payload()
   loop_inventory_service.py     # Reads the n-compass whitelist sweep (screen_loops,
                                 #   dark_content) — measured loop length per screen
   screen_inventory_service.py   # Manual book of record: what creative plays where
@@ -114,6 +118,7 @@ scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)
   fix_rls_policies.sql          # RLS policy audit/fix
   apply_updates.sql             # Schema migration script
+  fetch_rates.py                # Daily PMMS fetch cron -> market_rates
   contract_flow_test.py         # Contract lifecycle test
   integration_test.py           # Full integration test
 
@@ -124,7 +129,7 @@ output/                         # Generated files (gitignored)
 ## Architecture
 
 ### Generator Pattern (Proposals)
-All 6 proposal generators inherit from `BaseProposal` (ABC):
+All 7 proposal generators inherit from `BaseProposal` (ABC):
 1. `get_sections()` — returns ordered `(section_key, title)` tuples
 2. `get_prompt_variables()` — extracts template variables from input data
 3. `build_section()` — dispatches to per-section builder methods
@@ -166,6 +171,54 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
 - **Perf rule**: the Pipeline page fetches `get_all_opportunities()` once per rerun
   and passes the list into every tab and analytics helper (`opps=` params) — don't
   add per-tab fetches.
+
+### Real Estate Feeds Board
+A dynamic board format sold to agents, brokerages, and lenders
+(`generators/real_estate_board.py`, config under `real_estate_board`). Agent or
+brokerage branding holds every frame, listings rotate one at a time, and a
+market mortgage-rate strip sits in a fixed corner.
+
+- **Four sell modes** share one generator (`board_mode`): `agent`, `brokerage`,
+  `cosponsor` (agent + lender split one board), `lender` (lender-branded board).
+- **Mode drives sections.** `get_prompt_variables()` latches `self._mode` before
+  `get_sections()` runs — that ordering is load-bearing. The two lender modes add
+  a `_compliance` section.
+- **The compliance section is not boilerplate.** Agent/lender co-marketing is
+  regulated under RESPA Section 8, and putting a rate next to a lender's name
+  pulls the board into TILA / Reg Z advertising-disclosure territory. The
+  proposal states the cost split, the separate invoicing, and the lender display
+  rules on the page so the deal isn't improvised later. Don't strip it out.
+- **Cosponsor pricing** renders a split table: each party's share, each
+  separately invoiced by MCTV. Neither party is ever billed through the other.
+- **Rate strip** is Freddie Mac PMMS (weekly, free, citable), shown with source
+  and date. `staleness_days` governs a hide-when-stale rule — a board quoting an
+  old rate is worse than one with no rate.
+- Pricing is above standard tiers (dynamic content + optional category
+  exclusivity premium, `exclusivity_premium_pct`).
+
+**The board itself** (what plays on screen) is separate from the proposal that
+sells it. Migration 025 adds `market_rates`, `boards`, `board_listings`.
+
+- **Two URLs, on purpose** (`server_routes.py`): `/board/<slug>` is the static
+  shell, `/board/<slug>.json` is the payload it polls every 5 min. The shell
+  never touches the database, so a Supabase outage leaves boards rendering
+  last-known-good instead of blanking. Same Tornado + ASGI double-patch as
+  `/rates`; `_resolve()` is shared so the two stacks can't drift.
+- **Rates are cached, never fetched from a screen.** `scripts/fetch_rates.py`
+  (daily Render cron) pulls the weekly observation into `market_rates`;
+  `rates_service.parse_rate_csv()` is a tolerant parser that keys off column
+  position, not header names — both publishers have renamed columns before.
+- **The staleness rule lives in the payload, not the template.**
+  `rate_for_display()` returns None past the window and `render_payload()` then
+  omits the `rate` key entirely. A template bug cannot resurrect an old number
+  because there is nothing to render.
+- **Lender name and NMLS ID travel together or not at all.** `render_payload()`
+  drops lender branding (and logs) when either is missing, and only emits it for
+  `cosponsor`/`lender` modes. This is the disclosure promise the proposal makes.
+- **Listings are agent-supplied**, never MLS/IDX — those feeds carry display
+  rules that don't contemplate third-party digital signage.
+- `pages/26_Boards.py` manages boards and listings, and surfaces rate-feed
+  health at the top because a stale feed silently hides the strip network-wide.
 
 ### Screen Inventory & Loop Tracking
 `pages/24_Loop_Inventory.py` covers two halves of the same question, in four tabs:
@@ -284,6 +337,13 @@ applied by hand in the Supabase SQL editor):
   but not twice in one
 - `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
   (migration 024); cascades on item delete
+- `market_rates` — cached weekly mortgage-rate observations (migration 025).
+  `week_ending` is the source's publication date, not the fetch time, so
+  staleness is judged on the data's age rather than on whether the cron ran
+- `boards` — one row per sold real estate board: slug, mode, branding, lender
+  identifiers, theme (migration 025). `lower(slug)` is unique — it's the public URL
+- `board_listings` — the properties that rotate on a board (migration 025);
+  cascades on board delete. Agent-supplied only, never MLS/IDX
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 

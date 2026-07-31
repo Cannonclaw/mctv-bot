@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCTV Real Estate Board</title>
+<style>
+/* ============================================================
+   MCTV REAL ESTATE FEEDS BOARD
+   Served at /board/<slug>; polls /board/<slug>.json.
+
+   Built for a 1920x1080 landscape screen viewed from across a
+   waiting room, NOT for a phone. Everything scales off a --u
+   unit tied to viewport width so the same markup holds up on a
+   43" panel and in a laptop preview.
+
+   Design rules that are load-bearing, not taste:
+     * Branding holds a fixed band on EVERY frame. It never
+       participates in the rotation.
+     * ONE listing at a time. Four listings nobody reads is
+       worse than one listing someone does.
+     * The rate strip owns a fixed corner and never moves, so a
+       repeat viewer knows where to look.
+     * No external requests: no CDN, no webfont, no analytics.
+       Screens sit on flaky venue wifi and a blocked request
+       must never blank the board.
+   ============================================================ */
+
+:root{
+  /* 1u = 1% of viewport width. All sizing derives from this. */
+  --u: 1vw;
+  --navy:#0a1220;
+  --navy2:#16233a;
+  --gold:#d4a017;
+  --ink:#0e1726;
+  --paper:#f5f7fa;
+  --muted:#8aa0b8;
+  --white:#ffffff;
+  --bg-a:var(--navy);
+  --bg-b:var(--navy2);
+  --accent:var(--gold);
+  --text:var(--white);
+  --sub:var(--muted);
+  --card:rgba(255,255,255,0.06);
+  /* Tints for the two fixed bands. Dark on a dark board, light on a light
+     one -- a black wash over a pale gradient just reads as dirty grey. */
+  --band:rgba(0,0,0,0.18);
+  --band-strong:rgba(0,0,0,0.30);
+  --rule:rgba(255,255,255,0.20);
+}
+/* Themes mirror the four DocxService colour schemes so a board matches
+   the proposal that sold it. */
+body[data-theme="light"]{
+  --bg-a:#eef2f7; --bg-b:#dde5ef; --accent:#c67c1b;
+  --text:#16283c; --sub:#5a6a7a; --card:rgba(0,0,0,0.05);
+  --band:rgba(255,255,255,0.62);
+  --band-strong:rgba(255,255,255,0.78);
+  --rule:rgba(0,0,0,0.18);
+}
+body[data-theme="dark"]{
+  --bg-a:#12121f; --bg-b:#1a1a2e; --accent:#d4af37;
+  --text:#f2f2f7; --sub:#9a9ab0; --card:rgba(255,255,255,0.06);
+}
+body[data-theme="sage"]{
+  --bg-a:#2f423f; --bg-b:#3d5450; --accent:#c48d78;
+  --text:#f3f6f4; --sub:#adc2bd; --card:rgba(255,255,255,0.07);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  background:linear-gradient(140deg,var(--bg-a) 0%,var(--bg-b) 100%);
+  color:var(--text);
+  /* Screens are unattended: never show a text cursor or selection. */
+  cursor:none; user-select:none;
+}
+
+.stage{height:100vh;display:flex;flex-direction:column}
+
+/* ── BRAND BAND — present on every frame ───────────────────── */
+.brand{
+  flex:none;display:flex;align-items:center;gap:calc(var(--u)*1.6);
+  padding:calc(var(--u)*1.5) calc(var(--u)*2.6);
+  border-bottom:calc(var(--u)*0.22) solid var(--accent);
+  background:var(--band);
+}
+.headshot{
+  flex:none;width:calc(var(--u)*7);height:calc(var(--u)*7);border-radius:50%;
+  object-fit:cover;border:calc(var(--u)*0.22) solid var(--accent);
+  background:var(--card);
+}
+.brandtext{flex:1;min-width:0}
+.agent{
+  font-size:calc(var(--u)*2.9);font-weight:800;line-height:1.1;
+  letter-spacing:-0.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.firm{
+  font-size:calc(var(--u)*1.5);color:var(--sub);margin-top:calc(var(--u)*0.3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.brandlogo{
+  flex:none;max-height:calc(var(--u)*6);max-width:calc(var(--u)*20);
+  object-fit:contain;
+}
+.contact{
+  flex:none;text-align:right;font-size:calc(var(--u)*1.45);
+  color:var(--text);line-height:1.5;font-weight:600;
+}
+
+/* ── LISTING AREA — the only thing that rotates ────────────── */
+.body{flex:1;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;
+  opacity:0;transition:opacity .7s ease;
+}
+.slide.on{opacity:1}
+
+.photo{
+  flex:1.35;position:relative;background:var(--card);
+  background-size:cover;background-position:center;
+}
+.flag{
+  position:absolute;top:calc(var(--u)*2);left:0;
+  background:var(--accent);color:#0a1220;font-weight:900;
+  font-size:calc(var(--u)*1.5);letter-spacing:0.08em;
+  padding:calc(var(--u)*0.6) calc(var(--u)*1.8);
+}
+.detail{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  gap:calc(var(--u)*1.1);padding:calc(var(--u)*3);
+}
+.price{
+  font-size:calc(var(--u)*5.4);font-weight:900;color:var(--accent);
+  line-height:1;letter-spacing:-0.02em;
+}
+.addr{font-size:calc(var(--u)*2.5);font-weight:700;line-height:1.2}
+.city{font-size:calc(var(--u)*1.8);color:var(--sub)}
+.specs{display:flex;gap:calc(var(--u)*1.2);flex-wrap:wrap;margin-top:calc(var(--u)*0.5)}
+.spec{
+  background:var(--card);border-radius:calc(var(--u)*0.5);
+  padding:calc(var(--u)*0.7) calc(var(--u)*1.4);
+  font-size:calc(var(--u)*1.6);font-weight:700;
+}
+.blurb{font-size:calc(var(--u)*1.5);color:var(--sub);line-height:1.45}
+
+/* Shown when a board has no listings loaded yet — branding still holds. */
+.empty{
+  position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;text-align:center;padding:calc(var(--u)*4);
+  font-size:calc(var(--u)*2.2);color:var(--sub);
+}
+
+/* ── RATE STRIP — fixed corner, never moves ────────────────── */
+/* Absent from the DOM entirely when the observation is stale. The
+   payload omits the key; this element is only ever built when it's
+   present, so there is no path that renders an old number. */
+.rate{
+  flex:none;display:flex;align-items:center;gap:calc(var(--u)*1.6);
+  padding:calc(var(--u)*1.1) calc(var(--u)*2.6);
+  background:var(--band-strong);border-top:calc(var(--u)*0.16) solid var(--accent);
+}
+.ratenum{
+  font-size:calc(var(--u)*3.2);font-weight:900;color:var(--accent);
+  line-height:1;
+}
+.ratelabel{font-size:calc(var(--u)*1.35);font-weight:700;line-height:1.35}
+.ratesrc{
+  margin-left:auto;text-align:right;
+  font-size:calc(var(--u)*1.05);color:var(--sub);line-height:1.4;
+}
+/* Lender block. Name and NMLS ID are emitted together or not at all. */
+.lender{
+  display:flex;align-items:center;gap:calc(var(--u)*1);
+  padding-left:calc(var(--u)*1.6);
+  border-left:calc(var(--u)*0.12) solid var(--rule);
+}
+.lenderlogo{max-height:calc(var(--u)*3);max-width:calc(var(--u)*12);object-fit:contain}
+.lendertext{font-size:calc(var(--u)*1.1);line-height:1.35}
+.lendername{font-weight:800}
+.nmls{color:var(--sub)}
+
+/* Progress ticks: one per listing, current one filled. */
+.dots{
+  position:absolute;bottom:calc(var(--u)*1.2);right:calc(var(--u)*2.6);
+  display:flex;gap:calc(var(--u)*0.6);
+}
+.dot{
+  width:calc(var(--u)*0.7);height:calc(var(--u)*0.7);border-radius:50%;
+  background:var(--rule);
+}
+.dot.on{background:var(--accent)}
+
+/* Portrait screens: stack photo over detail instead of side by side. */
+@media (orientation:portrait){
+  :root{--u:1.7vw}
+  .slide{flex-direction:column}
+  .photo{flex:1.1}
+  .detail{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <header class="brand" id="brand"></header>
+  <main class="body" id="body"></main>
+  <footer id="ratebar"></footer>
+</div>
+
+<script>
+/* ============================================================
+   Board runtime.
+
+   Two independent clocks:
+     ROTATE  advances the visible listing
+     RELOAD  re-fetches the payload so listing and rate edits
+             reach the screen without anyone touching the panel
+
+   Failure posture: if a reload fails, KEEP RENDERING what we
+   already have. A screen that keeps showing last-known-good
+   listings beats a screen that goes blank because venue wifi
+   hiccuped. Only the rate strip is allowed to disappear, and
+   only because the server stopped sending it.
+   ============================================================ */
+
+var SLUG = (location.pathname.split('/').filter(Boolean).pop() || '').replace(/\.json$/, '');
+var DATA_URL = '/board/' + encodeURIComponent(SLUG) + '.json';
+
+var RELOAD_MS = 5 * 60 * 1000;   // pick up listing/rate edits
+var data = null;
+var idx = 0;
+var rotateTimer = null;
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function renderBrand(d){
+  var parts = [];
+  if (d.headshot_url) {
+    parts.push('<img class="headshot" src="' + esc(d.headshot_url) + '" alt="">');
+  }
+  parts.push(
+    '<div class="brandtext">' +
+      '<div class="agent">' + esc(d.display_name) + '</div>' +
+      (d.brokerage_name || d.tagline
+        ? '<div class="firm">' + esc(d.brokerage_name || d.tagline) + '</div>'
+        : '') +
+    '</div>'
+  );
+  if (d.logo_url) {
+    parts.push('<img class="brandlogo" src="' + esc(d.logo_url) + '" alt="">');
+  }
+  if (d.phone || d.email) {
+    parts.push(
+      '<div class="contact">' +
+        (d.phone ? esc(d.phone) : '') +
+        (d.phone && d.email ? '<br>' : '') +
+        (d.email ? esc(d.email) : '') +
+      '</div>'
+    );
+  }
+  document.getElementById('brand').innerHTML = parts.join('');
+}
+
+function renderSlides(d){
+  var body = document.getElementById('body');
+  var list = d.listings || [];
+
+  if (!list.length) {
+    body.innerHTML = '<div class="empty">Listings coming soon.</div>';
+    return;
+  }
+
+  var html = list.map(function(l, i){
+    var photo = l.photo_url
+      ? ' style="background-image:url(\'' + esc(l.photo_url).replace(/'/g, "%27") + '\')"'
+      : '';
+    var specs = (l.specs || []).map(function(s){
+      return '<span class="spec">' + esc(s) + '</span>';
+    }).join('');
+    return '' +
+      '<section class="slide' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' +
+        '<div class="photo"' + photo + '>' +
+          (l.flag ? '<div class="flag">' + esc(l.flag) + '</div>' : '') +
+        '</div>' +
+        '<div class="detail">' +
+          (l.price ? '<div class="price">' + esc(l.price) + '</div>' : '') +
+          '<div class="addr">' + esc(l.address) + '</div>' +
+          (l.city ? '<div class="city">' + esc(l.city) + '</div>' : '') +
+          (specs ? '<div class="specs">' + specs + '</div>' : '') +
+          (l.blurb ? '<div class="blurb">' + esc(l.blurb) + '</div>' : '') +
+        '</div>' +
+      '</section>';
+  }).join('');
+
+  // Dots only earn their space when there's more than one listing.
+  if (list.length > 1) {
+    html += '<div class="dots">' + list.map(function(_, i){
+      return '<div class="dot' + (i === 0 ? ' on' : '') + '"></div>';
+    }).join('') + '</div>';
+  }
+
+  body.innerHTML = html;
+}
+
+function renderRate(d){
+  var bar = document.getElementById('ratebar');
+  var r = d.rate;
+  var lender = d.lender;
+
+  // No rate and no lender means no strip at all — not an empty bar.
+  if (!r && !lender) { bar.className = ''; bar.innerHTML = ''; return; }
+
+  var parts = [];
+  if (r) {
+    parts.push(
+      '<div class="ratenum">' + esc(r.rate_label) + '</div>' +
+      '<div class="ratelabel">30-Year Fixed<br>Market Average</div>'
+    );
+  }
+  if (lender) {
+    parts.push(
+      '<div class="lender">' +
+        (lender.logo_url
+          ? '<img class="lenderlogo" src="' + esc(lender.logo_url) + '" alt="">'
+          : '') +
+        '<div class="lendertext">' +
+          '<div class="lendername">' + esc(lender.name) + '</div>' +
+          '<div class="nmls">NMLS #' + esc(lender.nmls_id) +
+            (lender.equal_housing ? ' &middot; Equal Housing Lender' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  if (r) {
+    // Provenance is what makes this information rather than a claim.
+    parts.push(
+      '<div class="ratesrc">' + esc(r.source_name) + '<br>Week of ' +
+      esc(r.week_label) + ' &middot; Not a quote or offer</div>'
+    );
+  }
+
+  bar.className = 'rate';
+  bar.innerHTML = parts.join('');
+}
+
+function show(i){
+  var slides = document.querySelectorAll('.slide');
+  var dots = document.querySelectorAll('.dot');
+  if (!slides.length) return;
+  idx = ((i % slides.length) + slides.length) % slides.length;
+  for (var s = 0; s < slides.length; s++) {
+    slides[s].classList.toggle('on', s === idx);
+  }
+  for (var t = 0; t < dots.length; t++) {
+    dots[t].classList.toggle('on', t === idx);
+  }
+}
+
+function startRotation(){
+  if (rotateTimer) clearInterval(rotateTimer);
+  var count = (data && data.listings) ? data.listings.length : 0;
+  if (count < 2) return;               // nothing to rotate through
+  var ms = Math.max(4, data.rotation_seconds || 12) * 1000;
+  rotateTimer = setInterval(function(){ show(idx + 1); }, ms);
+}
+
+function apply(d){
+  data = d;
+  document.body.setAttribute('data-theme', d.theme || 'navy');
+  document.title = (d.display_name || 'MCTV') + ' — Real Estate Board';
+  renderBrand(d);
+  renderSlides(d);
+  renderRate(d);
+  idx = 0;
+  startRotation();
+}
+
+function load(initial){
+  var xhr = new XMLHttpRequest();
+  // Cache-buster: venue networks and proxies love to serve a stale board.
+  xhr.open('GET', DATA_URL + '?t=' + Date.now(), true);
+  xhr.onload = function(){
+    if (xhr.status !== 200) { fail(initial, 'HTTP ' + xhr.status); return; }
+    var parsed;
+    try { parsed = JSON.parse(xhr.responseText); }
+    catch (e) { fail(initial, 'bad JSON'); return; }
+    apply(parsed);
+  };
+  xhr.onerror = function(){ fail(initial, 'network'); };
+  xhr.send();
+}
+
+function fail(initial, why){
+  // Only a cold start can leave the screen with nothing to say. Every
+  // later failure silently keeps the last good render on the panel.
+  if (initial && !data) {
+    document.getElementById('body').innerHTML =
+      '<div class="empty">Board unavailable (' + esc(why) + ')</div>';
+  }
+}
+
+load(true);
+setInterval(function(){ load(false); }, RELOAD_MS);
+
+// A digital sign runs for months. Reload the whole document daily so any
+// slow leak in this page gets swept up without someone driving to the venue.
+setTimeout(function(){ location.reload(); }, 24 * 60 * 60 * 1000);
+</script>
+</body>
+</html>

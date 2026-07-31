@@ -1,7 +1,7 @@
 # MCTV-Bot Render Blueprint
 # Docs: https://docs.render.com/blueprint-spec
 #
-# Deploys the Streamlit web app + 12 scheduled cron jobs.
+# Deploys the Streamlit web app + 13 scheduled cron jobs.
 # All services share the same Dockerfile and env var group.
 
 services:
@@ -173,6 +173,21 @@ services:
     dockerfilePath: ./Dockerfile
     schedule: "45 13 * * 1-5"
     dockerCommand: python scripts/stalled_deal_alerts.py
+    region: ohio
+    branch: main
+    envVarGroups:
+      - mctv-bot-env
+
+  # ── Cron: Mortgage Rate Fetch ─────────────────────────────────────────────
+  # 6:20 AM CT (Daily) = 12:20 UTC. Freddie Mac publishes PMMS on Thursdays;
+  # running daily means a missed Thursday self-heals instead of leaving the
+  # rate strip hidden on every board until the following week.
+  - type: cron
+    name: mctv-fetch-rates
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "20 12 * * *"
+    dockerCommand: python scripts/fetch_rates.py
     region: ohio
     branch: main
     envVarGroups:

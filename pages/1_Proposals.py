@@ -20,6 +20,7 @@ from services.docx_service import DocxService
 from models.proposal_data import (
     ProposalInput, HostInput, BundleInput, BundleBusiness,
     VenuePartnerInput, ExclusivityInput, RenewalInput,
+    RealEstateBoardInput,
 )
 from generators.elite_advertiser import EliteAdvertiserProposal
 from generators.host_media_kit import HostMediaKitProposal
@@ -27,6 +28,7 @@ from generators.multi_brand_bundle import MultiBrandBundleProposal
 from generators.venue_partner import VenuePartnerProposal
 from generators.category_exclusivity import CategoryExclusivityProposal
 from generators.renewal_upgrade import RenewalUpgradeProposal
+from generators.real_estate_board import RealEstateBoardProposal
 
 st.set_page_config(page_title="Proposal Generator - MCTV Bot", page_icon="\U0001F4DD", layout="wide")
 
@@ -240,6 +242,7 @@ proposal_type = st.selectbox(
         "Multi-Brand Bundle",
         "Venue Partner / Revenue Share",
         "Category Exclusivity",
+        "Real Estate Board",
         "Renewal / Upgrade",
         "Sponsorship Package",
     ],
@@ -962,6 +965,206 @@ elif proposal_type == "Category Exclusivity":
                 additional_notes=additional_notes,
             )
             _generate_proposal(CategoryExclusivityProposal, data,
+                               client_logo_path=logo_path,
+                               page2_photo_paths=pg2_paths,
+                               page4_photo_paths=pg4_paths,
+                               page4_captions=scraped_page4_captions,
+                               color_scheme=color_scheme)
+
+
+# ── REAL ESTATE BOARD FORM ───────────────────────────────────────────────────
+elif proposal_type == "Real Estate Board":
+    st.markdown("### Real Estate Feeds Board")
+    st.caption("Dynamic board: agent/brokerage branding + rotating listings + "
+               "a market mortgage-rate strip. Priced above a standard slot "
+               "because the content refreshes instead of going stale.")
+
+    reb_cfg = config.get("real_estate_board", {})
+    reb_tiers = reb_cfg.get("tiers", [])
+    if not reb_tiers:
+        st.error("No board tiers defined. Add them in config.json under "
+                 "`real_estate_board.tiers`.")
+        st.stop()
+
+    _MODES = {
+        "Agent — one agent buys their own board": "agent",
+        "Brokerage — firm-level buy, usually with exclusivity": "brokerage",
+        "Agent + Lender co-sponsor — split board, separate invoices": "cosponsor",
+        "Lender — lender-branded rate board": "lender",
+    }
+    mode_label = st.selectbox(
+        "Who is buying the board?", list(_MODES.keys()),
+        help="Co-sponsor and lender modes add a Co-Sponsorship & Disclosure "
+             "section to the proposal.",
+    )
+    board_mode = _MODES[mode_label]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        business_name = st.text_input(
+            "Agent / Business Name *",
+            placeholder="Jane Smith" if board_mode in ("agent", "cosponsor")
+            else "Cannon Cleary McGraw")
+        contact_name = st.text_input("Contact Name *")
+        contact_email = st.text_input("Contact Email")
+        brokerage_name = st.text_input(
+            "Brokerage Name",
+            help="Shown on the board alongside the agent. Leave blank to use "
+                 "the name above.")
+    with col2:
+        tier_idx = st.selectbox(
+            "Board Tier", range(len(reb_tiers)),
+            format_func=lambda i: (
+                f"{reb_tiers[i]['name']} — {reb_tiers[i]['screens']} screens, "
+                f"{reb_tiers[i]['listings']} listings, "
+                f"${reb_tiers[i]['monthly_rate']:,}/mo"),
+        )
+        city = st.selectbox("Primary City", market_names)
+        selected_markets = st.multiselect("Markets", market_names,
+                                          default=[market_names[0]])
+        listing_count = st.number_input(
+            "Listings in rotation", min_value=0, value=0, step=1,
+            help="0 = use the tier default.")
+
+    ecol1, ecol2, ecol3 = st.columns(3)
+    with ecol1:
+        include_exclusivity = st.checkbox(
+            "Include category exclusivity",
+            value=(board_mode == "brokerage"),
+            help=f"Adds the "
+                 f"{reb_cfg.get('exclusivity_premium_pct', 0)}% premium to the "
+                 f"tier rate and locks competitors out of these markets.")
+    with ecol2:
+        show_rate_strip = st.checkbox(
+            "Include mortgage rate strip", value=True,
+            help="Freddie Mac PMMS market average, sourced and dated on "
+                 "screen. Hides itself when the feed goes stale.")
+    with ecol3:
+        monthly_rate = st.number_input(
+            "Custom Monthly Rate ($)", min_value=0.0, value=0.0, step=50.0,
+            help="0 = use the tier rate (plus exclusivity premium if checked).")
+
+    exclusive_category = "Real Estate"
+    if include_exclusivity:
+        exclusive_category = st.text_input(
+            "Exclusive Category", value="Real Estate",
+            help="The category locked out for competitors.")
+
+    # ── Lender fields (co-sponsor and lender-branded modes) ──────────────
+    lender_name = lender_contact = lender_nmls_id = ""
+    lender_share_pct = 0.0
+    if board_mode in ("cosponsor", "lender"):
+        st.markdown("#### Lender")
+        lcol1, lcol2, lcol3 = st.columns(3)
+        with lcol1:
+            lender_name = st.text_input("Lender Name *",
+                                        placeholder="First Community Mortgage")
+        with lcol2:
+            lender_contact = st.text_input("Lender Contact")
+        with lcol3:
+            lender_nmls_id = st.text_input(
+                "NMLS ID",
+                help="Appears next to the lender's name on the board.")
+
+        if board_mode == "cosponsor":
+            default_share = float(reb_cfg.get("lender_cosponsor", {})
+                                  .get("default_lender_share_pct", 40))
+            lender_share_pct = st.slider(
+                "Lender's share of the board (%)", 0, 100, int(default_share),
+                help="Drives the split table in the proposal. Each party is "
+                     "invoiced separately for its own share.")
+
+            # Live split preview so the rep sees both invoices before sending.
+            _tier = reb_tiers[tier_idx]
+            _base = monthly_rate or float(_tier["monthly_rate"])
+            if include_exclusivity and not monthly_rate:
+                _base *= 1 + float(reb_cfg.get("exclusivity_premium_pct", 0)) / 100
+            _lender_amt = _base * lender_share_pct / 100
+            scol1, scol2, scol3 = st.columns(3)
+            scol1.metric("Board total", f"${_base:,.0f}/mo")
+            scol2.metric(f"{business_name or 'Agent'} invoice",
+                         f"${_base - _lender_amt:,.0f}/mo")
+            scol3.metric(f"{lender_name or 'Lender'} invoice",
+                         f"${_lender_amt:,.0f}/mo")
+
+            st.info(
+                "**This proposal documents the arrangement, it does not clear "
+                "it.** Agent/lender co-marketing falls under RESPA Section 8 — "
+                "each party must sign its own agreement, receive its own "
+                "invoice, and pay fair market value for its own share. The "
+                "generated proposal states that structure explicitly. Have "
+                "both parties run it past their own counsel or compliance "
+                "officer before signing."
+            )
+        else:
+            st.info(
+                "**Lender-branded board.** The rate strip stays attributed to "
+                "its published source and is never presented as this lender's "
+                "offer. Putting a specific rate, APR, term, or payment next to "
+                "lender branding triggers TILA / Regulation Z advertising "
+                "disclosures — if the lender wants their own rates on screen, "
+                "their compliance team supplies the disclosure language and we "
+                "build it into the template."
+            )
+
+    agent_count = 1
+    if board_mode == "brokerage":
+        agent_count = st.number_input("Agents featured", min_value=1, value=6,
+                                      step=1)
+
+    sales_rep = st.selectbox("Sales Rep", team_names)
+    additional_notes = st.text_area("Additional Notes", height=80)
+
+    # Same live conflict check the Category Exclusivity form runs.
+    if include_exclusivity and exclusive_category and selected_markets:
+        try:
+            from services.exclusivity_service import find_conflicts, format_conflict_message
+            conflicts = find_conflicts(exclusive_category, selected_markets)
+            if conflicts:
+                st.error(
+                    "**⚠️ Exclusivity Conflict Detected**\n\n"
+                    + format_conflict_message(conflicts)
+                )
+            else:
+                st.success(
+                    f"✅ No exclusivity conflicts for '{exclusive_category}' "
+                    f"in {', '.join(selected_markets)}."
+                )
+        except Exception as _e:
+            st.caption(f"Exclusivity check unavailable: {_e}")
+
+    if st.button("Generate Proposal", type="primary", width='stretch'):
+        _missing = not business_name or not contact_name
+        _missing_lender = board_mode in ("cosponsor", "lender") and not lender_name
+        if _missing or _missing_lender:
+            st.error("Please fill in all required fields.")
+        else:
+            logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
+            data = RealEstateBoardInput(
+                business_name=business_name,
+                contact_name=contact_name,
+                contact_email=contact_email,
+                board_mode=board_mode,
+                brokerage_name=brokerage_name,
+                city=city,
+                selected_markets=selected_markets,
+                board_tier=tier_idx,
+                monthly_rate=monthly_rate,
+                listing_count=int(listing_count),
+                agent_count=int(agent_count),
+                include_exclusivity=include_exclusivity,
+                exclusive_category=exclusive_category,
+                lender_name=lender_name,
+                lender_contact=lender_contact,
+                lender_nmls_id=lender_nmls_id,
+                lender_share_pct=float(lender_share_pct),
+                show_rate_strip=show_rate_strip,
+                sales_rep=sales_rep,
+                additional_notes=additional_notes,
+            )
+            _generate_proposal(RealEstateBoardProposal, data,
                                client_logo_path=logo_path,
                                page2_photo_paths=pg2_paths,
                                page4_photo_paths=pg4_paths,

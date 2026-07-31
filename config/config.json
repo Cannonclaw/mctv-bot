@@ -210,6 +210,94 @@
       "prepay_12mo_bonus": "Pay 12 months upfront, get the 13th & 14th months FREE"
     }
   },
+  "real_estate_board": {
+    "description": "A living board built for real estate: agent or brokerage branding, rotating listing photos, and a market mortgage-rate strip that refreshes on a schedule. Priced above standard slots because the content never goes stale and the category can be locked.",
+    "tiers": [
+      {
+        "name": "Agent Board",
+        "screens": 20,
+        "monthly_rate": 750,
+        "listings": 4,
+        "description": "One agent, one market. Headshot and brokerage logo on every play, four listings in rotation, rate strip on every frame."
+      },
+      {
+        "name": "Team Board",
+        "screens": 40,
+        "monthly_rate": 1200,
+        "listings": 8,
+        "description": "Small team or top producer across two markets. Eight listings in rotation and agent headshots that rotate with them."
+      },
+      {
+        "name": "Brokerage Board",
+        "screens": 75,
+        "monthly_rate": 2400,
+        "listings": 16,
+        "description": "Firm-level buy across the network. Brokerage brand on every play, sixteen listings in rotation, and the recruiting message that comes with being everywhere."
+      }
+    ],
+    "exclusivity_premium_pct": 40,
+    "listing_refresh": "Listings are updated through your MCTV portal. Post a new listing, mark one sold, swap a photo \u2014 the board picks up the change on its next refresh. No creative request, no re-design fee, no waiting on us.",
+    "rate_strip": {
+      "source_name": "Freddie Mac Primary Mortgage Market Survey (PMMS)",
+      "cadence": "Updated weekly",
+      "staleness_days": 10,
+      "attribution": "Source: Freddie Mac PMMS",
+      "note": "The rate strip shows the published national market average with its source and date on screen. It is market information, not a quote, not an offer, and not tied to any lender."
+    },
+    "board_features": [
+      [
+        "Your brand on every single play",
+        "Headshot and brokerage logo hold their position on every frame. Nobody has to wait for the right slide to find out whose board it is."
+      ],
+      [
+        "Listings that rotate, one at a time",
+        "One property per play with photo, price, and beds/baths. One listing read at a glance beats four listings nobody reads."
+      ],
+      [
+        "A rate strip people actually read",
+        "The current market mortgage average sits in a fixed corner strip on every frame, sourced and dated. It is the reason someone looks up in the first place."
+      ],
+      [
+        "Content that never goes stale",
+        "Sold listings come down. New ones go up. A board that is current every week is worth more than a board designed once and forgotten."
+      ],
+      [
+        "Built for the room it plays in",
+        "Legible from across a waiting room at a glance \u2014 not a flyer someone has to walk up to and squint at."
+      ]
+    ],
+    "staleness_promise": "If the rate feed goes stale, the strip hides itself rather than showing an old number. A board quoting last month's rate is worse than a board that never mentioned rates.",
+    "lender_cosponsor": {
+      "default_lender_share_pct": 40,
+      "intro": "A lender can co-sponsor the board and carry part of the cost. This is common, and it is also the part that has to be structured correctly from day one.",
+      "structure_points": [
+        [
+          "Two contracts, two invoices",
+          "The agent and the lender each sign their own agreement with MCTV and each receive their own invoice. MCTV never bills one party for the other's share."
+        ],
+        [
+          "Each party pays for what they get",
+          "The split follows the share of the board each party occupies \u2014 branding footprint and frame time \u2014 and each side's rate is stated on its own contract."
+        ],
+        [
+          "No referral consideration",
+          "Nothing in either agreement conditions payment on referrals, loan volume, closings, or business sent either direction. The parties are buying advertising space."
+        ],
+        [
+          "Either party can leave",
+          "If the lender exits, the agent's board keeps running at the agent's own rate. Neither side is locked to the other."
+        ]
+      ],
+      "review_note": "MCTV sells advertising space and is not giving legal or compliance advice. Because co-marketing between a real estate agent and a mortgage lender is regulated \u2014 RESPA Section 8 in particular \u2014 both parties should run this structure past their own counsel or compliance officer before signing.",
+      "lender_display_rules": [
+        "Lender name appears with its NMLS ID.",
+        "No specific rate, APR, term, or payment figure is displayed alongside the lender's branding.",
+        "The market rate strip stays attributed to its published source and is never presented as the lender's offer.",
+        "'Equal Housing Lender' and any state-required identifiers appear as the lender's compliance team specifies."
+      ],
+      "lender_display_note": "Advertising a specific rate or payment next to a lender's name pulls the board into TILA / Regulation Z advertising-disclosure territory. The default board keeps lender branding and rate information visually and legally separate for exactly that reason. If the lender wants their own rates on screen, their compliance team supplies the required disclosure language and we build it into the template."
+    }
+  },
   "venue_categories": [
     "Bar/Restaurant",
     "Medical & Dental",
