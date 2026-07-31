@@ -127,8 +127,17 @@ The only reason to watch the calendar is her bandwidth.
 ## 9. What to carry into the room
 
 - **The one-pager** (`build_onepager.py`) — one page, printed. Resist bringing the deck.
-- **A real mock, not a description.** A tornado warning and a "Boil Water Notice — Ward 3"
-  graphic composited onto an actual photo of one of our screens in a real Oxford venue.
-  Concrete beats abstract by a wide margin in fifteen minutes. *(Not yet built — this is the
-  highest-value remaining prep item.)*
+- **The sample City messages** (`build_psa_frames.py`) — four real frames at the network's
+  actual 1920×1080, printed as a second page. Concrete beats abstract by a wide margin in
+  fifteen minutes.
 - **The verified alert turnaround** from section 6.
+
+Lead the second page with the boil water frame, not the tornado. The tornado is the
+dramatic one, but the boil water notice is the one she has actually had to get out, more
+than once, and it is where she will feel the gap in her current channels. Let her get to
+the tornado frame herself.
+
+Say out loud that no MCTV logo appears on any of them. It is a thirty-second point that
+does a lot of work: it says the City's message is the City's message, that we know the
+difference between a public-service frame and an advertisement, and that we are not
+looking to get credit on screen. That is the whole partnership in one sentence.

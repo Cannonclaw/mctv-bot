@@ -13,6 +13,9 @@ messages.
 2. **`follow-up-email.md`** — ready-to-send email if the text goes quiet for ~3 days.
    Copy the body between the rules; the notes underneath are for the sender only.
 3. **`build_onepager.py`** — generates the printed leave-behind.
+4. **`build_psa_frames.py`** — generates the four sample City messages, plus a
+   second printed page showing them. `psa_render.py` holds the shared layout
+   primitives.
 
 ## Building the one-pager
 
@@ -47,8 +50,64 @@ python handoffs/city-of-oxford/build_onepager.py --alert-turnaround "within four
 Quote it conservatively. A city told "within the hour" that gets four hours during an
 actual weather event will not trust the channel again. See section 6 of the brief.
 
-## Still to build
+## The sample City messages
 
-A mock of a City message on a real screen — a tornado warning and a "Boil Water Notice —
-Ward 3" graphic composited onto a photo of one of our Oxford venues. Concrete beats
-abstract in a fifteen-minute meeting, and this is the highest-value remaining prep item.
+```
+python handoffs/city-of-oxford/build_psa_frames.py
+```
+
+Four 1920×1080 stills — a boil water notice, a tornado warning, a road closure, and an
+election reminder — at the network's real spot resolution. Writes to `output/city/psa/`:
+
+- `clean/` — for the printed handout
+- `labeled/` — same frames carrying a black **SAMPLE MOCKUP · NOT AN ACTIVE ALERT** bar.
+  Use these for anything that travels digitally. They look convincingly like real
+  municipal alerts, which is the point in the room and a liability outside it.
+- `contact-sheet.png` — all four in one image
+- `MCTV_Oxford_Sample_City_Messages.docx/.pdf` — the second printed page for the meeting
+
+**No MCTV logo appears on any frame, deliberately.** A sign operator's mark on an
+emergency frame turns a warning into an advertisement, and attribution belongs to the
+issuing authority. The MCTV framing lives on the printed page around them instead.
+
+The build enforces its own legibility rules and exits non-zero if a frame breaks one —
+headline cap height ≥12% of frame height, ≤5 words, ≤2 lines, headline contrast ≥7:1,
+single-line meta, nothing overrunning the footer. Current state: all four pass, headlines
+at 13.2–15% cap height, contrast 8.1:1 to 14.4:1.
+
+Design basis, if it's ever questioned: sized for a 43″ panel read at 25 feet by someone
+not trying to read it; ANSI Z535 severity logic and its text pairings (orange and yellow
+are black-text colors); a monotonic luminance ramp across the four tiers so severity
+survives colorblindness and a badly calibrated screen.
+
+### Still to verify
+
+Two of these are open because a verification pass was cut short partway through — do not
+treat the set as fully checked.
+
+| Item | State |
+| --- | --- |
+| `oxfordms.net` is the City's real domain | **UNVERIFIED.** It appears on two frames and needs a 30-second check before printing. Change it with `--city-domain`. |
+| Road closure and election frames | **UNREVIEWED.** The boil water and tornado frames were critiqued for legibility and municipal accuracy; these two were not. |
+| Alert turnaround on the one-pager | Still the placeholder. See above. |
+
+Two findings were acted on and are worth knowing about, because they are the kind of
+thing a mayor's staff catches:
+
+- **The boil water source line now reads "Oxford Utilities" alone.** It previously also
+  credited the state health department. In Mississippi those are two different notice
+  types: the utility issues a precautionary notice after a pressure loss or line break,
+  and MSDH issues one only after a failed lab sample. The frame depicts the first case,
+  so crediting both was a misattribution — and the Utilities director is the person in
+  the room most likely to spot it.
+- **The tornado affected-area line is bracketed** like the expiry, because NWS warnings
+  are polygon-based and routinely cover only part of a county. Hard-coding a county-wide
+  string would push "TAKE SHELTER NOW" to screens outside the polygon, which is the
+  over-warning failure an emergency manager will raise.
+
+One critique was deliberately **not** taken: a reviewer wanted the `[bracketed]`
+placeholders removed because they read as an unfilled template. They stay. On a mockup
+the brackets are the honest signal — they mark every field the City would fill and stop
+the frames from asserting specifics nobody has approved. Consistency is the answer to
+"looks broken": every genuinely variable field is bracketed, so the frames read as a
+template on purpose.
