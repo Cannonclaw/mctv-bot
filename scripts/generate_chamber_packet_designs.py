@@ -163,19 +163,20 @@ body { background: #DDDDDD; }
   margin: 0 auto;
 }
 .inner { position: absolute; left: 0.62in; right: 0.62in; top: 0.5in; }
-.masthead { display: flex; justify-content: space-between; align-items: baseline;
-  padding-bottom: 9pt; border-bottom: 1.6pt solid %(navy)s; }
+.masthead { display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 7pt; border-bottom: 1.6pt solid %(navy)s; }
 .masthead .brand { font-size: 10pt; font-weight: 700; letter-spacing: 0.22em;
   color: %(navy)s; }
 .masthead .brand .amp { color: %(gold)s; }
 .masthead .prog { font-size: 6.6pt; font-weight: 600; letter-spacing: 0.18em;
   color: %(muted)s; text-transform: uppercase; line-height: 1.35; text-align: right; }
 .masthead .mh-right { display: flex; align-items: center; gap: 9pt; }
-.masthead .mh-right .ch-logo { height: 0.42in; width: auto; display: block;
+/* 0.36in = 108px artwork at exactly 300ppi; raising this drops below press minimum */
+.masthead .mh-right .ch-logo { height: 0.36in; width: auto; display: block;
   max-width: 1.5in; object-fit: contain; }
 .masthead .mh-right .prog { padding-left: 9pt;
   border-left: 0.6pt solid %(hairline)s; }
-.kicker { margin-top: 22pt; font-size: 7.2pt; font-weight: 700;
+.kicker { margin-top: 11pt; font-size: 7.2pt; font-weight: 700;
   letter-spacing: 0.24em; color: %(gold_dk)s; text-transform: uppercase; }
 .headline { font-family: 'Playfair Display', serif; font-weight: 800;
   color: %(navy)s; margin-top: 7pt; }
