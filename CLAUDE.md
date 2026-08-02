@@ -42,6 +42,8 @@ pages/                          # 13 internal + 8 portal pages
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
+  26_Feeds.py                   # Event feeds — venue calendars pulled and
+                                #   rendered as loop slides
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -83,6 +85,8 @@ services/                       # Business logic and integrations
   screen_inventory_service.py   # Manual book of record: what creative plays where
                                 #   (loop_items + per-screen overrides), plus the two
                                 #   reconciliations (vs sweep, vs Encompass export)
+  event_feed_service.py         # Venue calendar → loop slides. Tribe REST / ICS /
+                                #   manual sources, discovery, slide + HTML render
   creatomate_service.py         # Creatomate video generation API
   supabase_client.py            # Supabase REST client (query, insert, update, delete)
   portal_service.py             # Portal business logic (clients, activity log)
@@ -208,6 +212,41 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
   passes them into every tab (`items=` / `overrides=` / `screens=` params) — same
   convention as the Pipeline page.
 
+### Event Feeds
+`pages/26_Feeds.py` + `services/event_feed_service.py`. A **feed** is a venue's
+public calendar, pulled on a schedule and rendered as loop slides for that
+venue's screens. It's a door-opener as much as a product: the venue gets an
+always-current event board they don't maintain, and the screens go in to carry
+it. Tabs: **Feeds** (health + add), **Source** (discover/test/import),
+**Slides** (preview + export), **Pitch** (venue brief).
+
+- **Three source types.** `tribe` (The Events Calendar REST API — the common
+  case for venue and tourism WordPress sites), `ics` (any iCalendar feed), and
+  `manual` (pasted `.ics`). `discover()` probes a bare site URL for the first
+  two and records every attempt with its outcome, so a failed probe still says
+  *why* — a WAF 403 and a plain 404 need different next moves. Manual is the
+  answer when a site blocks automated fetches; it's always available.
+- **Fetching is stdlib only** (`urllib`), same rule as `web_scraper`, with a
+  browser UA because venue marketing sites reject the default agent.
+- **`clean_events()`** filters to the window and the venue, dedupes (on source
+  `uid`, else title + start date), and sorts. Multi-day tournaments stay visible
+  until their last day is over. A blank venue is kept — single-venue feeds
+  often omit it — so `venue_filter` only bites on shared calendars.
+- **A failed refresh keeps the previous events.** A screen shows last week's
+  board rather than going blank because the venue's site had a bad morning.
+  `feed_health()` is what catches it: stale (>72h) is an error, because a feed
+  nobody noticed had stopped updating looks fine on the wall.
+- **`build_slides()`** is the render contract — `{headline, footer, index,
+  total, lines[]}`. `slides_to_html()` (branded 16:9 preview, self-contained)
+  and `slides_to_text()` (script for the design team) both consume it, and so
+  would a Creatomate render.
+- **Status `prospect`** means the feed previews and refreshes on demand but
+  `refresh_all()` skips it — a venue we haven't signed can't generate noise in
+  the health counts. First one is mTrade Park (`scripts/seed_mtrade_feed.py`,
+  brief in `docs/MTRADE_PARK_FEED_BRIEF.md`).
+- **Perf rule**: the page fetches `get_feeds()` once per rerun and passes the
+  list into every tab — same convention as Pipeline and Loop Inventory.
+
 ### Contract System
 5 contract types, each with dedicated clause sets:
 - **Advertiser** (8 clauses) — standard advertising partnership
@@ -284,6 +323,11 @@ applied by hand in the Supabase SQL editor):
   but not twice in one
 - `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
   (migration 024); cascades on item delete
+- `event_feeds` — one row per venue calendar we track: source config, slide
+  settings, and refresh health (migration 025). `slug` is unique
+- `feed_events` — normalized events pulled from a feed (migration 025). A
+  refresh is a full replace, not a merge, so a cancelled tournament can
+  disappear; cascades on feed delete
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 
