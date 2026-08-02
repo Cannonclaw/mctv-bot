@@ -332,6 +332,31 @@ _collateral_button(_o3, "objection-handling-cheatsheet.pdf",
                    "audience). For reps only — do NOT hand to clients. "
                    "2 pages.")
 
+# The per-market cross of the two sheets above: the same 10 plays, filtered to
+# one town, with the actual venue names and that mix's own 4-week price. This
+# is the one a rep opens sitting in the parking lot.
+st.caption(
+    "**Working one town?** These are the same 10 plays filtered to that "
+    "market — real venue names plus what that exact mix costs for 4 weeks, "
+    "volume discount already applied where the mix carries 10+ screens."
+)
+_p1, _p2, _p3 = st.columns(3)
+_collateral_button(_p1, "audience-plays-oxford.pdf",
+                   "\U0001F3AF Oxford plays — INTERNAL",
+                   "Oxford only: which rooms to pitch each advertiser type, "
+                   "named, with the 4-week price for the mix. 55 screens / "
+                   "44 venues. For reps only — 2 pages.")
+_collateral_button(_p2, "audience-plays-tupelo.pdf",
+                   "\U0001F3AF Tupelo plays — INTERNAL",
+                   "Tupelo only: which rooms to pitch each advertiser type, "
+                   "named, with the 4-week price for the mix. 33 screens / "
+                   "27 venues. For reps only — 2 pages.")
+_collateral_button(_p3, "audience-plays-starkville.pdf",
+                   "\U0001F3AF Starkville plays — INTERNAL",
+                   "Starkville only: which rooms to pitch each advertiser "
+                   "type, named, with the 4-week price for the mix. 35 "
+                   "screens / 29 venues. For reps only — 2 pages.")
+
 # The public tool is on locked Phase-1 pricing ($5 CPM / $175 venue cap); this
 # page follows `rate_model_params`, which only gains those knobs when the flip
 # in scripts/023 section 2 runs. Until then a rep reading rates off this page
