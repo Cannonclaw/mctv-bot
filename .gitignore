@@ -12,3 +12,5 @@ config/qb_tokens.json
 TRADE_SECRETS.md
 docs/NTV360_BUSINESS_CASE.md
 assets/samples/*.docx
+data/feeds/*
+!data/feeds/.gitkeep
