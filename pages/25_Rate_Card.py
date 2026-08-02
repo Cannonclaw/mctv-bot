@@ -326,8 +326,11 @@ _collateral_button(_o2, "audience-plays.pdf",
                    "2 pages.")
 _collateral_button(_o3, "objection-handling-cheatsheet.pdf",
                    "\U0001F6E1 Objection cheat sheet — INTERNAL",
-                   "10 objections with grounded rebuttals. For reps only — "
-                   "do NOT hand to clients.")
+                   "11 objections with grounded rebuttals — including the "
+                   "answer to \"I priced my own screens cheaper than your "
+                   "package\" (same screen count, about a third of the "
+                   "audience). For reps only — do NOT hand to clients. "
+                   "2 pages.")
 
 # The public tool is on locked Phase-1 pricing ($5 CPM / $175 venue cap); this
 # page follows `rate_model_params`, which only gains those knobs when the flip
