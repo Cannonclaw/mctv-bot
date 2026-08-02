@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — Saturdays Aren't Free (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        lockup,
+      } from "../lib/scene.js";
+      import { impact } from "../lib/fx.js";
+
+      /* SPOT 01 — "SATURDAYS AREN'T FREE"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The price spot. Runs the whole idea down to one number and holds on
+         it. Built for a muted screen across a dining room: four short lines,
+         nothing that needs to be read twice.
+
+         Punch-up: opener anchored lower-left (campaign layout 'open--left'),
+         $21 slams in from oversized with a red hit + bank snaps,
+         beat 4 lands on a red slab wipe in the lower third, and the world
+         runs hot — environment floor up, red ignition on the payoffs.
+
+           0.0 - 3.0   SATURDAYS AREN'T FREE.       <- lower-left
+           3.0 - 5.4   REBEL NATION PAYS FOR THEM.  <- same anchor
+           5.4 - 9.2   $21 A MONTH.                 <- the slam
+           9.2 - 11.9  THAT'S THE WHOLE ASK.        <- red slab, crowd roars
+          11.9 - 15.0  Lockup + CTA + MCTV endcard
+
+         PHOTO SLOTS (see README):
+           hero-wide   1920x1080 full bleed, behind beats 1-2
+           hero-lock   1920x620  behind the closing lockup            */
+
+      const CUTS = [3.0, { t: 5.4, color: "red", k: 1.4 }, 9.2, 11.9];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotWide = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+            opacity: "0",
+          });
+          slotWide.dataset.slot = "hero-wide";
+          bindPhoto(slotWide, window.PHOTOS?.["hero-wide"], "50% 38%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 7412, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ---------------------------------- beats 1 & 2 (lower-left) -- */
+          const opener = el("div", null, stage, {
+            position: "absolute",
+            left: "150px",
+            right: "150px",
+            bottom: "195px",
+            zIndex: "20",
+            textAlign: "left",
+          });
+          const beat1 = el("div", null, opener);
+          const l1 = el("div", "headline", beat1, {
+            fontSize: "175px",
+            color: "var(--white)",
+          });
+          const c1 = splitChars(l1, "SATURDAYS");
+          const l1b = el("div", "headline", beat1, {
+            fontSize: "175px",
+            color: "var(--red-hot)",
+            marginTop: "6px",
+          });
+          const c1b = splitChars(l1b, "AREN'T FREE.");
+
+          const beat2 = el("div", null, opener, { position: "absolute", inset: "auto 0 0 0" });
+          const l2 = el("div", "headline", beat2, {
+            fontSize: "150px",
+            color: "var(--white)",
+          });
+          l2.textContent = "REBEL NATION";
+          const l2b = el("div", "headline", beat2, {
+            fontSize: "150px",
+            color: "var(--powder)",
+            marginTop: "4px",
+          });
+          l2b.textContent = "PAYS FOR THEM.";
+
+          /* ------------------------- beat 3: the $21, off-axis, slammed -- */
+          const beat3 = el("div", null, stage, {
+            position: "absolute",
+            inset: "0",
+            zIndex: "22",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            paddingLeft: "160px",
+          });
+          const priceWrap = el("div", null, beat3, {
+            display: "flex",
+            alignItems: "flex-end",
+          });
+          const dollar = el("div", "headline", priceWrap, {
+            fontSize: "240px",
+            color: "var(--red-hot)",
+            marginBottom: "52px",
+            marginRight: "-4px",
+          });
+          dollar.textContent = "$";
+          const price = el("div", "headline", priceWrap, {
+            fontSize: "640px",
+            color: "var(--white)",
+            lineHeight: "0.8",
+            transformOrigin: "30% 80%",
+          });
+          price.textContent = "21";
+          /* "A MONTH" is the offer's other half — it rides a navy chip so
+             it survives the crowd instead of sinking into it. */
+          const sideCol = el("div", null, priceWrap, {
+            marginLeft: "44px",
+            marginBottom: "104px",
+            background: "rgba(5, 12, 29, 0.62)",
+            padding: "20px 28px 24px",
+          });
+          const priceSub = el("div", "sub", sideCol, {
+            fontSize: "64px",
+            fontWeight: "700",
+            color: "var(--white)",
+          });
+          priceSub.textContent = "A MONTH";
+          const priceRule = el("div", "rule", sideCol, {
+            width: "300px",
+            marginTop: "20px",
+            transformOrigin: "left center",
+          });
+
+          /* --------------------- beat 4: red slab, lower third, roaring -- */
+          const slab = el("div", null, stage, {
+            position: "absolute",
+            left: "-4%",
+            right: "-4%",
+            bottom: "150px",
+            height: "470px",
+            background: "var(--red)",
+            opacity: "0.94",
+            zIndex: "21",
+            transform: "skewY(-2.4deg) scaleX(0)",
+            transformOrigin: "left center",
+          });
+          const beat4 = el("div", null, stage, {
+            position: "absolute",
+            left: "0",
+            right: "0",
+            bottom: "215px",
+            zIndex: "22",
+            textAlign: "center",
+          });
+          const l4 = el("div", "headline", beat4, {
+            fontSize: "190px",
+            color: "var(--white)",
+          });
+          const c4 = splitChars(l4, "THAT'S THE");
+          const l4b = el("div", "headline", beat4, {
+            fontSize: "190px",
+            color: "var(--white)",
+          });
+          const c4b = splitChars(l4b, "WHOLE ASK.");
+
+          /* -------------------------------------------------- lockup --- */
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "230px",
+            height: "620px",
+            zIndex: "23",
+          });
+          slotLock.dataset.slot = "hero-lock";
+          bindPhoto(slotLock, window.PHOTOS?.["hero-lock"], "50% 40%");
+
+          const lock = lockup(stage, {
+            at: 11.9,
+            cta: "MEMBERSHIPS FROM $21 / MONTH",
+          });
+
+          const end = endcard(stage, { at: 12.3 });
+          const hit = impact(stage, stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* Environment floor raised: half the loop used to be dead navy.
+               Heat ignites the red rig on the money beat and the payoff. */
+            const power = clamp(0.3 + seg(t, 0.4, 2.2) * 0.25 + seg(t, 5.4, 7.4) * 0.45);
+            const heat = clamp(seg(t, 5.4, 6.5) * 0.45 + seg(t, 9.2, 10.2) * 0.55);
+            /* Bank snaps land WITH the $21, one at a time. */
+            const bp =
+              t >= 5.4 && t < 7.2
+                ? [
+                    seg(t, 5.4, 5.45),
+                    seg(t, 5.55, 5.6),
+                    seg(t, 5.7, 5.75),
+                    seg(t, 5.85, 5.9),
+                  ].map((p) => 0.35 + p * 0.65)
+                : null;
+            lights.seek(t, power, bp, heat);
+            air.seek(t, power);
+
+            /* Crowd flares on the price, then holds a real roar for the
+               payoff — and stays alive under the lockup. */
+            const flare = Math.max(0, 1 - Math.abs(t - 5.8) / 0.9);
+            const energy = clamp(
+              Math.max(0.3, flare * 0.9, lerp(0.3, 1, seg(t, 8.6, 10.0)) - seg(t, 12.6, 13.4) * 0.4)
+            );
+            const fill = clamp(0.22 + seg(t, 1.0, 3.0) * 0.18 + seg(t, 5.4, 9.6) * 0.6);
+            bowl.seek(t, fill, energy);
+            bowl.node.style.opacity = String(1 - seg(t, 12.6, 13.4) * 0.25);
+            /* The whole bowl physically lifts when the payoff line drops. */
+            bowl.node.style.transform = `translate3d(0, ${lerp(
+              14,
+              0,
+              ease.back(seg(t, 9.2, 9.7))
+            ) * (t >= 9.2 && t < 10.2 ? 1 : 0)}px, 0)`;
+
+            /* Backdrop photo only exists once real photography is bound —
+               the empty-state weave read as wallpaper behind the opener. */
+            if (slotWide.dataset.filled !== undefined) {
+              slotWide.style.opacity = String(
+                clamp(0.85 - seg(t, 11.9, 12.5) * 0.85)
+              );
+              slotWide.style.transform = `scale(${tw(t, 0, 15, 1.06, 1.16, ease.linear)})`;
+            }
+
+            /* ---- beat 1 (fast resolve — no broken words on screen) --- */
+            const b1 = band(t, 0.35, 3.0, 0.3);
+            beat1.style.opacity = String(b1);
+            c1.forEach((ch, i) => {
+              const p = seg(t, 0.35 + i * 0.018, 0.72 + i * 0.018);
+              ch.style.transform = `translate3d(0, ${lerp(120, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c1b.forEach((ch, i) => {
+              const p = seg(t, 0.9 + i * 0.016, 1.25 + i * 0.016);
+              ch.style.transform = `translate3d(0, ${lerp(120, 0, ease.back(p))}px, 0)`;
+              /* Red over navy must never sit half-transparent — snap it. */
+              ch.style.opacity = String(clamp(p * 4));
+            });
+
+            /* ---- beat 2 --------------------------------------------- */
+            const b2 = band(t, 3.0, 5.4, 0.22);
+            beat2.style.opacity = String(b2);
+            l2.style.transform = `translate3d(${tw(t, 3.0, 3.6, -90, 0, ease.out)}px, 0, 0)`;
+            l2b.style.transform = `translate3d(${tw(t, 3.12, 3.72, -90, 0, ease.out)}px, 0, 0)`;
+
+            /* ---- beat 3: the slam ----------------------------------- */
+            const b3 = band(t, 5.4, 9.2, 0.24);
+            beat3.style.opacity = String(b3);
+            /* Arrive FROM oversized — impact, not inflation. */
+            price.style.transform = `scale(${tw(t, 5.4, 5.75, 1.55, 1, ease.outQuint)})`;
+            dollar.style.transform = `scale(${tw(t, 5.45, 5.8, 1.55, 1, ease.outQuint)})`;
+            priceSub.style.opacity = String(seg(t, 5.9, 6.3));
+            priceRule.style.transform = `scaleX(${ease.out(seg(t, 6.05, 6.6))})`;
+            /* A slow breathe keeps the hold alive for three full seconds. */
+            beat3.style.transform = `scale(${1 + Math.sin(t * 1.6) * 0.006})`;
+
+            /* ---- beat 4: red slab ----------------------------------- */
+            const b4 = band(t, 9.2, 11.9, 0.2);
+            beat4.style.opacity = String(b4);
+            slab.style.opacity = String(0.94 * b4);
+            slab.style.transform = `skewY(-2.4deg) scaleX(${ease.outQuint(seg(t, 9.2, 9.55))})`;
+            c4.forEach((ch, i) => {
+              const p = seg(t, 9.3 + i * 0.02, 9.62 + i * 0.02);
+              ch.style.transform = `translate3d(0, ${lerp(60, 0, ease.out(p))}px, 0)`;
+              ch.style.opacity = String(clamp(p * 2.5));
+            });
+            c4b.forEach((ch, i) => {
+              const p = seg(t, 9.5 + i * 0.02, 9.82 + i * 0.02);
+              ch.style.transform = `translate3d(0, ${lerp(60, 0, ease.out(p))}px, 0)`;
+              /* White on the red slab pinks out below full alpha — snap it. */
+              ch.style.opacity = String(clamp(p * 2.5));
+            });
+
+            /* ---- lockup --------------------------------------------- */
+            const bl = seg(t, 11.9, 12.4);
+            slotLock.style.opacity = String(bl * 0.8);
+            slotLock.style.transform = `scale(${tw(t, 11.9, 15, 1.04, 1.1, ease.linear)})`;
+            lock.seek(t);
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>

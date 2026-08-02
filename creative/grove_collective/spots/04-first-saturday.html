@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — First Saturday (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        lockup,
+      } from "../lib/scene.js";
+      import { impact, confetti, shockwave, pennants } from "../lib/fx.js";
+
+      /* SPOT 04 — "FIRST SATURDAY"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The hype spot. No price, no tiers, no ask — just the town, the
+         lights and the date. This is the one that runs early and often to
+         warm the market up; 01-03 do the converting once it has.
+
+         Punch-up: the open is now an actual whisper (small tracked line over
+         dark empty seats) so the wake-up detonates against it — banks POP on
+         one at a time with overshoot, the bowl floods, and SEPT 12 slams in
+         as ONE UNIT (the per-character reveal briefly showed "SEPT 1", a
+         wrong date on screen — killed). Confetti + red ignition on the slam,
+         and the whole hold keeps pushing in. Sign-off is in their actual
+         voice: Hotty Toddy.
+
+           0.0 - 3.4   it's been quiet in oxford.   <- whisper, empty seats
+           3.4 - 6.4   NOT FOR MUCH LONGER.         <- the bowl floods
+           6.4 - 10.6  SEPT 12 / FIRST SATURDAY IN THE GROVE
+          10.6 - 15.0  Lockup + pennants + MCTV endcard
+
+         THE DATE: Sept 12 vs Charlotte is Ole Miss's first home game of 2026
+         and the first Saturday the Grove is open. The season opener (Sept 5
+         or 6 vs Louisville) is deliberately not used — it is a neutral-site
+         game in Nashville and the exact day was still unconfirmed. Change
+         GAME_DATE below and re-render if the client wants a different date.
+
+         PHOTO SLOTS (see README):
+           grove-wide  1920x1080 full bleed — the Grove itself, tents up
+           lock-band   1920x520  behind the closing lockup                */
+
+      const GAME_DATE = { short: "SEPT 12", line: "FIRST SATURDAY IN THE GROVE" };
+      const CUTS = [3.4, { t: 6.7, color: "red", k: 1.5 }, 10.6];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotWide = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+            opacity: "0",
+          });
+          slotWide.dataset.slot = "grove-wide";
+          bindPhoto(slotWide, window.PHOTOS?.["grove-wide"], "50% 42%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 91226, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ---------------------------------- beat 1: an actual whisper -- */
+          /* The copy says quiet, so the type finally does too: one small
+             tracked line low in the frame, over a bowl of dark empty seats.
+             Beat 2's 190px slam then detonates against it. */
+          const beat1 = el("div", null, stage, {
+            position: "absolute",
+            left: "0",
+            right: "0",
+            top: "71%",
+            zIndex: "20",
+            textAlign: "center",
+          });
+          const l1 = el("div", "sub", beat1, {
+            fontSize: "74px",
+            fontWeight: "700",
+            letterSpacing: "0.42em",
+            color: "#d8e8f6",
+          });
+          l1.textContent = "IT'S BEEN QUIET IN OXFORD.";
+
+          /* ------------------------------------------------- beat 2 ---- */
+          const beat2 = el("div", "center", stage, { zIndex: 20 });
+          const l2 = el("div", "headline", beat2, {
+            fontSize: "190px",
+            color: "var(--white)",
+          });
+          const c2 = splitChars(l2, "NOT FOR");
+          const l2b = el("div", "headline", beat2, {
+            fontSize: "190px",
+            color: "var(--red-hot)",
+            marginTop: "2px",
+          });
+          const c2b = splitChars(l2b, "MUCH LONGER.");
+
+          /* --------------------------------------- beat 3: the date ---- */
+          const dateCard = el("div", "center", stage, { zIndex: 24 });
+          const scrim3 = el("div", null, dateCard, {
+            position: "absolute",
+            inset: "-10%",
+            zIndex: "-1",
+            background:
+              "radial-gradient(ellipse 55% 60% at 50% 52%, rgba(5,12,29,0.62), transparent 75%)",
+          });
+          const dateRule = el("div", "rule", dateCard, {
+            width: "300px",
+            marginBottom: "40px",
+            background: "var(--powder)",
+          });
+          /* ONE block — never partially legible, never "SEPT 1". */
+          const dateBig = el("div", "headline", dateCard, {
+            fontSize: "310px",
+            color: "var(--white)",
+            lineHeight: "0.86",
+          });
+          dateBig.textContent = GAME_DATE.short;
+          const dateLine = el("div", "sub", dateCard, {
+            fontSize: "64px",
+            fontWeight: "700",
+            marginTop: "34px",
+            color: "var(--white)",
+            textShadow: "0 6px 40px rgba(5,12,29,0.85)",
+          });
+          dateLine.textContent = GAME_DATE.line;
+
+          const wave = shockwave(stage, { at: 6.65, x: 960, y: 500, zIndex: 23 });
+          const party = confetti(stage, { at: 6.75, seed: 912, count: 130, zIndex: 30 });
+
+          /* -------------------------------------------------- lockup --- */
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "270px",
+            height: "540px",
+            zIndex: "25",
+          });
+          slotLock.dataset.slot = "lock-band";
+          bindPhoto(slotLock, window.PHOTOS?.["lock-band"], "50% 42%");
+
+          const bunting = pennants(stage, { y: 42, seed: 7, zIndex: 28 });
+          const lock = lockup(stage, {
+            at: 10.9,
+            cta: "HOTTY TODDY, REBEL NATION.",
+          });
+
+          const end = endcard(stage, { at: 11.4 });
+          const hit = impact(stage, stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* The wake-up: each bank POPS past full and decays to idle —
+               four escalating light clangs over the whisper. */
+            const snap = (s) =>
+              seg(t, s, s + 0.08) *
+              (1 + Math.pow(1 - seg(t, s + 0.08, s + 0.7), 2) * 1.6);
+            const power = clamp(0.22 + seg(t, 3.4, 6.4) * 0.78);
+            const bp =
+              t < 6.4
+                ? [0.5, 1.25, 2.0, 2.7].map((s) => Math.max(snap(s), power))
+                : null;
+            const heat = clamp(seg(t, 6.6, 7.4)) * (1 - seg(t, 12.0, 13.2) * 0.5);
+            lights.seek(t, power, bp, heat);
+            air.seek(t, power);
+
+            /* Empty seats through the whisper, then the bowl floods and the
+               roar peaks exactly ON the slam. */
+            const dormant = 1 - seg(t, 3.4, 4.6);
+            const fill = seg(t, 3.5, 6.6);
+            const energy = clamp(
+              Math.max(0.3, lerp(0.3, 1, seg(t, 6.4, 7.0)) - seg(t, 12.0, 13.2) * 0.4)
+            );
+            bowl.seek(t, fill, energy, { dormant });
+            bowl.node.style.opacity = String(1 - seg(t, 12.0, 13.0) * 0.25);
+
+            if (slotWide.dataset.filled !== undefined) {
+              slotWide.style.opacity = String(clamp(0.8 - seg(t, 10.6, 11.2) * 0.8));
+              slotWide.style.transform = `scale(${tw(t, 0, 15, 1.06, 1.16, ease.linear)})`;
+            }
+
+            /* ---- beat 1: whisper ------------------------------------ */
+            const b1 = band(t, 0.6, 3.4, 0.35);
+            beat1.style.opacity = String(b1);
+            l1.style.letterSpacing = `${lerp(0.38, 0.5, seg(t, 0.6, 3.4))}em`;
+
+            /* ---- beat 2 --------------------------------------------- */
+            const b2 = band(t, 3.4, 6.4, 0.22);
+            beat2.style.opacity = String(b2);
+            c2.forEach((ch, i) => {
+              const p = seg(t, 3.4 + i * 0.03, 3.85 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            c2b.forEach((ch, i) => {
+              const p = seg(t, 3.85 + i * 0.026, 4.3 + i * 0.026);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              /* Red over navy must never sit half-transparent — snap it. */
+              ch.style.opacity = String(clamp(p * 4));
+            });
+
+            /* ---- beat 3: the date, slammed as one unit -------------- */
+            const b3 = band(t, 6.4, 10.6, 0.24);
+            dateCard.style.opacity = String(b3);
+            dateRule.style.transform = `scaleX(${ease.out(seg(t, 6.45, 6.9))})`;
+            /* Slam from oversized, then keep pushing in for the whole hold
+               so the frame never freezes. */
+            const slam = tw(t, 6.6, 6.95, 1.35, 1, ease.back);
+            const push = tw(t, 6.95, 10.6, 1.0, 1.07, ease.linear);
+            dateBig.style.transform = `scale(${slam * push})`;
+            dateBig.style.opacity = String(seg(t, 6.55, 6.65));
+            dateLine.style.opacity = String(seg(t, 7.3, 7.8));
+            wave.seek(t);
+            party.seek(t);
+
+            /* ---- lockup + bunting ----------------------------------- */
+            const bl = seg(t, 10.6, 11.1);
+            slotLock.style.opacity = String(bl * 0.75);
+            slotLock.style.transform = `scale(${tw(t, 10.6, 15, 1.04, 1.1, ease.linear)})`;
+            bunting.seek(t, seg(t, 10.6, 11.3));
+            lock.seek(t);
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>

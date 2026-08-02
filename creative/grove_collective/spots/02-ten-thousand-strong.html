@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — Ten Thousand Strong (:15)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+        bindPhoto,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        lockup,
+      } from "../lib/scene.js";
+      import { impact, confetti } from "../lib/fx.js";
+
+      /* SPOT 02 — "TEN THOUSAND STRONG"  :15 / 1920x1080 / silent
+         ------------------------------------------------------------------
+         The membership-drive spot. One number counts up while the bowl fills
+         underneath it, so the goal is felt rather than read.
+
+         Punch-up: the bowl now fills FROM the counter value (they were
+         telling different stories), the count surges into 10,000 with a red
+         hit + confetti + digit flash, the opening is a dark stadium of empty
+         seats with one lit fan, and the banks slam on one at a time at the
+         turn.
+
+           0.0 - 2.9   ONE FAN CAN'T BUILD A ROSTER.   <- empty seats, one light
+           2.9 - 9.4   counter surges 0 -> 10,000, crowd IS the number
+           9.4 - 12.0  TEN THOUSAND CAN.
+          12.0 - 15.0  Lockup + CTA + MCTV endcard
+
+         PHOTO SLOTS (see README):
+           crowd-wide  1920x1080 full bleed, behind the count
+           lock-band   1920x520  behind the closing lockup            */
+
+      const GOAL = 10000;
+      const CUTS = [2.9, { t: 8.4, color: "red", k: 1.4 }, 9.4, 12.0];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        build(stage) {
+          /* -------------------------------------------------- backdrop -- */
+          const slotCrowd = el("div", "photo-slot", stage, {
+            inset: "0",
+            zIndex: "1",
+            opacity: "0",
+          });
+          slotCrowd.dataset.slot = "crowd-wide";
+          bindPhoto(slotCrowd, window.PHOTOS?.["crowd-wide"], "50% 40%");
+
+          const lights = stadiumLights(stage);
+          const bowl = crowd(stage, { seed: 30514, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ------------------------------------------ beat 1: the one --- */
+          /* A single lit figure, alone in a bowl of dark empty seats. Big
+             enough to survive a glance from across a dining room. */
+          const solo = el("div", null, stage, {
+            position: "absolute",
+            left: "928px",
+            top: "640px",
+            width: "56px",
+            height: "84px",
+            borderRadius: "28px 28px 10px 10px",
+            background: "rgba(255,248,226,0.95)",
+            boxShadow: "0 0 120px 30px rgba(255,240,200,0.55)",
+            zIndex: "6",
+          });
+
+          const beat1 = el("div", "center", stage, {
+            zIndex: 20,
+            justifyContent: "flex-start",
+            paddingTop: "280px",
+          });
+          const l1 = el("div", "headline", beat1, {
+            fontSize: "132px",
+            color: "var(--white)",
+          });
+          const c1 = splitChars(l1, "ONE FAN CAN'T");
+          const l1b = el("div", "headline", beat1, {
+            fontSize: "132px",
+            color: "var(--powder)",
+          });
+          const c1b = splitChars(l1b, "BUILD A ROSTER.");
+
+          /* --------------------------------------- beat 2: the counter -- */
+          const counterWrap = el("div", "center", stage, {
+            zIndex: 22,
+            justifyContent: "flex-start",
+            paddingTop: "225px",
+          });
+          const countKicker = el("div", "kicker", counterWrap);
+          countKicker.textContent = "REBEL NATION, SIGNING UP";
+          const countRow = el("div", null, counterWrap, {
+            display: "flex",
+            marginTop: "18px",
+          });
+          /* Six fixed-width cells so the digits never reflow while racing.
+             Cell width is set per frame from the character it holds, because
+             the comma moves left as the number grows. */
+          const digits = [];
+          for (let i = 0; i < 6; i++) {
+            const cell = el("div", "headline", countRow, {
+              fontSize: "320px",
+              color: "var(--white)",
+              width: "192px",
+              textAlign: "center",
+              lineHeight: "0.92",
+            });
+            digits.push(cell);
+          }
+          const countRule = el("div", "rule", counterWrap, {
+            width: "780px",
+            marginTop: "20px",
+          });
+
+          /* ------------------------------------------------- beat 3 ---- */
+          const scrim3 = el("div", null, stage, {
+            position: "absolute",
+            inset: "0",
+            zIndex: "23",
+            background:
+              "radial-gradient(ellipse 66% 52% at 50% 50%, rgba(5,12,29,0.68), transparent 72%)",
+            opacity: "0",
+            pointerEvents: "none",
+          });
+          const beat3 = el("div", "center", stage, { zIndex: 24 });
+          const l3 = el("div", "headline", beat3, {
+            fontSize: "268px",
+            color: "var(--white)",
+          });
+          const c3 = splitChars(l3, "TEN THOUSAND");
+          const l3b = el("div", "headline", beat3, {
+            fontSize: "252px",
+            color: "var(--red-hot)",
+            marginTop: "8px",
+          });
+          const c3b = splitChars(l3b, "CAN.");
+
+          const party = confetti(stage, { at: 8.42, seed: 20260912, count: 100, zIndex: 30 });
+
+          /* -------------------------------------------------- lockup --- */
+          const slotLock = el("div", "photo-slot photo-slot--band", stage, {
+            left: "0",
+            right: "0",
+            top: "280px",
+            height: "520px",
+            zIndex: "25",
+          });
+          slotLock.dataset.slot = "lock-band";
+          bindPhoto(slotLock, window.PHOTOS?.["lock-band"], "50% 42%");
+
+          const lock = lockup(stage, {
+            at: 12.0,
+            cta: "BE ONE OF THE TEN THOUSAND",
+          });
+
+          const end = endcard(stage, { at: 12.4 });
+          const hit = impact(stage, stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            /* Two-phase count: steady build to ~9,300, then a surge that
+               slams into 10,000 exactly at 8.4 — the last second is the
+               fastest digits in the spot, not the slowest. */
+            const cp = seg(t, 2.9, 8.4);
+            const p =
+              cp < 0.8
+                ? ease.inOut(cp / 0.8) * 0.93
+                : 0.93 + ease.in((cp - 0.8) / 0.2) * 0.07;
+            const value = Math.round(GOAL * p);
+            const str = value.toLocaleString("en-US").padStart(6, " ");
+            const landed = t >= 8.4;
+            for (let i = 0; i < 6; i++) {
+              const ch = str[i] ?? "";
+              if (digits[i].textContent !== ch) {
+                digits[i].textContent = ch;
+                digits[i].style.width =
+                  ch === "," ? "84px" : ch === " " ? "0px" : "192px";
+              }
+              /* The digits flash red for half a second on the land. */
+              digits[i].style.color =
+                landed && t < 8.9 ? "var(--red-hot)" : "var(--white)";
+            }
+
+            const power = clamp(0.18 + seg(t, 2.9, 7.0) * 0.82);
+            const heat = clamp(seg(t, 8.4, 9.2)) * (1 - seg(t, 12.6, 13.6) * 0.5);
+            /* Banks slam on one at a time at the turn — the wake-up. */
+            const bp =
+              t < 4.6
+                ? [
+                    ease.back(seg(t, 2.9, 3.0)),
+                    ease.back(seg(t, 3.05, 3.15)),
+                    ease.back(seg(t, 3.2, 3.3)),
+                    ease.back(seg(t, 3.35, 3.45)),
+                  ]
+                : null;
+            lights.seek(t, power, bp, heat);
+            air.seek(t, power);
+
+            /* The bowl IS the number: fill driven by the counter value, and
+               a discrete energy spike when 10,000 lands. */
+            const fill = value / GOAL;
+            const energy = landed
+              ? 1 - seg(t, 12.6, 13.6) * 0.4
+              : lerp(0.3, 0.7, seg(t, 5.0, 8.4));
+            const dormant = 1 - seg(t, 2.9, 4.2);
+            bowl.seek(t, fill, energy, { dormant });
+            bowl.node.style.opacity = String(1 - seg(t, 12.6, 13.4) * 0.25);
+
+            if (slotCrowd.dataset.filled !== undefined) {
+              slotCrowd.style.opacity = String(
+                clamp(seg(t, 2.9, 4.2) * 0.8 - seg(t, 12.0, 12.6) * 0.8)
+              );
+              slotCrowd.style.transform = `scale(${tw(t, 0, 15, 1.05, 1.15, ease.linear)})`;
+            }
+
+            /* ---- beat 1 --------------------------------------------- */
+            const b1 = band(t, 0.3, 2.9, 0.3);
+            beat1.style.opacity = String(b1);
+            c1.forEach((ch, i) => {
+              const px = seg(t, 0.3 + i * 0.02, 0.68 + i * 0.02);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.out(px))}px, 0)`;
+              ch.style.opacity = String(px);
+            });
+            c1b.forEach((ch, i) => {
+              const px = seg(t, 0.72 + i * 0.018, 1.1 + i * 0.018);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.out(px))}px, 0)`;
+              ch.style.opacity = String(px);
+            });
+            /* The lone figure pulses, then is swallowed by the crowd. */
+            solo.style.opacity = String(clamp(seg(t, 0.5, 1.1) - seg(t, 2.9, 3.6)));
+            solo.style.transform = `scale(${1 + Math.sin(t * 3.4) * 0.07})`;
+
+            /* ---- beat 2: counter ------------------------------------ */
+            const b2 = band(t, 2.9, 9.4, 0.22);
+            counterWrap.style.opacity = String(b2);
+            /* The number physically swells as the crowd builds, then takes
+               a real punch on the land. */
+            const grow = lerp(0.78, 1.06, p);
+            const punch = landed ? lerp(1.16, 1.0, ease.back(seg(t, 8.4, 9.0))) : 1;
+            countRow.style.transform = `scale(${grow * punch})`;
+            countRule.style.transform = `scaleX(${ease.out(seg(t, 8.4, 9.0))})`;
+            party.seek(t);
+
+            /* ---- beat 3 --------------------------------------------- */
+            const b3 = band(t, 9.4, 12.0, 0.2);
+            beat3.style.opacity = String(b3);
+            scrim3.style.opacity = String(b3);
+            c3.forEach((ch, i) => {
+              const px = seg(t, 9.4 + i * 0.022, 9.82 + i * 0.022);
+              ch.style.transform = `translate3d(0, ${lerp(80, 0, ease.back(px))}px, 0)`;
+              ch.style.opacity = String(clamp(px * 2.5));
+            });
+            c3b.forEach((ch, i) => {
+              const px = seg(t, 9.95 + i * 0.04, 10.4 + i * 0.04);
+              ch.style.transform = `scale(${lerp(1.6, 1, ease.back(px))})`;
+              /* Red over the crowd must never sit half-transparent. */
+              ch.style.opacity = String(clamp(px * 2.5));
+            });
+
+            /* ---- lockup --------------------------------------------- */
+            const bl = seg(t, 12.0, 12.5);
+            slotLock.style.opacity = String(bl * 0.75);
+            slotLock.style.transform = `scale(${tw(t, 12.0, 15, 1.04, 1.1, ease.linear)})`;
+            lock.seek(t);
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>
