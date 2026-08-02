@@ -181,19 +181,9 @@ if link_mode == "Network Package":
     parts.append(f"pkg={pkg}")
     if terr:
         parts.append("terr=" + ",".join(terr))
-    # The 75 and 125+ tiers exist in the local calculator source but are not on the
-    # live page until Creed re-uploads index.html to SiteGround. applyParams() ignores
-    # an unknown pkg key, so such a link would open an EMPTY builder rather than the
-    # client's quote. Warn before the rep sends it; delete this block after the upload.
-    if pkg in ("p75", "p125"):
-        st.warning(
-            f"**{PKG_LABELS[pkg]} is not on the live page yet.** The public tool at "
-            "mctvofms.com/rate-quote still tops out at 40 screens until the pending "
-            "`index.html` re-upload, and a link with an unknown package silently opens "
-            "an empty builder. Send a 10 / 20 / 40 link, or quote this tier from the "
-            "one-pager and write the agreement manually, until the upload lands.",
-            icon="⚠️",
-        )
+    # (All five tiers went live on mctvofms.com/rate-quote 2026-08-02, verified
+    # byte-identical to the source, so the temporary "not on the live page yet"
+    # guard that sat here is gone.)
 else:
     chosen = st.multiselect("Venues", [r["venue_name"] for r in rows],
                             key="ql_venues")
