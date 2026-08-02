@@ -59,12 +59,17 @@ python handoffs/city-of-oxford/build_psa_frames.py
 Four 1920×1080 stills — a boil water notice, a tornado warning, a road closure, and an
 election reminder — at the network's real spot resolution. Writes to `output/city/psa/`:
 
-- `clean/` — for the printed handout
+- `clean/` — for on-screen demo in the room only; never printed
 - `labeled/` — same frames carrying a black **SAMPLE MOCKUP · NOT AN ACTIVE ALERT** bar.
-  Use these for anything that travels digitally. They look convincingly like real
-  municipal alerts, which is the point in the room and a liability outside it.
+  **Print and circulate only this set.** A risk review concluded the clean frames are
+  accurate enough that a photographed clean frame is functionally a counterfeit official
+  alert — real issuing offices, real domains, correct safety wording, and the bracketed
+  placeholders are the only tell, invisible at phone-photo scale. If the clean look must
+  be shown, show it on a screen and collect nothing printed. The tornado frame carries
+  the bar even in `clean/`, unconditionally — it names a real federal warning authority
+  and is the one frame where brackets alone are an inadequate tell.
 - `contact-sheet.png` — all four in one image
-- `MCTV_Oxford_Sample_City_Messages.docx/.pdf` — the second printed page for the meeting
+- `MCTV_Oxford_Sample_City_Messages.docx/.pdf` — the second printed page for the meeting; embeds the labeled set
 
 **No MCTV logo appears on any frame, deliberately.** A sign operator's mark on an
 emergency frame turns a warning into an advertisement, and attribution belongs to the
@@ -80,15 +85,15 @@ not trying to read it; ANSI Z535 severity logic and its text pairings (orange an
 are black-text colors); a monotonic luminance ramp across the four tiers so severity
 survives colorblindness and a badly calibrated screen.
 
-### Still to verify
+### Verification state
 
-Two of these are open because a verification pass was cut short partway through — do not
-treat the set as fully checked.
+The full review pass has now run — all four frames critiqued for legibility and
+municipal accuracy, plus a cross-set risk review.
 
 | Item | State |
 | --- | --- |
-| `oxfordms.net` is the City's real domain | **UNVERIFIED.** It appears on two frames and needs a 30-second check before printing. Change it with `--city-domain`. |
-| Road closure and election frames | **UNREVIEWED.** The boil water and tornado frames were critiqued for legibility and municipal accuracy; these two were not. |
+| `oxfordms.net` | **CONFIRMED** as the City of Oxford's official site (the city publishes its real boil-water notices there). `weather.gov` and NWS Memphis as the issuing office for Lafayette County also verified. |
+| Road closure and election frames | **Reviewed; fixes applied** (below). |
 | Alert turnaround on the one-pager | Still the placeholder. See above. |
 
 Two findings were acted on and are worth knowing about, because they are the kind of
@@ -104,6 +109,19 @@ thing a mayor's staff catches:
   are polygon-based and routinely cover only part of a county. Hard-coding a county-wide
   string would push "TAKE SHELTER NOW" to screens outside the polygon, which is the
   over-warning failure an emergency manager will raise.
+- **The election frame is the municipal version.** It originally paired "City of Oxford"
+  with the Secretary of State's precinct locator — a jurisdiction mismatch, since the SoS
+  tool covers county-run elections only and Oxford municipal elections are run by the
+  Municipal Election Commission, organized by ward. It now reads "[All wards]" and points
+  polling-place lookups at the City's own site. A county/state election day version would
+  instead credit the Lafayette County Election Commission and point at sos.ms.gov.
+- **The road closure frame leads with the location.** The headline was the generic
+  instruction ("Use posted detour") while which road was closed sat in the smallest text.
+  For a seated viewer the location is the load-bearing fact, so it now takes the
+  headline, with the instruction demoted — and bracketed, since short event closures
+  have no posted detour. Bonus from review: North Lamar at Molly Barr matches a real
+  City of Oxford closure (the roundabout project), so the example reads as researched
+  rather than invented.
 
 One critique was deliberately **not** taken: a reviewer wanted the `[bracketed]`
 placeholders removed because they read as an unfilled template. They stay. On a mockup

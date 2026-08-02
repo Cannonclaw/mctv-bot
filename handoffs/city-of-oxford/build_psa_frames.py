@@ -90,6 +90,11 @@ class Frame:
     source: str
     confirm: str
     verify: list[str] = dc_field(default_factory=list)
+    # Frames that impersonate a live alert too well keep the MOCKUP bar even in
+    # the "clean" set. The tornado frame names a real federal issuing office
+    # with real safety wording — photographed without the bar, it is
+    # indistinguishable from a genuine NWS graphic.
+    always_label: bool = False
 
 
 def frames(city_domain: str) -> list[Frame]:
@@ -101,7 +106,7 @@ def frames(city_domain: str) -> list[Frame]:
             headline="Boil Your Water",
             action="Rolling boil, 1 full minute.",
             scope="[North Oxford service area]",
-            time_bound="Until further notice",
+            time_bound="[Until further notice]",
             source="Oxford Utilities",
             confirm=city_domain,
             verify=[
@@ -126,6 +131,7 @@ def frames(city_domain: str) -> list[Frame]:
             time_bound="Until [9:45 PM CDT]",
             source="National Weather Service · Memphis",
             confirm="weather.gov",
+            always_label=True,
             verify=[
                 "Warnings for Lafayette County are issued by NWS Memphis, not by "
                 "the City. Keeping NWS on the source line makes the screen match "
@@ -143,9 +149,9 @@ def frames(city_domain: str) -> list[Frame]:
             key="road_closure",
             tier="advisory",
             signal="ROAD CLOSED",
-            headline="Use Posted Detour",
-            action="",
-            scope="[North Lamar] at [Molly Barr]",
+            headline="[North Lamar] at [Molly Barr]",
+            action="[Use posted detour]",
+            scope="",
             time_bound="[Through Friday]",
             source="City of Oxford",
             confirm=city_domain,
@@ -154,8 +160,9 @@ def frames(city_domain: str) -> list[Frame]:
                 "If the closure is on Highway 7, University Avenue ramps, or any "
                 "state route, the issuing authority is MDOT and not the City — "
                 "change the source line or the mayor will catch it.",
-                "If no detour is signed, replace the headline with the alternate "
-                "route by name.",
+                "The action line varies by closure: short event closures have no "
+                "posted detour, so the alternates are 'Seek alternate route' or "
+                "'Local traffic only'.",
             ],
         ),
         Frame(
@@ -164,17 +171,22 @@ def frames(city_domain: str) -> list[Frame]:
             signal="ELECTION DAY",
             headline="Vote Today",
             action="Polls open 7 a.m. to 7 p.m.",
-            scope="All Oxford precincts · [Date]",
+            scope="[All wards] · [Date]",
             time_bound="",
             source="City of Oxford",
-            confirm="Find your precinct: sos.ms.gov",
+            confirm=f"Polling places: {city_domain}",
             verify=[
                 "7 a.m. to 7 p.m. is Mississippi's statutory poll window and is "
                 "safe to leave as-is; it does not change election to election.",
                 "Fill the date and name the election (municipal general, primary, "
                 "runoff, special).",
-                "Confirm the City wants traffic pointed at sos.ms.gov rather than "
-                "its own page.",
+                "Jurisdiction check, verified in review: Oxford municipal "
+                "elections are run by the Municipal Election Commission and "
+                "organized by WARD, not precinct — and the Secretary of State's "
+                "locator (sos.ms.gov) covers county-run elections only. This "
+                "frame is the municipal version. A county/state election day "
+                "version changes the source line to the Lafayette County "
+                "Election Commission and the lookup to sos.ms.gov.",
                 "This same frame becomes a public hearing notice or a city hiring "
                 "notice by changing two lines — worth demonstrating in the room.",
             ],
@@ -437,10 +449,13 @@ def build_handout(out_dir: Path, city: str = "Oxford",
     run.font.name = "Arial"
     run.font.color.rgb = docx.c["text"]
 
-    clean = out_dir / "clean"
+    # The printed page embeds the LABELED set. Paper leaves the room; the
+    # SAMPLE MOCKUP bar is what keeps a photographed frame from passing for a
+    # live alert.
+    labeled = out_dir / "labeled"
     paths, captions = [], []
     for frame in frames(""):
-        path = clean / f"{frame.key}.png"
+        path = labeled / f"{frame.key}.png"
         if path.exists():
             paths.append(str(path))
             captions.append(CAPTIONS.get(frame.key, ""))
@@ -468,7 +483,7 @@ def build(city_domain: str = "oxfordms.net", out_dir: Path = OUTPUT_DIR) -> int:
 
     reports, clean_paths = [], []
     for frame in frames(city_domain):
-        img, report = render(frame, labeled=False)
+        img, report = render(frame, labeled=frame.always_label)
         path = clean_dir / f"{frame.key}.png"
         img.save(path)
         clean_paths.append(path)

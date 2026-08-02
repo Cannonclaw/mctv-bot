@@ -129,7 +129,11 @@ The only reason to watch the calendar is her bandwidth.
 - **The one-pager** (`build_onepager.py`) — one page, printed. Resist bringing the deck.
 - **The sample City messages** (`build_psa_frames.py`) — four real frames at the network's
   actual 1920×1080, printed as a second page. Concrete beats abstract by a wide margin in
-  fifteen minutes.
+  fifteen minutes. **Print the labeled set** (the one with the SAMPLE MOCKUP bar): the
+  clean frames are realistic enough that a photograph of one circulating outside the
+  meeting could pass for a live alert, and a fake NWS warning in the wild is a legal
+  problem, not just an embarrassment. The bar also does sales work — it says we treat
+  alert integrity seriously before anyone asks.
 - **The verified alert turnaround** from section 6.
 
 Lead the second page with the boil water frame, not the tornado. The tornado is the
