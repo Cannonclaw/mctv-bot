@@ -168,14 +168,32 @@ link_mode = st.radio("Link type", ["Network Package", "Custom venues"],
                      horizontal=True, key="ql_mode")
 parts = []
 if link_mode == "Network Package":
-    pkg = st.selectbox("Package", ["p10", "p20", "p40"],
-                       format_func=lambda p: f"{p[1:]} Screens", key="ql_pkg")
+    # Mirrors the public calculator's PACKAGES array (rate-calculator-v2.0-selfserve.html).
+    # Keep both in step: a key listed here that the live page does not carry is ignored by
+    # applyParams(), so the client lands on an empty builder instead of their quote.
+    PKG_LABELS = {"p10": "10 Screens", "p20": "20 Screens", "p40": "40 Screens",
+                  "p75": "75 Screens", "p125": "125+ Screens (whole network)"}
+    pkg = st.selectbox("Package", list(PKG_LABELS),
+                       format_func=lambda p: PKG_LABELS[p], key="ql_pkg")
     terr = st.multiselect("Territories", ["oxford", "tupelo", "starkville"],
                           format_func=lambda m: MARKET_LABELS.get(m, m.title()),
                           key="ql_terr")
     parts.append(f"pkg={pkg}")
     if terr:
         parts.append("terr=" + ",".join(terr))
+    # The 75 and 125+ tiers exist in the local calculator source but are not on the
+    # live page until Creed re-uploads index.html to SiteGround. applyParams() ignores
+    # an unknown pkg key, so such a link would open an EMPTY builder rather than the
+    # client's quote. Warn before the rep sends it; delete this block after the upload.
+    if pkg in ("p75", "p125"):
+        st.warning(
+            f"**{PKG_LABELS[pkg]} is not on the live page yet.** The public tool at "
+            "mctvofms.com/rate-quote still tops out at 40 screens until the pending "
+            "`index.html` re-upload, and a link with an unknown package silently opens "
+            "an empty builder. Send a 10 / 20 / 40 link, or quote this tier from the "
+            "one-pager and write the agreement manually, until the upload lands.",
+            icon="⚠️",
+        )
 else:
     chosen = st.multiselect("Venues", [r["venue_name"] for r in rows],
                             key="ql_venues")
@@ -374,8 +392,8 @@ if not params.get("venue_cap_4wk"):
         "rates in the tabs below. Quote from a quote link or a market rate "
         "sheet above, not from this table, until the flip is run "
         "(`scripts/023_self_serve_rate_card.sql` "
-        "section 2). Flat package prices (\\$350 / \\$500 / \\$800 / \\$1,300) "
-        "are unaffected either way.",
+        "section 2). Flat package prices (\\$350 / \\$500 / \\$800 / \\$1,300 / "
+        "\\$2,000) are unaffected either way.",
         icon="⚠️",
     )
 
