@@ -73,8 +73,10 @@
   .tab small{display:block;font-weight:500;font-size:11.5px;margin-top:3px;color:#7a8a9a}
 
   /* PACKAGES */
-  .pkggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media(max-width:780px){.pkggrid{grid-template-columns:1fr}}
+  .pkggrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  @media(max-width:980px){.pkggrid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:700px){.pkggrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.pkggrid{grid-template-columns:1fr}}
   .pkg{
     border:2px solid var(--line);border-radius:12px;padding:16px 14px;cursor:pointer;
     text-align:center;background:#fff;position:relative;transition:all .15s;
@@ -104,6 +106,22 @@
   .chip.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
 
   /* CUSTOM VENUES */
+  .vfilter{margin:0 0 12px}
+  #venueSearch{
+    width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;
+    font-size:14px;font-family:inherit;color:var(--ink);background:#fff;box-sizing:border-box;
+  }
+  #venueSearch:focus{outline:none;border-color:var(--gold)}
+  #typeChips{margin-top:8px}
+  #typeChips .chip{padding:5px 12px;font-size:12.5px}
+  #typeChips .chip small{font-weight:700;opacity:.55;margin-left:5px}
+  .vfnote{font-size:12.5px;color:var(--mut);margin-top:8px}
+  .vfnote b{color:var(--navy)}
+  .vfclear{
+    background:none;border:none;color:var(--navy);font:inherit;font-size:12.5px;
+    font-weight:700;cursor:pointer;text-decoration:underline;padding:0;margin-left:8px;
+  }
+  .nomatch{border:1px dashed var(--line);border-radius:10px;padding:20px;text-align:center;color:var(--mut);font-size:13.5px}
   details.market{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
   details.market summary{
     cursor:pointer;padding:11px 14px;font-weight:700;color:var(--navy);background:#f8fafc;
@@ -177,7 +195,8 @@
   .mobilebar{display:none}
   @media(max-width:640px){
     /* 16px inputs stop iOS Safari's auto-zoom on focus */
-    input[type=text],input[type=email],input[type=tel],input[type=date]{font-size:16px}
+    input[type=text],input[type=email],input[type=tel],input[type=date],input[type=search]{font-size:16px}
+    #venueSearch{font-size:16px}   /* ID beats the type selector above — needed or iOS zooms */
     .vstat{width:92px}
     .vrate{font-size:13px}
     .venue{gap:8px;padding:8px 2px}
@@ -198,7 +217,7 @@
   @media print{.mobilebar{display:none!important}}
 
   /* QUOTE-CARD MODE (?print=1 on a quote link — clean client-facing card, no builder) */
-  body.quotecard #step1,body.quotecard #step2,body.quotecard #step3,
+  body.quotecard #stepBiz,body.quotecard #stepAd,body.quotecard #stepTerm,
   body.quotecard #compareCard,body.quotecard #howRates,body.quotecard .mobilebar{display:none!important}
   body.quotecard .printonly{display:block}
   body.quotecard.has-mobilebar{padding-bottom:0}
@@ -244,18 +263,8 @@
   <div class="pagesub">Select a network package or build your own. Instant professional quotes based on real traffic data.</div>
 </header>
 
-<section class="card noprint" id="step1">
-  <h2><span class="stepnum">1</span> Business Information</h2>
-  <div class="grid2">
-    <div><label class="f">Business Name *</label><input type="text" id="bizName" placeholder="e.g. Smith Family Dental" oninput="recalc()"></div>
-    <div><label class="f">Contact Name *</label><input type="text" id="contactName" placeholder="First & last name" oninput="recalc()"></div>
-    <div><label class="f">Email *</label><input type="email" id="contactEmail" placeholder="you@business.com" oninput="recalc()"></div>
-    <div><label class="f">Phone</label><input type="tel" id="contactPhone" placeholder="(662) 555-0100" oninput="recalc()"></div>
-  </div>
-</section>
-
-<section class="card noprint" id="step2">
-  <h2><span class="stepnum">2</span> Choose Advertising</h2>
+<section class="card noprint" id="stepAd">
+  <h2><span class="stepnum">1</span> Choose Advertising</h2>
   <div class="tabs">
     <div class="tab active" id="tabPkg" onclick="setMode('pkg')">Network Packages<br><small>Best value — high-traffic screens</small></div>
     <div class="tab" id="tabCustom" onclick="setMode('custom')">Build Your Own<br><small>Hand-pick exact locations</small></div>
@@ -269,12 +278,18 @@
 
   <div id="customPane" style="display:none">
     <div class="terr-note">Check the locations you want. Rates shown per 4-week cycle.</div>
+    <div class="vfilter">
+      <input type="search" id="venueSearch" autocomplete="off" oninput="onVenueSearch(this)"
+             placeholder="Search locations by name, town, or business type">
+      <div class="chips" id="typeChips"></div>
+      <div class="vfnote" id="vfNote"></div>
+    </div>
     <div id="marketList"></div>
   </div>
 </section>
 
-<section class="card noprint" id="step3">
-  <h2><span class="stepnum">3</span> Term & Payment</h2>
+<section class="card noprint" id="stepTerm">
+  <h2><span class="stepnum">2</span> Term & Payment</h2>
   <div class="termrow">
     <div class="termopt sel" data-months="6" onclick="setTerm(6)">6 Months<br><small>Standard minimum</small></div>
     <div class="termopt" data-months="12" onclick="setTerm(12)">12 Months<br><small>Lock in rate</small></div>
@@ -317,6 +332,17 @@
       <button class="btn decline" id="btnDecline" onclick="sendDecision('decline')" disabled>✗ Decline</button>
     </div>
     <div class="hint noprint">Accepting opens a short plain-English agreement — pick a start date, sign with your typed name, done. We countersign and start your free ad design, typically within 1 business day.</div>
+  </div>
+</section>
+
+<section class="card noprint" id="stepBiz">
+  <h2 style="font-size:15px">Your details <span style="font-weight:500;color:#6b7280;font-size:13px">— optional</span></h2>
+  <div class="hint" style="margin:-2px 0 12px">You don't need this to get a price or to sign — we'll ask when you accept. Fill it in only if you want your name on the printed quote.</div>
+  <div class="grid2">
+    <div><label class="f">Business Name</label><input type="text" id="bizName" placeholder="e.g. Smith Family Dental" oninput="recalc()"></div>
+    <div><label class="f">Contact Name</label><input type="text" id="contactName" placeholder="First &amp; last name" oninput="recalc()"></div>
+    <div><label class="f">Email</label><input type="email" id="contactEmail" placeholder="you@business.com" oninput="recalc()"></div>
+    <div><label class="f">Phone</label><input type="tel" id="contactPhone" placeholder="(662) 555-0100" oninput="recalc()"></div>
   </div>
 </section>
 
@@ -390,7 +416,9 @@ const CFG = {
 const PACKAGES = [
   { key: "p10", name: "10 Screens", screens: 10, monthly: 350, plays: "≈15,000 ad plays/mo" },
   { key: "p20", name: "20 Screens", screens: 20, monthly: 500, plays: "≈30,000 ad plays/mo" },
-  { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" }
+  { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" },
+  { key: "p75", name: "75 Screens", screens: 75, monthly: 1300, plays: "≈110,000 ad plays/mo" },
+  { key: "p125", name: "125+ Screens", screens: 125, monthly: 2000, plays: "≈180,000+ ad plays/mo" }
 ];
 
 // Venue types (for rate calculation)
@@ -596,20 +624,64 @@ function renderPackages(){
 function pickPkg(k){ selPkg = (selPkg === k ? null : k); renderPackages(); recalc(); }
 function toggleTerr(t){ selTerr.has(t) ? selTerr.delete(t) : selTerr.add(t); renderPackages(); recalc(); }
 
+/* ---- Venue finder: 100 locations is too many to scroll, so let people narrow by
+   name / town / business type. The filter is strictly a search — anything already
+   selected but not matching is counted in the note below (and stays in the quote),
+   so nothing goes silently missing. Every market with a match is opened, so a hit
+   in Tupelo can't sit inside a collapsed section. ---- */
+let venueFilter = '';
+const marketOpen = { oxford:true, tupelo:false, starkville:false, special:false };
+
+// Quick chips = the highest-inventory business types, derived from VENUES so they
+// stay right when the venue list changes. Nothing hand-typed.
+const QUICK_TYPES = (() => {
+  const agg = {};
+  VENUES.forEach(v => { const a = agg[v[4]] || (agg[v[4]] = {screens:0,venues:0}); a.screens += v[3]; a.venues++; });
+  return Object.entries(agg)
+    .map(([k,a]) => ({ label: TYPES[k]?.label || k, screens:a.screens, venues:a.venues }))
+    .sort((a,b) => b.screens - a.screens || b.venues - a.venues || a.label.localeCompare(b.label))
+    .slice(0,6);
+})();
+
+function venueHay(v){ return (v[1] + ' ' + v[2] + ' ' + (TYPES[v[4]]?.label || v[4])).toLowerCase(); }
+function venueShown(v){ return !venueFilter || venueHay(v).includes(venueFilter); }
+
+function onVenueSearch(el){ venueFilter = el.value.trim().toLowerCase(); renderMarkets(); }
+function setVenueFilter(s){
+  const box = $('venueSearch');
+  if(box) box.value = s;
+  venueFilter = s.trim().toLowerCase();
+  renderMarkets();
+}
+function toggleTypeChip(label){ setVenueFilter(venueFilter === label.toLowerCase() ? '' : label); }
+
+function renderTypeChips(){
+  $('venueSearch').placeholder = `Search ${VENUES.length} locations by name, town, or business type`;
+  $('typeChips').innerHTML = QUICK_TYPES.map(t => `
+    <div class="chip ${venueFilter === t.label.toLowerCase() ? 'sel' : ''}" onclick="toggleTypeChip('${esc(t.label).replace(/'/g,"\\'")}')"
+      >${esc(t.label)}<small>${t.venues}</small></div>`).join('');
+}
+
 function renderMarkets(){
   const order = ['oxford','tupelo','starkville','special'];
-  $('marketList').innerHTML = order.map(mk => {
+  let shownTotal = 0;
+  const html = order.map(mk => {
     const rows = VENUES.map((v,i)=>({v,i})).filter(x => x.v[0] === mk);
     if(!rows.length) return '';
+    const shown = rows.filter(x => venueShown(x.v));
+    if(!shown.length) return '';
+    shownTotal += shown.length;
     const nSel = rows.filter(x => selVenues.has(x.i)).length;
-    return `<details class="market" ${mk==='oxford'?'open':''}>
+    const count = venueFilter ? `${shown.length} of ${rows.length} locations` : `${rows.length} locations`;
+    return `<details class="market" data-mk="${mk}" ${venueFilter || marketOpen[mk] ? 'open' : ''}
+        ontoggle="if(!venueFilter) marketOpen['${mk}'] = this.open">
       <summary>${MARKETS[mk].label}
-        <span class="mcount">${nSel ? nSel+' selected · ' : ''}${rows.length} locations
+        <span class="mcount">${nSel ? nSel+' selected · ' : ''}${count}
           <button style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer" onclick="event.preventDefault();selectAll('${mk}')">all</button>
           <button style="margin-left:4px;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer" onclick="event.preventDefault();clearAll('${mk}')">clear</button>
         </span>
       </summary>
-      <div class="vlist">` + rows.map(({v,i}) => {
+      <div class="vlist">` + shown.map(({v,i}) => {
         const c = venueCalc(v);
         return `<label class="venue">
           <input type="checkbox" ${selVenues.has(i)?'checked':''} onchange="toggleVenue(${i})">
@@ -618,11 +690,32 @@ function renderMarkets(){
         </label>`;
       }).join('') + `</div></details>`;
   }).join('');
+
+  $('marketList').innerHTML = html || `<div class="nomatch">No locations match “${esc($('venueSearch').value.trim())}”.
+    <button class="vfclear" onclick="setVenueFilter('')">Show all ${VENUES.length}</button></div>`;
+
+  renderTypeChips();
+  const hidden = [...selVenues].filter(i => !venueShown(VENUES[i])).length;
+  $('vfNote').innerHTML = !venueFilter ? ''
+    : `Showing <b>${shownTotal}</b> of ${VENUES.length} locations.${shownTotal ? ' Use <b>all</b> on a market to add every match at once.' : ''}
+       ${hidden ? `<b>${hidden}</b> more you already picked ${hidden===1?'is':'are'} still in your quote below.` : ''}
+       <button class="vfclear" onclick="setVenueFilter('')">Clear filter</button>`;
 }
 
-function toggleVenue(i){ selVenues.has(i)?selVenues.delete(i):selVenues.add(i); renderMarkets(); recalc(); }
-function selectAll(mk){ VENUES.forEach((v,i)=>{if(v[0]===mk) selVenues.add(i);}); renderMarkets(); recalc(); }
-function clearAll(mk){ VENUES.forEach((v,i)=>{if(v[0]===mk) selVenues.delete(i);}); renderMarkets(); recalc(); }
+// "all" adds what's currently listed, so filter + all = a targeted build in two taps.
+// "clear" always drops every selection in the market (filtered or not) — it stays the
+// escape hatch for anything the current filter is hiding.
+function toggleVenue(i){
+  selVenues.has(i) ? selVenues.delete(i) : selVenues.add(i);
+  marketOpen[VENUES[i][0]] = true;
+  renderMarkets(); recalc();
+}
+function selectAll(mk){
+  VENUES.forEach((v,i)=>{ if(v[0]===mk && venueShown(v)) selVenues.add(i); });
+  marketOpen[mk] = true;
+  renderMarkets(); recalc();
+}
+function clearAll(mk){ VENUES.forEach((v,i)=>{ if(v[0]===mk) selVenues.delete(i); }); renderMarkets(); recalc(); }
 
 function setMode(m){
   mode = m;
@@ -732,7 +825,15 @@ function recalc(){
   $('btnAccept').disabled = false;
   $('btnDecline').disabled = false;
 
-  $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value ? ', ' + esc($('contactPhone').value) : ''})`;
+  // Only show the parts we actually have — a rep's card link often carries the business
+  // name alone (PII deliberately omitted), and empty placeholders read as broken.
+  const _pfBiz = $('bizName').value.trim(), _pfName = $('contactName').value.trim();
+  const _pfMail = $('contactEmail').value.trim(), _pfTel = $('contactPhone').value.trim();
+  const _pfContact = [_pfMail, _pfTel].filter(Boolean).map(esc).join(', ');
+  const _pfWho = [_pfBiz, _pfName].filter(Boolean).map(esc).join(' — ');
+  $('printHead').innerHTML = _pfWho
+    ? `<b>Prepared for:</b> ${_pfWho}${_pfContact ? ' (' + _pfContact + ')' : ''}`
+    : '';
 }
 
 function esc(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -792,17 +893,24 @@ function showComparison(){
       footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#5a6a7a"><span>List total</span><span>${fmt$(tot)}/mo</span></div>`;
       footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#15803d;font-weight:700"><span>Volume discount (${CFG.volumeDiscountPct}% — ${CFG.volumeDiscountScreens}+ screens)</span><span>−${fmt$(disc)}</span></div>`;
     }
-    footer += `<div style="display:flex;justify-content:space-between;font-weight:800;margin-top:4px"><span>Total</span><span>${fmt$(fin)}/mo · ${scr} screens</span></div></div>`;
+    footer += `<div style="display:flex;justify-content:space-between;font-weight:800;margin-top:4px"><span>Total</span><span>${fmt$(fin)}/mo · ${scr} screen${scr === 1 ? '' : 's'}</span></div></div>`;
     custEl.innerHTML = html + footer;
   } else custEl.innerHTML = `<div style="color:#5a6a7a;font-style:italic">No custom venues selected</div>`;
 
   const tipEl = container.querySelector('#cmp-tip');
   if (custFinal != null) {
     const near = PACKAGES.reduce((b,p) => Math.abs(p.screens - custScr) < Math.abs(b.screens - custScr) ? p : b, PACKAGES[0]);
-    if (custFinal > near.monthly) {
+    // Three cases, not two. The old `else` assumed custom >= package, so ANY cheaper build
+    // was told it was "right in line" — a $180 build read as in line with the $350 package.
+    // The middle band is deliberately narrow (+/-5%) so "in line" means what it says.
+    const band = near.monthly * 0.05;
+    if (custFinal > near.monthly + band) {
       tipEl.innerHTML = `💡 <b>Insight:</b> the ${near.name} Network Package runs ${fmt$(near.monthly)}/mo — our best value. A custom build costs more because you hand-pick exact premium locations.`;
-    } else {
+    } else if (custFinal >= near.monthly - band) {
       tipEl.innerHTML = `💡 <b>Insight:</b> your custom build at ${fmt$(custFinal)}/mo is right in line with the ${near.name} Network Package (${fmt$(near.monthly)}/mo) — either way you're getting our best pricing.`;
+    } else {
+      const perCust = Math.round(custFinal / custScr), perPkg = Math.round(near.monthly / near.screens);
+      tipEl.innerHTML = `💡 <b>Insight:</b> this hand-picked build comes in <b>under</b> the ${near.name} Network Package — ${fmt$(custFinal)}/mo for ${custScr} screen${custScr === 1 ? '' : 's'} (${fmt$(perCust)} per screen) vs ${fmt$(near.monthly)}/mo for ${near.screens} (${fmt$(perPkg)} per screen). À la carte prices every location by its own foot traffic and dwell time, so a build weighted toward smaller-traffic rooms lands below the flat rate. The package trades the hand-picking for ${near.plays} across the network.`;
     }
     tipEl.style.display = '';
   }
@@ -888,7 +996,7 @@ async function sendDecision(decision){
   if(!biz || !name || !email){
     // Card mode hides the contact form — bring it back before asking for the fields
     if(document.body.classList.contains('quotecard')) exitCardMode();
-    alert('Please fill in Business Name, Contact Name, and Email first.');
+    alert('To send feedback we need a way to reply — please fill in Business Name, Contact Name, and Email in "Your details" below the quote.');
     $('bizName').focus(); return;
   }
 
@@ -1126,7 +1234,7 @@ function exitCardMode(){
   document.querySelector('.pagesub').textContent = DEFAULT_PAGESUB;
   const b = document.getElementById('cardModeBar'); if(b) b.remove();
   history.replaceState(null, '', location.pathname + location.search.replace(/[?&]print=1/,'').replace(/^&/,'?'));
-  $('step2').scrollIntoView({behavior:'smooth'});
+  $('stepAd').scrollIntoView({behavior:'smooth'});
 }
 
 // Shareable quote links — build one from current state
