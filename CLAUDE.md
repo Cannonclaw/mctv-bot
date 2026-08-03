@@ -42,6 +42,8 @@ pages/                          # 13 internal + 8 portal pages
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
+  26_Sponsored_Feed.py          # Builder for the ISP-sponsored live speed-test
+                                #   feed (sponsor settings -> screen URL)
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -80,6 +82,8 @@ services/                       # Business logic and integrations
   leads_service.py              # Lead CRUD + scoring (intake form submissions)
   loop_inventory_service.py     # Reads the n-compass whitelist sweep (screen_loops,
                                 #   dark_content) — measured loop length per screen
+  speedtest_feed.py             # Sponsored speed-test feed: FeedConfig validation,
+                                #   screen URL build/parse, test payload generator
   screen_inventory_service.py   # Manual book of record: what creative plays where
                                 #   (loop_items + per-screen overrides), plus the two
                                 #   reconciliations (vs sweep, vs Encompass export)
@@ -207,6 +211,35 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
 - **Perf rule**: the page fetches items, overrides, and screens once per rerun and
   passes them into every tab (`items=` / `overrides=` / `screens=` params) — same
   convention as the Pipeline page.
+
+### Sponsored Live Speed Test Feed
+An ISP/fiber sponsorship that runs as a **URL zone**, not a video file:
+sponsor intro (5-10s) → live speed test on the venue's own connection →
+sponsor outro (5-10s), looping forever. Full write-up in
+`docs/SPONSORED_FEED.md`.
+
+- **The feed** is `static/feed_speedtest.html` — self-contained, no CDN, no
+  external fonts. Served at `/feed/speedtest` by `server_routes.py` (same
+  Tornado/ASGI double-patch as `/rates`).
+- **Config is the query string.** `FeedConfig` in `services/speedtest_feed.py`
+  validates and clamps; the page re-implements the same clamps client-side.
+  A new sponsor is a new URL off `pages/26_Sponsored_Feed.py` — never a deploy.
+- **`endpoint` decides who pays for the bytes**: `cf` (default, Cloudflare,
+  free to us and measures the venue's real path out), `local` (our
+  `/feed/speedtest/*` routes — Render bandwidth on our bill, demos only), or
+  a sponsor-hosted Cloudflare-shaped https URL. Any choice falls back to
+  `local` when the primary is unreachable.
+- **The interval is a bandwidth decision, not a UX one.** A real test moves
+  real bytes over the *host venue's* Wi-Fi, so measurement runs every
+  `interval_seconds` (default 1800) and the last result is shown with its
+  age in between. ~23 GB/screen/month at the defaults.
+- **Honesty rules are load-bearing** — live tests say `Testing now · Live`,
+  cached ones say how old they are, demo mode wears a `SIMULATED` badge, and
+  a failed test shows the sponsor card with no number at all. Don't "improve"
+  the feed by animating a stale number as if it were fresh.
+- Server-side caps hold regardless of the URL: 8 MiB per download request
+  streamed from one reused 256 KiB random block, uploads discarded as they
+  arrive. Checks: `python scripts/speedtest_feed_test.py`.
 
 ### Contract System
 5 contract types, each with dedicated clause sets:

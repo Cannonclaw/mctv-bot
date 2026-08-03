@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
+  Proprietary and confidential.
+
+  SPONSORED LIVE SPEED TEST FEED
+  ------------------------------
+  A looping screen feed an ISP or fiber company sponsors:
+
+      sponsor intro (5-10s)  ->  live speed test  ->  sponsor outro (5-10s)
+
+  The screen loads this as a URL zone. Every sponsor setting rides in the
+  query string (see services/speedtest_feed.py for the builder), so a new
+  sponsor is a new URL, not a deploy.
+
+  Honesty rules this page will not break:
+    * a real measurement is labelled LIVE, a cached one is labelled with
+      its age, and demo mode wears a SIMULATED badge. Numbers are never
+      re-animated as if they were fresh.
+    * a failed test shows the sponsor card and says the test is
+      unavailable. It never invents a number.
+
+  Bandwidth is the venue's Wi-Fi, so the test runs on an interval
+  (default 30 min) rather than every cycle.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Live Speed Test — Sponsored Feed</title>
+<style>
+  :root{
+    --accent:#c5a55a;
+    --bg:#0a1220;
+    --ink:#ffffff;
+    --mut:rgba(255,255,255,.62);
+    --dim:rgba(255,255,255,.34);
+    --good:#3ddc97;
+    --warn:#ffb020;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* The stage is a fixed design canvas (1920x1080 by default) scaled to
+     whatever the player gives us, so nothing reflows on odd screens. */
+  #stage{
+    position:absolute;top:50%;left:50%;
+    width:1920px;height:1080px;
+    transform-origin:50% 50%;
+    background:
+      radial-gradient(1200px 700px at 80% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%),
+      radial-gradient(900px 600px at -5% 105%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+      linear-gradient(160deg, color-mix(in srgb, var(--bg) 88%, #ffffff 0%) 0%, var(--bg) 55%, #05080f 100%);
+    overflow:hidden;
+  }
+
+  /* ── fiber strands ─────────────────────────────────────────────── */
+  .strands{position:absolute;inset:0;opacity:.5;pointer-events:none}
+  .strand{
+    position:absolute;left:-20%;width:140%;height:2px;
+    background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 55%,transparent),transparent);
+    transform-origin:0 0;
+  }
+  .pulse{
+    position:absolute;top:-3px;left:0;width:220px;height:8px;border-radius:8px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    filter:blur(2px);
+    animation:run linear infinite;
+  }
+  @keyframes run{from{transform:translateX(-260px)}to{transform:translateX(1960px)}}
+
+  .vignette{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 45%,transparent 45%,rgba(0,0,0,.55) 100%);
+  }
+
+  /* ── scenes ────────────────────────────────────────────────────── */
+  .scene{
+    position:absolute;inset:0;display:none;
+    flex-direction:column;justify-content:center;align-items:center;
+    padding:96px 120px;text-align:center;
+  }
+  .scene.on{display:flex}
+  .scene.on > *{animation:rise .55s cubic-bezier(.2,.8,.25,1) both}
+  .scene.on > *:nth-child(2){animation-delay:.08s}
+  .scene.on > *:nth-child(3){animation-delay:.16s}
+  .scene.on > *:nth-child(4){animation-delay:.24s}
+  .scene.on > *:nth-child(5){animation-delay:.32s}
+  @keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+  /* ── shared bits ───────────────────────────────────────────────── */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:16px;
+    font-size:26px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--accent);
+  }
+  .dot{
+    width:16px;height:16px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 70%,transparent);
+    animation:beat 1.6s ease-out infinite;
+  }
+  @keyframes beat{
+    0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}
+    70%{box-shadow:0 0 0 22px transparent}
+    100%{box-shadow:0 0 0 0 transparent}
+  }
+  .logo{max-width:760px;max-height:240px;object-fit:contain;display:none}
+  .wordmark{font-size:104px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .wordmark .b{color:var(--accent)}
+  .tagline{font-size:40px;color:var(--mut);font-weight:500;max-width:1280px;line-height:1.3}
+  .introline{
+    margin-top:26px;padding:18px 40px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
+    font-size:28px;font-weight:600;color:var(--mut);
+  }
+
+  /* corner furniture, present in every scene */
+  .corner{
+    position:absolute;bottom:0;left:0;right:0;height:132px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 72px;font-size:24px;color:var(--dim);
+    background:linear-gradient(0deg,rgba(0,0,0,.5),transparent);
+  }
+  .corner b{color:var(--mut);font-weight:600}
+  .brandchip{display:flex;align-items:center;gap:18px}
+  .brandchip img{height:56px;max-width:260px;object-fit:contain;display:none}
+  .brandchip .nm{font-size:26px;font-weight:700;color:var(--ink)}
+  .mctv{font-size:22px;letter-spacing:.16em;text-transform:uppercase;text-align:right}
+  .mctv b{color:var(--accent);font-weight:800}
+
+  /* status pill, top of the test scene */
+  .status{
+    position:absolute;top:56px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:14px;
+    padding:14px 30px;border-radius:999px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+    font-size:24px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--mut);white-space:nowrap;
+  }
+  .status.live{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  .status.sim{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+
+  /* ── test scene ────────────────────────────────────────────────── */
+  .testwrap{display:flex;align-items:center;gap:110px}
+  .gauge{position:relative;width:620px;height:620px;flex:none}
+  .gauge svg{width:100%;height:100%;transform:rotate(135deg)}
+  .gauge .track{fill:none;stroke:rgba(255,255,255,.09);stroke-width:26;stroke-linecap:round}
+  .gauge .prog{
+    fill:none;stroke:var(--accent);stroke-width:26;stroke-linecap:round;
+    /* An SVG filter with an oversized region, not a CSS drop-shadow: the
+       CSS one is clipped to the element box, and because the gauge is
+       rotated 135deg that clip edge shows on screen as a diamond. */
+    filter:url(#gauge-glow);
+    transition:stroke-dasharray .18s linear;
+  }
+  .readout{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;
+  }
+  .readout .kind{
+    font-size:24px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);
+  }
+  .readout .num{
+    font-size:188px;font-weight:800;line-height:1;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+  }
+  .readout .unit{font-size:34px;font-weight:700;letter-spacing:.22em;color:var(--accent)}
+
+  .stats{display:flex;flex-direction:column;gap:26px;min-width:560px}
+  .stat{
+    display:flex;align-items:center;justify-content:space-between;gap:30px;
+    padding:28px 36px;border-radius:22px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+    border-left:8px solid rgba(255,255,255,.12);
+    opacity:.42;transition:opacity .35s,border-color .35s,background .35s;
+  }
+  .stat.active{opacity:1;border-left-color:var(--accent);background:rgba(255,255,255,.09)}
+  .stat.done{opacity:1;border-left-color:var(--good)}
+  .stat .lab{font-size:27px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  .stat .val{font-size:56px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .stat .val small{font-size:24px;font-weight:700;color:var(--dim);margin-left:10px;letter-spacing:.1em}
+
+  /* Hidden until there is an actual trace to draw — an empty rounded box
+     under the stats reads as a broken fourth stat. */
+  .spark{width:100%;height:110px;margin-top:8px;opacity:0;transition:opacity .4s}
+  .spark.on{opacity:1}
+  .spark polyline{fill:none;stroke:var(--accent);stroke-width:2.2;vector-effect:non-scaling-stroke;opacity:.85}
+  .spark rect{fill:rgba(255,255,255,.04)}
+
+  /* ── outro / result ────────────────────────────────────────────── */
+  .resultcard{
+    display:flex;align-items:stretch;gap:0;
+    border-radius:30px;overflow:hidden;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  }
+  .resultcard .cell{padding:44px 66px;text-align:center;min-width:340px}
+  .resultcard .cell + .cell{border-left:1px solid rgba(255,255,255,.12)}
+  .resultcard .cell .lab{font-size:24px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+  .resultcard .cell .big{
+    font-size:132px;font-weight:800;line-height:1.05;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+  }
+  .resultcard .cell.hero .big{color:var(--accent)}
+  .resultcard .cell .u{font-size:26px;font-weight:700;color:var(--mut);letter-spacing:.16em}
+
+  .compare{width:1180px;display:flex;flex-direction:column;gap:18px}
+  .bar{display:flex;align-items:center;gap:24px}
+  .bar .nm{width:380px;text-align:right;font-size:28px;font-weight:600;color:var(--mut)}
+  /* display:block matters — these are spans, and an inline box ignores
+     the height that makes the bar a bar. */
+  .bar .track{
+    display:block;flex:1;height:34px;border-radius:999px;
+    background:rgba(255,255,255,.09);overflow:hidden;
+  }
+  .bar .fill{
+    display:block;height:100%;border-radius:999px;
+    background:rgba(255,255,255,.35);width:0;
+    transition:width 1.1s cubic-bezier(.2,.8,.25,1);
+  }
+  .bar.sponsor .fill{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 55%,transparent),var(--accent))}
+  .bar .v{width:220px;font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+
+  .cta{
+    display:flex;align-items:center;gap:36px;
+    padding:26px 52px;border-radius:999px;
+    background:var(--accent);color:#0a1220;
+    font-size:40px;font-weight:800;letter-spacing:-.01em;
+  }
+  .cta .sep{width:2px;height:44px;background:rgba(10,18,32,.28)}
+  .cta .small{font-size:32px;font-weight:700}
+
+  .fineprint{font-size:22px;color:var(--dim);max-width:1400px;line-height:1.45}
+
+  .msg{font-size:44px;font-weight:600;color:var(--mut);max-width:1200px;line-height:1.35}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="strands" id="strands"></div>
+  <div class="vignette"></div>
+
+  <!-- ── INTRO ──────────────────────────────────────────────────── -->
+  <section class="scene" id="sc-intro">
+    <div class="eyebrow"><span class="dot"></span><span>Live Speed Test</span></div>
+    <img class="logo" id="intro-logo" alt="">
+    <div class="wordmark" id="intro-name"></div>
+    <div class="tagline" id="intro-tagline"></div>
+    <div class="introline" id="intro-line"></div>
+  </section>
+
+  <!-- ── TEST ───────────────────────────────────────────────────── -->
+  <section class="scene" id="sc-test">
+    <div class="status" id="test-status"><span class="dot"></span><span id="test-status-text">Starting</span></div>
+    <div class="testwrap">
+      <div class="gauge">
+        <svg viewBox="0 0 240 240" aria-hidden="true">
+          <defs>
+            <filter id="gauge-glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+              <feComponentTransfer in="blur" result="soft">
+                <feFuncA type="linear" slope="0.55"></feFuncA>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode in="soft"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+          </defs>
+          <circle class="track" cx="120" cy="120" r="100" pathLength="100"
+                  stroke-dasharray="75 100"></circle>
+          <circle class="prog" id="gauge-prog" cx="120" cy="120" r="100" pathLength="100"
+                  stroke-dasharray="0 100"></circle>
+        </svg>
+        <div class="readout">
+          <div class="kind" id="gauge-kind">Latency</div>
+          <div class="num" id="gauge-num">0</div>
+          <div class="unit" id="gauge-unit">Mbps</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat" id="stat-ping">
+          <span class="lab">Ping</span>
+          <span class="val" id="v-ping">—<small>ms</small></span>
+        </div>
+        <div class="stat" id="stat-down">
+          <span class="lab">Download</span>
+          <span class="val" id="v-down">—<small>Mbps</small></span>
+        </div>
+        <div class="stat" id="stat-up">
+          <span class="lab">Upload</span>
+          <span class="val" id="v-up">—<small>Mbps</small></span>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 300 60" preserveAspectRatio="none">
+          <rect x="0" y="0" width="300" height="60" rx="6"></rect>
+          <polyline id="spark-line" points=""></polyline>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── OUTRO ──────────────────────────────────────────────────── -->
+  <section class="scene" id="sc-outro">
+    <div class="eyebrow" id="outro-eyebrow"><span>Brought to you by</span></div>
+    <img class="logo" id="outro-logo" alt="">
+    <div class="wordmark" id="outro-name"></div>
+    <div class="resultcard" id="outro-result">
+      <div class="cell hero">
+        <div class="lab">Download</div>
+        <div class="big" id="r-down">—</div>
+        <div class="u">Mbps</div>
+      </div>
+      <div class="cell">
+        <div class="lab">Upload</div>
+        <div class="big" id="r-up">—</div>
+        <div class="u">Mbps</div>
+      </div>
+      <div class="cell">
+        <div class="lab">Ping</div>
+        <div class="big" id="r-ping">—</div>
+        <div class="u">ms</div>
+      </div>
+    </div>
+    <div class="compare" id="outro-compare" style="display:none">
+      <div class="bar" id="bar-here">
+        <span class="nm" id="bar-here-name">This connection</span>
+        <span class="track"><span class="fill" id="bar-here-fill"></span></span>
+        <span class="v" id="bar-here-val"></span>
+      </div>
+      <div class="bar sponsor" id="bar-sponsor">
+        <span class="nm" id="bar-sponsor-name"></span>
+        <span class="track"><span class="fill" id="bar-sponsor-fill"></span></span>
+        <span class="v" id="bar-sponsor-val"></span>
+      </div>
+    </div>
+    <div class="msg" id="outro-msg" style="display:none"></div>
+    <div class="cta" id="outro-cta"></div>
+    <div class="fineprint" id="outro-fine"></div>
+  </section>
+
+  <!-- ── always-on furniture ────────────────────────────────────── -->
+  <div class="corner">
+    <span class="brandchip">
+      <img id="corner-logo" alt="">
+      <span class="nm" id="corner-name"></span>
+    </span>
+    <span class="mctv" id="corner-mctv">MCTV <b>Elite</b> Advertising</span>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function () {
+
+/* ══════════════════════════════════════════════════════════════════
+   1. CONFIG — query string in, clamped settings out.
+      Keys and limits mirror services/speedtest_feed.py.
+   ══════════════════════════════════════════════════════════════════ */
+
+var Q = new URLSearchParams(location.search);
+
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+function num(key, dflt, lo, hi) {
+  var raw = parseFloat(Q.get(key));
+  return clamp(isFinite(raw) ? raw : dflt, lo, hi);
+}
+function str(key, dflt, limit) {
+  var v = (Q.get(key) || "").replace(/\s+/g, " ").trim();
+  return (v || dflt || "").slice(0, limit || 120);
+}
+function flag(key) {
+  var v = (Q.get(key) || "").toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+}
+function color(key, dflt) {
+  var v = (Q.get(key) || "").trim();
+  if (v && v[0] !== "#") v = "#" + v;
+  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(v) ? v : dflt;
+}
+/* Only https or a data: image may load — http is a mixed-content block on
+   the player, which shows as an empty box on a screen nobody is watching. */
+function imageURL(key) {
+  var v = (Q.get(key) || "").trim();
+  if (/^data:image\//i.test(v)) return v.slice(0, 4096);
+  if (/^https:\/\/[^\s]+$/i.test(v)) return v.slice(0, 600);
+  return "";
+}
+
+var CFG = {
+  sponsor:  str("sponsor", "Your Fiber Company", 48),
+  tagline:  str("tagline", "Fiber internet, built for Mississippi", 90),
+  logo:     imageURL("logo"),
+  accent:   color("color", "#c5a55a"),
+  bg:       color("color2", "#0a1220"),
+  phone:    str("phone", "", 32),
+  web:      str("web", "", 90),
+  cta:      str("cta", "Ask about fiber at your address", 90),
+
+  compareMbps:  num("compare_mbps", 0, 0, 10000),
+  compareLabel: str("compare_label", "", 48),
+
+  introMs:    num("intro_seconds", 8, 5, 10) * 1000,
+  outroMs:    num("outro_seconds", 8, 5, 10) * 1000,
+  testMs:     num("test_seconds", 20, 10, 45) * 1000,
+  intervalMs: num("interval_seconds", 1800, 60, 21600) * 1000,
+
+  endpoint:  (Q.get("endpoint") || "cf").trim(),
+  maxDown:   num("max_down_mb", 24, 2, 64) * 1024 * 1024,
+  maxUp:     num("max_up_mb", 8, 1, 32) * 1024 * 1024,
+  streams:   num("streams", 4, 1, 8),
+
+  venue:  str("venue", "", 48),
+  market: str("market", "", 32),
+  width:  num("width", 1920, 320, 7680),
+  height: num("height", 1080, 320, 7680),
+  demo:   flag("demo")
+};
+
+/* Endpoint resolution. Anything that is not "cf"/"local" must be an https
+   origin shaped like Cloudflare's (/__down?bytes=, /__up) with CORS open. */
+function endpoints(kind) {
+  if (kind === "local") {
+    return {
+      name: "MCTV",
+      ping: "/feed/speedtest/ping",
+      down: "/feed/speedtest/down?bytes=",
+      up:   "/feed/speedtest/up"
+    };
+  }
+  var base = (kind === "cf" || !/^https:\/\//i.test(kind))
+    ? "https://speed.cloudflare.com"
+    : kind.replace(/\/+$/, "");
+  return {
+    name: base.indexOf("cloudflare") >= 0 ? "Cloudflare" : "the sponsor's network",
+    ping: base + "/__down?bytes=0",
+    down: base + "/__down?bytes=",
+    up:   base + "/__up"
+  };
+}
+
+var PRIMARY  = endpoints(CFG.endpoint);
+var FALLBACK = CFG.endpoint === "local" ? null : endpoints("local");
+
+/* ══════════════════════════════════════════════════════════════════
+   2. STAGE — fixed design canvas, scaled to whatever the player gives us
+   ══════════════════════════════════════════════════════════════════ */
+
+var stage = document.getElementById("stage");
+var root = document.documentElement;
+root.style.setProperty("--accent", CFG.accent);
+root.style.setProperty("--bg", CFG.bg);
+stage.style.width = CFG.width + "px";
+stage.style.height = CFG.height + "px";
+
+function fit() {
+  var s = Math.min(window.innerWidth / CFG.width, window.innerHeight / CFG.height);
+  stage.style.transform = "translate(-50%,-50%) scale(" + s + ")";
+}
+window.addEventListener("resize", fit);
+fit();
+
+/* Decorative fiber strands. Cheap: transform-only animation. */
+(function strands() {
+  var host = document.getElementById("strands");
+  for (var i = 0; i < 7; i++) {
+    var line = document.createElement("div");
+    line.className = "strand";
+    line.style.top = (8 + i * 14) + "%";
+    line.style.transform = "rotate(" + (-8 + i * 2.2) + "deg)";
+    var p = document.createElement("div");
+    p.className = "pulse";
+    p.style.animationDuration = (5.5 + i * 0.9) + "s";
+    p.style.animationDelay = (-i * 1.7) + "s";
+    line.appendChild(p);
+    host.appendChild(line);
+  }
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   3. STATIC COPY
+   ══════════════════════════════════════════════════════════════════ */
+
+var $ = function (id) { return document.getElementById(id); };
+
+/* Sponsor name split so the first word carries the accent colour. */
+function wordmark(el, name) {
+  el.textContent = "";
+  var parts = name.split(" ");
+  var head = document.createElement("span");
+  head.className = "b";
+  head.textContent = parts[0];
+  el.appendChild(head);
+  if (parts.length > 1) {
+    el.appendChild(document.createTextNode(" " + parts.slice(1).join(" ")));
+  }
+}
+
+function setLogo(el, url) {
+  if (!url) return false;
+  el.src = url;
+  el.alt = CFG.sponsor;
+  el.style.display = "block";
+  el.onerror = function () { el.style.display = "none"; };
+  return true;
+}
+
+wordmark($("intro-name"), CFG.sponsor);
+wordmark($("outro-name"), CFG.sponsor);
+$("intro-tagline").textContent = CFG.tagline;
+
+/* Tells the room what it is about to watch. Worded to stay true whether
+   the next scene runs a fresh test or shows the last one — only demo mode
+   gets to promise anything different. */
+$("intro-line").textContent = CFG.demo
+  ? "Demonstration — simulated speed test"
+  : "Real speeds, measured on this screen's own connection"
+    + (CFG.venue ? " at " + CFG.venue : "");
+$("corner-name").textContent = CFG.sponsor;
+setLogo($("intro-logo"), CFG.logo);
+setLogo($("outro-logo"), CFG.logo);
+if (setLogo($("corner-logo"), CFG.logo)) $("corner-name").style.display = "none";
+
+/* CTA line: phone and web sit either side of a divider. */
+(function ctaLine() {
+  var el = $("outro-cta");
+  el.textContent = "";
+  var bits = [];
+  if (CFG.phone) bits.push({ t: CFG.phone, small: false });
+  if (CFG.web) bits.push({ t: CFG.web, small: !!CFG.phone });
+  if (!bits.length) bits.push({ t: CFG.cta, small: false });
+  bits.forEach(function (b, i) {
+    if (i) {
+      var sep = document.createElement("span");
+      sep.className = "sep";
+      el.appendChild(sep);
+    }
+    var s = document.createElement("span");
+    if (b.small) s.className = "small";
+    s.textContent = b.t;
+    el.appendChild(s);
+  });
+})();
+
+(function cornerPlacement() {
+  var where = [CFG.venue, CFG.market].filter(Boolean).join(" · ");
+  if (!where) return;
+  var el = $("corner-mctv");
+  el.textContent = "";
+  var b = document.createElement("b");
+  b.textContent = "MCTV";
+  el.appendChild(b);
+  el.appendChild(document.createTextNode(" Elite Advertising · " + where));
+})();
+
+if (CFG.compareMbps > 0) {
+  $("bar-sponsor-name").textContent = CFG.compareLabel || (CFG.sponsor + " fiber");
+  $("bar-here-name").textContent = CFG.venue ? ("Wi-Fi at " + CFG.venue) : "This connection";
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   4. GAUGE + SPARKLINE
+   ══════════════════════════════════════════════════════════════════ */
+
+var SCALE_TOP = 1200;   // log scale so 25 Mbps and 900 Mbps are both legible
+function gaugeFrac(mbps) {
+  if (!(mbps > 0)) return 0;
+  return clamp(Math.log10(1 + mbps) / Math.log10(1 + SCALE_TOP), 0, 1);
+}
+function setGauge(mbps) {
+  $("gauge-prog").setAttribute("stroke-dasharray", (gaugeFrac(mbps) * 75).toFixed(2) + " 100");
+}
+function fmtSpeed(mbps) {
+  if (!isFinite(mbps) || mbps <= 0) return "—";
+  if (mbps >= 100) return String(Math.round(mbps));
+  if (mbps >= 10) return mbps.toFixed(1);
+  return mbps.toFixed(2);
+}
+function setReadout(kind, value, unit) {
+  $("gauge-kind").textContent = kind;
+  var num = $("gauge-num");
+  num.textContent = value;
+  /* Gigabit is the number the sponsor is paying for, and "1087" at full
+     size runs into the ring — step the type down as digits are added. */
+  var digits = value.replace(/[^0-9]/g, "").length;
+  num.style.fontSize = digits >= 4 ? "150px" : (digits >= 3 ? "172px" : "188px");
+  $("gauge-unit").textContent = unit;
+}
+
+var samples = [];
+function pushSample(mbps) {
+  samples.push(mbps);
+  if (samples.length > 150) samples.shift();
+  var top = Math.max.apply(null, samples.concat([1]));
+  var pts = samples.map(function (v, i) {
+    var x = samples.length > 1 ? (i / (samples.length - 1)) * 300 : 0;
+    var y = 58 - (v / top) * 54;
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+  $("spark-line").setAttribute("points", pts);
+  if (samples.length >= 3) $("spark").classList.add("on");
+}
+function clearSamples() {
+  samples = [];
+  $("spark-line").setAttribute("points", "");
+  $("spark").classList.remove("on");
+}
+
+function statState(id, state) {
+  var el = $(id);
+  el.classList.remove("active", "done");
+  if (state) el.classList.add(state);
+}
+function setStat(el, value, unit) {
+  el.textContent = value;
+  var s = document.createElement("small");
+  s.textContent = unit;
+  el.appendChild(s);
+}
+function resetStats() {
+  ["stat-ping", "stat-down", "stat-up"].forEach(function (id) { statState(id, null); });
+  setStat($("v-ping"), "—", "ms");
+  setStat($("v-down"), "—", "Mbps");
+  setStat($("v-up"), "—", "Mbps");
+  setGauge(0);
+  clearSamples();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   5. THE MEASUREMENT ENGINE
+   ══════════════════════════════════════════════════════════════════ */
+
+var randomChunk = null;
+function uploadChunk(size) {
+  if (!randomChunk || randomChunk.byteLength < size) {
+    var buf = new Uint8Array(size);
+    /* getRandomValues caps at 64 KiB per call. */
+    for (var o = 0; o < size; o += 65536) {
+      crypto.getRandomValues(buf.subarray(o, Math.min(o + 65536, size)));
+    }
+    randomChunk = buf;
+  }
+  return new Blob([randomChunk.subarray(0, size)]);
+}
+
+function withTimeout(ms) {
+  var ac = new AbortController();
+  var t = setTimeout(function () { ac.abort(); }, ms);
+  return { signal: ac.signal, done: function () { clearTimeout(t); }, abort: function () { ac.abort(); } };
+}
+
+/* -- latency ------------------------------------------------------- */
+async function measurePing(ep, rounds) {
+  var times = [];
+  for (var i = 0; i < rounds; i++) {
+    var t = withTimeout(4000);
+    var t0 = performance.now();
+    try {
+      await fetch(ep.ping + (ep.ping.indexOf("?") >= 0 ? "&" : "?") + "cb=" + Math.random(),
+                  { cache: "no-store", signal: t.signal });
+      times.push(performance.now() - t0);
+    } catch (e) {
+      /* one lost probe is not a failed test — only an empty set is */
+    } finally {
+      t.done();
+    }
+  }
+  if (!times.length) throw new Error("ping failed");
+  times.sort(function (a, b) { return a - b; });
+  var best = times[0];
+  var jitter = 0;
+  for (var j = 1; j < times.length; j++) jitter += Math.abs(times[j] - times[j - 1]);
+  return { ping: best, jitter: times.length > 1 ? jitter / (times.length - 1) : 0 };
+}
+
+/* -- download ------------------------------------------------------
+   Concurrent streams, chunk size escalating 1 -> 8 MiB so a slow DSL
+   line spends a few hundred KB and a gigabit line gets enough bytes to
+   measure. Ends on whichever comes first: byte budget or deadline.
+   Throughput is computed after an 800 ms warm-up so TCP slow start and
+   TLS setup do not drag the number down.                            */
+async function measureDownload(ep, budget, deadlineMs, streams, onTick) {
+  var total = 0, warmBytes = 0, warmAt = 0;
+  var start = performance.now();
+  var stop = withTimeout(deadlineMs);
+  var lastTick = start, lastBytes = 0;
+
+  function tick() {
+    var now = performance.now();
+    var dt = (now - lastTick) / 1000;
+    if (dt >= 0.2) {
+      var inst = ((total - lastBytes) * 8) / dt / 1e6;
+      lastTick = now; lastBytes = total;
+      if (onTick) onTick(inst);
+    }
+    if (!warmAt && now - start >= 800) { warmAt = now; warmBytes = total; }
+  }
+
+  async function stream(index) {
+    var size = 1024 * 1024;
+    while (total < budget && performance.now() - start < deadlineMs) {
+      var want = Math.min(size, budget - total);
+      if (want <= 0) break;
+      var url = ep.down + want + "&cb=" + Math.random() + "." + index;
+      var res = await fetch(url, { cache: "no-store", signal: stop.signal });
+      if (!res.ok) throw new Error("down " + res.status);
+      if (res.body && res.body.getReader) {
+        var reader = res.body.getReader();
+        while (true) {
+          var r = await reader.read();
+          if (r.done) break;
+          total += r.value.length;
+          tick();
+        }
+      } else {
+        total += (await res.arrayBuffer()).byteLength;
+        tick();
+      }
+      size = Math.min(size * 2, 8 * 1024 * 1024);
+    }
+  }
+
+  var jobs = [];
+  for (var i = 0; i < streams; i++) jobs.push(stream(i));
+  try {
+    await Promise.all(jobs);
+  } catch (e) {
+    if (!total) { stop.done(); throw e; }   /* nothing moved at all */
+  }
+  stop.done();
+
+  var now = performance.now();
+  var bytes = warmAt ? total - warmBytes : total;
+  var secs = ((warmAt ? now - warmAt : now - start)) / 1000;
+  if (secs <= 0.05 || bytes <= 0) throw new Error("download too short");
+  return (bytes * 8) / secs / 1e6;
+}
+
+/* -- upload --------------------------------------------------------
+   XHR rather than fetch: upload.onprogress is the only way to draw a
+   live number while bytes are still going out.                      */
+function postChunk(ep, blob, signalStop, onBytes) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", ep.up + (ep.up.indexOf("?") >= 0 ? "&" : "?") + "cb=" + Math.random(), true);
+    xhr.upload.onprogress = function (e) { if (onBytes) onBytes(e.loaded); };
+    xhr.onload = function () {
+      (xhr.status >= 200 && xhr.status < 400) ? resolve(blob.size)
+                                              : reject(new Error("up " + xhr.status));
+    };
+    xhr.onerror = function () { reject(new Error("up failed")); };
+    xhr.onabort = function () { resolve(0); };
+    signalStop.push(function () { try { xhr.abort(); } catch (e) {} });
+    xhr.send(blob);
+  });
+}
+
+async function measureUpload(ep, budget, deadlineMs, streams, onTick) {
+  var CHUNK = 1024 * 1024;
+  var start = performance.now();
+  var aborts = [];
+  var timer = setTimeout(function () { aborts.forEach(function (f) { f(); }); }, deadlineMs);
+  var completed = 0, inflight = {}, seq = 0;
+  var lastTick = start, lastBytes = 0;
+
+  function moved() {
+    var live = 0;
+    for (var k in inflight) live += inflight[k];
+    return completed + live;
+  }
+  function tick() {
+    var now = performance.now();
+    var dt = (now - lastTick) / 1000;
+    if (dt >= 0.25) {
+      var m = moved();
+      var inst = ((m - lastBytes) * 8) / dt / 1e6;
+      lastTick = now; lastBytes = m;
+      if (onTick) onTick(Math.max(inst, 0));
+    }
+  }
+
+  async function stream() {
+    while (completed < budget && performance.now() - start < deadlineMs) {
+      var size = Math.min(CHUNK, budget - completed);
+      if (size <= 0) break;
+      var id = seq++;
+      inflight[id] = 0;
+      try {
+        var sent = await postChunk(ep, uploadChunk(size), aborts, function (loaded) {
+          inflight[id] = loaded;
+          tick();
+        });
+        completed += sent;
+      } finally {
+        delete inflight[id];
+      }
+    }
+  }
+
+  var jobs = [];
+  for (var i = 0; i < Math.min(streams, 3); i++) jobs.push(stream());
+  try {
+    await Promise.all(jobs);
+  } catch (e) {
+    if (!completed) { clearTimeout(timer); throw e; }
+  }
+  clearTimeout(timer);
+  var secs = (performance.now() - start) / 1000;
+  if (secs <= 0.05 || completed <= 0) throw new Error("upload too short");
+  return (completed * 8) / secs / 1e6;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   6. RESULT CACHE — so the feed has something honest to show between
+      measurements, and after a network blip.
+   ══════════════════════════════════════════════════════════════════ */
+
+var CACHE_KEY = "mctv.speedtest.result";
+var memoryCache = null;
+
+function loadResult() {
+  if (memoryCache) return memoryCache;
+  try {
+    var raw = localStorage.getItem(CACHE_KEY);
+    if (raw) memoryCache = JSON.parse(raw);
+  } catch (e) { /* private mode / no storage — memory only */ }
+  return memoryCache;
+}
+function saveResult(r) {
+  memoryCache = r;
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(r)); } catch (e) {}
+}
+function ageText(ms) {
+  var mins = Math.round(ms / 60000);
+  if (mins < 1) return "moments ago";
+  if (mins === 1) return "1 minute ago";
+  if (mins < 60) return mins + " minutes ago";
+  var hrs = Math.round(mins / 60);
+  return hrs === 1 ? "1 hour ago" : hrs + " hours ago";
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   7. SCENES
+   ══════════════════════════════════════════════════════════════════ */
+
+function show(id) {
+  ["sc-intro", "sc-test", "sc-outro"].forEach(function (s) {
+    $(s).classList.toggle("on", s === id);
+  });
+}
+function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+function status(text, mode) {
+  $("test-status-text").textContent = text;
+  var el = $("test-status");
+  el.classList.remove("live", "sim");
+  if (mode) el.classList.add(mode);
+}
+
+/* Count a number up into place — used when replaying a cached or
+   simulated result, never as a stand-in for a measurement. */
+async function countTo(target, kind, unit, ms) {
+  var start = performance.now();
+  return new Promise(function (resolve) {
+    (function step() {
+      var t = clamp((performance.now() - start) / ms, 0, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      var v = target * eased;
+      setReadout(kind, unit === "ms" ? String(Math.round(v)) : fmtSpeed(v), unit);
+      setGauge(unit === "ms" ? 0 : v);
+      if (unit !== "ms") pushSample(v);
+      if (t < 1) requestAnimationFrame(step); else resolve();
+    })();
+  });
+}
+
+/* -- a real measurement -------------------------------------------- */
+async function runMeasurement() {
+  var budgetPing = 3000;
+  var budgetDown = Math.max(4000, (CFG.testMs - budgetPing) * 0.6);
+  var budgetUp = Math.max(3000, (CFG.testMs - budgetPing) * 0.4 - 500);
+
+  async function against(ep) {
+    status("Testing now · Live", "live");
+
+    statState("stat-ping", "active");
+    setReadout("Latency", "…", "ms");
+    var lat = await measurePing(ep, 6);
+    setStat($("v-ping"), String(Math.round(lat.ping)), "ms");
+    statState("stat-ping", "done");
+
+    statState("stat-down", "active");
+    setReadout("Download", "0", "Mbps");
+    var down = await measureDownload(ep, CFG.maxDown, budgetDown, CFG.streams, function (inst) {
+      setReadout("Download", fmtSpeed(inst), "Mbps");
+      setGauge(inst);
+      pushSample(inst);
+    });
+    setStat($("v-down"), fmtSpeed(down), "Mbps");
+    statState("stat-down", "done");
+    setReadout("Download", fmtSpeed(down), "Mbps");
+    setGauge(down);
+
+    statState("stat-up", "active");
+    var up = await measureUpload(ep, CFG.maxUp, budgetUp, CFG.streams, function (inst) {
+      setReadout("Upload", fmtSpeed(inst), "Mbps");
+      setGauge(inst);
+      pushSample(inst);
+    });
+    setStat($("v-up"), fmtSpeed(up), "Mbps");
+    statState("stat-up", "done");
+    setReadout("Upload", fmtSpeed(up), "Mbps");
+    setGauge(up);
+
+    return { down: down, up: up, ping: lat.ping, jitter: lat.jitter,
+             at: Date.now(), via: ep.name, live: true };
+  }
+
+  try {
+    return await against(PRIMARY);
+  } catch (err) {
+    if (!FALLBACK) throw err;
+    /* Venue firewall or a bad day at the endpoint — try our own server
+       before giving up on the whole cycle. */
+    resetStats();
+    return await against(FALLBACK);
+  }
+}
+
+/* -- demo mode ------------------------------------------------------ */
+async function runDemo() {
+  status("Simulated · Demo mode", "sim");
+  var down = 420 + Math.random() * 480;
+  var up = down * (0.5 + Math.random() * 0.45);
+  var ping = 6 + Math.random() * 9;
+
+  statState("stat-ping", "active");
+  await countTo(ping, "Latency", "ms", 900);
+  setStat($("v-ping"), String(Math.round(ping)), "ms");
+  statState("stat-ping", "done");
+
+  statState("stat-down", "active");
+  await countTo(down, "Download", "Mbps", 2600);
+  setStat($("v-down"), fmtSpeed(down), "Mbps");
+  statState("stat-down", "done");
+
+  statState("stat-up", "active");
+  await countTo(up, "Upload", "Mbps", 2000);
+  setStat($("v-up"), fmtSpeed(up), "Mbps");
+  statState("stat-up", "done");
+
+  return { down: down, up: up, ping: ping, jitter: 1.2,
+           at: Date.now(), via: "demo", live: false, demo: true };
+}
+
+/* -- replaying a cached result -------------------------------------- */
+async function replay(cached) {
+  status("Last measured " + ageText(Date.now() - cached.at), null);
+  statState("stat-ping", "active");
+  await countTo(cached.ping, "Latency", "ms", 700);
+  setStat($("v-ping"), String(Math.round(cached.ping)), "ms");
+  statState("stat-ping", "done");
+
+  statState("stat-down", "active");
+  await countTo(cached.down, "Download", "Mbps", 1800);
+  setStat($("v-down"), fmtSpeed(cached.down), "Mbps");
+  statState("stat-down", "done");
+
+  statState("stat-up", "active");
+  await countTo(cached.up, "Upload", "Mbps", 1400);
+  setStat($("v-up"), fmtSpeed(cached.up), "Mbps");
+  statState("stat-up", "done");
+
+  return cached;
+}
+
+/* -- the outro card -------------------------------------------------- */
+function paintOutro(result) {
+  var haveResult = !!result;
+  $("outro-result").style.display = haveResult ? "flex" : "none";
+  $("outro-msg").style.display = haveResult ? "none" : "block";
+  $("outro-compare").style.display =
+    (haveResult && CFG.compareMbps > 0) ? "flex" : "none";
+
+  if (!haveResult) {
+    $("outro-msg").textContent =
+      "Live speed test unavailable right now — this screen could not reach the test server.";
+    $("outro-fine").textContent = CFG.cta;
+    return;
+  }
+
+  $("r-down").textContent = fmtSpeed(result.down);
+  $("r-up").textContent = fmtSpeed(result.up);
+  $("r-ping").textContent = String(Math.round(result.ping));
+
+  if (CFG.compareMbps > 0) {
+    var top = Math.max(CFG.compareMbps, result.down) * 1.05;
+    $("bar-here-val").textContent = fmtSpeed(result.down) + " Mbps";
+    $("bar-sponsor-val").textContent = CFG.compareMbps + " Mbps";
+    /* width set on the next frame so the transition actually plays */
+    $("bar-here-fill").style.width = "0%";
+    $("bar-sponsor-fill").style.width = "0%";
+    requestAnimationFrame(function () {
+      $("bar-here-fill").style.width = (result.down / top * 100).toFixed(1) + "%";
+      $("bar-sponsor-fill").style.width = (CFG.compareMbps / top * 100).toFixed(1) + "%";
+    });
+  }
+
+  /* The fine print is the honesty line. It always says what was measured,
+     where, when, and against what. */
+  var where = CFG.venue ? ("the Wi-Fi at " + CFG.venue) : "this venue's internet connection";
+  var when = result.demo
+    ? "Simulated result — demonstration only, not a live measurement."
+    : (result.live ? "Measured live just now" : "Measured " + ageText(Date.now() - result.at))
+      + " on " + where + ", to " + result.via + ". Speeds vary by device, time of day and network load.";
+  $("outro-fine").textContent = when;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   8. THE LOOP
+   ══════════════════════════════════════════════════════════════════ */
+
+var nextTestAt = 0;
+
+async function testPhase() {
+  resetStats();
+  var cached = loadResult();
+  var due = Date.now() >= nextTestAt;
+
+  if (CFG.demo) return runDemo();
+
+  if (!due && cached) return replay(cached);
+
+  try {
+    var fresh = await runMeasurement();
+    saveResult(fresh);
+    /* +/-10% jitter so 125 screens do not all re-test on the same tick */
+    nextTestAt = Date.now() + CFG.intervalMs * (0.9 + Math.random() * 0.2);
+    return fresh;
+  } catch (err) {
+    /* Back off, but not for the full interval — a venue router that just
+       rebooted should be picked up within a couple of minutes. */
+    nextTestAt = Date.now() + Math.min(CFG.intervalMs, 120000);
+    if (cached) {
+      status("Last measured " + ageText(Date.now() - cached.at), null);
+      return replay(cached);
+    }
+    status("Test unavailable", null);
+    setReadout("Offline", "—", "");
+    await wait(1500);
+    return null;
+  }
+}
+
+async function cycle() {
+  /* INTRO */
+  show("sc-intro");
+  await wait(CFG.introMs);
+
+  /* TEST — held to the configured window: if the measurement lands early
+     the result sits on screen, if it overruns it is cut off there. */
+  show("sc-test");
+  var startedAt = Date.now();
+  var result = await testPhase();
+  var spent = Date.now() - startedAt;
+  if (spent < CFG.testMs) await wait(CFG.testMs - spent);
+
+  /* OUTRO */
+  paintOutro(result);
+  show("sc-outro");
+  await wait(CFG.outroMs);
+}
+
+async function main() {
+  /* Stagger the very first test across the network. */
+  nextTestAt = Date.now() + Math.random() * 5000;
+  /* Long-running players leak; a nightly-ish reload also picks up edits. */
+  setTimeout(function () { location.reload(); }, 6 * 3600 * 1000);
+
+  while (true) {
+    try {
+      await cycle();
+    } catch (err) {
+      /* Nothing in a cycle is allowed to stop the loop and leave a screen
+         showing a frozen frame. Logged so a player's remote console can
+         say why a screen has been sitting on the sponsor card. */
+      if (window.console) console.warn("[feed] cycle failed:", err);
+      show("sc-intro");
+      await wait(CFG.introMs);
+    }
+  }
+}
+
+main();
+
+})();
+</script>
+</body>
+</html>
