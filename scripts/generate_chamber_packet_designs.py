@@ -757,17 +757,32 @@ SIZE & GEOMETRY
   marks, let us know and we will re-export.
 
 COLOR
-  Files are supplied in RGB. Please convert to CMYK using your standard
-  profile (US Web Coated SWOP or GRACoL 2013), relative colorimetric.
+  Two sets are supplied. Use whichever suits your workflow:
 
-  Brand colors - match to these values on a calibrated proof. The CMYK
-  figures are a STARTING POINT ONLY; the hex value is authoritative:
-    MCTV Navy ....... {navy}   deep rich navy, must not read washed
-                                 or purple; a rich build around
-                                 300% total ink is preferred
+    *_PRINT_CMYK.pdf  DeviceCMYK, already separated. Converted from the
+                      RGB masters through a SWOP-like profile. All images
+                      are CMYK; no RGB remains.
+    *_PRINT.pdf       the RGB masters. If you would rather separate these
+                      yourself against your own press profile, please do
+                      - your profile beats ours. Ignore the CMYK set.
+
+  Achieved separation in the CMYK files, for reference:
+    MCTV Navy ....... {navy}   C90 M85 Y47 K55, 276% total ink
     MCTV Gold ....... {gold}   warm antique gold, not yellow/brassy
     Warm cream ...... {cream}   very light panel tint - please confirm
                                  it holds and does not blow out to white
+  Peak coverage anywhere on the page is 302% and only over a couple of
+  stray pixels; everything else sits at or under 276%. The hex values
+  remain authoritative - match them on a calibrated proof. The navy must
+  not read washed out or purple.
+
+  Note on small type: body copy is {ink}, a very dark navy rather than
+  pure black, so it separates as a rich 4-color dark rather than 100% K.
+  That is deliberate - forcing near-blacks to K-only also flattened the
+  brand navy to solid black. If you would prefer 100% K on text at 8pt
+  and below, apply your own black generation, or take the RGB masters
+  and separate to taste.
+
   The navy covers a large solid area. Please watch for banding and
   mottling in the footer band.
 
@@ -808,7 +823,7 @@ Questions on any of the above - call Creed at 601-201-8202.
 def write_print_instructions() -> Path:
     text = PRINT_INSTRUCTIONS.format(
         trim_w=TRIM_W, trim_h=TRIM_H, media_w=MEDIA_W, media_h=MEDIA_H,
-        bleed=BLEED, navy=NAVY, gold=GOLD, cream=CREAM,
+        bleed=BLEED, navy=NAVY, gold=GOLD, cream=CREAM, ink=INK,
     )
     path = OUTPUT_DIR / "MCTV_Chamber_Packet_PRINT_INSTRUCTIONS.txt"
     path.write_text(text, encoding="utf-8")
