@@ -1,0 +1,62 @@
+[
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 1",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'. The July 2026 whitelist sweep covered the oxford/starkville/tupelo playlists only, so this venue's special playlist was never captured into screen_loops."
+  },
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 2",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'."
+  },
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 3",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'."
+  },
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 4",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'."
+  },
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 5",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'."
+  },
+  {
+    "market": "special",
+    "city": "Tupelo",
+    "venue_name": "Tupelo Airport Authority",
+    "screen_label": "Screen 6",
+    "license_id": null,
+    "address": "",
+    "expected_loop_seconds": 607,
+    "note": "Pull the license number from n-compass under 'Tupelo Airport Authority'."
+  }
+]

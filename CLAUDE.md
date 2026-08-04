@@ -42,6 +42,8 @@ pages/                          # 13 internal + 8 portal pages
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
+  26_Field_Audit.py             # Field audit packet (roster, gaps, brief + field
+                                #   sheet + Pi labels), and import of findings
   portal_login.py               # Client/host portal login
   portal_dashboard.py           # Portal dashboard (venue-specific or advertiser)
   portal_profile.py             # Profile management
@@ -62,6 +64,9 @@ generators/                     # Document generators
   advertiser_report.py          # Advertiser traction report (NTV360 data)
   venue_report.py               # Venue partner report
   contract_generator.py         # Contract document generator (5 types)
+  field_audit.py                # Field audit brief (route, per-stop reference
+                                #   pages with license numbers, gaps appendix)
+  field_audit_labels.py         # Raspberry Pi license labels, Avery 5163 + QR
 
 services/                       # Business logic and integrations
   auth.py                       # Password + magic link auth, email allowlist
@@ -83,6 +88,8 @@ services/                       # Business logic and integrations
   screen_inventory_service.py   # Manual book of record: what creative plays where
                                 #   (loop_items + per-screen overrides), plus the two
                                 #   reconciliations (vs sweep, vs Encompass export)
+  field_audit_service.py        # Joins the sweep + hosts + addresses + geocodes into
+                                #   a routed screen roster; XLSX field sheet; import
   creatomate_service.py         # Creatomate video generation API
   supabase_client.py            # Supabase REST client (query, insert, update, delete)
   portal_service.py             # Portal business logic (clients, activity log)
@@ -208,6 +215,44 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
   passes them into every tab (`items=` / `overrides=` / `screens=` params) — same
   convention as the Pipeline page.
 
+### Field Audit
+`pages/26_Field_Audit.py` + `services/field_audit_service.py` produce the packet a
+contracted technician carries into the field, and read their findings back in.
+Four tabs: **Roster**, **Gaps**, **Packet**, **Import findings**.
+
+- **The roster** (`audit_roster(market)`) is a five-way join. `screen_loops` is the
+  spine — one row per license, and the only source of license numbers.
+  `venue_rate_inputs` adds screen counts and catches `special`-market venues in the
+  same city (the airport), `clients` (`client_type='host'`) adds contacts with the
+  street address parsed out of the `notes` string, `data/network_dashboard.json`
+  adds NTV360's address and category, and `data/venue_geocodes.json` adds lat/lon.
+  Every join goes through `screen_inventory_service.normalize()` — the five sources
+  spell venues differently.
+- **Short codes** (`short_code()`) are `TUP-6ABE3B` — a market prefix plus the first
+  six hex of the license UUID. Derived, not positional, so a printed label stays
+  correct after venues are added or removed. Route stop numbers are separate and
+  may change freely.
+- **Routing** (`route_order()`): nearest-neighbour then 2-opt over the geocoded
+  stops, starting from the stop farthest from the market centroid. Consecutive
+  stops within `CLUSTER_GAP_MI` join a cluster until it spans `CLUSTER_SPAN_MI`
+  from its own centre. `_building_key()` truncates an address at its street-type
+  suffix so tenants of one building (499 S Gloster St in Tupelo is four licenses)
+  are flagged `same_building` instead of read as four stops.
+- **Screens the sweep never captured** live in `data/audit/extra_licenses.json` and
+  merge in with `source='overlay'` and `license_id: null`. They render as blanks to
+  record on site and print no label. Delete an overlay entry once a sweep covers it.
+- **The three files**: `generators/field_audit.py` (brief), `build_workbook()`
+  (XLSX field sheet, written with openpyxl — there is no other XLSX writer in the
+  repo), and `generators/field_audit_labels.py` (Avery 5163 labels with a QR of the
+  license UUID; degrades to text-only if `qrcode` is missing).
+- **The loop closes** through `parse_completed_workbook()` → `save_assets()` →
+  `screen_assets` (migration 026), upserting on `license_id`.
+- `CAPTURE_COLUMNS` / `CAPTURE_LEGEND` in the service are the single source for the
+  workbook columns, their dropdowns, and the brief's legend — change them in one
+  place or the sheet and the brief drift apart.
+- **Perf rule**: the page builds the roster once per rerun and passes it into every
+  tab — same convention as the Pipeline and Loop Inventory pages.
+
 ### Contract System
 5 contract types, each with dedicated clause sets:
 - **Advertiser** (8 clauses) — standard advertising partnership
@@ -284,6 +329,11 @@ applied by hand in the Supabase SQL editor):
   but not twice in one
 - `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
   (migration 024); cascades on item delete
+- `screen_assets` — the physical record of each screen: display brand/model/size,
+  mount, Raspberry Pi model and serial, power, network, condition, last audited
+  (migration 026). Written by importing a completed field sheet on the Field Audit
+  page. `license_id` is nullable and uniquely indexed only where non-null, so
+  screens whose license number is not yet known can still be recorded
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 
