@@ -46,6 +46,9 @@ class BaseProposal(ABC):
         Returns (proposal_path, email_path) tuple.
         """
         doc = self.docx.create_document()
+        # Stash the input so get_sections() can vary the section list per
+        # proposal (e.g. the optional NIL page on Elite Advertiser).
+        self.input_data = input_data
         variables = self.get_prompt_variables(input_data)
         sections = self.get_sections()
         total = len(sections)

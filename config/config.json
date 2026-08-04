@@ -252,6 +252,96 @@
       "Real-time analytics powered by NTV360 dashboard"
     ]
   },
+  "nil": {
+    "collective": {
+      "name": "The Growth Collective",
+      "school": "",
+      "market": "Oxford",
+      "blurb": "{collective} connects North Mississippi businesses with the athletes who represent this community. Athletes get paid for work they actually do. Businesses get advertising that runs on 125+ screens."
+    },
+    "objection": "You have probably heard that NIL is just boosters cutting checks to players. That is not what this is. Every dollar here buys advertising that runs on our screens, and every athlete is paid for work you can point to.",
+    "value_props": [
+      {"title": "Real screens, real numbers", "body": "125+ screens across five markets and an impression report on every campaign. The promotion is not a handshake, it is a document."},
+      {"title": "The athlete does the work", "body": "Every agreement is built around a shoot day, a post, or an appearance. Nobody is paid for nothing."},
+      {"title": "Priced against a published rate card", "body": "Our CPM and screen pricing are public. That is what makes the value defensible when somebody asks."},
+      {"title": "One category, one business", "body": "Lock your category and your competitor cannot buy the same athlete on the same screens."}
+    ],
+    "athlete_voices": [
+      {
+        "name": "Athlete Name",
+        "sport": "Football",
+        "school": "",
+        "quote": "We shot the spot at the dealership on a Tuesday morning and it was running on screens around town that same week. People I had never met started bringing it up at the gas station.",
+        "consent_on_file": false,
+        "photo": ""
+      },
+      {
+        "name": "Athlete Name",
+        "sport": "Women's Basketball",
+        "school": "",
+        "quote": "I grew up eating at that restaurant. Getting to be the face of their ad felt like doing something for a place that had already done a lot for me.",
+        "consent_on_file": false,
+        "photo": ""
+      },
+      {
+        "name": "Athlete Name",
+        "sport": "Baseball",
+        "school": "",
+        "quote": "The appearance took an hour on a Saturday. I signed some things, took pictures with kids, and the owner told me it was the busiest morning they had all month.",
+        "consent_on_file": false,
+        "photo": ""
+      }
+    ],
+    "how_it_works": {
+      "bundled": [
+        "Pick your package: You choose the market and the screen count, the same way you would with any MCTV campaign.",
+        "We bring the athlete: The collective matches you with an athlete who fits your business and your customers.",
+        "We shoot the spot: Your ad features that athlete and runs on our screens across North Mississippi.",
+        "You get the paperwork: Proof of play, impression counts, and a signed deal memo. Everything your accountant and the clearinghouse need."
+      ],
+      "addon": [
+        "Start with your media buy: Pick the screens and the markets you want at standard rates.",
+        "Add the athlete tier you want: Three levels. You decide how far you want to take it.",
+        "The athlete goes to work: Your spot, their name and face, running on every screen you bought.",
+        "You get the paperwork: Proof of play, impression counts, and a signed deal memo for every athlete."
+      ],
+      "contribution": [
+        "Buy your advertising: Pick your screens and markets at standard MCTV rates.",
+        "Choose your support level: Add whatever amount you want to put behind local athletes.",
+        "The collective puts it to work: Athletes are matched with businesses and paid for promotional work.",
+        "You get the paperwork: Proof of play and impression reporting on your MCTV campaign."
+      ]
+    },
+    "packages": {
+      "bundled": [
+        {"name": "Hometown", "monthly_rate": 1750.0, "screens": 40, "athletes": 1, "includes": "One athlete featured in your spot, one shoot day, one social post."},
+        {"name": "Gameday", "monthly_rate": 2750.0, "screens": 75, "athletes": 2, "includes": "Two athletes, quarterly creative refresh, one in-store appearance."},
+        {"name": "Franchise", "monthly_rate": 4500.0, "screens": 125, "athletes": 3, "includes": "Three athletes, network-wide placement, category exclusivity, two appearances."}
+      ],
+      "addon": [
+        {"name": "One Athlete", "monthly_rate": 750.0, "athletes": 1, "includes": "One athlete in your creative, one shoot day, one social post."},
+        {"name": "Two Athletes", "monthly_rate": 1400.0, "athletes": 2, "includes": "Two athletes, quarterly refresh, one in-store appearance."},
+        {"name": "Roster", "monthly_rate": 2500.0, "athletes": 3, "includes": "Three athletes, category exclusivity, two appearances."}
+      ],
+      "contribution": {
+        "note": "Your MCTV advertising is priced off the standard rate card. Support for the collective is whatever you decide on top of it.",
+        "suggested_levels": [250.0, 500.0, 1000.0]
+      }
+    },
+    "compliance_points": [
+      "Filed, not assumed: Every athlete agreement over $600 goes through NIL Go within five business days.",
+      "Paid for real work: A shoot day, use of name and image, and an agreed number of appearances or posts.",
+      "Priced off a public rate card: Fees are set against our published screen pricing and CPM, so the value is documented rather than guessed.",
+      "Proof of play: An NTV360 report showing where your spot ran and how many people actually saw it.",
+      "Releases on file: Every athlete quote and photo in our materials is used with a signed release."
+    ],
+    "tax_language": {
+      "plain": "Your spend with MCTV is an advertising expense. Athlete fees are paid for defined promotional work at fair market value, and we document all of it with proof-of-play reporting. Talk to your tax advisor about how this applies to your own situation.",
+      "headline": "Put your advertising budget behind local athletes. Your MCTV spend is an advertising expense, the athlete fee is paid for real promotional work at fair market value, and we hand you the documentation to back it up. Talk to your tax advisor about your own situation.",
+      "omit": ""
+    },
+    "disclaimer": "MCTV Elite Advertising is not a tax or legal advisor and nothing in this document is tax advice. Talk to your own CPA about how advertising spend applies to your business."
+  },
   "proposal_settings": {
     "default_format": "docx",
     "include_cover_email": true,

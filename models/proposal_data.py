@@ -22,6 +22,11 @@ class ProposalInput:
     custom_per_slot_rate: float = 0.0
     sales_rep: str = "Mary Michael Cannon"
     additional_notes: str = ""
+    # Optional athlete/NIL partnership page. See NILPartnerInput for the
+    # meaning of nil_structure and tax_language.
+    include_nil: bool = False
+    nil_structure: str = "bundled"
+    tax_language: str = "plain"
 
 
 @dataclass
@@ -92,6 +97,41 @@ class ExclusivityInput:
     selected_markets: list = field(default_factory=lambda: ["Oxford"])
     base_tier: int = 0
     monthly_rate: float = 0.0
+    sales_rep: str = "Mary Michael Cannon"
+    additional_notes: str = ""
+
+
+@dataclass
+class NILPartnerInput:
+    """Input data for an NIL / athlete partnership proposal.
+
+    Two independent knobs drive how the money is presented:
+
+    nil_structure -- how the spend is packaged.
+        "bundled"      fixed athlete-featured ad tiers, one price.
+        "addon"        standard media buy plus a priced athlete tier.
+        "contribution" media buy plus an open support amount.
+    tax_language -- how much tax framing appears in the printed document.
+        "plain"    state it is an advertising expense, plus "see your advisor".
+        "headline" lead with the deduction as a primary benefit.
+        "omit"     no tax language in the document at all.
+    """
+    business_name: str
+    contact_name: str
+    contact_email: str = ""
+    industry: str = ""
+    city: str = "Oxford"
+    selected_markets: list = field(default_factory=lambda: ["Oxford"])
+    collective_name: str = ""
+    base_tier: int = 0
+    nil_tier: int = 0
+    athlete_count: int = 1
+    nil_monthly_fee: float = 0.0
+    contribution_amount: float = 0.0
+    category_exclusive: bool = False
+    exclusive_category: str = ""
+    nil_structure: str = "bundled"
+    tax_language: str = "plain"
     sales_rep: str = "Mary Michael Cannon"
     additional_notes: str = ""
 
