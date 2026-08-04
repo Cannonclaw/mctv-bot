@@ -30,6 +30,9 @@ The checks are ranked by how often they actually break signage players:
                         scoreboards). These can start failing AFTER publish
                         with nobody touching the playlist, which is what
                         makes them so confusing to chase.
+    dynamic_load        Too many of those in one playlist. Each runs a web
+                        view; enough together can starve a player of memory
+                        even when every individual feed is healthy.
     dark_item           Whitelisted to zero screens: present in the
                         playlist, playing nowhere.
     duplicate_file      Same creative twice in one playlist.
@@ -77,6 +80,12 @@ RISKY_CHARS = set("'\"&%#?*|<>:\\;$`{}[]")
 # Durations outside this band are suspect for a :15/:30 spot loop.
 MIN_SANE_SECONDS = 3
 MAX_SANE_SECONDS = 120
+
+# How many live/web-rendered items in one playlist before the total itself is
+# the problem. Set from the Oxford Aug 2026 outage, where the loop had picked
+# up a chamber events calendar, three college athletics schedules, a Sparc
+# intro/outro and a weather widget over about eight weeks.
+DYNAMIC_LOAD_THRESHOLD = 4
 
 # Header aliases — Encompass exports do not use stable column names.
 _FIELD_ALIASES: dict[str, tuple[str, ...]] = {
@@ -413,6 +422,50 @@ def _check_dynamic(rows: list[dict[str, Any]]) -> list[Finding]:
     return findings
 
 
+def _check_dynamic_load(rows: list[dict[str, Any]]) -> list[Finding]:
+    """Flag a playlist carrying enough web-rendered items to exhaust a player.
+
+    Individually-fine feeds still add up. Each calendar, schedule, or widget
+    runs a live web view, and those hold memory in a way a flat video does
+    not. Past a handful, a player can be starved to the point where video
+    decode fails first — spots get skipped while the feeds keep rendering —
+    and then it stops drawing anything at all. A reboot clears it, buys an
+    hour, and it happens again, which is what makes it read as a hardware
+    fault instead of a playlist problem.
+
+    Fires on the playlist, not on any one item, because no single feed is
+    the culprit — the total is.
+    """
+    dynamic = [r for r in rows if _looks_dynamic(r)]
+    if len(dynamic) < DYNAMIC_LOAD_THRESHOLD:
+        return []
+
+    names = ", ".join((r.get("file_name") or "(unnamed)") for r in dynamic[:6])
+    if len(dynamic) > 6:
+        names += f", +{len(dynamic) - 6} more"
+    share = len(dynamic) / len(rows) if rows else 0
+
+    return [Finding(
+        rule="dynamic_load",
+        severity="high",
+        file_name=f"{len(dynamic)} live items in this playlist",
+        detail=(
+            f"{len(dynamic)} of {len(rows)} items ({share:.0%}) are live or "
+            f"web-rendered: {names}. Each one runs its own web view. Enough of "
+            f"them together can starve a player until video decode fails — "
+            f"spots skipped while the feeds still render — and then it goes "
+            f"black. Rebooting clears it for about an hour."
+        ),
+        action=(
+            "Pull the live items off this playlist, leaving the flat video "
+            "spots, and watch the screens for a few hours. If they stay up, "
+            "add the feeds back one at a time."
+        ),
+        context={"dynamic_count": len(dynamic), "total": len(rows),
+                 "files": [r.get("file_name") for r in dynamic]},
+    )]
+
+
 def _check_dark(rows: list[dict[str, Any]]) -> list[Finding]:
     """Items present in the playlist but whitelisted to zero screens."""
     findings = []
@@ -499,6 +552,7 @@ def check_playlist(rows: list[dict[str, Any]]) -> list[Finding]:
         _check_filenames,
         _check_durations,
         _check_dynamic,
+        _check_dynamic_load,
         _check_dark,
         _check_duplicates,
     ):
