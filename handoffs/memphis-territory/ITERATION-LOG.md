@@ -24,6 +24,10 @@ Delete both with `delete_trigger` when iteration 12 completes.
 
 | 4 | 2026-08-04 ~11:3x | **Build cost model** — `build_cost_model.py` → `cost-model.html`, an interactive calculator (every input editable), plus `COST-MODEL.md`. Found n-Compass's published terms: **$35,000 franchise fee, $48,150–$120,405 total investment, and a $500/mo flat + $75 per billboard per month royalty**. At 90 screens that royalty is **$87,000/yr — the waived fee is ~7% of the 5-year cost**. Capex to 90 screens models at $54,000 (inside n-Compass's own published range). Break-even is 11 advertisers at Phase 1 and **10 at Phase 2** — it improves with scale because the tier jump outruns the cost curve. Adds a fifth question for Don. | Rep coverage / drive-time routing |
 
+| 5 | 2026-08-04 ~12:0x | **60-mile radius scan** — `radius_scan.json` + `build_radius_map.py` → `radius-map.html`, plus `EXPANSION-SCAN.md`. Great-circle distances from 31 candidate towns to all five current markets. **Tuscaloosa + Northport AL is 53 mi from Columbus** — 116,477 people + ~34,000 UA students, the only genuine second Oxford in range, but already contested by Impulse Digital Media running our exact free-host model. Bigger finding: **Columbus (2 screens) + West Point (1) sit against a $2.5B Steel Dynamics investment creating 1,000 jobs at $93K average** — finishing the Golden Triangle beats opening anything new. Builder validates current screen counts against `config.json`. | Rep coverage / drive-time routing |
+
+**Published artifact (iteration 5):** https://claude.ai/code/artifact/ae624d29-df75-408d-92ad-4d869d11702b
+
 **Published artifact (iteration 4):** https://claude.ai/code/artifact/278f6c6a-079c-4f42-a0f3-f5c31195bd28
 
 **Published artifact (iteration 3):** https://claude.ai/code/artifact/dd30a00e-8162-4263-a4ed-95b635bec81a
@@ -51,6 +55,7 @@ republishing `market-maps.artifact.html` — either keeps the same link.
 - [x] **Tier-aligned phasing** — phase lines on 40 / 75 / 90
 - [ ] **Build cost model** — hardware + install per screen × phase, so the build-out clause can be
       priced. This is the number that decides whether "free territory" is actually free.
+- [x] **60-mile expansion scan** — Tuscaloosa is the only real market in range; Golden Triangle first
 - [ ] **Rep coverage plan** — drive-time routing across DeSoto nodes; one rep or two?
 - [ ] **Venue category targeting model** — how many venues of each category actually exist per node
       (vs. which categories we'd *want*); ties to `loop_items`
