@@ -8,6 +8,10 @@ Call `CronDelete` on `39fef93a` when iteration 12 completes.
 | 1 | 2026-08-04 ~06:5x | Established corridor/node structure for all five markets (Olive Branch, Hernando, Southaven, Horn Lake fill-in, Tupelo densification). Node-level screen targets. Grounded every node in verified geography — Goodman Rd/Craft Rd/Old Towne/Cascades, Courthouse Sq/McIngvale, Silo Square/Snowden/Tanger/Landers, NMMC/Barnes Crossing/Gloster/Fairpark. Competitive overlay stubbed pending NTV360 export. | Visual map artifact |
 | 2 | 2026-08-04 ~07:4x | **Visual maps built** — `markets.json` + `build_maps.py` → `market-maps.html`, mirroring the `rafters-oxford` handoff pattern (stdlib only, navy/gold, dark-mode aware, self-contained). Inline SVG corridor schematics per market with auto-placed road labels. **Re-cut every phase target onto a pricing-tier threshold (40 / 75 / 90)** after finding iteration 1's ranges landed in billing dead zones. Applied the same logic to Tupelo: 25 + 50 = 75 unlocks the top tier for a Tupelo-only buy. Categories now validate against `config/config.json`. | Build cost model — price the "free" territory |
 
+**Published artifact (iteration 2):** https://claude.ai/code/artifact/c356da53-40dd-4653-b7b8-80dfb03fde07
+Republish by passing that URL as `url` to the Artifact tool, or from this conversation by
+republishing `market-maps.artifact.html` — either keeps the same link.
+
 ## Notes for future iterations
 
 - `build_maps.py` validates on every run: node sums vs market targets, phase cumulatives vs
@@ -15,6 +19,8 @@ Call `CronDelete` on `39fef93a` when iteration 12 completes.
   on mismatch, so edit `markets.json` and re-run rather than hand-editing the HTML.
 - Road labels auto-place at the point along each polyline farthest from any node *and* from
   previously-placed labels. Adding nodes near a corridor will move its label — that's intended.
+- `build_maps.py` emits two files: `market-maps.html` (standalone, for the repo) and
+  `market-maps.artifact.html` (fragment — the Artifact publisher supplies the document wrapper).
 - Screenshot check: Chromium is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. The pip
   `playwright` package expects a newer build, so pass `executable_path` rather than running
   `playwright install`.

@@ -12,6 +12,8 @@ ROOT = "/home/user/mctv-bot"
 OUT = f"{ROOT}/handoffs/memphis-territory"
 
 NAVY, GOLD = "#1B1F3B", "#C5A55A"
+PAGE_TITLE = ("MCTV &mdash; Strategic Market Maps: DeSoto Expansion "
+              "+ Tupelo Densification")
 
 # Phase palette. Phase 0 = Tupelo densification (parallel track, no territory grant).
 PHASE_COLOR = {0: "#4F8A57", 1: GOLD, 2: "#4A7C9B", 3: "#8A8FA3"}
@@ -296,11 +298,12 @@ CSS = """
   .badge { display:inline-block; margin-top:12px; background:#C4576B; color:#fff; font-size:11px;
            letter-spacing:.8px; text-transform:uppercase; padding:4px 10px; font-weight:bold; }
   .wrap { max-width:1180px; margin:0 auto; padding:24px; }
-  h2 { font-size:19px; margin:34px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--gold); }
+  h2 { font-size:19px; margin:34px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--gold);
+       text-wrap:balance; }
   .stats { display:flex; flex-wrap:wrap; gap:12px; margin:0 0 18px; }
   .stat { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--gold);
           padding:11px 15px; min-width:132px; }
-  .stat b { display:block; font-size:21px; color:var(--gold); }
+  .stat b { display:block; font-size:21px; color:var(--gold); font-variant-numeric:tabular-nums; }
   .stat span { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
   .nav { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .nav a { text-decoration:none; font-size:13px; padding:7px 13px; background:var(--card);
@@ -310,6 +313,8 @@ CSS = """
   .filters button { font:inherit; font-size:13px; padding:8px 16px; cursor:pointer;
     background:var(--card); color:var(--text); border:1px solid var(--line); }
   .filters button[aria-pressed="true"] { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .filters button:focus-visible, .nav a:focus-visible { outline:3px solid var(--gold);
+    outline-offset:2px; }
   .mapbox { background:var(--card); border:1px solid var(--line); padding:10px; margin-bottom:18px;
             overflow-x:auto; }
   .mapbox svg { display:block; width:100%; min-width:600px; height:auto; }
@@ -333,7 +338,7 @@ CSS = """
   .node-card.dim { display:none; }
   .node-card header { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
   .node-card h4 { margin:0; font-size:15px; flex:1; }
-  .node-card .cnt { color:var(--gold); font-size:19px; }
+  .node-card .cnt { color:var(--gold); font-size:19px; font-variant-numeric:tabular-nums; }
   .dot { width:11px; height:11px; border-radius:50%; flex:none; }
   .geo { margin:0 0 5px; font-size:12px; color:var(--muted); }
   .anchors { margin:0 0 9px; font-size:12px; }
@@ -350,14 +355,15 @@ CSS = """
             margin-bottom:16px; position:relative; }
   .track { position:relative; height:104px; }
   .pbar { position:absolute; left:0; height:30px; top:0; display:flex; align-items:center;
-          padding-left:11px; color:#fff; font-size:12px; font-weight:bold; }
+          padding-left:11px; color:#fff; font-size:12px; font-weight:bold;
+          font-variant-numeric:tabular-nums; }
   .pbar:nth-child(2) { top:34px; }
   .pbar:nth-child(3) { top:68px; }
   .tick { position:absolute; top:-14px; bottom:0; }
   .tickline { position:absolute; top:0; bottom:0; width:2px; background:var(--muted); opacity:.5; }
   .ticklab { position:absolute; top:-16px; left:4px; font-size:10.5px; color:var(--muted);
              white-space:nowrap; }
-  .ticklab b { color:var(--text); }
+  .ticklab b { color:var(--text); font-variant-numeric:tabular-nums; }
   .legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:var(--muted);
             margin-bottom:20px; align-items:center; }
   .legend i { display:inline-block; width:13px; height:13px; border-radius:50%; margin-right:5px;
@@ -366,8 +372,10 @@ CSS = """
              padding:15px 19px; font-size:13.5px; margin-bottom:20px; }
   .callout b { color:var(--gold); }
   .gap { border-left-color:#C4576B; }
+  .tablewrap { overflow-x:auto; margin-bottom:18px; }
   table { border-collapse:collapse; width:100%; background:var(--card); border:1px solid var(--line);
-          font-size:13px; margin-bottom:18px; }
+          font-size:13px; min-width:420px; }
+  td + td, th + th { font-variant-numeric:tabular-nums; }
   th,td { padding:9px 13px; border-bottom:1px solid var(--line); text-align:left; }
   th { background:var(--navy); color:#fff; font-size:11px; text-transform:uppercase;
        letter-spacing:.6px; }
@@ -381,15 +389,7 @@ tier_rows = "".join(
     for t in tiers
 )
 
-html = f"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MCTV &mdash; Strategic Market Maps: DeSoto Expansion + Tupelo Densification</title>
-<style>{CSS}</style>
-</head>
-<body>
+body_html = f"""
 <header class="top">
   <h1>Strategic Market Maps</h1>
   <p>Memphis / DeSoto County expansion &middot; Tupelo densification &middot;
@@ -430,10 +430,10 @@ html = f"""<!doctype html>
     </div>
   </div>
 
-  <table>
+  <div class="tablewrap"><table>
     <tr><th>Tier</th><th>Monthly</th><th>Cost / screen</th><th>Plays / month</th></tr>
     {tier_rows}
-  </table>
+  </table></div>
 
   <h2>DeSoto County &mdash; corridor overview</h2>
   <div class="legend">
@@ -502,12 +502,28 @@ html = f"""<!doctype html>
     }});
   }}));
 </script>
-</body>
-</html>
 """
+
+# Full standalone document for the repo.
+html = (
+    "<!doctype html>\n<html lang=\"en\">\n<head>\n"
+    '<meta charset="utf-8">\n'
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    f"<title>{PAGE_TITLE}</title>\n"
+    f"<style>{CSS}</style>\n</head>\n<body>\n"
+    + body_html
+    + "</body>\n</html>\n"
+)
+
+# Artifact fragment: the publisher supplies doctype/head/body, so emit only the
+# style block, the page content, and the script.
+artifact_html = f"<title>{PAGE_TITLE}</title>\n<style>{CSS}</style>\n" + body_html
+
 
 with open(f"{OUT}/market-maps.html", "w") as f:
     f.write(html)
+with open(f"{OUT}/market-maps.artifact.html", "w") as f:
+    f.write(artifact_html)
 
 node_count = sum(len(m["nodes"]) for m in markets)
 print(f"market-maps.html written: {len(markets)} markets, {node_count} nodes, {len(html):,} bytes")
