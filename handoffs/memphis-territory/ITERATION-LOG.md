@@ -22,6 +22,10 @@ Delete both with `delete_trigger` when iteration 12 completes.
 
 | 3 | 2026-08-04 ~11:0x | **Metro zone map** — `metro_zones.json` + `build_metro_map.py` → `metro-map.html`. True-to-scale equirectangular projection (cos-lat corrected at 35.15N) with real county, river and interstate geography; 10 ranked zones drawn as lat/lon bounding boxes, solid outline = DeSoto (offered), dashed = separate n-Compass territory. Headline finding: **Germantown $149,920 / Collierville $134,319 / Arlington $135,105 vs DeSoto's $85,500** — the wealthiest ground in the metro is in Tennessee and is not ours to take. Corrected the BlueOval City claim in TERRITORY-BRIEF.md (Ford/SK JV dissolved, production slipped). | Build cost model — n-Compass franchise data found: $35K fee, $48,150–$120,405 total investment |
 
+| 4 | 2026-08-04 ~11:3x | **Build cost model** — `build_cost_model.py` → `cost-model.html`, an interactive calculator (every input editable), plus `COST-MODEL.md`. Found n-Compass's published terms: **$35,000 franchise fee, $48,150–$120,405 total investment, and a $500/mo flat + $75 per billboard per month royalty**. At 90 screens that royalty is **$87,000/yr — the waived fee is ~7% of the 5-year cost**. Capex to 90 screens models at $54,000 (inside n-Compass's own published range). Break-even is 11 advertisers at Phase 1 and **10 at Phase 2** — it improves with scale because the tier jump outruns the cost curve. Adds a fifth question for Don. | Rep coverage / drive-time routing |
+
+**Published artifact (iteration 4):** https://claude.ai/code/artifact/278f6c6a-079c-4f42-a0f3-f5c31195bd28
+
 **Published artifact (iteration 3):** https://claude.ai/code/artifact/dd30a00e-8162-4263-a4ed-95b635bec81a
 
 **Published artifact (iteration 2):** https://claude.ai/code/artifact/c356da53-40dd-4653-b7b8-80dfb03fde07
