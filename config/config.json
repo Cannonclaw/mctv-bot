@@ -254,10 +254,10 @@
   },
   "nil": {
     "collective": {
-      "name": "The Growth Collective",
-      "school": "",
+      "name": "The Grove Collective",
+      "school": "Ole Miss",
       "market": "Oxford",
-      "blurb": "{collective} connects North Mississippi businesses with the athletes who represent this community. Athletes get paid for work they actually do. Businesses get advertising that runs on 125+ screens."
+      "blurb": "{collective} is the NIL program for Ole Miss athletics. It connects North Mississippi businesses with the athletes who represent this community. Athletes get paid for work they actually do. Businesses get advertising that runs on 125+ screens."
     },
     "objection": "You have probably heard that NIL is just boosters cutting checks to players. That is not what this is. Every dollar here buys advertising that runs on our screens, and every athlete is paid for work you can point to.",
     "value_props": [
@@ -270,7 +270,7 @@
       {
         "name": "Athlete Name",
         "sport": "Football",
-        "school": "",
+        "school": "Ole Miss",
         "quote": "We shot the spot at the dealership on a Tuesday morning and it was running on screens around town that same week. People I had never met started bringing it up at the gas station.",
         "consent_on_file": false,
         "photo": ""
@@ -278,7 +278,7 @@
       {
         "name": "Athlete Name",
         "sport": "Women's Basketball",
-        "school": "",
+        "school": "Ole Miss",
         "quote": "I grew up eating at that restaurant. Getting to be the face of their ad felt like doing something for a place that had already done a lot for me.",
         "consent_on_file": false,
         "photo": ""
@@ -286,7 +286,7 @@
       {
         "name": "Athlete Name",
         "sport": "Baseball",
-        "school": "",
+        "school": "Ole Miss",
         "quote": "The appearance took an hour on a Saturday. I signed some things, took pictures with kids, and the owner told me it was the busiest morning they had all month.",
         "consent_on_file": false,
         "photo": ""
