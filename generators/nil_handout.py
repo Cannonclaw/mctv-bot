@@ -10,7 +10,7 @@ instantly and identically every time, which is what a printed handout needs.
 
 from datetime import datetime
 
-from generators.base_proposal import BaseProposal
+from generators.base_proposal import BaseProposal, safe_stem
 from generators import nil_sections as nil
 from services.config_service import get_team_member
 
@@ -88,7 +88,7 @@ class NILHandout(BaseProposal):
 
         self.docx.add_footer(doc)
 
-        safe_name = input_data.business_name.replace(" ", "_").replace("'", "")
+        safe_name = safe_stem(self.document_name(input_data))
         date_str = datetime.now().strftime("%Y-%m-%d")
         filename = f"MCTV_NIL_Handout_{safe_name}_{date_str}.docx"
         return self.docx.save_proposal(doc, filename), None

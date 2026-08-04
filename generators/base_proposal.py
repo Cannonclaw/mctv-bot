@@ -10,6 +10,30 @@ from services.claude_service import ClaudeService
 from services.docx_service import DocxService
 from services.config_service import get_team_member
 
+# Not every input dataclass calls its primary name "business_name" — host and
+# venue inputs use venue_name, bundles use owner_name. Ordered by specificity.
+DOCUMENT_NAME_FIELDS = ("business_name", "venue_name", "owner_name")
+
+# Characters that are illegal in a filename on Windows and/or would change the
+# path on POSIX. Deliberately narrow: "&", "-", "." and "," are legal and are
+# preserved so existing filenames are unchanged.
+_ILLEGAL_FILENAME_CHARS = '/\\:*?"<>|'
+
+
+def safe_stem(name: str) -> str:
+    """Turn a business/venue name into a filename-safe stem.
+
+    Keeps the long-standing " " -> "_" and "'" -> "" behavior, and additionally
+    drops characters that cannot appear in a filename. Venue and bundle names
+    routinely contain "/" and ":" ("Bar/Restaurant", "Smith & Sons: Oxford"),
+    which would otherwise break the path.
+    """
+    cleaned = "".join(
+        ch for ch in name
+        if ch not in _ILLEGAL_FILENAME_CHARS and ord(ch) >= 32
+    )
+    return cleaned.replace(" ", "_").replace("'", "").strip("._") or "Proposal"
+
 
 class BaseProposal(ABC):
     """Base class that all proposal generators inherit from."""
@@ -137,7 +161,7 @@ class BaseProposal(ABC):
         self.docx.add_footer(doc)
 
         # Save proposal
-        safe_name = input_data.business_name.replace(" ", "_").replace("'", "")
+        safe_name = safe_stem(self.document_name(input_data))
         date_str = datetime.now().strftime("%Y-%m-%d")
         filename = f"MCTV_Proposal_{safe_name}_{date_str}.docx"
         proposal_path = self.docx.save_proposal(doc, filename)
@@ -155,6 +179,19 @@ class BaseProposal(ABC):
                     email_path = self.docx.save_email(email_content, email_filename)
 
         return proposal_path, email_path
+
+    def document_name(self, input_data) -> str:
+        """Human-readable name for this proposal, used to build the filename.
+
+        Falls back through DOCUMENT_NAME_FIELDS because the input dataclasses
+        disagree on what the primary name is called. Override in a generator
+        that wants a different label.
+        """
+        for field in DOCUMENT_NAME_FIELDS:
+            value = (getattr(input_data, field, "") or "").strip()
+            if value:
+                return value
+        return "Proposal"
 
     def _build_cover(self, doc, input_data):
         """Build the cover page from input data."""
