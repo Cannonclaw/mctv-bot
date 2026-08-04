@@ -167,17 +167,34 @@ QUOTE_BASE = "https://mctvofms.com/rate-quote/"
 link_mode = st.radio("Link type", ["Network Package", "Custom venues"],
                      horizontal=True, key="ql_mode")
 parts = []
+quote_pkg = None   # set in package mode — drives the preview + the send templates
+chosen = []        # set in custom mode
+terr = []
 if link_mode == "Network Package":
-    # Mirrors the public calculator's PACKAGES array (rate-calculator-v2.0-selfserve.html).
+    # Mirrors the public calculator's PACKAGES array (rate-calculator-v2.0-selfserve.html):
+    # label, screen count, the FLAT monthly price, and the ad-plays line printed on the card.
     # Keep both in step: a key listed here that the live page does not carry is ignored by
     # applyParams(), so the client lands on an empty builder instead of their quote.
-    PKG_LABELS = {"p10": "10 Screens", "p20": "20 Screens", "p40": "40 Screens",
-                  "p75": "75 Screens", "p125": "125+ Screens (whole network)"}
-    pkg = st.selectbox("Package", list(PKG_LABELS),
-                       format_func=lambda p: PKG_LABELS[p], key="ql_pkg")
+    # Package prices are flat and locked, so mirroring them here cannot drift with
+    # `rate_model_params` the way the a la carte table further down does.
+    PACKAGES = {
+        "p10": {"label": "10 Screens", "screens": 10,
+                "monthly": 350, "plays": "15,000"},
+        "p20": {"label": "20 Screens", "screens": 20,
+                "monthly": 500, "plays": "30,000"},
+        "p40": {"label": "40 Screens", "screens": 40,
+                "monthly": 800, "plays": "60,000"},
+        "p75": {"label": "75 Screens", "screens": 75,
+                "monthly": 1300, "plays": "110,000"},
+        "p125": {"label": "125+ Screens (whole network)", "screens": 125,
+                 "monthly": 2000, "plays": "180,000+"},
+    }
+    pkg = st.selectbox("Package", list(PACKAGES),
+                       format_func=lambda p: PACKAGES[p]["label"], key="ql_pkg")
     terr = st.multiselect("Territories", ["oxford", "tupelo", "starkville"],
                           format_func=lambda m: MARKET_LABELS.get(m, m.title()),
                           key="ql_terr")
+    quote_pkg = PACKAGES[pkg]
     parts.append(f"pkg={pkg}")
     if terr:
         parts.append("terr=" + ",".join(terr))
@@ -219,6 +236,66 @@ query = "?" + "&".join(parts)
 card_link = QUOTE_BASE + query + "&print=1"
 builder_link = QUOTE_BASE + query
 
+# ── What the client will see ─────────────────────────────────────────────────
+# A rep used to have to open the link to find out what they were about to send,
+# so the price never made it into the call, the text or their notes. Term math
+# mirrors the calculator's currentQuote(): termTotal = monthly x term months,
+# prepay bonus 6 -> +1 month, 12 -> +2, effective = termTotal / total months.
+bonus_months = (2 if ql_months == 12 else 1) if ql_prepay else 0
+total_months = ql_months + bonus_months
+
+st.markdown("**What the client will see**")
+if quote_pkg:
+    monthly = quote_pkg["monthly"]
+    term_total = monthly * ql_months
+    effective = round(term_total / total_months)
+    _q1, _q2, _q3 = st.columns(3)
+    _q1.metric("They pay / month", f"${monthly:,}")
+    _q2.metric(f"{ql_months}-month term total", f"${term_total:,}")
+    _q3.metric("Screens", quote_pkg["screens"])
+    # Territory wording is quoted from the card itself: currentQuote() prints
+    # the selected market labels, and literally "To be selected" when the link
+    # carries no `terr` — so an empty multiselect is worth flagging, not
+    # silently calling it "all markets".
+    _terr_txt = (", ".join(MARKET_LABELS.get(m, m.title()) for m in terr)
+                 if terr else "**To be selected** — pick the territories "
+                              "above or the card leaves that line blank for them")
+    st.caption(
+        f"{quote_pkg['label']} · Territories: {_terr_txt} · approx "
+        f"{quote_pkg['plays']} ad plays/mo. Flat package price — the same "
+        "number the card shows, whatever the table below says."
+    )
+    if bonus_months:
+        st.success(
+            f"**Prepay bonus:** pay the \\${term_total:,} upfront and they get "
+            f"**{bonus_months} extra month{'s' if bonus_months > 1 else ''} free "
+            f"— {total_months} months** for the price of {ql_months} "
+            f"(effective \\${effective:,}/mo)."
+        )
+else:
+    _sel_screens = sum(int(r.get("screens") or 0)
+                       for r in rows if r["venue_name"] in chosen)
+    _v1, _v2 = st.columns(2)
+    _v1.metric("Venues selected", len(chosen))
+    _v2.metric("Screens (this page)", _sel_screens)
+    # Deliberately no dollar figure: a custom build is priced by the public
+    # calculator's locked Phase-1 engine, and this page's rates are pre-flip.
+    # Quoting one from here would hand the client a different number than the
+    # page they sign on.
+    # The screen count is this page's inventory (`venue_rate_inputs`), which as
+    # of 2026-08-04 disagrees with the calculator on exactly one venue —
+    # 4 Corner's Chevron (Chicken On A Stick): 1 here, 2 on the public page
+    # (network 122 vs 123). Hence "this page" in the label; the card is the
+    # number that counts. Drop the caveat once the two are reconciled.
+    st.caption(
+        "Custom builds are priced on the card itself, at the public tool's "
+        "locked rates (\\$5 CPM, \\$25 floor, \\$175/venue cap"
+        + (", 20% volume discount at 10+ screens" if _sel_screens >= 10 else "")
+        + "). **Open the card link below to read the number before you quote it** "
+        "\u2014 do not read it off the a la carte table further down this page, "
+        "which is pre-flip."
+    )
+
 st.markdown("\U0001F4C7 **Client quote card** — send this one. Clean prepared-quote "
             "card: no builder to wade through, Accept & sign right there.")
 st.code(card_link)
@@ -226,16 +303,38 @@ st.code(card_link)
 # One-tap send — open the rep's own mail/SMS app with the card link already written
 # into the message, so there's nothing to copy and no app-switch-then-paste step.
 _first_name = ql_name.strip().split()[0] if ql_name.strip() else "there"
-_email_subject = "Your MCTV advertising quote"
+
+# Lead with the number. A package price is flat and known here, so the message
+# can carry it instead of asking the client to click to find out what it costs.
+# Custom builds get no figure — see the note above.
+if quote_pkg:
+    _headline = (f"{quote_pkg['screens']} screens across our network "
+                 f"for ${quote_pkg['monthly']:,}/month")
+    _terms_line = f"{ql_months}-month term, ${quote_pkg['monthly'] * ql_months:,} total"
+    if bonus_months:
+        _terms_line += (f" — prepay and you get {bonus_months} extra month"
+                        f"{'s' if bonus_months > 1 else ''} free "
+                        f"({total_months} months for the price of {ql_months})")
+    _email_subject = f"Your MCTV quote — ${quote_pkg['monthly']:,}/mo"
+    _email_intro = (f"Here's your prepared MCTV Elite Advertising quote: "
+                    f"{_headline}. {_terms_line}.\n\n"
+                    "The full breakdown is on the page, and you can accept and "
+                    "sign right there:")
+    _sms_body = (f"Your MCTV quote: {_headline}. Review & sign here: {card_link}")
+else:
+    _email_subject = "Your MCTV advertising quote"
+    _email_intro = ("Here's your prepared MCTV Elite Advertising quote. Review "
+                    "the screens and pricing, and you can accept and sign right "
+                    "on the page:")
+    _sms_body = f"Your MCTV quote is ready — review & sign here: {card_link}"
+
 _email_body = (
     f"Hi {_first_name},\n\n"
-    "Here's your prepared MCTV Elite Advertising quote. Review the screens and "
-    "pricing, and you can accept and sign right on the page:\n\n"
+    f"{_email_intro}\n\n"
     f"{card_link}\n\n"
     "Reply here with any questions.\n\n"
     "— MCTV Elite Advertising"
 )
-_sms_body = f"Your MCTV quote is ready — review & sign here: {card_link}"
 
 _send_l, _send_r = st.columns(2)
 with _send_l:
@@ -274,10 +373,17 @@ st.code(builder_link)
 st.caption("Text or email either link — the client sees their quote pre-built "
            "and can sign self-serve. Contact details you prefill travel inside "
            "the link, so send it only to that client.")
+# bot.mctvofms.com/rates serves static/rates.html, still the 2026-07-23 build
+# (three packages, tops out at $800, no venue finder). The re-synced copy is
+# committed on branch `sync/rates-page-aug2026` and goes live the moment that
+# branch merges — delete this caveat then.
 st.caption(
-    "✅ The **v2.0** self-serve calculator is live at both mctvofms.com/rate-quote "
-    "and bot.mctvofms.com/rates (deployed 2026-07-23) — prefilled links, the "
-    "quote card, and in-page e-signing all work. Send away."
+    "✅ The current **v2.0** calculator is live at **mctvofms.com/rate-quote** "
+    "— which is the URL every link above points at, so prefilled links, the "
+    "quote card and in-page e-signing all work. Send away. "
+    "⚠️ **Do not hand out bot.mctvofms.com/rates** — it is still the July build "
+    "(three packages, tops out at \\$800, no venue search) until the "
+    "`sync/rates-page-aug2026` branch is merged."
 )
 
 st.divider()
