@@ -1,7 +1,19 @@
 # Market Mapping — Iteration Log
 
-Recurring job `39fef93a`, every 30 minutes, 12 iterations (~6 hours), started 2026-08-04.
-Call `CronDelete` on `39fef93a` when iteration 12 completes.
+Driven by two **Routines** (persistent, server-side) firing 30 minutes apart:
+
+| Routine | Cron | ID |
+| --- | --- | --- |
+| MCTV market maps — iteration (top of hour) | `7 * * * *` | `trig_011MDCD64iHrmHURtYMd4e4Y` |
+| MCTV market maps — iteration (half past) | `37 * * * *` | `trig_01JSLEoDPKUPppm1FU2pQ8Xi` |
+
+Delete both with `delete_trigger` when iteration 12 completes.
+
+> **Why Routines and not `CronCreate`.** The loop originally ran on an in-memory cron job
+> (`39fef93a`). Those are session-only — they die on any session restart, and this one died twice,
+> costing roughly three iterations between 07:48 and 10:35. Routines are stored server-side and
+> survive restarts. Routines have a one-hour minimum interval, so the 30-minute cadence comes from
+> two hourly Routines offset by 30 minutes.
 
 | # | Time | Work done | Next up |
 | --- | --- | --- | --- |
