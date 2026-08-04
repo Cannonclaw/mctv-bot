@@ -1,0 +1,621 @@
+{
+  "meta": {
+    "title": "Memphis Metro — Zone Map",
+    "updated": "2026-08-04",
+    "audience": "internal",
+    "metro_population": "1,389,905",
+    "metro_rank": "41st-largest US metro",
+    "projection_note": "Equirectangular projection with cos(latitude) correction at 35.1°N, so the map is to scale. County and river outlines are simplified but geographically positioned.",
+    "bounds": {
+      "lat_min": 34.68,
+      "lat_max": 35.62,
+      "lon_min": -90.42,
+      "lon_max": -89.28
+    }
+  },
+  "tiers": {
+    "A": {
+      "label": "Primary target",
+      "color": "#C5A55A"
+    },
+    "B": {
+      "label": "Secondary",
+      "color": "#4A7C9B"
+    },
+    "C": {
+      "label": "Watch",
+      "color": "#8A8FA3"
+    },
+    "D": {
+      "label": "Avoid",
+      "color": "#C4576B"
+    }
+  },
+  "counties": [
+    {
+      "name": "SHELBY CO, TN",
+      "lat": [
+        34.9957,
+        35.41
+      ],
+      "lon": [
+        -90.31,
+        -89.63
+      ],
+      "state": "TN",
+      "label_dy": 20
+    },
+    {
+      "name": "DESOTO CO, MS",
+      "lat": [
+        34.66,
+        34.9957
+      ],
+      "lon": [
+        -90.31,
+        -89.72
+      ],
+      "state": "MS"
+    },
+    {
+      "name": "FAYETTE CO, TN",
+      "lat": [
+        34.9957,
+        35.42
+      ],
+      "lon": [
+        -89.63,
+        -89.29
+      ],
+      "state": "TN"
+    },
+    {
+      "name": "TIPTON CO, TN",
+      "lat": [
+        35.32,
+        35.61
+      ],
+      "lon": [
+        -90.05,
+        -89.59
+      ],
+      "state": "TN"
+    },
+    {
+      "name": "MARSHALL CO, MS",
+      "lat": [
+        34.66,
+        34.9957
+      ],
+      "lon": [
+        -89.72,
+        -89.33
+      ],
+      "state": "MS"
+    },
+    {
+      "name": "CRITTENDEN CO, AR",
+      "lat": [
+        35.0,
+        35.41
+      ],
+      "lon": [
+        -90.42,
+        -90.11
+      ],
+      "state": "AR",
+      "label_dy": 38
+    }
+  ],
+  "river": [
+    [
+      -90.16,
+      35.61
+    ],
+    [
+      -90.13,
+      35.45
+    ],
+    [
+      -90.09,
+      35.31
+    ],
+    [
+      -90.05,
+      35.2
+    ],
+    [
+      -90.09,
+      35.13
+    ],
+    [
+      -90.14,
+      35.06
+    ],
+    [
+      -90.24,
+      34.99
+    ],
+    [
+      -90.31,
+      34.9
+    ],
+    [
+      -90.36,
+      34.78
+    ],
+    [
+      -90.33,
+      34.7
+    ]
+  ],
+  "interstates": [
+    {
+      "name": "I-40",
+      "points": [
+        [
+          -90.34,
+          35.14
+        ],
+        [
+          -90.16,
+          35.14
+        ],
+        [
+          -90.02,
+          35.15
+        ],
+        [
+          -89.86,
+          35.19
+        ],
+        [
+          -89.63,
+          35.21
+        ],
+        [
+          -89.36,
+          35.26
+        ]
+      ]
+    },
+    {
+      "name": "I-55",
+      "points": [
+        [
+          -90.16,
+          35.42
+        ],
+        [
+          -90.1,
+          35.22
+        ],
+        [
+          -90.06,
+          35.11
+        ],
+        [
+          -90.02,
+          35.02
+        ],
+        [
+          -90.0,
+          34.9
+        ],
+        [
+          -89.99,
+          34.72
+        ]
+      ]
+    },
+    {
+      "name": "I-269",
+      "points": [
+        [
+          -89.99,
+          34.83
+        ],
+        [
+          -89.87,
+          34.92
+        ],
+        [
+          -89.75,
+          35.03
+        ],
+        [
+          -89.68,
+          35.16
+        ],
+        [
+          -89.66,
+          35.3
+        ],
+        [
+          -89.76,
+          35.37
+        ]
+      ]
+    },
+    {
+      "name": "I-22 / US-78",
+      "points": [
+        [
+          -90.01,
+          35.09
+        ],
+        [
+          -89.89,
+          34.99
+        ],
+        [
+          -89.74,
+          34.91
+        ],
+        [
+          -89.55,
+          34.83
+        ],
+        [
+          -89.36,
+          34.76
+        ]
+      ]
+    },
+    {
+      "name": "I-240",
+      "points": [
+        [
+          -90.05,
+          35.16
+        ],
+        [
+          -89.94,
+          35.16
+        ],
+        [
+          -89.87,
+          35.1
+        ],
+        [
+          -89.92,
+          35.03
+        ],
+        [
+          -90.03,
+          35.04
+        ],
+        [
+          -90.06,
+          35.11
+        ]
+      ]
+    }
+  ],
+  "cities": [
+    {
+      "name": "Memphis",
+      "lat": 35.1495,
+      "lon": -90.049,
+      "pop": 606132,
+      "hhi": 51736
+    },
+    {
+      "name": "Germantown",
+      "lat": 35.0868,
+      "lon": -89.8101,
+      "pop": 39773,
+      "hhi": 149920
+    },
+    {
+      "name": "Collierville",
+      "lat": 35.042,
+      "lon": -89.6645,
+      "pop": 52126,
+      "hhi": 134319
+    },
+    {
+      "name": "Bartlett",
+      "lat": 35.2045,
+      "lon": -89.8739,
+      "pop": 56708,
+      "hhi": 100660
+    },
+    {
+      "name": "Arlington",
+      "lat": 35.2967,
+      "lon": -89.6684,
+      "pop": 15866,
+      "hhi": 135105
+    },
+    {
+      "name": "Lakeland",
+      "lat": 35.262,
+      "lon": -89.737,
+      "pop": 14416,
+      "hhi": 116250
+    },
+    {
+      "name": "Cordova",
+      "lat": 35.156,
+      "lon": -89.777,
+      "pop": 68779,
+      "hhi": null
+    },
+    {
+      "name": "Millington",
+      "lat": 35.3415,
+      "lon": -89.8973,
+      "pop": 10582,
+      "hhi": null
+    },
+    {
+      "name": "Southaven",
+      "lat": 34.989,
+      "lon": -90.0126,
+      "pop": 58551,
+      "hhi": 85500
+    },
+    {
+      "name": "Horn Lake",
+      "lat": 34.9551,
+      "lon": -90.0353,
+      "pop": 26738,
+      "hhi": 85500
+    },
+    {
+      "name": "Olive Branch",
+      "lat": 34.9618,
+      "lon": -89.8295,
+      "pop": 47819,
+      "hhi": 85500
+    },
+    {
+      "name": "Hernando",
+      "lat": 34.8226,
+      "lon": -89.9917,
+      "pop": 19165,
+      "hhi": 85500
+    },
+    {
+      "name": "West Memphis",
+      "lat": 35.1465,
+      "lon": -90.1848,
+      "pop": 23130,
+      "hhi": 42674
+    },
+    {
+      "name": "Byhalia",
+      "lat": 34.872,
+      "lon": -89.6889,
+      "pop": 1417,
+      "hhi": 38500
+    },
+    {
+      "name": "Oakland",
+      "lat": 35.2278,
+      "lon": -89.517,
+      "pop": 9000,
+      "hhi": null
+    },
+    {
+      "name": "Covington",
+      "lat": 35.5645,
+      "lon": -89.6461,
+      "pop": 9000,
+      "hhi": null
+    }
+  ],
+  "zones": [
+    {
+      "id": "Z1",
+      "name": "East Shelby money crescent",
+      "tier": "A",
+      "rank": 1,
+      "lat": [
+        35.0,
+        35.14
+      ],
+      "lon": [
+        -89.89,
+        -89.6
+      ],
+      "anchors": "Germantown · Collierville",
+      "population": 91899,
+      "hhi_low": 134319,
+      "hhi_high": 149920,
+      "territory": "TN — not DeSoto; separate n-Compass territory",
+      "why": "The highest-income concentration in Tennessee. Germantown at $149,920 and Collierville at $134,319 are 57–75% above DeSoto County, which is itself #1 in Mississippi. ~92,000 people who can afford everything our advertisers sell.",
+      "verdict": "The single most valuable ground on this map. Find out who holds it before anything else."
+    },
+    {
+      "id": "Z2",
+      "name": "Northeast growth arc",
+      "tier": "A",
+      "rank": 2,
+      "lat": [
+        35.16,
+        35.34
+      ],
+      "lon": [
+        -89.94,
+        -89.59
+      ],
+      "anchors": "Bartlett · Lakeland · Arlington",
+      "population": 86990,
+      "hhi_low": 100660,
+      "hhi_high": 135105,
+      "territory": "TN — not DeSoto; separate n-Compass territory",
+      "why": "Arlington ($135,105) and Lakeland ($116,250) are family-formation suburbs in a residential build-out; Bartlett adds 56,708 people at $100,660. Every income here beats DeSoto County.",
+      "verdict": "Second prize, and the one most likely to still be open — these are newer suburbs."
+    },
+    {
+      "id": "Z3",
+      "name": "DeSoto north",
+      "tier": "A",
+      "rank": 3,
+      "lat": [
+        34.93,
+        34.9957
+      ],
+      "lon": [
+        -90.09,
+        -89.94
+      ],
+      "anchors": "Southaven · Horn Lake",
+      "population": 85289,
+      "hhi_low": 85500,
+      "hhi_high": 85500,
+      "territory": "DeSoto — on the table from n-Compass",
+      "why": "Silo Square, Tanger Outlets, Landers Center, the Snowden District and the Goodman Road spine. The densest venue inventory in DeSoto County.",
+      "verdict": "Ours to take, but assume the incumbent is dug in here. Phase 2 in the build plan."
+    },
+    {
+      "id": "Z4",
+      "name": "Olive Branch",
+      "tier": "A",
+      "rank": 4,
+      "lat": [
+        34.92,
+        35.0
+      ],
+      "lon": [
+        -89.93,
+        -89.75
+      ],
+      "anchors": "Olive Branch · Craft Rd / I-22",
+      "population": 47819,
+      "hhi_low": 85500,
+      "hhi_high": 85500,
+      "territory": "DeSoto — on the table from n-Compass",
+      "why": "Mississippi's #1 boomtown, and it borders Zone 1. An advertiser in Olive Branch is selling to Germantown and Collierville households too — the county line is not a shopping boundary.",
+      "verdict": "Phase 1 flagship. Also the bridge between the DeSoto territory and the money crescent."
+    },
+    {
+      "id": "Z5",
+      "name": "Cordova / East Memphis",
+      "tier": "B",
+      "rank": 5,
+      "lat": [
+        35.1,
+        35.21
+      ],
+      "lon": [
+        -89.92,
+        -89.74
+      ],
+      "anchors": "Cordova · Poplar corridor",
+      "population": 68779,
+      "hhi_low": null,
+      "hhi_high": null,
+      "territory": "TN — not DeSoto",
+      "why": "68,779 people and the Poplar Avenue retail spine. Mixed incomes — strong at the eastern end, thinner toward the I-240 loop.",
+      "verdict": "Real volume, but sits inside Memphis proper where media competition is heaviest."
+    },
+    {
+      "id": "Z6",
+      "name": "DeSoto south",
+      "tier": "B",
+      "rank": 6,
+      "lat": [
+        34.78,
+        34.92
+      ],
+      "lon": [
+        -90.06,
+        -89.92
+      ],
+      "anchors": "Hernando · Nesbit",
+      "population": 19165,
+      "hhi_low": 85500,
+      "hhi_high": 85500,
+      "territory": "DeSoto — on the table from n-Compass",
+      "why": "Fastest percentage growth in DeSoto County (+10.96% since 2020) and a walkable courthouse square — the Oxford playbook.",
+      "verdict": "Phase 1 co-launch. Small enough to own outright."
+    },
+    {
+      "id": "Z7",
+      "name": "Fayette west — Piperton / Oakland",
+      "tier": "C",
+      "rank": 7,
+      "lat": [
+        35.02,
+        35.3
+      ],
+      "lon": [
+        -89.6,
+        -89.38
+      ],
+      "anchors": "Piperton · Oakland · Somerville",
+      "population": 45600,
+      "hhi_low": null,
+      "hhi_high": null,
+      "territory": "TN — not DeSoto",
+      "why": "Fayette County is the fastest-growing county in the metro (+1.17%/yr, and 3.44% on the state's own certified report). But it is still mostly rural and its BlueOval City upside has slipped.",
+      "verdict": "Watch. Not enough venue density yet to support a build."
+    },
+    {
+      "id": "Z8",
+      "name": "Memphis core",
+      "tier": "C",
+      "rank": 8,
+      "lat": [
+        35.1,
+        35.19
+      ],
+      "lon": [
+        -90.09,
+        -89.95
+      ],
+      "anchors": "Downtown · Midtown",
+      "population": 606132,
+      "hhi_low": 51736,
+      "hhi_high": 51736,
+      "territory": "TN — not DeSoto",
+      "why": "Huge raw population, but a $51,736 median household income and the most contested media market in the region. Density is not the same as spending power.",
+      "verdict": "Skip on economics, not on size. Our advertisers sell to households with disposable income."
+    },
+    {
+      "id": "Z9",
+      "name": "Tipton — Atoka / Munford / Covington",
+      "tier": "C",
+      "rank": 9,
+      "lat": [
+        35.38,
+        35.6
+      ],
+      "lon": [
+        -89.95,
+        -89.6
+      ],
+      "anchors": "Atoka · Munford · Covington",
+      "population": 62268,
+      "hhi_low": null,
+      "hhi_high": null,
+      "territory": "TN — not DeSoto",
+      "why": "62,268 people but growth is flat at -0.03%/yr, and West Tennessee counties are underperforming their BlueOval projections.",
+      "verdict": "Watch only. No growth story to sell against."
+    },
+    {
+      "id": "Z10",
+      "name": "West Memphis / Crittenden",
+      "tier": "D",
+      "rank": 10,
+      "lat": [
+        35.05,
+        35.28
+      ],
+      "lon": [
+        -90.32,
+        -90.11
+      ],
+      "anchors": "West Memphis · Marion",
+      "population": 45631,
+      "hhi_low": 42674,
+      "hhi_high": 55358,
+      "territory": "AR — not DeSoto",
+      "why": "Population down 10.45% since 2010 and still falling at -1.25%/yr. West Memphis itself is at $42,674 median household income with a 29.13% poverty rate.",
+      "verdict": "Avoid. Shrinking population and the weakest advertiser base in the metro."
+    }
+  ]
+}

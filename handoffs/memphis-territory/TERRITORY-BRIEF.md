@@ -224,6 +224,10 @@ refusal on the rest of the Memphis-adjacent Mississippi counties?
   against real alternatives.
 - **Do not plan around the incumbent running out of money.** Unverified, and irrelevant if we get
   exclusivity in writing.
+- **Do not lean on BlueOval City.** Ford and SK On dissolved their joint venture and production
+  dates have slipped; West Tennessee counties are underperforming their projections and Tipton
+  County is flat at -0.03%/yr. The Marshall County jobs (Jabil, Amazon, Baxter) are real and
+  unaffected — the BlueOval halo is not.
 - **Screens are not revenue.** Our pricing is per-advertiser ($350–$1,300/mo by tier), so what
   actually pays is advertisers sold, not screens hung. DeSoto's appeal is that it has the 4th-largest
   business base in the state to sell *to* — but it still has to be sold.
