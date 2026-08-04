@@ -299,7 +299,9 @@ def crop_marks_html():
 def wrap_for_print(html):
     slug = (f'<div class="slug">MCTV Chamber Rev-Share Term Sheet &nbsp;&middot;&nbsp; '
             f'TRIM {TRIM_W}&Prime; &times; {TRIM_H}&Prime; &nbsp;&middot;&nbsp; BLEED {BLEED}&Prime;'
-            f' &nbsp;&middot;&nbsp; CROP MARKS SHOWN &nbsp;&middot;&nbsp; RGB &mdash; CONVERT TO CMYK</div>')
+            # colour space is stated per-set in the instructions file, not
+            # baked into a slug that is shared by the RGB and CMYK builds
+            f' &nbsp;&middot;&nbsp; CROP MARKS SHOWN</div>')
     html = html.replace("</style>", PRINT_CSS + "</style>")
     html = html.replace('<div class="page-canvas">',
                         '<div class="sheet">' + crop_marks_html() + slug + '<div class="page-canvas">')

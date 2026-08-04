@@ -149,7 +149,11 @@ def crop_marks_html() -> str:
 def slug_html(label: str) -> str:
     return (
         f'<div class="slug">{esc(label)} &nbsp;·&nbsp; TRIM {TRIM_W}&Prime; &times; {TRIM_H}&Prime;'
-        f' &nbsp;·&nbsp; BLEED {BLEED}&Prime; &nbsp;·&nbsp; CROP MARKS SHOWN &nbsp;·&nbsp; RGB &mdash; CONVERT TO CMYK</div>'
+        # No colour-space claim here on purpose: the same master is also the
+        # source for the CMYK set, so any claim baked in would be wrong on one
+        # of the two and risks the printer converting an already-separated
+        # file twice. Colour space is stated per-set in the instructions file.
+        f' &nbsp;·&nbsp; BLEED {BLEED}&Prime; &nbsp;·&nbsp; CROP MARKS SHOWN</div>'
     )
 
 
