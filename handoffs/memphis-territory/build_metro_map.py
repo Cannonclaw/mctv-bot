@@ -292,13 +292,16 @@ body_html = f"""<header class="top">
   </div>
 
   <div class="callout gap">
-    <b>Read this before the map.</b> Only the two solid-outlined zones &mdash; DeSoto County &mdash;
-    are what Don offered. Everything drawn with a <b>dashed outline sits in Tennessee or Arkansas
-    and is a separate n-Compass territory</b> that is very likely already held by someone else.
-    n-Compass sells protected territories for a $35,000 franchise fee and claims coverage in 250+
-    cities, so Memphis proper is unlikely to be sitting empty. This map shows where the value is,
-    not what is available &mdash; those are different questions, and the second one is a question
-    for Don.
+    <b>Updated 2026-08-05 &mdash; the incumbent's own location map changed this.</b> Zones 1 and 2
+    were originally labelled &ldquo;separate n-Compass territory, not available.&rdquo; That was
+    wrong. <b>DeSoto Local is already operating in Bartlett, Lakeland and Germantown</b> &mdash;
+    roughly a third of her ~32&ndash;35 pins are north of the state line, in the two highest-income
+    zones on this map.
+    <br><br>
+    So either her grant includes part of Shelby County, or n-Compass territories are far more porous
+    than the franchise marketing suggests. <b>Either answer is worth more than DeSoto itself</b>
+    &mdash; Zones 1 and 2 hold ~179,000 people at $100,660&ndash;$149,920 median household income,
+    against DeSoto's $85,500. Ask Don how she is operating up there before anything else.
   </div>
 
   <h2>The map</h2>

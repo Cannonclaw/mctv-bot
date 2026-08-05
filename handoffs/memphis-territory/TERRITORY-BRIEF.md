@@ -4,7 +4,7 @@
 **Occasion:** Call with Don Winfrey (n-Compass / NTV360) re: Memphis-area territory availability
 **Date:** 2026-08-04
 **Decision deadline:** Reply to Don within 24 hours
-**Status:** Research complete — recommendation below, three items still need Don to answer
+**Status:** Updated 2026-08-05 after seeing the incumbent's own location map — see `INCUMBENT-FOOTPRINT.md`
 
 ---
 
@@ -36,10 +36,19 @@ desotolocal.biz, run a host-recruitment page at `/host/`, and describe their foo
 "restaurants to gyms, doctors' offices to auto repair" throughout DeSoto County. They are already
 in SOUL.md as a known competitor ("DeSoto County. Small, hyper-local.").
 
-**We could not get a venue-level location list, and it does not exist publicly.** Their site
-returns 403 to automated fetches and the domain is blocked by this environment's egress policy.
-Their chamber listings (Horn Lake, Southaven) are also 403. No aggregator publishes n-Compass
-venue lists. I checked.
+**UPDATE 2026-08-05 — we have seen her location map.** It shows roughly **32–35 pins across two
+states**: ~12–14 in Southaven/Horn Lake, ~3 in Olive Branch, ~3–4 in Hernando, ~1 at Walls, ~1 near
+Byhalia — **and roughly a third of the total in Tennessee**, clustered in Bartlett/Lakeland (~7–9)
+and Germantown/East Memphis (~3). Full read in `INCUMBENT-FOOTPRINT.md`.
+
+Two things follow. **She is thin everywhere** — 32–35 screens across seven towns is a toehold, not a
+network; Southaven alone at Oxford density would carry ~160. And **she is operating in Shelby County,
+Tennessee**, which we had assumed was a separate territory closed to us. That is now the first
+question for Don, ahead of DeSoto.
+
+Still missing, and only obtainable from n-Compass: venue names, screens per pin, and **contract end
+dates**. No aggregator publishes n-Compass venue lists; her site returns 403 to automated fetches
+and the domain is blocked by this environment's egress policy.
 
 **The authoritative list already exists and Don can hand it over in five minutes.** Every screen is
 a license in NTV360. Ask Don for an export of Desoto Local's active licenses — venue name, address,
@@ -180,18 +189,25 @@ Tupelo densification returns faster.
 
 Ask these in the reply. Do not accept a handshake "it's available."
 
-1. **What exactly is available, in writing?** Full exclusive rights to DeSoto County, or coexistence
-   with Desoto Local? If the incumbent still holds active licenses, we need her venue list and
-   contract end dates. "Available to some extent" is not a territory grant.
-2. **What is the export?** Request the NTV360 license export for Desoto Local — venue, address,
-   license ID, install date, contract end. This is the location list you asked me for, and Don is
-   the only person who can produce it.
-3. **What is the build-out obligation?** Free territory almost always carries a performance clause —
+1. **How is she operating in Bartlett, Lakeland and Germantown?** Her map shows live screens in
+   Shelby County, Tennessee. Does her grant include it? If she gives up DeSoto, does the Tennessee
+   footprint come too — and if not, who holds it and is any of it available? **Ask this first.**
+   Those zones hold ~179,000 people at $100,660–$149,920 median household income, against DeSoto's
+   $85,500. This question is worth more than DeSoto.
+2. **What exactly is available in DeSoto, in writing?** Full exclusive rights, or coexistence? She
+   has live screens in all four cities we want. "Available to some extent" is not a territory grant.
+3. **What is the export?** Request the NTV360 license export for Desoto Local — venue, address,
+   license ID, install date, **contract end date**. We now know roughly where her pins are; what we
+   need from Don is whether those licenses are about to free up or are locked for two more years.
+4. **What is the build-out obligation?** Free territory almost always carries a performance clause —
    X screens live in Y months or the rights revert. Get the number before agreeing, because that
    number is the actual price.
 
-Also worth asking: does the grant include Marshall and Tate County, and do we get right of first
-refusal on the rest of the Memphis-adjacent Mississippi counties?
+5. **Does DeSoto come under our existing agreement or a new one?** See `COST-MODEL.md` — the
+   $75/screen/month royalty is the real price, not the waived $35,000 franchise fee.
+
+Also worth asking: does the grant include Marshall and Tate County (she already has a pin near
+Byhalia), and do we get right of first refusal on the rest of the Memphis-adjacent counties?
 
 ---
 
@@ -205,9 +221,13 @@ refusal on the rest of the Memphis-adjacent Mississippi counties?
 > **Marshall County and Tate County rights on paper**, right of first refusal, no immediate build
 > commitment — we think the Byhalia jobs monetize in DeSoto, not in Byhalia.
 >
-> Three things I need before I can give you a build schedule: (1) is DeSoto exclusive or are we
-> coexisting with Desoto Local, (2) can you send the NTV360 license export for their active screens
-> so I can see the real footprint, and (3) what build-out commitment comes attached to the grant.
+> First though — I've seen her location map, and she's running screens in Bartlett, Lakeland and
+> Germantown. How does that work? Is Shelby County part of her territory, and if she steps back from
+> DeSoto does any of the Tennessee side come with it?
+>
+> Then three things before I can give you a build schedule: (1) is DeSoto exclusive or are we
+> coexisting, (2) can you send the NTV360 license export with contract end dates, and (3) what
+> build-out commitment comes attached to the grant.
 >
 > Get me those and I can come back with a screen count and a timeline this week.
 
@@ -223,7 +243,8 @@ refusal on the rest of the Memphis-adjacent Mississippi counties?
   — does not transfer. DeSoto needs the cost-versus-Memphis-media pitch and a rep who can sell
   against real alternatives.
 - **Do not plan around the incumbent running out of money.** Unverified, and irrelevant if we get
-  exclusivity in writing.
+  exclusivity in writing. That said, her map is consistent with thin capital — 32–35 screens spread
+  across seven towns in two states, dense nowhere.
 - **Do not lean on BlueOval City.** Ford and SK On dissolved their joint venture and production
   dates have slipped; West Tennessee counties are underperforming their projections and Tipton
   County is flat at -0.03%/yr. The Marshall County jobs (Jabil, Amazon, Baxter) are real and

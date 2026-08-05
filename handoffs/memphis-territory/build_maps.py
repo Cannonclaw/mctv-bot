@@ -31,8 +31,15 @@ ROAD_STYLE = {
     "border": ("#C4576B", 2, "6 5"),
 }
 
-CONTESTED = {"assumed contested"}
-UNKNOWN = {"unknown"}
+# Status strings carry qualifiers ("contested — observed", "assumed contested"),
+# so classify on the keyword rather than matching the whole string.
+def status_class(s):
+    s = s.lower()
+    if "contested" in s:
+        return "contested"
+    if "unknown" in s:
+        return "unknown"
+    return "clear"
 
 
 def esc(s):
@@ -137,11 +144,11 @@ def roads_svg(roads, obstacles, width_px):
 def node_svg(n, idx):
     r = 13 + n["screens"] * 1.15
     color = PHASE_COLOR[n["phase"]]
-    status = n["competitive_status"]
-    if status in CONTESTED:
-        ring = f' stroke="#C4576B" stroke-width="3.5" stroke-dasharray="5 4"'
-    elif status in UNKNOWN:
-        ring = f' stroke="#8A8FA3" stroke-width="2.5" stroke-dasharray="2 4"'
+    sc = status_class(n["competitive_status"])
+    if sc == "contested":
+        ring = ' stroke="#C4576B" stroke-width="3.5" stroke-dasharray="5 4"'
+    elif sc == "unknown":
+        ring = ' stroke="#8A8FA3" stroke-width="2.5" stroke-dasharray="2 4"'
     else:
         ring = ' stroke="#ffffff" stroke-width="2.5"'
     label_y = n["y"] + r + 17
@@ -226,11 +233,7 @@ def market_block(m):
         chips = "".join(f'<span class="chip">{esc(c)}</span>' for c in n["categories"])
         anchors = " &middot; ".join(esc(a) for a in n["anchors"])
         status = n["competitive_status"]
-        scls = (
-            "contested" if status in CONTESTED
-            else "unknown" if status in UNKNOWN
-            else "clear"
-        )
+        scls = status_class(status)
         cards.append(
             f'<article class="node-card" data-phase="{n["phase"]}">'
             f'<header><span class="dot" style="background:{PHASE_COLOR[n["phase"]]}"></span>'
@@ -465,14 +468,17 @@ body_html = f"""
 
   <h2>Competitive overlay &mdash; the gap in this map</h2>
   <div class="callout gap">
-    Node flags marked <b>assumed contested</b> or <b>unknown</b> are exactly that &mdash; assumptions.
-    We know the incumbent (Desoto Local, Inc., an N-Compass&ndash;NTV360 dealer) but not which venues
-    they hold, how many licenses, or when contracts expire, and it is not publicly discoverable.
-    The working assumption is that a small operator building DeSoto started in <b>Southaven</b> and
-    worked outward along Goodman Road &mdash; which is why Olive Branch and Hernando go first.
+    Flags marked <b>observed</b> now come from the incumbent's own current location map, read
+    2026-08-05 (see <code>INCUMBENT-FOOTPRINT.md</code>). The Southaven assumption was confirmed
+    &mdash; ~12&ndash;14 pins along the Goodman Road corridor, her densest cluster. But
+    <b>Olive Branch (~3) and Hernando (~3&ndash;4) are not empty either.</b> They remain Phase 1
+    for a revised reason: a toehold is not a network, and we can outbuild 3 pins 8:1.
     <br><br>
-    <b>The NTV360 license export from n-Compass closes this in one file.</b> Every flag on this page
-    gets re-cut the moment it lands.
+    <b>She is also operating in Tennessee</b> &mdash; roughly a third of her ~32&ndash;35 pins sit in
+    Bartlett, Lakeland and Germantown. See the metro map; that is now the first question for Don.
+    <br><br>
+    Still missing: venue names, screen counts per pin, and <b>contract end dates</b>. The NTV360
+    license export is the only source for those.
   </div>
 
   <div class="callout">

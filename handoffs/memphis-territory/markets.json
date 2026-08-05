@@ -3,8 +3,8 @@
     "title": "Strategic Market Maps — Memphis/DeSoto Expansion + Tupelo Densification",
     "audience": "internal",
     "generated_for": "MCTV Elite Advertising",
-    "iteration": 2,
-    "updated": "2026-08-04",
+    "iteration": 6,
+    "updated": "2026-08-05",
     "schematic_notice": "Corridor diagrams are schematic, not to scale. Node positions show relative placement on the road network, not survey coordinates.",
     "phase_targets": {
       "1": {
@@ -174,8 +174,8 @@
             "Medical & Dental",
             "Barbershop/Salon"
           ],
-          "competitive_status": "assumed clear",
-          "note": "The primary retail spine of Olive Branch and northern DeSoto County. Anchor node — build here first."
+          "competitive_status": "contested — observed",
+          "note": "The primary retail spine of Olive Branch and northern DeSoto County. Anchor node — build here first. [Incumbent: Incumbent has ~3 pins in Olive Branch. A toehold against our 24-screen target, not a network.]"
         },
         {
           "name": "Craft Rd / I-22 corridor",
@@ -194,8 +194,8 @@
             "Auto Shop",
             "Professional Services"
           ],
-          "competitive_status": "assumed clear",
-          "note": "Catches the Marshall County commuter flow — Jabil, Amazon, Baxter. This is how we monetize 3,300 jobs that don't get spent in Byhalia."
+          "competitive_status": "clear — observed",
+          "note": "Catches the Marshall County commuter flow — Jabil, Amazon, Baxter. This is how we monetize 3,300 jobs that don't get spent in Byhalia. [Incumbent: No incumbent pins read on this corridor.]"
         },
         {
           "name": "Old Towne Main Street",
@@ -213,8 +213,8 @@
             "Barbershop/Salon",
             "Non-Profit/Community"
           ],
-          "competitive_status": "assumed clear",
-          "note": "Walkable historic district — gifts, collectibles, antiques, local restaurants. The Oxford Square analog. Our single most proven venue environment."
+          "competitive_status": "contested — observed",
+          "note": "Walkable historic district — gifts, collectibles, antiques, local restaurants. The Oxford Square analog. Our single most proven venue environment. [Incumbent: Within the Olive Branch cluster where the incumbent has ~3 pins.]"
         },
         {
           "name": "The Cascades",
@@ -287,8 +287,8 @@
             "Professional Services",
             "Non-Profit/Community"
           ],
-          "competitive_status": "assumed clear",
-          "note": "Boutiques, retailers and restaurants ringing a walkable square, plus the Hernando Farmers Market every Saturday May–October with live music. Oxford's playbook on a smaller stage."
+          "competitive_status": "contested — observed",
+          "note": "Boutiques, retailers and restaurants ringing a walkable square, plus the Hernando Farmers Market every Saturday May–October with live music. Oxford's playbook on a smaller stage. [Incumbent: Incumbent has ~3-4 pins in Hernando, clustered near I-55. Square itself may still be open.]"
         },
         {
           "name": "McIngvale Rd / I-55",
@@ -307,8 +307,8 @@
             "Gas/Grocery",
             "Medical & Dental"
           ],
-          "competitive_status": "assumed clear",
-          "note": "McIngvale Square is adding retail/restaurant/office/residential on 4 acres, explicitly to pull high-end dining east toward the interstate. Another get-in-early node."
+          "competitive_status": "contested — observed",
+          "note": "McIngvale Square is adding retail/restaurant/office/residential on 4 acres, explicitly to pull high-end dining east toward the interstate. Another get-in-early node. [Incumbent: The Hernando pins sit near the I-55 interchange.]"
         },
         {
           "name": "Hwy 51 corridor",
@@ -392,8 +392,8 @@
             "Barbershop/Salon",
             "Gas/Grocery"
           ],
-          "competitive_status": "assumed contested",
-          "note": "$200M purpose-built walkable town square. The single best venue cluster in the entire county."
+          "competitive_status": "contested — observed",
+          "note": "$200M purpose-built walkable town square. The single best venue cluster in the entire county. [Incumbent: Southaven is the incumbent's densest cluster, ~12-14 pins across Southaven/Horn Lake.]"
         },
         {
           "name": "Goodman Rd spine",
@@ -413,8 +413,8 @@
             "Auto Shop",
             "Medical & Dental"
           ],
-          "competitive_status": "assumed contested",
-          "note": "The city's main commercial artery — and the deepest bench of independent service businesses. Most likely where the incumbent started."
+          "competitive_status": "contested — observed",
+          "note": "The city's main commercial artery — and the deepest bench of independent service businesses. Most likely where the incumbent started. [Incumbent: Confirmed: the Southaven/Horn Lake pins run along the Goodman Road corridor exactly as assumed.]"
         },
         {
           "name": "Snowden District",
@@ -434,8 +434,8 @@
             "Gas/Grocery",
             "Retail & Boutique"
           ],
-          "competitive_status": "unknown",
-          "note": "Sleeper node. Snowden Grove is a youth baseball complex — tournament weekends park hundreds of families for hours between games. Highest captive dwell time in the county."
+          "competitive_status": "contested — observed",
+          "note": "Sleeper node. Snowden Grove is a youth baseball complex — tournament weekends park hundreds of families for hours between games. Highest captive dwell time in the county. [Incumbent: Inside the Southaven cluster.]"
         },
         {
           "name": "Tanger Outlets / Airways @ Church",
@@ -454,7 +454,7 @@
             "Barbershop/Salon"
           ],
           "competitive_status": "unknown",
-          "note": "Huge draw pulling shoppers from Tennessee, but outlet tenants are national chains that buy media at corporate. Target the surrounding service businesses, not the outlet tenants."
+          "note": "Huge draw pulling shoppers from Tennessee, but outlet tenants are national chains that buy media at corporate. Target the surrounding service businesses, not the outlet tenants. [Incumbent: Western Southaven; pin density thins out here.]"
         },
         {
           "name": "Landers Center",
@@ -526,8 +526,8 @@
             "Auto Shop",
             "Gas/Grocery"
           ],
-          "competitive_status": "unknown",
-          "note": "The Horn Lake stretch of the county's main artery."
+          "competitive_status": "contested — observed",
+          "note": "The Horn Lake stretch of the county's main artery. [Incumbent: Horn Lake sits inside the incumbent's densest cluster.]"
         },
         {
           "name": "Church Road",
@@ -581,8 +581,8 @@
             "Bar/Restaurant",
             "Auto Shop"
           ],
-          "competitive_status": "unknown",
-          "note": "Rounding errors on their own, but free to service once the rep is already in the county."
+          "competitive_status": "contested — observed",
+          "note": "Rounding errors on their own, but free to service once the rep is already in the county. [Incumbent: One incumbent pin at Walls.]"
         }
       ]
     },

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Memphis Metro — Zone Map",
-    "updated": "2026-08-04",
+    "updated": "2026-08-05",
     "audience": "internal",
     "metro_population": "1,389,905",
     "metro_rank": "41st-largest US metro",
@@ -424,9 +424,9 @@
       "population": 91899,
       "hhi_low": 134319,
       "hhi_high": 149920,
-      "territory": "TN — not DeSoto; separate n-Compass territory",
+      "territory": "TN — INCUMBENT OPERATES HERE (~3 pins)",
       "why": "The highest-income concentration in Tennessee. Germantown at $149,920 and Collierville at $134,319 are 57–75% above DeSoto County, which is itself #1 in Mississippi. ~92,000 people who can afford everything our advertisers sell.",
-      "verdict": "The single most valuable ground on this map. Find out who holds it before anything else."
+      "verdict": "Reclassified. The DeSoto incumbent has screens in Germantown/East Memphis. Either her grant includes Shelby County or n-Compass territories are porous. Ask Don first — this is worth more than DeSoto."
     },
     {
       "id": "Z2",
@@ -445,9 +445,9 @@
       "population": 86990,
       "hhi_low": 100660,
       "hhi_high": 135105,
-      "territory": "TN — not DeSoto; separate n-Compass territory",
+      "territory": "TN — INCUMBENT OPERATES HERE (~7-9 pins)",
       "why": "Arlington ($135,105) and Lakeland ($116,250) are family-formation suburbs in a residential build-out; Bartlett adds 56,708 people at $100,660. Every income here beats DeSoto County.",
-      "verdict": "Second prize, and the one most likely to still be open — these are newer suburbs."
+      "verdict": "Her densest cluster outside Southaven sits here, in the $100K-$135K income band. Whatever arrangement lets her operate in Bartlett and Lakeland is the arrangement we want to understand."
     },
     {
       "id": "Z3",
@@ -468,7 +468,7 @@
       "hhi_high": 85500,
       "territory": "DeSoto — on the table from n-Compass",
       "why": "Silo Square, Tanger Outlets, Landers Center, the Snowden District and the Goodman Road spine. The densest venue inventory in DeSoto County.",
-      "verdict": "Ours to take, but assume the incumbent is dug in here. Phase 2 in the build plan."
+      "verdict": "Ours to take, and confirmed as the incumbent's stronghold — ~12-14 pins across Southaven/Horn Lake. Phase 2, after Olive Branch and Hernando are live."
     },
     {
       "id": "Z4",
@@ -489,7 +489,7 @@
       "hhi_high": 85500,
       "territory": "DeSoto — on the table from n-Compass",
       "why": "Mississippi's #1 boomtown, and it borders Zone 1. An advertiser in Olive Branch is selling to Germantown and Collierville households too — the county line is not a shopping boundary.",
-      "verdict": "Phase 1 flagship. Also the bridge between the DeSoto territory and the money crescent."
+      "verdict": "Phase 1 flagship. Incumbent has only ~3 pins here — a toehold against our 24-screen target, not a network."
     },
     {
       "id": "Z5",
@@ -508,7 +508,7 @@
       "population": 68779,
       "hhi_low": null,
       "hhi_high": null,
-      "territory": "TN — not DeSoto",
+      "territory": "TN — incumbent present",
       "why": "68,779 people and the Poplar Avenue retail spine. Mixed incomes — strong at the eastern end, thinner toward the I-240 loop.",
       "verdict": "Real volume, but sits inside Memphis proper where media competition is heaviest."
     },
@@ -531,7 +531,7 @@
       "hhi_high": 85500,
       "territory": "DeSoto — on the table from n-Compass",
       "why": "Fastest percentage growth in DeSoto County (+10.96% since 2020) and a walkable courthouse square — the Oxford playbook.",
-      "verdict": "Phase 1 co-launch. Small enough to own outright."
+      "verdict": "Phase 1 co-launch. Incumbent has ~3-4 pins clustered near I-55; the courthouse square may still be open."
     },
     {
       "id": "Z7",
