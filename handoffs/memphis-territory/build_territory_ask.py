@@ -115,9 +115,9 @@ def screen_icon(lat, lon):
     x, y = px(lon), py(lat)
     return (
         f'<g class="existing">'
-        f'<rect x="{x - 11:.1f}" y="{y - 9:.1f}" width="22" height="15.5" rx="2.5" '
+        f'<rect x="{x - 6.5:.1f}" y="{y - 5.5:.1f}" width="13" height="9.5" rx="1.6" '
         f'class="scr"/>'
-        f'<rect x="{x - 4:.1f}" y="{y + 6.5:.1f}" width="8" height="3.4" rx="1.2" '
+        f'<rect x="{x - 2.4:.1f}" y="{y + 4:.1f}" width="4.8" height="2.2" rx=".8" '
         f'class="scrbase"/>'
         f"</g>"
     )
@@ -223,8 +223,9 @@ CSS = """
             box-shadow:0 0 0 1px rgba(0,0,0,.14); }
   .sw.dot.sm { width:12px; height:12px; border-width:2px; margin-top:6px; }
   .sw.band { width:30px; height:16px; border-radius:3px; display:block; margin-top:5px; }
-  .sw.scrsw { width:26px; height:18px; border-radius:3px; display:block; margin-top:4px;
-              border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.14); }
+  .sw.scrsw { width:16px; height:11px; border-radius:2px; display:block; margin-top:7px;
+              border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.14);
+              opacity:.85; }
   .lgroup b { display:block; font-size:13.5px; line-height:1.35; }
   .lgroup span { font-size:12px; color:var(--muted); }
   .mapbox { background:var(--card); border:1px solid var(--line); padding:12px; margin-bottom:20px;
@@ -240,8 +241,8 @@ CSS = """
   .statelab { font:bold 12px Arial,sans-serif; fill:var(--muted); letter-spacing:1.8px; }
   .arcband { fill:none; stroke:var(--amber); stroke-width:64; stroke-opacity:.28;
              stroke-linejoin:round; stroke-linecap:round; }
-  .scr, .scrbase { fill:var(--green); stroke:#fff; stroke-width:2.4;
-                   stroke-linejoin:round; paint-order:stroke fill; }
+  .scr, .scrbase { fill:var(--green); stroke:#fff; stroke-width:1.6;
+                   stroke-linejoin:round; paint-order:stroke fill; opacity:.85; }
   @media (prefers-color-scheme: dark) { .scr, .scrbase { stroke:#0c1016; } }
   :root[data-theme="dark"] .scr, :root[data-theme="dark"] .scrbase { stroke:#0c1016; }
   :root[data-theme="light"] .scr, :root[data-theme="light"] .scrbase { stroke:#fff; }
@@ -313,7 +314,7 @@ BODY = f"""<header class="top">
     </div>
     <div class="lgroup">
       <span class="sw scrsw" style="background:{GREEN}"></span>
-      <span><b>Screens on the network today</b><span>Existing placements in the area</span></span>
+      <span><b>Existing screens in the area</b><span>Already placed &mdash; not ours</span></span>
     </div>
     <div class="lgroup">
       <span class="sw dot sm" style="background:transparent;border:2px dashed {SLATE};box-shadow:none"></span>
