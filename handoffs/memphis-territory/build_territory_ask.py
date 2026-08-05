@@ -19,7 +19,6 @@ PAGE_TITLE = "MCTV &mdash; Memphis Areas of Interest"
 
 AMBER = "#E89E3C"    # priority 1 — the markets we want most
 BLUE = "#2E5E86"     # priority 2 — want, lower urgency
-GREEN = "#2FA05A"    # screens already on the network
 SLATE = "#8A93A3"    # lower-priority markers
 NAVY = "#1B1F3B"
 
@@ -70,9 +69,6 @@ for t in data["targets"] + data["excluded"]:
 for la, lo in data["arc"]:
     if not inside(la, lo):
         errors.append(f"arc point {la},{lo} outside map bounds")
-for la, lo in data["her_pins"]:
-    if not inside(la, lo):
-        errors.append(f"existing screen {la},{lo} outside map bounds")
 if errors:
     print("VALIDATION FAILED:")
     for e in errors:
@@ -109,21 +105,6 @@ state_line = (
 arc_pts = " ".join(f"{px(lo):.1f},{py(la):.1f}" for la, lo in data["arc"])
 arc = f'<polyline points="{arc_pts}" class="arcband"/>'
 
-def screen_icon(lat, lon):
-    """A little monitor glyph — reads as a screen at a glance, the way the
-    source map does, rather than as another generic dot."""
-    x, y = px(lon), py(lat)
-    return (
-        f'<g class="existing">'
-        f'<rect x="{x - 6.5:.1f}" y="{y - 5.5:.1f}" width="13" height="9.5" rx="1.6" '
-        f'class="scr"/>'
-        f'<rect x="{x - 2.4:.1f}" y="{y + 4:.1f}" width="4.8" height="2.2" rx=".8" '
-        f'class="scrbase"/>'
-        f"</g>"
-    )
-
-
-existing = "".join(screen_icon(la, lo) for la, lo in data["her_pins"])
 
 targets = "".join(
     f'<g class="tgt">'
@@ -160,7 +141,7 @@ scale = (
 map_svg = (
     f'<svg viewBox="0 0 {MAP_W:.0f} {MAP_H:.0f}" role="img" '
     f'aria-label="Memphis-area markets MCTV is interested in">'
-    f"{counties}{roads}{state_line}{arc}{existing}{lower}{targets}{scale}</svg>"
+    f"{counties}{roads}{state_line}{arc}{lower}{targets}{scale}</svg>"
 )
 
 p1 = sorted([t for t in data["targets"] if t["priority"] == 1], key=lambda t: -t["hhi"])
@@ -182,8 +163,7 @@ def cards(ts, color):
 
 
 CSS = """
-  :root { --navy:#1B1F3B; --amber:#E89E3C; --blue:#2E5E86; --green:#2FA05A;
-          --slate:#8A93A3;
+  :root { --navy:#1B1F3B; --amber:#E89E3C; --blue:#2E5E86; --slate:#8A93A3;
           --bg:#f6f7f9; --card:#fff; --text:#15181f; --muted:#5b6270; --line:#dfe2e8;
           --land:#e9ecf1; }
   @media (prefers-color-scheme: dark) {
@@ -223,9 +203,6 @@ CSS = """
             box-shadow:0 0 0 1px rgba(0,0,0,.14); }
   .sw.dot.sm { width:12px; height:12px; border-width:2px; margin-top:6px; }
   .sw.band { width:30px; height:16px; border-radius:3px; display:block; margin-top:5px; }
-  .sw.scrsw { width:16px; height:11px; border-radius:2px; display:block; margin-top:7px;
-              border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.14);
-              opacity:.85; }
   .lgroup b { display:block; font-size:13.5px; line-height:1.35; }
   .lgroup span { font-size:12px; color:var(--muted); }
   .mapbox { background:var(--card); border:1px solid var(--line); padding:12px; margin-bottom:20px;
@@ -241,11 +218,6 @@ CSS = """
   .statelab { font:bold 12px Arial,sans-serif; fill:var(--muted); letter-spacing:1.8px; }
   .arcband { fill:none; stroke:var(--amber); stroke-width:64; stroke-opacity:.28;
              stroke-linejoin:round; stroke-linecap:round; }
-  .scr, .scrbase { fill:var(--green); stroke:#fff; stroke-width:1.6;
-                   stroke-linejoin:round; paint-order:stroke fill; opacity:.85; }
-  @media (prefers-color-scheme: dark) { .scr, .scrbase { stroke:#0c1016; } }
-  :root[data-theme="dark"] .scr, :root[data-theme="dark"] .scrbase { stroke:#0c1016; }
-  :root[data-theme="light"] .scr, :root[data-theme="light"] .scrbase { stroke:#fff; }
   .tgtdot { stroke:#fff; stroke-width:3.5; }
   .tgtdot.p1 { fill:var(--amber); }
   .tgtdot.p2 { fill:var(--blue); }
@@ -311,10 +283,6 @@ BODY = f"""<header class="top">
     <div class="lgroup">
       <span class="sw band" style="background:{AMBER};opacity:.45"></span>
       <span><b>The arc</b><span>How these markets connect</span></span>
-    </div>
-    <div class="lgroup">
-      <span class="sw scrsw" style="background:{GREEN}"></span>
-      <span><b>Existing screens in the area</b><span>Already placed &mdash; not ours</span></span>
     </div>
     <div class="lgroup">
       <span class="sw dot sm" style="background:transparent;border:2px dashed {SLATE};box-shadow:none"></span>
