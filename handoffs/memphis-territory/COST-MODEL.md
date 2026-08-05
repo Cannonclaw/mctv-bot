@@ -1,4 +1,4 @@
-# What "Free Territory" Actually Costs
+# What the Territory Actually Costs
 
 **Companion to:** `TERRITORY-BRIEF.md` · **Interactive version:** `cost-model.html`
 (run `python3 handoffs/memphis-territory/build_cost_model.py`)
@@ -8,22 +8,38 @@
 
 ## The headline
 
-**The franchise fee is not the price of this territory.**
+**The territory carries a $50,000 price and Don is willing to waive it. That is a real gift — and
+it is still not the number that decides this.**
 
-n-Compass publishes a **$35,000** franchise fee. That is a one-time number, and it is the part Don
-is offering to waive. It also publishes an ongoing royalty of **$500/month flat plus $75 per
-billboard per month**.
+n-Compass also charges an ongoing royalty of **$500/month flat plus $75 per billboard per month**.
 
 At the 90-screen DeSoto build:
 
 | | Amount |
 | --- | --- |
-| Franchise fee (waived) | **$35,000 once** |
+| Territory price (waived) | **$50,000 once — we pay $0** |
 | n-Compass royalty | **$87,000 per year** |
 | Same royalty over 5 years | **$435,000** |
 
-The waived fee is roughly **7%** of what the territory actually costs to hold over five years. The
-gift is the small number. The subscription is the big one.
+The waived entry is roughly **11%** of what the territory costs to hold over five years. **Entry is
+free; occupancy is not.** Negotiate the royalty and the build-out clause — the entry price is
+already won.
+
+### What comes with it is now the open question
+
+Price being zero doesn't tell us which deal this is:
+
+| Scenario | All-in to 90 screens | Payback |
+| --- | --- | --- |
+| **Rights only** — we build from zero | **$54,000** | ~5 months |
+| **Rights + her ~33 installed screens** | **$34,200** | ~3 months |
+| *(If the $50,000 were not waived)* | *$104,000* | *~9 months* |
+
+If her **advertiser contracts** come too, it stops being a territory handover and becomes an
+acquisition arriving for free — 15 advertisers at even $400/month is $72,000 a year of revenue
+walking in the door, and we'd start with a book instead of an empty network.
+
+**Ask which one it is, and if there's a book, ask what it earns.**
 
 > **Verify this against our own agreement before acting on it.** These are n-Compass's published
 > *franchise* terms. We already run 133 screens on NTV360, so we may be on dealer terms,
@@ -34,13 +50,14 @@ gift is the small number. The subscription is the big one.
 
 ## Fifth question for Don
 
-The brief lists three questions. The metro map added a fourth. This adds a fifth:
-
 > **Does the DeSoto territory come under our existing agreement, or a new one?**
 
-Waiving a $35,000 fee while attaching $75/screen/month to 90 new screens is not a gift — it is a
-subscription with a discounted signup. Both can still be worth it. But we should know which deal
-we're signing.
+Waiving $50,000 of entry while attaching $75/screen/month to 90 new screens is a discounted signup
+on a subscription, not a free lunch. Both can be worth it — but we should know which deal we're
+signing.
+
+And alongside it: **does her installed base and/or her advertiser book come with the territory?**
+That swing is worth more than the $50,000 being waived.
 
 ---
 
@@ -57,6 +74,8 @@ Defaults, all editable in the interactive version:
 | n-Compass flat fee | $500/mo | n-Compass published figure |
 | Rep (base + commission) | $4,500/mo | 90 screens across DeSoto is not a remote-managed market |
 | Advertisers sold | 20 | Steady-state assumption |
+| Territory cost | **$0** | Listed at $50,000, waived by Don |
+| Screens inherited | 0 | Set above zero if her installed base transfers |
 
 ### Results by phase
 
@@ -79,7 +98,8 @@ Defaults, all editable in the interactive version:
 
 - **Total capex to 90 screens: $54,000** — which lands inside the $48,150–$120,405 range n-Compass
   publishes for a new franchise. That's a reasonable sanity check on the per-screen defaults.
-- **Capex payback: ~5 months** at 20 advertisers.
+- **Capex payback: ~5 months** at 20 advertisers — or **~3 months** if her installed screens come
+  with the territory.
 
 ---
 
@@ -92,13 +112,15 @@ screens lifts the rate card from $800 to $1,300 per advertiser, so revenue per a
 faster than cost per screen. This is the arithmetic behind phasing to the tier lines instead of
 stopping short of them — the same finding as the market maps, now with the cost side attached.
 
-**2. Capex is the small problem; the royalty is the big one.**
+**2. Entry is the small problem; the royalty is the big one.**
 
-Hardware is $54,000, once. The recurring n-Compass line is $87,000 *every year*. Set the royalty
-input to $0 in the model and break-even drops from **11 advertisers to 5** — that single line is
-more than half the cost of running the territory.
+Entry is now $0 and hardware is $54,000, once. The recurring n-Compass line is $87,000 *every year*.
+Set the royalty input to $0 in the model and break-even drops from **11 advertisers to 5** — that
+single line is more than half the cost of running the territory.
 
-That is why the fifth question matters more than the first four.
+With the entry price waived, **everything left that matters in this deal is recurring or
+contractual**: the royalty rate, the build-out clause, and exclusivity. Those are the three things
+to negotiate.
 
 ---
 

@@ -63,20 +63,42 @@
   footer { padding:30px 24px; text-align:center; color:var(--muted); font-size:12px; }
 </style>
 <header class="top">
-  <h1>What &ldquo;Free Territory&rdquo; Actually Costs</h1>
+  <h1>What the Territory Actually Costs</h1>
   <p>DeSoto County build model &middot; MCTV Elite Advertising &middot; every input is editable</p>
   <span class="badge-int">Internal &mdash; not for n-Compass</span>
 </header>
 <div class="wrap">
 
   <div class="callout key">
-    <b>The headline, before any of the numbers below.</b> The franchise fee is not the price of this
-    territory. n-Compass publishes a <b>$35,000</b> franchise fee &mdash; a one-time number, and the
-    part Don is offering to waive. It also publishes an ongoing royalty of
-    <b>$500/month flat plus $75 per billboard per month</b>. At 90 DeSoto screens that recurring
-    line is roughly <b>$87,000 every year, forever</b>. Over five years it is about
-    <b>$435,000</b>. The waived fee is on the order of 7% of what the territory actually costs to
-    hold.
+    <b>The territory carries a $50,000 price, and Don is willing to waive it.</b> That is a real
+    gift &mdash; and it is still not the number that decides this.
+    <br><br>
+    The ongoing royalty is <b>$500/month flat plus $75 per billboard per month</b>. At 90 DeSoto
+    screens that is roughly <b>$87,000 every year, forever</b> &mdash; about <b>$435,000 over five
+    years</b>.
+    <br><br>
+    <b>So the gift is about 11% of what the territory costs to hold for five years.</b> Entry is
+    free; occupancy is not. Negotiate the royalty and the build-out clause, not the entry price
+    &mdash; the entry price is already zero.
+  </div>
+
+  <div class="callout gap">
+    <b>The question that actually matters: what comes with it?</b> Three very different deals wear
+    the same &ldquo;territory&rdquo; label, and the price being zero does not tell us which one this
+    is.
+    <ul>
+      <li><b>Rights only</b> &mdash; we build all 90 screens ourselves from zero. That is the model
+        below, and it is still a good deal at $0 entry.</li>
+      <li><b>Rights + her installed screens</b> (~32&ndash;35 of them) &mdash; roughly $20,000 of
+        hardware we do not buy, plus host agreements already signed, which is the slow part of any
+        build. Set <b>screens inherited</b> below to model it.</li>
+      <li><b>Rights + screens + her advertiser contracts</b> &mdash; then it is not a territory
+        handover at all, it is an <b>acquisition arriving for free</b>. If she has 15 advertisers at
+        even $400/month, that is $72,000 a year of revenue walking in the door, and it changes the
+        ramp completely &mdash; we would start with a book instead of an empty network.</li>
+    </ul>
+    <b>Ask which one it is.</b> And if a book of business comes with it, ask what it earns &mdash;
+    that is the difference between a 5-month payback and starting cash-flow positive.
   </div>
 
   <div class="callout gap">
@@ -86,13 +108,25 @@
     figures do not apply to us. Override the royalty inputs below with our real numbers.
     <br><br>
     This also adds a fifth question for Don: <b>does the DeSoto territory come under our existing
-    agreement, or a new one?</b> Waiving a $35,000 fee while attaching $75/screen/month to 90 new
-    screens is not a gift &mdash; it is a subscription.
+    agreement, or a new one?</b> Waiving $50,000 of entry while attaching $75/screen/month to 90 new
+    screens is a discounted signup on a subscription, not a free lunch. Both can be worth it &mdash;
+    but we should know which deal we are signing.
   </div>
 
   <h2>Model</h2>
   <div class="grid2">
     <div>
+      <fieldset>
+        <legend>One time &mdash; entry</legend>
+        <div class="row"><label for="terr">Territory cost (waived)</label>
+          <input id="terr" type="number" value="0" min="0" step="5000"><span class="unit">$</span></div>
+        <div class="row"><label for="inherit">Screens inherited in the deal</label>
+          <input id="inherit" type="number" value="0" min="0" step="1"><span class="unit">#</span></div>
+        <p class="src">Listed at $50,000; Don is willing to waive it, so the default is $0. Put the
+        $50,000 back to see what it would cost if the terms change. Set <b>screens inherited</b>
+        above zero if her installed base comes with it &mdash; those come off our build.</p>
+      </fieldset>
+
       <fieldset>
         <legend>Per screen &mdash; one time</legend>
         <div class="row"><label for="hw">Display + media player</label>
@@ -160,10 +194,13 @@
     the whole argument for phasing to the tier lines rather than stopping short of them.
   </div>
   <div class="callout">
-    <b>Capex is the small problem.</b> Even at full build, the hardware bill lands inside the
-    $48,150&ndash;$120,405 range n-Compass publishes for a new franchise &mdash; which is a decent
-    sanity check on the per-screen defaults. The recurring line is what deserves the scrutiny, and
-    it is the one Don controls.
+    <b>Entry is the small problem &mdash; and it is now zero.</b> The hardware build alone lands
+    inside the $48,150&ndash;$120,405 range n-Compass publishes for a new franchise, which is a
+    decent sanity check on the per-screen defaults.
+    <br><br>
+    With entry waived, <b>everything that matters in this deal is recurring or contractual</b>: the
+    royalty rate, the build-out clause, and whether we get exclusivity. Those are the three things
+    to negotiate. The $50,000 is already won.
   </div>
 
 </div>
@@ -180,7 +217,7 @@ our n-Compass agreement.</footer>
     { name: 'Phase 2 — + Southaven', screens: 75 },
     { name: 'Phase 3 — + Horn Lake / Walls / Nesbit', screens: 90 }
   ];
-  const ids = ['hw', 'inst', 'roy', 'conn', 'flat', 'rep', 'adv'];
+  const ids = ['terr', 'inherit', 'hw', 'inst', 'roy', 'conn', 'flat', 'rep', 'adv'];
   const $ = id => document.getElementById(id);
   const money = n => '$' + Math.round(n).toLocaleString('en-US');
 
@@ -201,9 +238,14 @@ our n-Compass agreement.</footer>
     body.innerHTML = '';
     let prev = 0;
     let last = null;
+    let inheritLeft = v.inherit;
     for (const p of PHASES) {
       const rate = rateFor(p.screens);
-      const capex = (p.screens - prev) * perScreenCapex;
+      const added = p.screens - prev;
+      // Inherited screens absorb the earliest phases first.
+      const free = Math.min(inheritLeft, added);
+      inheritLeft -= free;
+      const capex = (added - free) * perScreenCapex + (prev === 0 ? v.terr : 0);
       const monthly = fixed + p.screens * perScreenMonthly;
       const be = Math.ceil(monthly / rate);
       last = { p, rate, monthly, cumCapex: (last ? last.cumCapex : 0) + capex };
@@ -220,7 +262,7 @@ our n-Compass agreement.</footer>
     const monthly = fixed + s * perScreenMonthly;
     const revenue = v.adv * rate;
     const margin = revenue - monthly;
-    const totalCapex = s * perScreenCapex;
+    const totalCapex = Math.max(s - v.inherit, 0) * perScreenCapex + v.terr;
 
     const det = document.querySelector('#detail tbody');
     const line = (label, m) =>
@@ -236,7 +278,7 @@ our n-Compass agreement.</footer>
     const payback = margin > 0 ? Math.ceil(totalCapex / margin) : null;
     const be = Math.ceil(monthly / rate);
     document.getElementById('headline').innerHTML =
-      `<div class="stat"><b>${money(totalCapex)}</b><span>Capex to 90 screens</span></div>` +
+      `<div class="stat"><b>${money(totalCapex)}</b><span>All-in to 90 screens</span></div>` +
       `<div class="stat warnbox"><b>${money(royalty * 12)}</b><span>n-Compass, per year</span></div>` +
       `<div class="stat"><b>${be}</b><span>Break-even advertisers</span></div>` +
       `<div class="stat"><b>${payback ? payback + ' mo' : '—'}</b><span>Capex payback</span></div>` +

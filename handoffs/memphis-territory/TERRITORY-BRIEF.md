@@ -22,9 +22,11 @@ There is no second DeSoto anywhere in North Mississippi. The alternative markets
 Oxford were checked (Section 6) and every one of them is small, flat, or shrinking. If this
 territory is genuinely available for free, it is worth taking even if we build slowly.
 
-**The catch:** "free territory" is free the way a puppy is free. The cost is not the rights, it is
-the build — hardware, install, and a rep living in DeSoto County. Get the three answers in Section 7
-from Don before committing to a build-out schedule.
+**The catch:** the territory lists at **$50,000 and Don is willing to waive it** — a real gift, but
+the entry price was never the cost. The n-Compass royalty runs about **$87,000 a year at 90
+screens**, roughly $435,000 over five years, so the waived entry is ~11% of what holding the
+territory actually costs. Free to enter, not free to occupy. Get the answers in Section 7 before
+committing to a build-out schedule.
 
 ---
 
