@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": "Her Footprint vs. What We Want",
+    "updated": "2026-08-05",
+    "audience": "internal",
+    "bounds": {"lat_min": 34.72, "lat_max": 35.42, "lon_min": -90.30, "lon_max": -89.55},
+    "pin_note": "Pin positions are georeferenced from a screenshot of her Google My Map at metro zoom. Individual pins are accurate to roughly a mile; overlapping markers mean the count is ±3.",
+    "hull_note": "The dashed boundary is the convex hull of her observed pins — it is where she HAS screens, NOT a confirmed territory line. Her actual grant could be larger, smaller, or a different shape entirely. Nobody has shown us the boundary."
+  },
+
+  "her_pins": [
+    [35.239, -89.794], [35.213, -89.850], [35.221, -89.822], [35.209, -89.773],
+    [35.209, -89.747], [35.201, -89.830], [35.177, -89.854],
+    [35.112, -89.895], [35.101, -89.850], [35.074, -89.958],
+    [34.987, -89.993], [34.960, -90.055], [34.958, -90.013], [34.955, -89.972],
+    [34.958, -89.927], [34.960, -89.887], [34.934, -90.076], [34.934, -90.045],
+    [34.931, -90.013], [34.927, -89.993], [34.922, -89.980], [34.929, -89.964],
+    [34.958, -89.812], [34.958, -89.788], [34.958, -89.768],
+    [34.934, -90.156],
+    [34.812, -89.990], [34.808, -89.974], [34.803, -89.958],
+    [34.865, -89.670]
+  ],
+
+  "arc": [
+    [35.2967, -89.6684], [35.2620, -89.7370], [35.2045, -89.8739],
+    [35.0868, -89.8101], [35.0420, -89.6645], [34.9618, -89.8295],
+    [34.9890, -90.0126], [34.8226, -89.9917]
+  ],
+
+  "targets": [
+    {"name": "Germantown", "lat": 35.0868, "lon": -89.8101, "pop": 39773, "hhi": 149920, "state": "TN", "priority": 1, "note": "Highest household income in Tennessee. She has ~3 pins in this area."},
+    {"name": "Collierville", "lat": 35.0420, "lon": -89.6645, "pop": 52126, "hhi": 134319, "state": "TN", "priority": 1, "note": "11 miles from Olive Branch. No pins observed."},
+    {"name": "Olive Branch", "lat": 34.9618, "lon": -89.8295, "pop": 47819, "hhi": 85500, "state": "MS", "priority": 1, "note": "Mississippi's #1 boomtown. ~3 pins — a toehold, not a network."},
+    {"name": "Hernando", "lat": 34.8226, "lon": -89.9917, "pop": 19165, "hhi": 85500, "state": "MS", "priority": 1, "note": "Fastest-growing in DeSoto, +10.96%. ~3-4 pins near I-55."},
+    {"name": "Southaven", "lat": 34.9890, "lon": -90.0126, "pop": 58551, "hhi": 85500, "state": "MS", "priority": 2, "note": "Her stronghold — ~12-14 pins with Horn Lake. Richest venue inventory in the county."},
+    {"name": "Arlington", "lat": 35.2967, "lon": -89.6684, "pop": 15866, "hhi": 135105, "state": "TN", "priority": 2, "note": "Third-highest income in the metro. Family-formation suburb."},
+    {"name": "Lakeland", "lat": 35.2620, "lon": -89.7370, "pop": 14416, "hhi": 116250, "state": "TN", "priority": 2, "note": "~1-2 pins observed on the eastern edge of her Bartlett cluster."},
+    {"name": "Bartlett", "lat": 35.2045, "lon": -89.8739, "pop": 56708, "hhi": 100660, "state": "TN", "priority": 2, "note": "Her densest Tennessee cluster — ~7-9 pins across Bartlett/Lakeland."}
+  ],
+
+  "excluded": [
+    {"name": "Memphis core", "lat": 35.1495, "lon": -90.0490, "pop": 606132, "hhi": 51736, "why": "606,132 people, but $51,736 median household income and the most contested media market in the region. Density is not spending power."},
+    {"name": "West Memphis", "lat": 35.1465, "lon": -90.1848, "pop": 23130, "hhi": 42674, "why": "Down 10.45% since 2010, still falling. 29% poverty rate."},
+    {"name": "Millington", "lat": 35.3415, "lon": -89.8973, "pop": 10582, "hhi": null, "why": "Small, north of the arc, no growth story."},
+    {"name": "Horn Lake", "lat": 34.9551, "lon": -90.0353, "pop": 26738, "hhi": 85500, "why": "Wealthy enough but flat at -0.01%/yr. Fill-in once a rep is already driving the county — not a reason to ask."}
+  ],
+
+  "counties": [
+    {"name": "SHELBY CO, TN", "lat": [34.9957, 35.41], "lon": [-90.30, -89.63]},
+    {"name": "DESOTO CO, MS", "lat": [34.72, 34.9957], "lon": [-90.30, -89.72]},
+    {"name": "FAYETTE CO, TN", "lat": [34.9957, 35.42], "lon": [-89.63, -89.56]},
+    {"name": "MARSHALL CO, MS", "lat": [34.72, 34.9957], "lon": [-89.72, -89.56]}
+  ],
+
+  "interstates": [
+    {"name": "I-40", "points": [[-90.30, 35.14], [-90.02, 35.15], [-89.86, 35.19], [-89.63, 35.21]]},
+    {"name": "I-55", "points": [[-90.16, 35.42], [-90.10, 35.22], [-90.06, 35.11], [-90.02, 35.02], [-90.00, 34.90], [-89.99, 34.75]]},
+    {"name": "I-269", "points": [[-89.99, 34.83], [-89.87, 34.92], [-89.75, 35.03], [-89.68, 35.16], [-89.66, 35.30]]},
+    {"name": "I-240", "points": [[-90.05, 35.16], [-89.94, 35.16], [-89.87, 35.10], [-89.92, 35.03], [-90.03, 35.04], [-90.06, 35.11]]},
+    {"name": "I-22", "points": [[-90.01, 35.09], [-89.89, 34.99], [-89.74, 34.91], [-89.58, 34.84]]}
+  ]
+}

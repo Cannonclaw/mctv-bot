@@ -28,6 +28,10 @@ Delete both with `delete_trigger` when iteration 12 completes.
 
 | 6 | 2026-08-05 | **Incumbent footprint mapped** — Creed supplied DeSoto Local's own current location map. ~32–35 pins across **two states**. `INCUMBENT-FOOTPRINT.md` records the read; competitive flags in `markets.json` moved from assumption to observation (9 contested / 5 unknown / 7 clear), and Z1/Z2 in `metro_zones.json` reclassified. **Headline: she is operating in Bartlett, Lakeland and Germantown — Shelby County, TN** — the two zones the metro map had ranked #1 and #2 and labelled "not on the table." Southaven assumption confirmed (~12–14 pins on Goodman Rd) but Olive Branch (~3) and Hernando (~3–4) are not empty either. Build order unchanged; rationale changed from "empty ground" to "outbuild a toehold." Fixed status classification in `build_maps.py` to match on keyword. | Rep coverage / drive-time routing |
 
+| 7 | 2026-08-05 | **Negotiation map** — `territory_ask.json` + `build_territory_ask.py` → `territory-ask.html`. Her 30 georeferenced pins plotted from the screenshot, with a convex hull around them labelled everywhere as *inferred, not a boundary*. Over it, the **wealth arc** we actually want: Arlington → Lakeland → Bartlett → Germantown → Collierville → Olive Branch → Southaven → Hernando. **304,424 people, every market at or above $85,500 median HHI.** Priority 1/2 split, plus an explicit "deliberately not asking for" list (Memphis core, West Memphis, Millington, Horn Lake). Key read: **Collierville ($134,319) and Arlington ($135,105) fall outside her observed footprint entirely.** | Confirm territory boundary with Don |
+
+**Published artifact (iteration 7):** https://claude.ai/code/artifact/f8dcfb1a-465a-466a-b24f-9b8cc01effd1
+
 **Published artifact (iteration 5):** https://claude.ai/code/artifact/ae624d29-df75-408d-92ad-4d869d11702b
 
 **Published artifact (iteration 4):** https://claude.ai/code/artifact/278f6c6a-079c-4f42-a0f3-f5c31195bd28

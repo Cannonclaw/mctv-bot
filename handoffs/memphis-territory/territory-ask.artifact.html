@@ -1,0 +1,171 @@
+<title>MCTV &mdash; Her Footprint vs. What We Want</title>
+<style>
+  :root { --navy:#1B1F3B; --gold:#C5A55A; --her:#C4576B; --bg:#f7f7f9; --card:#fff;
+          --text:#1a1a1a; --muted:#5d616b; --line:#e3e3e8; --land:#eceef2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6; --line:#2a2f36;
+            --land:#181e26; }
+  }
+  :root[data-theme="dark"] { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6;
+                             --line:#2a2f36; --land:#181e26; }
+  :root[data-theme="light"] { --bg:#f7f7f9; --card:#fff; --text:#1a1a1a; --muted:#5d616b;
+                              --line:#e3e3e8; --land:#eceef2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text);
+         line-height:1.55; }
+  header.top { background:var(--navy); color:#fff; padding:34px 24px; border-bottom:5px solid var(--gold); }
+  header.top h1 { margin:0 0 6px; font-size:27px; text-wrap:balance; }
+  header.top p { margin:0; color:#c9cbd6; font-size:14px; }
+  .badge-int { display:inline-block; margin-top:12px; background:var(--her); color:#fff;
+    font-size:11px; letter-spacing:.8px; text-transform:uppercase; padding:4px 10px; font-weight:bold; }
+  .wrap { max-width:1160px; margin:0 auto; padding:24px; }
+  h2 { font-size:19px; margin:32px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--gold);
+       text-wrap:balance; }
+  .stats { display:flex; flex-wrap:wrap; gap:12px; margin:0 0 16px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--gold);
+          padding:11px 15px; min-width:150px; flex:1; }
+  .stat b { display:block; font-size:21px; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .stat.hers { border-left-color:var(--her); }
+  .stat.hers b { color:var(--her); }
+  .mapbox { background:var(--card); border:1px solid var(--line); padding:10px; margin-bottom:14px;
+            overflow-x:auto; }
+  .mapbox svg { display:block; width:100%; min-width:680px; height:auto; }
+  .county { fill:var(--land); stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3;
+            fill-opacity:.7; }
+  .countylab { font:bold 11px Arial,sans-serif; fill:var(--muted); letter-spacing:.7px; }
+  .road { fill:none; stroke:#8a94a6; stroke-width:2.2; stroke-linejoin:round; opacity:.75; }
+  .roadlab { font:bold 10px Arial,sans-serif; fill:#8a94a6; }
+  .stateline { stroke:var(--muted); stroke-width:1.6; stroke-dasharray:9 6; opacity:.8; }
+  .statelab { font:bold 11px Arial,sans-serif; fill:var(--muted); letter-spacing:1.5px; }
+  .arcband { fill:none; stroke:var(--gold); stroke-width:52; stroke-opacity:.20;
+             stroke-linejoin:round; stroke-linecap:round; }
+  .arcline { fill:none; stroke:var(--gold); stroke-width:2.5; stroke-dasharray:10 6;
+             stroke-opacity:.85; stroke-linejoin:round; }
+  .hull { fill:var(--her); fill-opacity:.07; stroke:var(--her); stroke-width:2.5;
+          stroke-dasharray:12 7; }
+  .hulllab { font:bold 11px Arial,sans-serif; fill:var(--her); letter-spacing:.8px; }
+  .herpin { fill:var(--her); stroke:#fff; stroke-width:1.3; opacity:.95; }
+  .tgtdot { fill:var(--gold); stroke:#fff; stroke-width:2.5; }
+  .tgtdot.p2 { fill-opacity:.55; }
+  .tgtlab { font:bold 13px Arial,sans-serif; fill:var(--text);
+            paint-order:stroke fill; stroke:var(--card); stroke-width:4px; stroke-linejoin:round; }
+  .tgtinc { font:bold 11.5px Arial,sans-serif; fill:var(--gold);
+            paint-order:stroke fill; stroke:var(--card); stroke-width:3.5px; stroke-linejoin:round; }
+  .excdot { fill:none; stroke:var(--muted); stroke-width:1.6; opacity:.8; }
+  .excx { stroke:var(--muted); stroke-width:1.8; opacity:.8; }
+  .exclab { font:11px Arial,sans-serif; fill:var(--muted);
+            paint-order:stroke fill; stroke:var(--card); stroke-width:3px; stroke-linejoin:round; }
+  .scale { stroke:var(--muted); stroke-width:2; }
+  .scalelab { font:bold 10px Arial,sans-serif; fill:var(--muted); letter-spacing:.6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--muted);
+            margin-bottom:18px; align-items:center; }
+  .legend i { display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:6px;
+              vertical-align:-3px; }
+  .legend i.band { border-radius:2px; width:22px; height:11px; }
+  .callout { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--navy);
+             padding:15px 19px; font-size:13.5px; margin-bottom:18px; }
+  .callout.key { border-left-color:var(--gold); }
+  .callout.warn { border-left-color:var(--her); }
+  .callout b { color:var(--gold); }
+  .callout.warn b { color:var(--her); }
+  .tablewrap { overflow-x:auto; margin-bottom:18px; }
+  table { border-collapse:collapse; width:100%; background:var(--card); border:1px solid var(--line);
+          font-size:13px; min-width:640px; }
+  th,td { padding:9px 13px; border-bottom:1px solid var(--line); text-align:left;
+          vertical-align:top; }
+  td:nth-child(2), td:nth-child(3) { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  th { background:var(--navy); color:#fff; font-size:11px; text-transform:uppercase;
+       letter-spacing:.6px; }
+  tr:last-child td { border-bottom:none; }
+  .st { font-size:10px; color:var(--muted); border:1px solid var(--line); padding:1px 4px; }
+  .nt { color:var(--muted); font-size:12.5px; }
+  footer { padding:30px 24px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+<header class="top">
+  <h1>Her Footprint vs. What We Want</h1>
+  <p>Negotiation map for the n-Compass conversation &middot; MCTV Elite Advertising &middot;
+     2026-08-05</p>
+  <span class="badge-int">Internal &mdash; not for n-Compass</span>
+</header>
+<div class="wrap">
+
+  <div class="stats">
+    <div class="stat hers"><b>~30</b><span>Her observed pins</span></div>
+    <div class="stat hers"><b>2</b><span>States she operates in</span></div>
+    <div class="stat"><b>304,424</b><span>People in the arc we want</span></div>
+    <div class="stat"><b>$149,920</b><span>Top target income</span></div>
+    <div class="stat"><b>$85,500</b><span>Lowest target income</span></div>
+  </div>
+
+  <div class="callout warn">
+    <b>Read the dashed red boundary carefully.</b> It is the convex hull of her observed pins
+    &mdash; <b>where she has screens, not where her territory ends</b>. Nobody has shown us the
+    actual grant. Her real boundary could be larger, smaller, or a completely different shape.
+    That is the first thing to ask Don, and this map is drawn to make the question obvious.
+  </div>
+
+  <h2>The map</h2>
+  <div class="legend">
+    <span><i style="background:#C4576B"></i>Her screens (observed)</span>
+    <span><i class="band" style="background:#C4576B;opacity:.35"></i>Inferred footprint &mdash; not a boundary</span>
+    <span><i class="band" style="background:#C5A55A;opacity:.45"></i>The arc we want</span>
+    <span><i style="background:#C5A55A"></i>Priority 1 target</span>
+    <span><i style="background:#C5A55A;opacity:.55"></i>Priority 2 target</span>
+    <span>&#10005; deliberately excluded</span>
+  </div>
+  <div class="mapbox"><svg viewBox="0 0 1000 1140" role="img" aria-label="Her observed footprint against the territory we want"><rect x="0.0" y="16.3" width="893.3" height="674.9" class="county"/><text class="countylab" x="9.0" y="36.3">SHELBY CO, TN</text><rect x="0.0" y="691.2" width="773.3" height="449.1" class="county"/><text class="countylab" x="9.0" y="711.2">DESOTO CO, MS</text><rect x="893.3" y="0.0" width="93.3" height="691.2" class="county"/><text class="countylab" x="902.3" y="20.0">FAYETTE CO, TN</text><rect x="773.3" y="691.2" width="213.3" height="449.1" class="county"/><text class="countylab" x="782.3" y="711.2">MARSHALL CO, MS</text><polyline points="0.0,456.1 373.3,439.9 586.7,374.7 893.3,342.1" class="road"/><text class="roadlab" x="889.3" y="335.1" text-anchor="end">I-40</text><polyline points="186.7,0.0 266.7,325.8 320.0,505.0 373.3,651.6 400.0,847.1 413.3,1091.5" class="road"/><text class="roadlab" x="409.3" y="1084.5" text-anchor="end">I-55</text><polyline points="413.3,961.2 573.3,814.5 733.3,635.3 826.7,423.6 853.3,195.5" class="road"/><text class="roadlab" x="849.3" y="188.5" text-anchor="end">I-269</text><polyline points="333.3,423.6 480.0,423.6 573.3,521.3 506.7,635.3 360.0,619.1 320.0,505.0" class="road"/><text class="roadlab" x="316.0" y="498.0" text-anchor="end">I-240</text><polyline points="386.7,537.6 546.7,700.5 746.7,830.8 960.0,944.9" class="road"/><text class="roadlab" x="956.0" y="937.9" text-anchor="end">I-22</text><line x1="0" y1="691.2" x2="1000.0" y2="691.2" class="stateline"/><text class="statelab" x="986" y="681.2" text-anchor="end">TENNESSEE</text><text class="statelab" x="986" y="733.2" text-anchor="end">MISSISSIPPI</text><polyline points="842.1,200.9 750.7,257.4 568.1,351.1 653.2,542.8 847.3,615.8 627.3,746.5 383.2,702.1 411.1,973.2" class="arcband"/><polyline points="842.1,200.9 750.7,257.4 568.1,351.1 653.2,542.8 847.3,615.8 627.3,746.5 383.2,702.1 411.1,973.2" class="arcline"/><polygon points="192.0,791.7 413.3,990.5 456.0,1005.2 840.0,904.1 737.3,343.7 674.7,294.9 600.0,337.2" class="hull"/><text class="hulllab" x="906.7" y="114.0" text-anchor="end">INFERRED FROM PINS &mdash; NOT A CONFIRMED BOUNDARY</text><circle cx="674.7" cy="294.9" r="5" class="herpin"/><circle cx="600.0" cy="337.2" r="5" class="herpin"/><circle cx="637.3" cy="324.2" r="5" class="herpin"/><circle cx="702.7" cy="343.7" r="5" class="herpin"/><circle cx="737.3" cy="343.7" r="5" class="herpin"/><circle cx="626.7" cy="356.8" r="5" class="herpin"/><circle cx="594.7" cy="395.9" r="5" class="herpin"/><circle cx="540.0" cy="501.8" r="5" class="herpin"/><circle cx="600.0" cy="519.7" r="5" class="herpin"/><circle cx="456.0" cy="563.7" r="5" class="herpin"/><circle cx="409.3" cy="705.4" r="5" class="herpin"/><circle cx="326.7" cy="749.4" r="5" class="herpin"/><circle cx="382.7" cy="752.6" r="5" class="herpin"/><circle cx="437.3" cy="757.5" r="5" class="herpin"/><circle cx="497.3" cy="752.6" r="5" class="herpin"/><circle cx="550.7" cy="749.4" r="5" class="herpin"/><circle cx="298.7" cy="791.7" r="5" class="herpin"/><circle cx="340.0" cy="791.7" r="5" class="herpin"/><circle cx="382.7" cy="796.6" r="5" class="herpin"/><circle cx="409.3" cy="803.1" r="5" class="herpin"/><circle cx="426.7" cy="811.3" r="5" class="herpin"/><circle cx="448.0" cy="799.9" r="5" class="herpin"/><circle cx="650.7" cy="752.6" r="5" class="herpin"/><circle cx="682.7" cy="752.6" r="5" class="herpin"/><circle cx="709.3" cy="752.6" r="5" class="herpin"/><circle cx="192.0" cy="791.7" r="5" class="herpin"/><circle cx="413.3" cy="990.5" r="5" class="herpin"/><circle cx="434.7" cy="997.0" r="5" class="herpin"/><circle cx="456.0" cy="1005.2" r="5" class="herpin"/><circle cx="840.0" cy="904.1" r="5" class="herpin"/><g class="exc"><circle cx="334.7" cy="440.7" r="7" class="excdot"/><line x1="329.7" y1="435.7" x2="339.7" y2="445.7" class="excx"/><line x1="339.7" y1="435.7" x2="329.7" y2="445.7" class="excx"/><text class="exclab" x="334.7" y="462.7" text-anchor="middle">Memphis core</text></g><g class="exc"><circle cx="153.6" cy="445.6" r="7" class="excdot"/><line x1="148.6" y1="440.6" x2="158.6" y2="450.6" class="excx"/><line x1="158.6" y1="440.6" x2="148.6" y2="450.6" class="excx"/><text class="exclab" x="153.6" y="467.6" text-anchor="middle">West Memphis</text></g><g class="exc"><circle cx="536.9" cy="127.9" r="7" class="excdot"/><line x1="531.9" y1="122.9" x2="541.9" y2="132.9" class="excx"/><line x1="541.9" y1="122.9" x2="531.9" y2="132.9" class="excx"/><text class="exclab" x="536.9" y="149.9" text-anchor="middle">Millington</text></g><g class="exc"><circle cx="352.9" cy="757.4" r="7" class="excdot"/><line x1="347.9" y1="752.4" x2="357.9" y2="762.4" class="excx"/><line x1="357.9" y1="752.4" x2="347.9" y2="762.4" class="excx"/><text class="exclab" x="352.9" y="779.4" text-anchor="middle">Horn Lake</text></g><g class="tgt"><circle cx="653.2" cy="542.8" r="16.7" class="tgtdot p1"/><text class="tgtlab" x="653.2" y="525.8" text-anchor="middle">Germantown</text><text class="tgtinc" x="653.2" y="568.8" text-anchor="middle">$149,920</text></g><g class="tgt"><circle cx="847.3" cy="615.8" r="17.8" class="tgtdot p1"/><text class="tgtlab" x="847.3" y="598.8" text-anchor="middle">Collierville</text><text class="tgtinc" x="847.3" y="641.8" text-anchor="middle">$134,319</text></g><g class="tgt"><circle cx="627.3" cy="746.5" r="17.4" class="tgtdot p1"/><text class="tgtlab" x="627.3" y="729.5" text-anchor="middle">Olive Branch</text><text class="tgtinc" x="627.3" y="772.5" text-anchor="middle">$85,500</text></g><g class="tgt"><circle cx="411.1" cy="973.2" r="14.3" class="tgtdot p1"/><text class="tgtlab" x="411.1" y="956.2" text-anchor="middle">Hernando</text><text class="tgtinc" x="411.1" y="999.2" text-anchor="middle">$85,500</text></g><g class="tgt"><circle cx="383.2" cy="702.1" r="18.3" class="tgtdot p2"/><text class="tgtlab" x="383.2" y="685.1" text-anchor="middle">Southaven</text><text class="tgtinc" x="383.2" y="728.1" text-anchor="middle">$85,500</text></g><g class="tgt"><circle cx="842.1" cy="200.9" r="13.8" class="tgtdot p2"/><text class="tgtlab" x="842.1" y="183.9" text-anchor="middle">Arlington</text><text class="tgtinc" x="842.1" y="226.9" text-anchor="middle">$135,105</text></g><g class="tgt"><circle cx="750.7" cy="257.4" r="13.6" class="tgtdot p2"/><text class="tgtlab" x="750.7" y="240.4" text-anchor="middle">Lakeland</text><text class="tgtinc" x="750.7" y="283.4" text-anchor="middle">$116,250</text></g><g class="tgt"><circle cx="568.1" cy="351.1" r="18.2" class="tgtdot p2"/><text class="tgtlab" x="568.1" y="334.1" text-anchor="middle">Bartlett</text><text class="tgtinc" x="568.1" y="377.1" text-anchor="middle">$100,660</text></g><line x1="34" y1="1110.3660100866864" x2="269.9" y2="1110.3660100866864" class="scale"/><line x1="34" y1="1104.3660100866864" x2="34" y2="1116.3660100866864" class="scale"/><line x1="269.9" y1="1104.3660100866864" x2="269.9" y2="1116.3660100866864" class="scale"/><text class="scalelab" x="152.0" y="1100.3660100866864" text-anchor="middle">10 MILES</text></svg></div>
+
+  <div class="callout key">
+    <b>The shape of the ask is a crescent, not a county.</b> Arlington and Lakeland at the top,
+    down through Bartlett, Germantown and Collierville, across the state line into Olive Branch,
+    then west to Southaven and south to Hernando. <b>304,424 people, every one of those
+    markets at or above $85,500 median household income.</b>
+    <br><br>
+    Germantown sits about <b>9 miles</b> from Olive Branch and Collierville about <b>11</b>. The
+    state line is the only thing between them &mdash; and it is the only reason we have been
+    treating them as two different conversations.
+  </div>
+
+  <h2>Priority 1 &mdash; what we actually want</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Market</th><th>Population</th><th>Median HHI</th><th>Note</th></tr>
+    <tr><td><b>Germantown</b> <span class="st">TN</span></td><td>39,773</td><td>$149,920</td><td class="nt">Highest household income in Tennessee. She has ~3 pins in this area.</td></tr><tr><td><b>Collierville</b> <span class="st">TN</span></td><td>52,126</td><td>$134,319</td><td class="nt">11 miles from Olive Branch. No pins observed.</td></tr><tr><td><b>Olive Branch</b> <span class="st">MS</span></td><td>47,819</td><td>$85,500</td><td class="nt">Mississippi's #1 boomtown. ~3 pins — a toehold, not a network.</td></tr><tr><td><b>Hernando</b> <span class="st">MS</span></td><td>19,165</td><td>$85,500</td><td class="nt">Fastest-growing in DeSoto, +10.96%. ~3-4 pins near I-55.</td></tr>
+  </table></div>
+
+  <h2>Priority 2 &mdash; take it if it comes</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Market</th><th>Population</th><th>Median HHI</th><th>Note</th></tr>
+    <tr><td><b>Arlington</b> <span class="st">TN</span></td><td>15,866</td><td>$135,105</td><td class="nt">Third-highest income in the metro. Family-formation suburb.</td></tr><tr><td><b>Lakeland</b> <span class="st">TN</span></td><td>14,416</td><td>$116,250</td><td class="nt">~1-2 pins observed on the eastern edge of her Bartlett cluster.</td></tr><tr><td><b>Bartlett</b> <span class="st">TN</span></td><td>56,708</td><td>$100,660</td><td class="nt">Her densest Tennessee cluster — ~7-9 pins across Bartlett/Lakeland.</td></tr><tr><td><b>Southaven</b> <span class="st">MS</span></td><td>58,551</td><td>$85,500</td><td class="nt">Her stronghold — ~12-14 pins with Horn Lake. Richest venue inventory in the county.</td></tr>
+  </table></div>
+
+  <h2>Deliberately not asking for</h2>
+  <div class="callout">
+    Worth naming these out loud. Asking for everything makes the ask look unconsidered; asking for
+    a specific shape makes it look like we have done the work &mdash; which we have.
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>Market</th><th>Population</th><th>Median HHI</th><th>Why not</th></tr>
+    <tr><td><b>Memphis core</b></td><td>606,132</td><td>$51,736</td><td class="nt">606,132 people, but $51,736 median household income and the most contested media market in the region. Density is not spending power.</td></tr><tr><td><b>West Memphis</b></td><td>23,130</td><td>$42,674</td><td class="nt">Down 10.45% since 2010, still falling. 29% poverty rate.</td></tr><tr><td><b>Millington</b></td><td>10,582</td><td>&mdash;</td><td class="nt">Small, north of the arc, no growth story.</td></tr><tr><td><b>Horn Lake</b></td><td>26,738</td><td>$85,500</td><td class="nt">Wealthy enough but flat at -0.01%/yr. Fill-in once a rep is already driving the county — not a reason to ask.</td></tr>
+  </table></div>
+
+  <h2>What the map tells you to ask</h2>
+  <div class="callout key">
+    <b>1. Where does her territory actually end?</b> The red hull is our guess. If her grant is
+    bigger than her pins, asking for &ldquo;DeSoto County&rdquo; leaves the best ground on the
+    table.
+    <br><br>
+    <b>2. How is she operating in Tennessee?</b> Ten-plus pins sit north of the state line, in the
+    richest suburbs on this map. Whatever arrangement permits that is the arrangement we want.
+    <br><br>
+    <b>3. She is thin everywhere.</b> ~30 pins across seven towns in two
+    states. Not one of these markets is built out &mdash; Southaven alone would carry ~160 screens
+    at the density we run in Oxford. This is a toehold being handed over, not a network.
+  </div>
+
+  <div class="callout warn">
+    <b>Precision note.</b> Pin positions are georeferenced from a screenshot of her Google My Map at metro zoom. Individual pins are accurate to roughly a mile; overlapping markers mean the count is ±3. The dashed boundary is the convex hull of her observed pins — it is where she HAS screens, NOT a confirmed territory line. Her actual grant could be larger, smaller, or a different shape entirely. Nobody has shown us the boundary.
+  </div>
+
+</div>
+<footer>MCTV Digital, Inc. &mdash; internal negotiation map. Generated from territory_ask.json.</footer>
