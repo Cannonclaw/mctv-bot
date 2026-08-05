@@ -164,6 +164,25 @@ st.markdown("### \U0001F517 Shareable Quote Links")
 
 QUOTE_BASE = "https://mctvofms.com/rate-quote/"
 
+# Mirrors the public calculator's PACKAGES array (rate-calculator-v2.0-selfserve.html):
+# label, screen count, the FLAT monthly price, and the ad-plays line printed on the card.
+# Keep both in step: a key listed here that the live page does not carry is ignored by
+# applyParams(), so the client lands on an empty builder instead of their quote.
+# Package prices are flat and locked, so mirroring them here cannot drift with
+# `rate_model_params` the way the a la carte table further down does.
+PACKAGES = {
+    "p10": {"label": "10 Screens", "screens": 10,
+            "monthly": 350, "plays": "15,000"},
+    "p20": {"label": "20 Screens", "screens": 20,
+            "monthly": 500, "plays": "30,000"},
+    "p40": {"label": "40 Screens", "screens": 40,
+            "monthly": 800, "plays": "60,000"},
+    "p75": {"label": "75 Screens", "screens": 75,
+            "monthly": 1300, "plays": "110,000"},
+    "p125": {"label": "125+ Screens (whole network)", "screens": 125,
+             "monthly": 2000, "plays": "180,000+"},
+}
+
 link_mode = st.radio("Link type", ["Network Package", "Custom venues"],
                      horizontal=True, key="ql_mode")
 parts = []
@@ -171,24 +190,6 @@ quote_pkg = None   # set in package mode — drives the preview + the send templ
 chosen = []        # set in custom mode
 terr = []
 if link_mode == "Network Package":
-    # Mirrors the public calculator's PACKAGES array (rate-calculator-v2.0-selfserve.html):
-    # label, screen count, the FLAT monthly price, and the ad-plays line printed on the card.
-    # Keep both in step: a key listed here that the live page does not carry is ignored by
-    # applyParams(), so the client lands on an empty builder instead of their quote.
-    # Package prices are flat and locked, so mirroring them here cannot drift with
-    # `rate_model_params` the way the a la carte table further down does.
-    PACKAGES = {
-        "p10": {"label": "10 Screens", "screens": 10,
-                "monthly": 350, "plays": "15,000"},
-        "p20": {"label": "20 Screens", "screens": 20,
-                "monthly": 500, "plays": "30,000"},
-        "p40": {"label": "40 Screens", "screens": 40,
-                "monthly": 800, "plays": "60,000"},
-        "p75": {"label": "75 Screens", "screens": 75,
-                "monthly": 1300, "plays": "110,000"},
-        "p125": {"label": "125+ Screens (whole network)", "screens": 125,
-                 "monthly": 2000, "plays": "180,000+"},
-    }
     pkg = st.selectbox("Package", list(PACKAGES),
                        format_func=lambda p: PACKAGES[p]["label"], key="ql_pkg")
     terr = st.multiselect("Territories", ["oxford", "tupelo", "starkville"],
@@ -202,6 +203,68 @@ if link_mode == "Network Package":
     # byte-identical to the source, so the temporary "not on the live page yet"
     # guard that sat here is gone.)
 else:
+    # Quick add. Building a "Tupelo restaurants" link used to mean typing a
+    # dozen names into a flat 100-item list one at a time; the public tool got
+    # a market/type venue finder in run #13 and the rep's own tool did not.
+    # Filter to a market and/or venue type, see what it adds up to, add the lot.
+    #
+    # The multiselect below deliberately keeps ALL 100 venues as its options:
+    # Streamlit prunes a selection down to whatever options it is handed, so
+    # filtering the option list would silently drop venues already picked.
+    # Filter what you ADD, never what is selected.
+    _ql_sel = list(st.session_state.get("ql_venues", []))
+
+    def _ql_add(names: list[str]) -> None:
+        cur = list(st.session_state.get("ql_venues", []))
+        st.session_state["ql_venues"] = cur + [n for n in names if n not in cur]
+
+    def _ql_clear() -> None:
+        st.session_state["ql_venues"] = []
+
+    _mkts = sorted({r["market"] for r in rows if r.get("market")})
+    _types = sorted({r["type_label"] for r in rows if r.get("type_label")})
+    _f1, _f2 = st.columns(2)
+    with _f1:
+        _f_mkt = st.selectbox(
+            "Quick add — market", ["*"] + _mkts, key="ql_f_mkt",
+            format_func=lambda m: ("Any market" if m == "*"
+                                   else MARKET_LABELS.get(m, m.title())))
+    with _f2:
+        _f_type = st.selectbox(
+            "Quick add — venue type", ["*"] + _types, key="ql_f_type",
+            format_func=lambda t: "Any type" if t == "*" else t)
+
+    _matches = [r for r in rows
+                if (_f_mkt == "*" or r.get("market") == _f_mkt)
+                and (_f_type == "*" or r.get("type_label") == _f_type)]
+    _new = [r for r in _matches if r["venue_name"] not in _ql_sel]
+    _new_screens = sum(int(r.get("screens") or 0) for r in _new)
+
+    _a1, _a2 = st.columns([3, 1])
+    with _a1:
+        if _new:
+            st.button(
+                f"\u2795 Add these {len(_new)} venues ({_new_screens} screens)",
+                key="ql_add_matches", width="stretch",
+                on_click=_ql_add, args=([r["venue_name"] for r in _new],))
+        else:
+            st.button(
+                "\u2795 Add these venues", key="ql_add_matches",
+                width="stretch", disabled=True,
+                help=("Every venue matching this filter is already selected."
+                      if _matches else "No venues match this filter."))
+    with _a2:
+        st.button("Clear all", key="ql_clear_venues", width="stretch",
+                  disabled=not _ql_sel, on_click=_ql_clear)
+    if _matches:
+        _names = [r["venue_name"] for r in _matches]
+        _already = len(_matches) - len(_new)
+        st.caption(
+            f"{len(_matches)} matching venue{'s' if len(_matches) != 1 else ''}: "
+            + ", ".join(_names[:6])
+            + (f" … +{len(_names) - 6} more" if len(_names) > 6 else "")
+            + (f" — {_already} already selected." if _already else ""))
+
     chosen = st.multiselect("Venues", [r["venue_name"] for r in rows],
                             key="ql_venues")
     # Slug MUST match the calculator's JS:
@@ -275,9 +338,19 @@ if quote_pkg:
 else:
     _sel_screens = sum(int(r.get("screens") or 0)
                        for r in rows if r["venue_name"] in chosen)
-    _v1, _v2 = st.columns(2)
+    # Nearest flat package, by the same rule the card's Compare uses: the
+    # smallest absolute screen gap, ties going to the smaller tier (JS
+    # `reduce` with a strict `<`, Python `min` keeping the first — same
+    # answer). Safe to show pre-flip: package prices are flat and locked, so
+    # this quotes the package sheet, not the engine.
+    _near = (min(PACKAGES.values(), key=lambda p: abs(p["screens"] - _sel_screens))
+             if _sel_screens else None)
+    _v1, _v2, _v3 = st.columns(3)
     _v1.metric("Venues selected", len(chosen))
     _v2.metric("Screens (this page)", _sel_screens)
+    _v3.metric("Nearest flat package",
+               f"${_near['monthly']:,}" if _near else "—",
+               _near["label"] if _near else None, delta_color="off")
     # Deliberately no dollar figure: a custom build is priced by the public
     # calculator's locked Phase-1 engine, and this page's rates are pre-flip.
     # Quoting one from here would hand the client a different number than the
@@ -294,6 +367,9 @@ else:
         + "). **Open the card link below to read the number before you quote it** "
         "\u2014 do not read it off the a la carte table further down this page, "
         "which is pre-flip."
+        + (" The card's Compare panel will put this build next to the "
+           f"**{_near['label']} package (\\${_near['monthly']:,}/mo flat)**; "
+           "read which way it falls before you send it." if _near else "")
     )
 
 st.markdown("\U0001F4C7 **Client quote card** — send this one. Clean prepared-quote "
