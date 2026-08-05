@@ -19,7 +19,8 @@ PAGE_TITLE = "MCTV &mdash; Memphis Areas of Interest"
 
 AMBER = "#E89E3C"    # priority 1 — the markets we want most
 BLUE = "#2E5E86"     # priority 2 — want, lower urgency
-SLATE = "#8A93A3"    # existing screens on the network today
+GREEN = "#2FA05A"    # screens already on the network
+SLATE = "#8A93A3"    # lower-priority markers
 NAVY = "#1B1F3B"
 
 data = json.load(open(f"{OUT}/territory_ask.json"))
@@ -108,11 +109,21 @@ state_line = (
 arc_pts = " ".join(f"{px(lo):.1f},{py(la):.1f}" for la, lo in data["arc"])
 arc = f'<polyline points="{arc_pts}" class="arcband"/>'
 
-# Existing screens on the network, shown small and neutral — context, not a claim.
-existing = "".join(
-    f'<circle cx="{px(lo):.1f}" cy="{py(la):.1f}" r="4" class="existing"/>'
-    for la, lo in data["her_pins"]
-)
+def screen_icon(lat, lon):
+    """A little monitor glyph — reads as a screen at a glance, the way the
+    source map does, rather than as another generic dot."""
+    x, y = px(lon), py(lat)
+    return (
+        f'<g class="existing">'
+        f'<rect x="{x - 11:.1f}" y="{y - 9:.1f}" width="22" height="15.5" rx="2.5" '
+        f'class="scr"/>'
+        f'<rect x="{x - 4:.1f}" y="{y + 6.5:.1f}" width="8" height="3.4" rx="1.2" '
+        f'class="scrbase"/>'
+        f"</g>"
+    )
+
+
+existing = "".join(screen_icon(la, lo) for la, lo in data["her_pins"])
 
 targets = "".join(
     f'<g class="tgt">'
@@ -171,7 +182,8 @@ def cards(ts, color):
 
 
 CSS = """
-  :root { --navy:#1B1F3B; --amber:#E89E3C; --blue:#2E5E86; --slate:#8A93A3;
+  :root { --navy:#1B1F3B; --amber:#E89E3C; --blue:#2E5E86; --green:#2FA05A;
+          --slate:#8A93A3;
           --bg:#f6f7f9; --card:#fff; --text:#15181f; --muted:#5b6270; --line:#dfe2e8;
           --land:#e9ecf1; }
   @media (prefers-color-scheme: dark) {
@@ -211,6 +223,8 @@ CSS = """
             box-shadow:0 0 0 1px rgba(0,0,0,.14); }
   .sw.dot.sm { width:12px; height:12px; border-width:2px; margin-top:6px; }
   .sw.band { width:30px; height:16px; border-radius:3px; display:block; margin-top:5px; }
+  .sw.scrsw { width:26px; height:18px; border-radius:3px; display:block; margin-top:4px;
+              border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.14); }
   .lgroup b { display:block; font-size:13.5px; line-height:1.35; }
   .lgroup span { font-size:12px; color:var(--muted); }
   .mapbox { background:var(--card); border:1px solid var(--line); padding:12px; margin-bottom:20px;
@@ -226,7 +240,11 @@ CSS = """
   .statelab { font:bold 12px Arial,sans-serif; fill:var(--muted); letter-spacing:1.8px; }
   .arcband { fill:none; stroke:var(--amber); stroke-width:64; stroke-opacity:.28;
              stroke-linejoin:round; stroke-linecap:round; }
-  .existing { fill:var(--slate); stroke:var(--card); stroke-width:1.4; opacity:.8; }
+  .scr, .scrbase { fill:var(--green); stroke:#fff; stroke-width:2.4;
+                   stroke-linejoin:round; paint-order:stroke fill; }
+  @media (prefers-color-scheme: dark) { .scr, .scrbase { stroke:#0c1016; } }
+  :root[data-theme="dark"] .scr, :root[data-theme="dark"] .scrbase { stroke:#0c1016; }
+  :root[data-theme="light"] .scr, :root[data-theme="light"] .scrbase { stroke:#fff; }
   .tgtdot { stroke:#fff; stroke-width:3.5; }
   .tgtdot.p1 { fill:var(--amber); }
   .tgtdot.p2 { fill:var(--blue); }
@@ -294,7 +312,7 @@ BODY = f"""<header class="top">
       <span><b>The arc</b><span>How these markets connect</span></span>
     </div>
     <div class="lgroup">
-      <span class="sw dot sm" style="background:{SLATE}"></span>
+      <span class="sw scrsw" style="background:{GREEN}"></span>
       <span><b>Screens on the network today</b><span>Existing placements in the area</span></span>
     </div>
     <div class="lgroup">
