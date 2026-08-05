@@ -245,6 +245,48 @@ CSS = """
              padding:17px 21px; font-size:14.5px; margin-bottom:20px; }
   .callout b { color:var(--amber); }
   footer { padding:34px 24px; text-align:center; color:var(--muted); font-size:12px; }
+
+  /* ---- print / PDF ------------------------------------------------------
+     A PDF has no theme, so pin the light palette. Keep break rules minimal —
+     stacking break-inside/break-after on tall flex containers made Chromium
+     eject whole pages. Cap the map height so it shares a page with its legend
+     instead of taking one to itself. */
+  @media print {
+    :root, :root[data-theme="dark"], :root[data-theme="light"] {
+      --bg:#fff; --card:#fff; --text:#15181f; --muted:#4d5462; --line:#d5d9e0;
+      --land:#eceef2;
+    }
+    @page { size: letter portrait; margin: 0; }
+    body { background:#fff; }
+    header.top { padding:30px 40px; }
+    header.top h1 { font-size:27px; }
+    .wrap { max-width:none; padding:20px 40px 6px; }
+    footer { padding:16px 40px 24px; }
+    h2 { margin:22px 0 10px; }
+    .lede { font-size:14.5px; margin-bottom:16px; }
+    .stats { gap:10px; margin-bottom:16px; }
+    .stat { padding:10px 13px; min-width:0; }
+    .stat b { font-size:20px; }
+    .legend { padding:12px 14px; gap:18px; }
+    .mapbox { overflow:visible; padding:8px; }
+    .mapbox svg { min-width:0; width:auto; max-width:100%; max-height:6.6in;
+                  margin:0 auto; }
+    .mkt, .callout { break-inside:avoid; }
+    /* Four across instead of three so both tiers fit on page one and the
+       map's forced break does not strand a near-empty page behind it. */
+    .mkts { grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .mkt { padding:10px 12px 11px; }
+    .mkt h3 { font-size:14.5px; margin-bottom:7px; }
+    .figs { gap:10px; }
+    .figs b { font-size:15px; }
+    .figs span { font-size:9.5px; letter-spacing:.3px; }
+    /* The map is genuinely taller than wide, so it earns its own page
+       rather than being shrunk past legibility. */
+    .mapsec { break-before:page; break-inside:avoid; }
+    .mapsec h2 { margin-top:4px; }
+    .mapbox svg { max-height:7.4in; }
+  }
+  * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 """
 
 BODY = f"""<header class="top">
@@ -269,6 +311,13 @@ BODY = f"""<header class="top">
     <div class="stat"><b>$85.5K&ndash;$150K</b><span>Household income range</span></div>
   </div>
 
+  <h2>Want most</h2>
+  <div class="mkts">{cards(p1, AMBER)}</div>
+
+  <h2>Also interested</h2>
+  <div class="mkts">{cards(p2, BLUE)}</div>
+
+  <section class="mapsec">
   <h2>The map</h2>
 
   <div class="legend">
@@ -294,18 +343,7 @@ BODY = f"""<header class="top">
     </div>
   </div>
   <div class="mapbox">{map_svg}</div>
-
-  <div class="callout">
-    <b>Worth noticing:</b> Germantown sits about nine miles from Olive Branch, and Collierville about
-    eleven. On the ground this is one market &mdash; the same shoppers, the same commutes, the same
-    restaurants. The state line is the only thing that splits it.
-  </div>
-
-  <h2>Want most</h2>
-  <div class="mkts">{cards(p1, AMBER)}</div>
-
-  <h2>Also interested</h2>
-  <div class="mkts">{cards(p2, BLUE)}</div>
+  </section>
 
   <h2>What we'd build</h2>
   <div class="callout">
