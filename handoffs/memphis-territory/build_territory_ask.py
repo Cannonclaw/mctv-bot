@@ -289,6 +289,44 @@ CSS = """
   * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 """
 
+SEND_MODE = "--send" in sys.argv
+
+# Everything after the map. Dropped in send mode so the PDF that goes out is
+# exactly two pages: the markets, then the map. Anything about what we would
+# build is a number that can become a build-out clause — better said in the
+# covering note than printed on a page.
+TAIL = "" if SEND_MODE else f"""  <h2>What we'd build</h2>
+  <div class="callout">
+    We run <b>{network_today} screens</b> across North Mississippi today &mdash; {market_list}.
+    Oxford is the one to look at: {oxford} screens in a town of 27,000, which is the density we
+    aim for when we own a market properly.
+    <br><br>
+    For the Memphis area we'd expect to start in the range of <b>40 screens</b> across the first
+    two markets, and grow from there as it proves out &mdash; realistically toward 75&ndash;90 over
+    the first couple of years if the sell-through supports it. We'd rather build two markets
+    properly than put a handful of screens in six.
+    <br><br>
+    Those are intentions, not promises &mdash; we'd want to walk the venues before committing to
+    numbers.
+  </div>
+
+  <h2>Lower priority for us</h2>
+  <div class="callout">
+    Memphis proper, West Memphis and Millington aren't where we'd start, and Horn Lake we'd pick up
+    once we're already working the county. Not a hard no on any of them &mdash; just not the first
+    conversation.
+  </div>
+
+  <h2>Open questions</h2>
+  <div class="callout">
+    We've drawn this by market rather than by boundary, because we don't know where the territory
+    lines actually fall &mdash; particularly across the state line, where several of the markets
+    we're most interested in sit. <b>Happy to shape the ask around whatever the real boundaries
+    are</b> once we understand them.
+  </div>
+
+"""
+
 BODY = f"""<header class="top">
   <h1>Memphis &mdash; Areas We're Interested In</h1>
   <p>MCTV Elite Advertising &middot; {meta['updated']}</p>
@@ -345,37 +383,7 @@ BODY = f"""<header class="top">
   <div class="mapbox">{map_svg}</div>
   </section>
 
-  <h2>What we'd build</h2>
-  <div class="callout">
-    We run <b>{network_today} screens</b> across North Mississippi today &mdash; {market_list}.
-    Oxford is the one to look at: {oxford} screens in a town of 27,000, which is the density we
-    aim for when we own a market properly.
-    <br><br>
-    For the Memphis area we'd expect to start in the range of <b>40 screens</b> across the first
-    two markets, and grow from there as it proves out &mdash; realistically toward 75&ndash;90 over
-    the first couple of years if the sell-through supports it. We'd rather build two markets
-    properly than put a handful of screens in six.
-    <br><br>
-    Those are intentions, not promises &mdash; we'd want to walk the venues before committing to
-    numbers.
-  </div>
-
-  <h2>Lower priority for us</h2>
-  <div class="callout">
-    Memphis proper, West Memphis and Millington aren't where we'd start, and Horn Lake we'd pick up
-    once we're already working the county. Not a hard no on any of them &mdash; just not the first
-    conversation.
-  </div>
-
-  <h2>Open questions</h2>
-  <div class="callout">
-    We've drawn this by market rather than by boundary, because we don't know where the territory
-    lines actually fall &mdash; particularly across the state line, where several of the markets
-    we're most interested in sit. <b>Happy to shape the ask around whatever the real boundaries
-    are</b> once we understand them.
-  </div>
-
-</div>
+{TAIL}</div>
 <footer>MCTV Digital, Inc. &middot; Memphis area &middot; {meta['updated']}</footer>
 """
 
@@ -385,11 +393,13 @@ html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         + BODY + "</body>\n</html>\n")
 artifact_html = f"<title>{PAGE_TITLE}</title>\n<style>{CSS}</style>\n" + BODY
 
-with open(f"{OUT}/territory-ask.html", "w") as f:
+stem = "territory-ask-send" if SEND_MODE else "territory-ask"
+with open(f"{OUT}/{stem}.html", "w") as f:
     f.write(html)
-with open(f"{OUT}/territory-ask.artifact.html", "w") as f:
-    f.write(artifact_html)
+if not SEND_MODE:
+    with open(f"{OUT}/territory-ask.artifact.html", "w") as f:
+        f.write(artifact_html)
 
-print(f"territory-ask.html written: {len(p1)} priority-1, {len(p2)} priority-2, "
+print(f"{stem}.html written: {len(p1)} priority-1, {len(p2)} priority-2, "
       f"{len(data['excluded'])} lower, {len(html):,} bytes")
 print(f"  arc population {arc_pop:,} | priority-1 population {p1_pop:,}")

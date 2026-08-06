@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Print territory-ask.html to PDF.
+"""Print the send version of the areas map to PDF.
+
+Renders territory-ask-send.html (built with `build_territory_ask.py --send`),
+which is exactly two pages: the markets, then the map.
 
 Chromium is pre-installed in this environment; the pip playwright package
 expects a newer build, so the executable path is passed explicitly rather
@@ -7,7 +10,7 @@ than running `playwright install`.
 """
 from playwright.sync_api import sync_playwright
 
-SRC = "file:///home/user/mctv-bot/handoffs/memphis-territory/territory-ask.html"
+SRC = "file:///home/user/mctv-bot/handoffs/memphis-territory/territory-ask-send.html"
 OUT = "/home/user/mctv-bot/handoffs/memphis-territory/MCTV-Memphis-Areas-of-Interest.pdf"
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 
