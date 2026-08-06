@@ -93,6 +93,85 @@ STATUS_EMOJI = {"new": "\U0001F195", "countersigned": "✅",
                 "converted": "\U0001F4C1", "rejected": "\U0001F6AB",
                 "spam": "\U0001F6AB"}
 
+
+def countersign_email(q: dict) -> tuple[str, str]:
+    """Subject + plain-text body of the countersigned copy the client is owed.
+
+    The public calculator's confirmation screen promises every signer, by
+    name, that "Creed Cannon countersigns & emails your copy (typically
+    within 1 business day)", and agreement term 6 makes the request binding
+    only ON that countersignature. Marking the row `countersigned` here sent
+    the client nothing, so the last step of the sale was a blank page and a
+    hand-written email.
+
+    Every figure below is read off the request row exactly as the client
+    signed it -- nothing is computed, priced or re-derived, so this can never
+    quote a number the agreement does not carry. The only mirrored rule is
+    the prepay bonus (6 -> +1 free month, 12 -> +2, added free at the end of
+    the paid term, agreement term 3), used to say "14 months" instead of
+    making the client do the arithmetic.
+
+    Body is deliberately ASCII-only and compact: it travels inside a mailto:
+    URL, and mail clients on Windows start truncating those around 2 KB.
+    """
+    ref = q.get("ref") or ""
+    name_parts = (q.get("contact_name") or "").strip().split()
+    greeting = name_parts[0] if name_parts else "there"
+    term = int(q.get("term_months") or 0)
+    bonus = (2 if term == 12 else 1) if q.get("prepay") else 0
+
+    lines = [
+        f"Hi {greeting},",
+        "",
+        f"MCTV has countersigned your agreement ({ref}) - it's official. "
+        "Your copy:",
+        "",
+    ]
+    if q.get("business_name"):
+        lines.append(f"  Business: {q['business_name']}")
+    if q.get("screens"):
+        lines.append(f"  Screens: {q['screens']} across the MCTV network")
+    if q.get("monthly_total"):
+        lines.append(f"  Monthly: ${float(q['monthly_total']):,.0f}")
+    if term:
+        term_line = f"  Term: {term} months"
+        if bonus:
+            term_line += (f" + {bonus} free (prepay bonus) = "
+                          f"{term + bonus} months")
+        lines.append(term_line)
+    if q.get("term_total"):
+        label = "Prepaid total" if q.get("prepay") else "Term total"
+        lines.append(f"  {label}: ${float(q['term_total']):,.0f}")
+    if q.get("start_date"):
+        lines.append(f"  Start date: {q['start_date']}")
+    if q.get("signed_name"):
+        lines.append(f"  Signed: {q['signed_name']}")
+
+    lines += [
+        "",
+        "NEXT",
+        "1. We design your ad at no extra cost - reply here with your logo, "
+        "any photos, and anything you want it to say.",
+        "2. You approve the creative before it airs.",
+        "3. Your first invoice goes out after you approve it, and your "
+        "campaign starts on your start date.",
+        "",
+        "Terms are exactly as you signed them: 6-month minimum, 30 days' "
+        "written notice to cancel after that, and any bonus months added "
+        "free at the end of the paid term.",
+        "",
+        "Glad to have you on the network.",
+        "",
+        # Signature block quoted from the agreement footer the client
+        # already read (calculator CFG repName/repPhone/repEmail).
+        "Creed Cannon",
+        "MCTV Elite Advertising (MCTV Digital, Inc.)",
+        "601-405-5054 | creed@mctvofms.com",
+    ]
+    subject = f"Countersigned - your MCTV agreement {ref}".strip()
+    return subject, "\n".join(lines)
+
+
 st.markdown("### \U0001F91D Self-Serve Agreement Requests")
 
 requests = query_table("contract_requests", order="-created_at", limit=50)
@@ -150,6 +229,35 @@ else:
             if b3.button("\U0001F6AB Spam", key=f"cr_spam_{q['id']}"):
                 update_row("contract_requests", q["id"], {"status": "spam"})
                 st.rerun()
+
+            # Send the copy the client was promised. One tap opens your own
+            # mail app with the whole confirmation already written -- ref,
+            # what they bought, start date, and what happens next -- so the
+            # 1-business-day promise on the public page is a click, not a
+            # blank page and a hand-written email.
+            _cs_subject, _cs_body = countersign_email(q)
+            _cs_to = (q.get("contact_email") or "").strip()
+            if _cs_to:
+                st.link_button(
+                    "\U0001F4E7 Email the countersigned copy to "
+                    f"{q.get('contact_name') or _cs_to}",
+                    "mailto:" + _cs_to
+                    + "?subject=" + urllib.parse.quote(_cs_subject)
+                    + "&body=" + urllib.parse.quote(_cs_body),
+                    width="stretch",
+                )
+            else:
+                st.button("\U0001F4E7 Email the countersigned copy",
+                          key=f"cr_send_{q['id']}", width="stretch",
+                          disabled=True,
+                          help="This request carries no contact email.")
+            st.caption(
+                "Mark it countersigned, then send the copy — the "
+                "agreement only becomes binding when MCTV countersigns "
+                "(term 6), and the page they signed on promises the copy "
+                "**within 1 business day**. Opens your own mail app with "
+                "everything already written; read it before you send."
+            )
 
     st.caption(
         "Each signed request auto-creates a **Contract Sent** deal on the "
