@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCTV &mdash; 60-Mile Radius Scan</title>
+<style>
+  :root { --navy:#1B1F3B; --gold:#C5A55A; --bg:#f7f7f9; --card:#fff; --text:#1a1a1a;
+          --muted:#5d616b; --line:#e3e3e8; --land:#eceef2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6; --line:#2a2f36;
+            --land:#171d25; }
+  }
+  :root[data-theme="dark"] { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6;
+                             --line:#2a2f36; --land:#171d25; }
+  :root[data-theme="light"] { --bg:#f7f7f9; --card:#fff; --text:#1a1a1a; --muted:#5d616b;
+                              --line:#e3e3e8; --land:#eceef2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text);
+         line-height:1.55; }
+  header.top { background:var(--navy); color:#fff; padding:34px 24px; border-bottom:5px solid var(--gold); }
+  header.top h1 { margin:0 0 6px; font-size:27px; text-wrap:balance; }
+  header.top p { margin:0; color:#c9cbd6; font-size:14px; }
+  .badge-int { display:inline-block; margin-top:12px; background:#C4576B; color:#fff; font-size:11px;
+               letter-spacing:.8px; text-transform:uppercase; padding:4px 10px; font-weight:bold; }
+  .wrap { max-width:1140px; margin:0 auto; padding:24px; }
+  h2 { font-size:19px; margin:34px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--gold);
+       text-wrap:balance; }
+  .callout { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--navy);
+             padding:15px 19px; font-size:13.5px; margin-bottom:18px; }
+  .callout.key { border-left-color:var(--gold); }
+  .callout.gap { border-left-color:#C4576B; }
+  .callout b { color:var(--gold); }
+  .mapbox { background:var(--card); border:1px solid var(--line); padding:10px; margin-bottom:14px;
+            overflow-x:auto; }
+  .mapbox svg { display:block; width:100%; min-width:680px; height:auto; }
+  .ring { fill:var(--gold); fill-opacity:.055; stroke:var(--gold); stroke-width:1.5;
+          stroke-dasharray:6 5; stroke-opacity:.55; }
+  .homedot { fill:var(--navy); stroke:var(--gold); stroke-width:3; }
+  @media (prefers-color-scheme: dark) { .homedot { fill:#e6e6e6; } }
+  .homelab { font:bold 12px Arial,sans-serif; fill:var(--text);
+             paint-order:stroke fill; stroke:var(--card); stroke-width:3.5px; stroke-linejoin:round; }
+  .candlab { font:11px Arial,sans-serif; fill:var(--text);
+             paint-order:stroke fill; stroke:var(--card); stroke-width:3px; stroke-linejoin:round; }
+  .cand.faded { opacity:.4; }
+  .stateline { stroke:#C4576B; stroke-width:1.5; stroke-dasharray:7 5; opacity:.7; }
+  .statelab { font:bold 11px Arial,sans-serif; fill:#C4576B; letter-spacing:1.4px; opacity:.75; }
+  .scale { stroke:var(--muted); stroke-width:2; }
+  .scalelab { font:bold 10px Arial,sans-serif; fill:var(--muted); letter-spacing:.6px; }
+  .legend { display:flex; flex-wrap:wrap; gap:15px; font-size:12px; color:var(--muted);
+            margin-bottom:18px; align-items:center; }
+  .legend i { display:inline-block; width:13px; height:13px; border-radius:50%; margin-right:5px;
+              vertical-align:-2px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:15px;
+           margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--line); padding:0 0 14px; }
+  .card header { border-left:5px solid var(--gold); padding:13px 15px 8px; }
+  .card h3 { margin:0; font-size:16px; }
+  .dist { font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .figs { display:flex; gap:22px; margin:10px 15px 11px; }
+  .figs b { display:block; font-size:17px; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .figs span { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .card p { margin:0 15px 9px; font-size:13px; }
+  .agn { color:var(--muted); }
+  .agn b { color:#C4576B; }
+  .tablewrap { overflow-x:auto; margin-bottom:18px; }
+  table { border-collapse:collapse; width:100%; background:var(--card); border:1px solid var(--line);
+          font-size:13px; min-width:560px; }
+  th,td { padding:8px 12px; border-bottom:1px solid var(--line); text-align:left; }
+  td:nth-child(2), td:nth-child(4) { font-variant-numeric:tabular-nums; }
+  th { background:var(--navy); color:#fff; font-size:11px; text-transform:uppercase;
+       letter-spacing:.6px; }
+  tr:last-child td { border-bottom:none; }
+  footer { padding:30px 24px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>What's Within 60 Miles</h1>
+  <p>Expansion candidates around Oxford, Starkville, Tupelo, Columbus and West Point &middot;
+     MCTV Elite Advertising &middot; 2026-08-04</p>
+  <span class="badge-int">Internal &mdash; not for n-Compass</span>
+</header>
+<div class="wrap">
+
+  <div class="callout key">
+    <b>Short answer: one real market, and it isn't in Mississippi.</b>
+    <b>Tuscaloosa</b> is 53 miles from Columbus &mdash; 116,477 people plus roughly 34,000
+    University of Alabama students. That is the only genuine second Oxford inside the radius, and
+    Oxford is the build we have already proven at 75 screens. Everything else in range is either a
+    small satellite of a market we already serve, or shrinking.
+    <br><br>
+    <b>But the best move inside 60 miles isn't a new market at all.</b> Columbus has
+    <b>2 screens</b> and West Point has <b>1</b> &mdash; while Lowndes County absorbs a
+    <b>$2.5 billion Steel Dynamics investment creating 1,000 jobs at an average wage of
+    $93,000</b>, plus a $90M Kloeckner aluminum plant and a $200M Aluminum Dynamics expansion.
+    We are three screens deep in a county having the biggest industrial decade in its history.
+  </div>
+
+  <h2>The map</h2>
+  <div class="legend">
+    <span><i style="background:#1B1F3B;border:2px solid #C5A55A"></i>Current market (screens)</span>
+    <span><i style="background:#C5A55A"></i>Worth a real look</span>
+    <span><i style="background:#4A7C9B"></i>Different play</span>
+    <span><i style="background:#5B8F7A"></i>Satellite fill-in</span>
+    <span><i style="background:#C4576B"></i>Skip</span>
+    <span>Dashed rings = 60-mile radius</span>
+  </div>
+  <div class="mapbox"><svg viewBox="0 0 1000 1012" role="img" aria-label="60-mile radius around MCTV markets"><circle cx="344.4" cy="445.0" r="244.2" class="ring"/><circle cx="507.3" cy="702.4" r="244.2" class="ring"/><circle cx="534.1" cy="475.6" r="244.2" class="ring"/><circle cx="598.3" cy="689.7" r="244.2" class="ring"/><circle cx="546.4" cy="658.2" r="244.2" class="ring"/><line x1="0.0" y1="268.2" x2="651.2" y2="268.2" class="stateline"/><line x1="651.2" y1="1011.6" x2="651.2" y2="268.2" class="stateline"/><text class="statelab" x="93.0" y="196.7">TENNESSEE</text><text class="statelab" x="790.7" y="379.4">ALABAMA</text><text class="statelab" x="93.0" y="379.4">MISSISSIPPI</text><g class="cand faded" data-tier=""><circle cx="99.7" cy="491.7" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="109.2" y="495.7">Clarksdale</text></g><g class="cand faded" data-tier=""><circle cx="559.0" cy="219.0" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="568.5" y="223.0">Selmer</text></g><g class="cand faded" data-tier=""><circle cx="775.0" cy="338.7" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="784.5" y="342.7">Muscle Shoals</text></g><g class="cand faded" data-tier=""><circle cx="772.7" cy="323.2" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="782.2" y="327.2">Florence</text></g><g class="cand faded" data-tier=""><circle cx="190.8" cy="683.9" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="200.3" y="687.9">Greenwood</text></g><g class="cand faded" data-tier=""><circle cx="64.0" cy="619.9" r="5.5" fill="#8A8FA3" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="73.5" y="623.9">Cleveland</text></g><g class="cand" data-tier="1"><circle cx="797.9" cy="770.0" r="16.0" fill="#C5A55A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="817.9" y="774.0">Tuscaloosa + Northport</text></g><g class="cand" data-tier="2"><circle cx="438.0" cy="893.3" r="7.2" fill="#4A7C9B" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="449.2" y="897.3">Philadelphia</text></g><g class="cand" data-tier="2"><circle cx="277.2" cy="612.9" r="8.3" fill="#4A7C9B" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="289.5" y="616.9">Grenada</text></g><g class="cand" data-tier="4"><circle cx="576.2" cy="285.4" r="8.6" fill="#C4576B" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="588.8" y="289.4">Corinth</text></g><g class="cand" data-tier="4"><circle cx="361.2" cy="332.3" r="7.0" fill="#C4576B" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="372.3" y="336.3">Holly Springs</text></g><g class="cand" data-tier="3"><circle cx="318.5" cy="505.1" r="6.2" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="328.7" y="509.1">Water Valley</text></g><g class="cand" data-tier="3"><circle cx="571.2" cy="597.1" r="6.8" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="582.0" y="601.1">Aberdeen</text></g><g class="cand" data-tier="3"><circle cx="602.6" cy="472.1" r="6.4" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="613.0" y="476.1">Fulton</text></g><g class="cand" data-tier="3"><circle cx="465.2" cy="478.4" r="7.0" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="476.3" y="482.4">Pontotoc</text></g><g class="cand" data-tier="3"><circle cx="549.6" cy="404.5" r="6.2" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="559.8" y="408.5">Baldwyn</text></g><g class="cand" data-tier="3"><circle cx="522.9" cy="547.8" r="6.0" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="532.8" y="551.8">Okolona</text></g><g class="cand" data-tier="3"><circle cx="584.1" cy="552.4" r="7.1" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="595.1" y="556.4">Amory</text></g><g class="cand" data-tier="3"><circle cx="424.8" cy="741.5" r="5.5" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="434.3" y="745.5">Ackerman</text></g><g class="cand" data-tier="3"><circle cx="463.9" cy="409.1" r="7.4" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="475.3" y="413.1">New Albany</text></g><g class="cand" data-tier="3"><circle cx="245.7" cy="461.1" r="7.3" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="257.0" y="465.1">Batesville</text></g><g class="cand" data-tier="3"><circle cx="672.0" cy="616.7" r="5.7" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="681.7" y="620.7">Vernon</text></g><g class="cand" data-tier="3"><circle cx="452.1" cy="794.2" r="7.0" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="463.1" y="798.2">Louisville</text></g><g class="cand" data-tier="3"><circle cx="402.8" cy="677.2" r="5.8" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="412.6" y="681.2">Eupora</text></g><g class="cand" data-tier="3"><circle cx="384.7" cy="550.1" r="5.7" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="394.4" y="554.1">Bruce</text></g><g class="cand" data-tier="3"><circle cx="567.1" cy="797.8" r="5.9" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="577.0" y="801.8">Macon</text></g><g class="cand" data-tier="3"><circle cx="465.2" cy="576.6" r="6.3" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="475.5" y="580.6">Houston</text></g><g class="cand" data-tier="3"><circle cx="565.6" cy="362.8" r="7.6" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="577.2" y="366.8">Booneville</text></g><g class="cand" data-tier="3"><circle cx="476.6" cy="343.1" r="6.8" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="487.4" y="347.1">Ripley</text></g><g class="cand" data-tier="3"><circle cx="328.1" cy="812.7" r="7.2" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="339.3" y="816.7">Kosciusko</text></g><g class="cand" data-tier="3"><circle cx="295.7" cy="692.0" r="6.5" fill="#5B8F7A" stroke="#fff" stroke-width="1.6" opacity=".92"/><text class="candlab" x="306.2" y="696.0">Winona</text></g><g class="home"><circle cx="344.4" cy="445.0" r="15.8" class="homedot"/><text class="homelab" x="344.4" y="433.0" text-anchor="middle">Oxford &middot; 75</text></g><g class="home"><circle cx="507.3" cy="702.4" r="9.9" class="homedot"/><text class="homelab" x="507.3" y="690.4" text-anchor="middle">Starkville &middot; 30</text></g><g class="home"><circle cx="534.1" cy="475.6" r="9.2" class="homedot"/><text class="homelab" x="534.1" y="463.6" text-anchor="middle">Tupelo &middot; 25</text></g><g class="home"><circle cx="598.3" cy="689.7" r="6.3" class="homedot"/><text class="homelab" x="598.3" y="677.7" text-anchor="middle">Columbus &middot; 2</text></g><g class="home"><circle cx="546.4" cy="658.2" r="6.1" class="homedot"/><text class="homelab" x="546.4" y="646.2" text-anchor="middle">West Point &middot; 1</text></g><line x1="40" y1="977.6467776726339" x2="284.2" y2="977.6467776726339" class="scale"/><line x1="40" y1="971.6467776726339" x2="40" y2="983.6467776726339" class="scale"/><line x1="284.2" y1="971.6467776726339" x2="284.2" y2="983.6467776726339" class="scale"/><text class="scalelab" x="162.1" y="967.6467776726339" text-anchor="middle">60 MILES</text></svg></div>
+  <div class="callout">
+    To scale &mdash; equirectangular projection with a cos(latitude) correction, so the rings are
+    true circles on the ground. Great-circle distance from every candidate to all five current markets; nearest wins. Distances are straight-line, not drive time.
+  </div>
+
+  <h2>The ones worth discussing</h2>
+  <div class="cards"><article class="card" data-tier="1"><header style="border-left-color:#C5A55A"><h3>Tuscaloosa + Northport, AL</h3><span class="dist">53 mi &middot; Columbus</span></header><div class="figs"><div><b>116,477</b><span>Population</span></div><div><b>$51,464</b><span>Median HHI</span></div></div><p class="for">116,477 people plus ~34,000 University of Alabama students. The only genuine second Oxford inside the radius — and Oxford is our most proven build at 75 screens. Metro median household income $62,280; the city figure is depressed by students, exactly as it is in Oxford.</p><p class="agn"><b>Against:</b> Contested. Impulse Digital Media already runs the same free-host model across Tuscaloosa and 40+ Alabama cities, Trillboards has 17 programmatic screens, and Lamar owns the outdoor. Also crosses a state line, needs its own rep, and 'MCTV of MS' does not travel.</p></article><article class="card" data-tier="2"><header style="border-left-color:#4A7C9B"><h3>Philadelphia, MS</h3><span class="dist">50 mi &middot; Starkville</span></header><div class="figs"><div><b>7,000</b><span>Population</span></div><div><b>&mdash;</b><span>Median HHI</span></div></div><p class="for">The town is small, but Pearl River Resort next door runs three casinos, a hotel complex, a water park and a golf course on Choctaw tribal land, employing 2,400–3,000 people. MBCI operations carry roughly $1B in annual economic impact.</p><p class="agn"><b>Against:</b> This is a destination play, not a town network — a handful of high-dwell screens serving visitors, not a 20-screen municipal build. Different sale, different math.</p></article><article class="card" data-tier="2"><header style="border-left-color:#4A7C9B"><h3>Grenada, MS</h3><span class="dist">44 mi &middot; Oxford</span></header><div class="figs"><div><b>12,335</b><span>Population</span></div><div><b>$46,303</b><span>Median HHI</span></div></div><p class="for">12,335 people on the I-55 corridor, 44 miles from Oxford. The largest standalone town in the radius that we do not already touch.</p><p class="agn"><b>Against:</b> Median household income $46,303 — well below Oxford or Tupelo. Modest advertiser base.</p></article><article class="card" data-tier="4"><header style="border-left-color:#C4576B"><h3>Corinth, MS</h3><span class="dist">48 mi &middot; Tupelo</span></header><div class="figs"><div><b>14,000</b><span>Population</span></div><div><b>&mdash;</b><span>Median HHI</span></div></div><p class="for">48 miles from Tupelo, and the biggest town in the northeast corner.</p><p class="agn"><b>Against:</b> Alcorn County shrank from 34,740 (2020) to 34,569 (2025). We already ruled it out in the territory brief; distance does not change that.</p></article><article class="card" data-tier="4"><header style="border-left-color:#C4576B"><h3>Holly Springs, MS</h3><span class="dist">28 mi &middot; Oxford</span></header><div class="figs"><div><b>6,285</b><span>Population</span></div><div><b>$45,462</b><span>Median HHI</span></div></div><p class="for">28 miles from Oxford — the closest sizeable town we do not serve.</p><p class="agn"><b>Against:</b> Declining at -1.83%/yr with a $45,462 median household income. Close is not the same as worth it.</p></article></div>
+
+  <h2>Satellite fill-in &mdash; 20 towns, 90,785 people</h2>
+  <div class="callout">
+    None of these justifies its own launch. Together they are a different proposition: every one
+    sits inside an existing rep's drive, so the marginal cost of adding a handful of screens is
+    close to zero &mdash; and they push the network screen count toward the tiers that matter on
+    the rate card.
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>Town</th><th>Distance</th><th>Nearest market</th><th>Population</th><th>Note</th></tr>
+    <tr><td><b>Water Valley, MS</b></td><td>16 mi</td><td>Oxford</td><td>3,200</td><td></td></tr><tr><td><b>Aberdeen, MS</b></td><td>16 mi</td><td>West Point</td><td>5,200</td><td></td></tr><tr><td><b>Fulton, MS</b></td><td>17 mi</td><td>Tupelo</td><td>4,000</td><td>Itawamba Community College.</td></tr><tr><td><b>Pontotoc, MS</b></td><td>17 mi</td><td>Tupelo</td><td>6,256</td><td>Toyota Blue Springs nearby.</td></tr><tr><td><b>Baldwyn, MS</b></td><td>18 mi</td><td>Tupelo</td><td>3,200</td><td></td></tr><tr><td><b>Okolona, MS</b></td><td>18 mi</td><td>Tupelo</td><td>2,600</td><td></td></tr><tr><td><b>Amory, MS</b></td><td>22 mi</td><td>Tupelo</td><td>6,300</td><td></td></tr><tr><td><b>Ackerman, MS</b></td><td>23 mi</td><td>Starkville</td><td>1,500</td><td></td></tr><tr><td><b>New Albany, MS</b></td><td>24 mi</td><td>Tupelo</td><td>7,784</td><td></td></tr><tr><td><b>Batesville, MS</b></td><td>24 mi</td><td>Oxford</td><td>7,445</td><td></td></tr><tr><td><b>Vernon, AL</b></td><td>26 mi</td><td>Columbus</td><td>2,000</td><td></td></tr><tr><td><b>Louisville, MS</b></td><td>26 mi</td><td>Starkville</td><td>6,100</td><td></td></tr><tr><td><b>Eupora, MS</b></td><td>27 mi</td><td>Starkville</td><td>2,100</td><td></td></tr><tr><td><b>Bruce, MS</b></td><td>28 mi</td><td>Oxford</td><td>2,000</td><td></td></tr><tr><td><b>Macon, MS</b></td><td>28 mi</td><td>Columbus</td><td>2,500</td><td></td></tr><tr><td><b>Houston, MS</b></td><td>28 mi</td><td>West Point</td><td>3,600</td><td></td></tr><tr><td><b>Booneville, MS</b></td><td>29 mi</td><td>Tupelo</td><td>8,600</td><td>Northeast MS Community College.</td></tr><tr><td><b>Ripley, MS</b></td><td>36 mi</td><td>Tupelo</td><td>5,300</td><td></td></tr><tr><td><b>Kosciusko, MS</b></td><td>52 mi</td><td>Starkville</td><td>6,800</td><td></td></tr><tr><td><b>Winona, MS</b></td><td>52 mi</td><td>Starkville</td><td>4,300</td><td>I-55.</td></tr>
+  </table></div>
+
+  <h2>Just outside the radius</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Town</th><th>Distance</th><th>Nearest market</th><th>Note</th></tr>
+    <tr><td><b>Clarksdale, MS</b></td><td>61 mi</td><td>Oxford</td><td>61 mi — just outside, and the Delta is losing population.</td></tr><tr><td><b>Selmer, TN</b></td><td>63 mi</td><td>Tupelo</td><td>63 mi from Tupelo.</td></tr><tr><td><b>Muscle Shoals, AL</b></td><td>68 mi</td><td>Tupelo</td><td>68 mi from Tupelo. The Shoals is a real market — worth a look if the radius ever widens.</td></tr><tr><td><b>Florence, AL</b></td><td>69 mi</td><td>Tupelo</td><td>69 mi from Tupelo. University of North Alabama.</td></tr><tr><td><b>Greenwood, MS</b></td><td>70 mi</td><td>Oxford</td><td>70 mi from Oxford.</td></tr><tr><td><b>Cleveland, MS</b></td><td>81 mi</td><td>Oxford</td><td>81 mi from Oxford. Delta State.</td></tr>
+  </table></div>
+
+  <h2>Recommendation</h2>
+  <div class="callout key">
+    <b>1. Finish the Golden Triangle before opening anything new.</b> Columbus and West Point are
+    3 screens between them against a $2.5B industrial build-out. No territory negotiation, no new
+    rep, existing brand. Same argument as Tupelo's under-density, with a bigger tailwind.
+    <br><br>
+    <b>2. Scout Tuscaloosa, don't commit to it.</b> It is the biggest prize in range and the closest
+    thing to a second Oxford we will find &mdash; but Impulse Digital Media is already running our
+    exact model there, it crosses a state line, and it needs a rep who lives in it. Worth a trip and
+    a competitive read, not a build decision yet.
+    <br><br>
+    <b>3. Fold the satellites in opportunistically.</b> Pontotoc, Fulton, New Albany, Amory,
+    Aberdeen and Water Valley are all inside 25 miles of a market we already run.
+  </div>
+
+  <div class="callout gap">
+    <b>Caution on Columbus itself.</b> The city is shrinking &mdash; 22,507 people, down 6.2% since
+    2020, median household income $42,235 with a 21.3% poverty rate. The money is arriving in
+    <i>Lowndes County</i> at $93,000 a job, not in the city's existing household base. Put the
+    screens where those wages get spent, which may mean Starkville and the Highway 45 corridor more
+    than downtown Columbus. That is the same lesson as Byhalia, and worth checking on the ground
+    before spending.
+  </div>
+
+</div>
+<footer>MCTV Digital, Inc. &mdash; internal planning document. Generated from radius_scan.json.</footer>
+</body>
+</html>
