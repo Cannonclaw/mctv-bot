@@ -337,6 +337,27 @@ else:
             if q.get("quote_link"):
                 st.code(q["quote_link"])
 
+            # contract-initiate writes the request row first (record of truth),
+            # then five best-effort CRM rows. Those five used to fail in silence:
+            # the `leads` insert no-opped for a month against NOT NULL columns,
+            # and every `activity_log` row was rejected because entity_id is a
+            # uuid and the function passed the SSA- ref. Function v2 parks any
+            # such failure on the request as "CRM sync warnings: ..." — show it,
+            # because the signed agreement is still good and what's missing is
+            # the lead/deal/task a rep would go looking for.
+            _sync = str(q.get("notes") or "")
+            if _sync.startswith("CRM sync warnings:"):
+                st.warning(
+                    "**This request did not fully reach the CRM.** The signed "
+                    "agreement above is intact — but one or more follow-on "
+                    "records were not created, so check the Pipeline and Tasks "
+                    "pages before relying on them.",
+                    icon="⚠️",
+                )
+                # st.code, not markdown: a raw Postgres error can carry $ (which
+                # Streamlit would pair up as LaTeX), backticks or underscores.
+                st.code(_sync)
+
             b1, b2, b3 = st.columns(3)
             if b1.button("✅ Mark countersigned", key=f"cr_counter_{q['id']}"):
                 update_row("contract_requests", q["id"], {"status": "countersigned"})
