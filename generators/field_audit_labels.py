@@ -54,7 +54,11 @@ NAVY = RGBColor(0x1B, 0x1F, 0x3B)
 GOLD = RGBColor(0xC5, 0xA5, 0x5A)
 GREY = RGBColor(0x55, 0x55, 0x55)
 
-SUPPORT_LINE = "Property of MCTV Digital  |  portal@mctvofms.com"
+# Printed on every label so a venue knows who to call about the unit. The
+# "property of" claim is carried by the gold header line above it. Change
+# SUPPORT_PHONE to a main line if this should not be a personal cell.
+SUPPORT_PHONE = "601-201-8202"
+SUPPORT_LINE = f"Questions? {SUPPORT_PHONE}  |  portal@mctvofms.com"
 
 # Longest venue name that still fits the label's text column on one line.
 MAX_VENUE_CHARS = 30
@@ -152,7 +156,7 @@ def _draw_label(cell, screen: dict) -> None:
     head = text_cell.paragraphs[0]
     head.paragraph_format.space_before = Pt(0)
     head.paragraph_format.space_after = Pt(1)
-    head_run = head.add_run("MCTV DIGITAL  ·  DO NOT REMOVE")
+    head_run = head.add_run("PROPERTY OF MCTV DIGITAL  ·  DO NOT REMOVE")
     head_run.font.name = "Arial"
     head_run.font.size = Pt(6.5)
     head_run.font.bold = True

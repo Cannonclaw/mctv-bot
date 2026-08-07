@@ -42,9 +42,9 @@ OUTPUT_DIR = Path(__file__).parent.parent / "output" / "field_audits"
 # Fields reproduced as fill-in lines on the paper stop pages. The full set
 # lives in the workbook; this is what is worth writing by hand at the screen.
 PAPER_CAPTURE_FIELDS = [
-    "Screen on?", "Content playing?", "Display brand", "Size (in)",
-    "Orientation", "Mount type", "Pi model", "Pi serial",
-    "Power source", "Network", "Label applied?", "Condition",
+    "Spoke with", "Card left?", "Screen on?", "Content playing?",
+    "Power test OK?", "Connection", "Presentation OK?", "Photos taken?",
+    "License # confirmed", "Label applied?", "Display brand", "Size (in)",
 ]
 
 
@@ -170,50 +170,62 @@ class FieldAuditGenerator:
     def _add_instructions(self, doc, prepared_for: str, summary: dict) -> None:
         self.docx.add_section_header(doc, "How to run the audit", new_page=True)
 
-        self.docx.add_selling_point(doc, "1. Print the label sheet first", (
-            "The label sheet is a separate file, sized for Avery 5163 stock "
-            "(4\" x 2\", ten labels per sheet). Print it before leaving. Each "
-            "label carries a venue name, a short code, the full license number, "
-            "and a QR code of that license number. Run one test page on plain "
-            "paper and hold it against a label sheet to confirm alignment before "
-            "printing on stock."
+        self.docx.add_body_text(doc, (
+            "Five things at every screen. Before you leave the office, print the "
+            "label sheet — it is a separate file, sized for Avery 5163 stock "
+            "(4\" x 2\", ten labels per sheet). Run one page on plain paper and "
+            "hold it against a label sheet to check alignment before printing on "
+            "stock."
         ))
 
-        self.docx.add_selling_point(doc, "2. Match the label to the screen, not the venue", (
-            "At a venue with a single screen there is one label and no ambiguity. "
-            "At a venue with two, the labels are not interchangeable — confirm which "
-            "license is on which player before affixing. If you cannot tell them "
-            "apart, note both license numbers and where each screen physically is "
-            "(for example \"front counter\" and \"back room\"), and we will "
-            "reconcile from the office."
+        self.docx.add_selling_point(doc, "1. Introduce yourself and leave a card", (
+            "Ask for the manager or whoever looks after the place. Explain that you "
+            "handle the MCTV screen for this venue and that they should call you "
+            "first if anything goes wrong with it. Leave a card. Write down who you "
+            "spoke to — that name becomes our contact of record, and for a good "
+            "number of these venues we do not have one."
         ))
 
-        self.docx.add_selling_point(doc, "3. Affix the label where it can be read later", (
-            "Put it on a flat face of the Raspberry Pi or its case, positioned so "
-            "the license number can be read without unmounting the unit or "
-            "unplugging anything. Do not cover vents, ports, or the SD card slot. "
-            "If the Pi is sealed behind the display and cannot be reached, say so "
-            "in the spreadsheet rather than putting the label on the television."
+        self.docx.add_selling_point(doc, "2. Confirm the screen is working", (
+            f"Check the display is on and the MCTV loop is actually advancing — "
+            f"stand with it long enough to see at least two spot changes. A loop in "
+            f"this market runs roughly {mmss(TARGET_SECONDS)}, so a frozen screen "
+            f"can look fine for a few seconds. Then confirm how the player reaches "
+            f"the internet, Wi-Fi or a hardline."
         ))
 
-        self.docx.add_selling_point(doc, "4. Watch the screen before you write it down", (
-            f"Stand with the display long enough to see at least two spot changes "
-            f"before judging whether content is playing. A loop in this market runs "
-            f"roughly {mmss(TARGET_SECONDS)}, so a frozen screen can look fine for a "
-            f"few seconds. Each stop page lists the loop length we expect for that "
-            f"screen."
+        self.docx.add_selling_point(doc, "3. Power test the unit", (
+            "Power the player down and back up, and stay until it returns to "
+            "playing content on its own. This is the most useful thing you will do "
+            "all day: a screen that cannot recover from losing power is a screen "
+            "that goes dark the next time the venue flips a breaker, and we would "
+            "rather find that out now than in a month."
         ))
 
-        self.docx.add_selling_point(doc, "5. Photograph every screen", (
-            "Two photographs per screen: one wide enough to show the display in its "
-            "setting and how it is mounted, one close enough to read the new label "
-            "on the Pi. Name the files with the short code from the label."
+        self.docx.add_selling_point(doc, "4. Make it look sharp, then photograph it", (
+            "Wipe the screen down, tuck away or conceal any visible cabling, and "
+            "make sure nothing is hanging loose or sitting in the sightline. Then "
+            "take two photographs: one wide enough to show the display in its "
+            "setting, one close on the Pi with its label. Name the files with the "
+            "short code from the label."
         ))
 
-        self.docx.add_selling_point(doc, "6. Record as you go", (
+        self.docx.add_selling_point(doc, "5. Label the player and record its license number", (
+            "Every Raspberry Pi gets the label printed for it. Put it on a flat "
+            "face of the unit or its case, where the number can be read without "
+            "unmounting anything — never over vents, ports, or the SD card slot. "
+            "The label carries the venue name, the license number, a QR of that "
+            "number, and a note that the unit is MCTV property with who to call. "
+            "Write the license number on the sheet as you go so we have it in two "
+            "places. At a venue with two screens the labels are not "
+            "interchangeable: confirm which license is on which player, and if you "
+            "cannot tell them apart record both numbers and where each screen sits."
+        ))
+
+        self.docx.add_callout_box(doc, (
             "Fill the spreadsheet row at the screen rather than from memory at the "
-            "end of the day. The dropdown columns exist so the results import "
-            "cleanly; free text in a dropdown column has to be corrected by hand."
+            "end of the day, and use the dropdowns where a column has them — free "
+            "text in a dropdown column has to be corrected by hand on our end."
         ))
 
         if summary["missing_license"]:

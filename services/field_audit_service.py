@@ -98,70 +98,74 @@ EARTH_RADIUS_MI = 3958.8
 # two can never drift apart.
 
 CAPTURE_COLUMNS: list[tuple[str, int, list[str] | None]] = [
+    # Who they met, so the venue has a face and we have a name on file.
+    ("Spoke with",          20, None),
+    ("Card left?",          14, ["Yes", "No - nobody available", "No - card not accepted"]),
+
+    # Is it working?
     ("Screen on?",          12, ["Yes", "No", "No screen found"]),
     ("Content playing?",    16, ["Yes", "Frozen", "Black", "Error / no signal"]),
+    ("Power test OK?",      15, ["Yes", "No - did not come back", "Not attempted"]),
+    ("Connection",          16, ["Wi-Fi", "Ethernet", "Not connected"]),
+
+    # Does it look sharp?
+    ("Presentation OK?",    18, ["Yes", "Wires visible", "Debris / dust", "Wires + debris"]),
+    ("Photos taken?",       14, ["Yes", "No"]),
+
+    # The player and its label.
+    ("License # confirmed", 34, None),
+    ("Label applied?",      14, ["Yes", "No - Pi not reachable", "No - no label for this screen"]),
+
+    # The display.
     ("Display brand",       16, None),
     ("Display model",       18, None),
     ("Size (in)",           10, None),
-    ("Orientation",         13, ["Landscape", "Portrait"]),
-    ("Mount type",          16, ["Wall", "Ceiling", "Stand", "Shelf / counter", "Other"]),
-    ("Pi model",            16, ["Pi 3", "Pi 4", "Pi 5", "Other / unmarked"]),
-    ("Pi serial",           20, None),
-    ("Power source",        18, ["Wall outlet", "Power strip", "TV USB port", "PoE", "Other"]),
-    ("Network",             16, ["Wi-Fi", "Ethernet", "Unknown"]),
-    ("Label applied?",      14, ["Yes", "No - Pi not reachable", "No - no label for this screen"]),
-    ("Condition",           14, ["Good", "Fair", "Poor", "Needs replacement"]),
-    ("Issues found",        34, None),
-    ("Photo taken?",        13, ["Yes", "No"]),
+
+    ("Issues / notes",      40, None),
     ("Audited by",          16, None),
     ("Date",                12, None),
-    ("Notes",               40, None),
 ]
 
 # What each capture column is for. Printed in the brief's legend and the
 # workbook's Legend sheet.
 CAPTURE_LEGEND: dict[str, str] = {
+    "Spoke with": "Name of the manager or staff member you introduced yourself to. This becomes our contact of record for the venue.",
+    "Card left?": "Confirm you left an Exceed card so the venue knows who to call about the screen.",
     "Screen on?": "Is the display powered and showing something? 'No screen found' if the venue has no MCTV screen at all.",
     "Content playing?": "Is the MCTV loop actually advancing? Watch for at least two spot changes before answering.",
+    "Power test OK?": "Power the unit down and back up, and confirm it returns to playing content on its own. This is the single most useful test in the audit.",
+    "Connection": "How the Pi reaches the internet. 'Not connected' is a finding, not a failure — record it and move on.",
+    "Presentation OK?": "Does the installation look sharp? Screen clean and clear of debris, cables concealed, nothing hanging loose.",
+    "Photos taken?": "Two shots: one wide enough to show the screen in its setting, one close on the Pi with its label.",
+    "License # confirmed": "Write the license number from the Pi. It is pre-filled where we have it — confirm it matches, and correct it here if it does not.",
+    "Label applied?": "Confirm the MCTV label was affixed to this unit. That label doubles as the property and contact sticker.",
     "Display brand": "Manufacturer on the bezel or the back label (Samsung, LG, TCL, Vizio...).",
     "Display model": "Model number from the back label. Photograph it if it is hard to read.",
     "Size (in)": "Diagonal screen size in inches. The model number usually starts with it.",
-    "Orientation": "How the display is hung. Our creative is built landscape; portrait screens letterbox.",
-    "Mount type": "How it is fixed in place. Tells us what it costs to service or replace.",
-    "Pi model": "Raspberry Pi generation, printed on the board. 'Other / unmarked' is a fine answer.",
-    "Pi serial": "Serial from the Pi's own label, not the license number. Blank if the unit cannot be reached.",
-    "Power source": "What the Pi is plugged into. TV USB ports cut power with the TV and cause 'dark screen' tickets.",
-    "Network": "How the Pi connects. Note the SSID in Notes if it is on venue guest Wi-Fi.",
-    "Label applied?": "Confirm the MCTV license label was affixed to this unit.",
-    "Condition": "Overall physical state of display and Pi together.",
-    "Issues found": "Anything wrong: dark screen, wrong content, damaged mount, cables exposed, blocked sightline.",
-    "Photo taken?": "One wide shot of the screen in place, one close shot of the Pi with its new label.",
+    "Issues / notes": "Anything wrong or worth knowing: dark screen, wrong content, exposed cables, blocked sightline, awkward access.",
     "Audited by": "Technician name.",
     "Date": "Date of the visit (YYYY-MM-DD).",
-    "Notes": "Anything the columns above do not cover — including who you spoke to.",
 }
 
 # Workbook column -> screen_assets column. Anything not listed here is context
 # for the technician and is not stored.
 CAPTURE_DB_FIELDS: dict[str, str] = {
+    "Spoke with": "spoke_with",
+    "Card left?": "card_left",
     "Screen on?": "screen_on",
     "Content playing?": "content_playing",
+    "Power test OK?": "power_test",
+    "Connection": "network_type",
+    "Presentation OK?": "presentation",
+    "Photos taken?": "photo_taken",
+    "License # confirmed": "license_confirmed",
+    "Label applied?": "label_applied",
     "Display brand": "display_brand",
     "Display model": "display_model",
     "Size (in)": "display_size_in",
-    "Orientation": "orientation",
-    "Mount type": "mount_type",
-    "Pi model": "pi_model",
-    "Pi serial": "pi_serial",
-    "Power source": "power_source",
-    "Network": "network_type",
-    "Label applied?": "label_applied",
-    "Condition": "condition",
-    "Issues found": "issues",
-    "Photo taken?": "photo_taken",
+    "Issues / notes": "issues",
     "Audited by": "audited_by",
     "Date": "audited_at",
-    "Notes": "notes",
 }
 
 # Pre-filled columns, in workbook order: (header, roster key, width).

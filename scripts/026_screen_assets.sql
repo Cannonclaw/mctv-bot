@@ -29,31 +29,31 @@ CREATE TABLE IF NOT EXISTS screen_assets (
   short_code       TEXT,
   screen_label     TEXT,                   -- where this screen sits, when a venue has several
 
+  -- The introduction. Who the technician met becomes our contact of record.
+  spoke_with       TEXT,
+  card_left        TEXT,                   -- Yes | No - nobody available | No - card not accepted
+
   -- What the technician observed.
   screen_on        TEXT,                   -- Yes | No | No screen found
   content_playing  TEXT,                   -- Yes | Frozen | Black | Error / no signal
+  power_test       TEXT,                   -- Yes | No - did not come back | Not attempted
+  network_type     TEXT,                   -- Wi-Fi | Ethernet | Not connected
+
+  -- How it looks.
+  presentation     TEXT,                   -- Yes | Wires visible | Debris / dust | Wires + debris
+  photo_taken      TEXT,                   -- what the technician reported
+  photo_url        TEXT,                   -- filled in later, once photos are filed
+
+  -- The player and its label.
+  license_confirmed TEXT,                  -- license number read off the Pi on site
+  label_applied    TEXT,
 
   -- The display.
   display_brand    TEXT,
   display_model    TEXT,
   display_size_in  NUMERIC,
-  orientation      TEXT,                   -- Landscape | Portrait
-  mount_type       TEXT,
 
-  -- The player.
-  pi_model         TEXT,
-  pi_serial        TEXT,
-  power_source     TEXT,                   -- TV USB ports cut power with the TV; worth knowing
-  network_type     TEXT,                   -- Wi-Fi | Ethernet | Unknown
-  label_applied    TEXT,
-
-  -- Condition and follow-up.
-  condition        TEXT,                   -- Good | Fair | Poor | Needs replacement
   issues           TEXT,
-  photo_taken      TEXT,                   -- what the technician reported
-  photo_url        TEXT,                   -- filled in later, once photos are filed
-  notes            TEXT,
-
   audited_by       TEXT,
   audited_at       DATE,
 
