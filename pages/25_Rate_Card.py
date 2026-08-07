@@ -291,6 +291,67 @@ PACKAGES = {
              "monthly": 2000, "plays": "180,000+"},
 }
 
+# ── Audience plays: what the client sells → which rooms to put them in ───────
+# Mirrors the PLAYS array in OneDrive\mctv-rate-quote\sales\_build-audience-plays.js
+# — the source of the "Audience Plays" PDFs offered further down this page. Same
+# ten verticals, same suggested venue-type mix, so a rep who reads a play on the
+# sheet can build that exact quote here in one tap instead of hand-picking a
+# dozen venues out of a flat 100-item list.
+#
+# The sheet keys each mix by venue-type CODE; this page only ever sees the
+# label. The two vocabularies are identical — all 29 `type_label` values in
+# `venue_rates_v` match the calculator's TYPES labels verbatim (checked
+# 2026-08-06) — so labels are listed directly and the codes are kept in the
+# comments, letting a future run diff the two lists without a translation step.
+# A mix is a suggested STARTING point, never a fixed SKU: add or drop venues
+# after the quick-add. Screen counts here are this page's inventory
+# (`venue_rate_inputs`), which is 1 short of the calculator on 4 Corner's
+# Chevron — so a gas-and-c-store play reads one screen lighter than the sheet.
+AUDIENCE_PLAYS = {
+    "Home Services": {  # bar rest sal asv gol par
+        "eg": "HVAC, roofing, plumbing, restoration, pest, lawn",
+        "types": ["Bar & Nightlife", "Restaurant", "Salon & Barber",
+                  "Auto Service & Collision", "Golf Course",
+                  "Parks & Recreation"]},
+    "Bank · Credit Union · Insurance": {  # cha cli aut rest ret cof
+        "eg": "branches, lenders, agents, financial advisors",
+        "types": ["Chamber / Office Lobby", "Medical Clinic", "Auto Dealer",
+                  "Restaurant", "Retail & Boutique", "Coffee & Smoothie"]},
+    "Dental · Ortho · Specialty Practice": {  # gym sal nai spa vet pha
+        "eg": "dentist, ortho, dermatology, urology, urgent care",
+        "types": ["Gym & Fitness", "Salon & Barber", "Nail Salon",
+                  "MedSpa & Wellness", "Veterinary", "Pharmacy"]},
+    "Restaurant · Bar · Food": {  # gas shc hot par gym rnk
+        "eg": "new location, daily specials, catering, food truck",
+        "types": ["Gas & C-Store", "Shopping Center", "Hotel Lobby",
+                  "Parks & Recreation", "Gym & Fitness", "Skating Rink"]},
+    "Auto Dealer · Service · Tire": {  # rest bar gas rnk cop ret
+        "eg": "dealership, collision, tires, detailing, glass",
+        "types": ["Restaurant", "Bar & Nightlife", "Gas & C-Store",
+                  "Skating Rink", "Farm Co-op", "Retail & Boutique"]},
+    "Fitness · Nutrition · Wellness": {  # nai sal tan spa cof rest
+        "eg": "gym, studio, supplements, med weight-loss, chiropractic",
+        "types": ["Nail Salon", "Salon & Barber", "Tanning Salon",
+                  "MedSpa & Wellness", "Coffee & Smoothie", "Restaurant"]},
+    "Retail · Boutique · Furniture": {  # sal nai cof spa rest ret
+        "eg": "clothing, gifts, jewelry, furniture, flooring",
+        "types": ["Salon & Barber", "Nail Salon", "Coffee & Smoothie",
+                  "MedSpa & Wellness", "Restaurant", "Retail & Boutique"]},
+    "Real Estate · Rentals · Property": {  # air hot cof rest gym dcl
+        "eg": "agents, brokerages, rentals, storage, developments",
+        "types": ["Airport Terminal", "Hotel Lobby", "Coffee & Smoothie",
+                  "Restaurant", "Gym & Fitness", "Dry Cleaner"]},
+    "Internet · Telecom · Tech": {  # cha cof gas ret rest hot
+        "eg": "fiber, IT services, security, phone systems",
+        "types": ["Chamber / Office Lobby", "Coffee & Smoothie",
+                  "Gas & C-Store", "Retail & Boutique", "Restaurant",
+                  "Hotel Lobby"]},
+    "Events · Campus · Civic": {  # par cof rest ret rnk gym
+        "eg": "festivals, nonprofits, churches, ticketed events",
+        "types": ["Parks & Recreation", "Coffee & Smoothie", "Restaurant",
+                  "Retail & Boutique", "Skating Rink", "Gym & Fitness"]},
+}
+
 link_mode = st.radio("Link type", ["Network Package", "Custom venues"],
                      horizontal=True, key="ql_mode")
 parts = []
@@ -331,6 +392,18 @@ else:
 
     _mkts = sorted({r["market"] for r in rows if r.get("market")})
     _types = sorted({r["type_label"] for r in rows if r.get("type_label")})
+
+    # The rep's actual first question is "what does this client sell?", not
+    # "which venue type do I want". Answer that once and the mix from the
+    # Audience Plays sheet is already filtered; the market/type controls below
+    # narrow it further. All three filters AND together.
+    _f_play = st.selectbox(
+        "Quick add — audience play (what does the client sell?)",
+        ["*"] + list(AUDIENCE_PLAYS), key="ql_f_play",
+        format_func=lambda p: ("Any — I'll pick the rooms myself" if p == "*"
+                               else f"{p} — {AUDIENCE_PLAYS[p]['eg']}"))
+    _play_types = AUDIENCE_PLAYS[_f_play]["types"] if _f_play != "*" else None
+
     _f1, _f2 = st.columns(2)
     with _f1:
         _f_mkt = st.selectbox(
@@ -342,9 +415,28 @@ else:
             "Quick add — venue type", ["*"] + _types, key="ql_f_type",
             format_func=lambda t: "Any type" if t == "*" else t)
 
+    if _play_types:
+        # Network size of the whole play, before the market/type narrowing —
+        # context for the button below, which counts only what it will add.
+        _p_rows = [r for r in rows if r.get("type_label") in _play_types]
+        _p_screens = sum(int(r.get("screens") or 0) for r in _p_rows)
+        _p_missing = [t for t in _play_types if t not in _types]
+        st.caption(
+            f"**{_f_play}** — the rooms this client should be in: "
+            + ", ".join(_play_types)
+            + f". {len(_p_rows)} venues / {_p_screens} screens network-wide"
+            + (f" (no venues on this page for: {', '.join(_p_missing)})"
+               if _p_missing else "")
+            + ". Narrow it by market above, then add the lot. The full play "
+            "— why those rooms land and the script to open with — is "
+            "on the **Audience plays** sheet further down this page."
+        )
+
     _matches = [r for r in rows
                 if (_f_mkt == "*" or r.get("market") == _f_mkt)
-                and (_f_type == "*" or r.get("type_label") == _f_type)]
+                and (_f_type == "*" or r.get("type_label") == _f_type)
+                and (_play_types is None
+                     or r.get("type_label") in _play_types)]
     _new = [r for r in _matches if r["venue_name"] not in _ql_sel]
     _new_screens = sum(int(r.get("screens") or 0) for r in _new)
 
