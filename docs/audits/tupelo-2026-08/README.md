@@ -9,10 +9,29 @@ Regenerate any time from the bot: **Field Audit** page → Tupelo → Build pack
 |---|---|
 | `MCTV_FieldAudit_Tupelo.docx` | The brief. Scope, instructions, the capture legend, the route, one reference page per stop with license numbers, and an appendix of known gaps. |
 | `MCTV_FieldSheet_Tupelo.xlsx` | Where findings get recorded. One row per screen, pre-filled with venue/address/contact/license, with dropdown-validated capture columns. |
-| `MCTV_FieldAuditLabels_Tupelo.docx` | 27 labels on 3 sheets of **Avery 5163** (4" × 2", ten per sheet). Each carries the venue name, short code, full license number, and a QR of that license number. |
+| `MCTV_FieldAuditLabels_Tupelo.docx` | 27 labels on 3 sheets of **Avery 5163** (4" × 2", ten per sheet). Each carries the venue name, short code, full license number, a QR of that number, and who to call. |
 
 Tell Exceed to print the label sheet on Avery 5163 stock, run one test page on
 plain paper first to check registration, and return the spreadsheet filled in.
+
+## What we're asking for at each screen
+
+Five things, in this order — the brief walks through them:
+
+1. **Introduce yourself and leave a card.** Ask for the manager, explain you look
+   after the MCTV screen, and tell them to call you first if it goes wrong.
+   Write down who you spoke to; for 12 of these venues we have no contact name.
+2. **Confirm it works.** Screen on, loop advancing, and note whether the player
+   is on Wi-Fi or a hardline.
+3. **Power test it.** Cycle the power and stay until it comes back on its own.
+4. **Make it look sharp, then photograph it.** Screen clean, cables concealed,
+   nothing in the sightline. Two shots: wide, and close on the Pi.
+5. **Label the player and write its license number down.** One label per Pi,
+   carrying the venue, the license number, a QR of it, ownership, and who to
+   call.
+
+The sheet captures those five things plus the TV's brand, model and size — 16
+columns, down from 18, and every one of them earns its place.
 
 ## The numbers
 
