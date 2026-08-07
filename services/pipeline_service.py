@@ -34,13 +34,41 @@ STAGES = {
     "lost":          {"label": "Lost",            "probability": 0,   "color": "#dc3545", "order": 8},
 }
 
-# Tier pricing for quick-select
+# Tier pricing for quick-select.
+# The five flat packages the public rate tool sells (mctvofms.com/rate-quote) and
+# config/config.json pricing.elite_tiers. Prices are LOCKED — see
+# mctv-rate-quote/sales/PRICING-SPEC.md. The $/screen ladder is monotonic by
+# design: $35.00 -> $25.00 -> $20.00 -> $17.33 -> $16.00.
 TIERS = {
-    "10 Screens":  {"screens": 10, "monthly": 350},
-    "20 Screens":  {"screens": 20, "monthly": 500},
-    "40 Screens":  {"screens": 40, "monthly": 800},
-    "75+ Screens": {"screens": 75, "monthly": 1300},
+    "10 Screens":   {"screens": 10,  "monthly": 350},
+    "20 Screens":   {"screens": 20,  "monthly": 500},
+    "40 Screens":   {"screens": 40,  "monthly": 800},
+    "75 Screens":   {"screens": 75,  "monthly": 1300},
+    "125+ Screens": {"screens": 125, "monthly": 2000},
 }
+
+# Tier names that were published before 2026-08-02, mapped to what they are
+# called now. Deals created under the old label are still in the pipeline (as of
+# 2026-08-07, 30 rows read "75+ Screens"), and a stored name that matches no
+# current tier would default the Update Tier selector to a *different* tier —
+# one click away from rewriting a $1,300 deal as $500. Resolve, never guess.
+TIER_ALIASES = {
+    "75+ Screens": "75 Screens",
+}
+
+
+def resolve_tier_name(tier_name: str | None) -> str | None:
+    """Map a stored tier name onto a current key in ``TIERS``.
+
+    Returns the name unchanged if it is already current, the current name for a
+    known legacy label, and ``None`` when it matches no tier (custom or blank
+    deals) so callers can fall back deliberately.
+    """
+    if not tier_name:
+        return None
+    if tier_name in TIERS:
+        return tier_name
+    return TIER_ALIASES.get(tier_name)
 
 
 # ── Supabase REST helpers ─────────────────────────────────────────────────────

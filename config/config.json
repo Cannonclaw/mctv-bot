@@ -185,11 +185,18 @@
         "plays_per_month": "60K"
       },
       {
-        "name": "75+ Screens",
+        "name": "75 Screens",
         "screens": 75,
         "monthly_rate": 1300.0,
         "cost_per_screen": 17.33,
-        "plays_per_month": "120K+"
+        "plays_per_month": "110K"
+      },
+      {
+        "name": "125+ Screens",
+        "screens": 125,
+        "monthly_rate": 2000.0,
+        "cost_per_screen": 16.0,
+        "plays_per_month": "180K+"
       }
     ],
     "host_free_inside_plays_per_hour": 8,

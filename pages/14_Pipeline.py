@@ -24,7 +24,7 @@ from services.pipeline_service import (
     update_opportunity, delete_opportunity, advance_stage, mark_lost,
     get_pipeline_summary, get_revenue_forecast, get_deals_needing_action,
     get_activity, log_note, log_call, import_lead_to_pipeline,
-    get_stage_options,
+    get_stage_options, resolve_tier_name,
 )
 from services.nurture_service import (
     get_available_sequences, start_sequence, stop_sequence,
@@ -253,14 +253,19 @@ with tab_deals:
                         st.rerun()
 
             with a2:
+                # Resolve through TIER_ALIASES so a deal stored under a retired
+                # label (e.g. "75+ Screens") opens on the tier it actually is,
+                # instead of defaulting to another tier that a single click on
+                # Update would then write over the top of it.
+                tier_keys = list(TIERS.keys())
+                current_tier = resolve_tier_name(deal.get("tier_name"))
                 new_value = st.selectbox(
                     "Update Tier",
-                    list(TIERS.keys()),
-                    index=list(TIERS.keys()).index(deal.get("tier_name", "20 Screens"))
-                    if deal.get("tier_name") in TIERS else 1,
+                    tier_keys,
+                    index=tier_keys.index(current_tier) if current_tier else 1,
                     key=f"tier_{deal['id']}"
                 )
-                if new_value != deal.get("tier_name"):
+                if new_value != current_tier:
                     if st.button("Update", key=f"upd_tier_{deal['id']}"):
                         tier = TIERS[new_value]
                         update_opportunity(deal["id"], {
