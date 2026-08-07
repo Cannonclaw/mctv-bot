@@ -1,4 +1,4 @@
-# Tupelo screen audit — packet for Xceed Technologies
+# Tupelo screen audit — packet for Exceed Technologies
 
 Generated 2026-08-04 from the n-compass whitelist sweep dated **2026-07-06**.
 Regenerate any time from the bot: **Field Audit** page → Tupelo → Build packet.
@@ -11,7 +11,7 @@ Regenerate any time from the bot: **Field Audit** page → Tupelo → Build pack
 | `MCTV_FieldSheet_Tupelo.xlsx` | Where findings get recorded. One row per screen, pre-filled with venue/address/contact/license, with dropdown-validated capture columns. |
 | `MCTV_FieldAuditLabels_Tupelo.docx` | 27 labels on 3 sheets of **Avery 5163** (4" × 2", ten per sheet). Each carries the venue name, short code, full license number, and a QR of that license number. |
 
-Tell Xceed to print the label sheet on Avery 5163 stock, run one test page on
+Tell Exceed to print the label sheet on Avery 5163 stock, run one test page on
 plain paper first to check registration, and return the spreadsheet filled in.
 
 ## The numbers
@@ -29,7 +29,7 @@ plain paper first to check registration, and return the spreadsheet filled in.
    four. Two more shared addresses: 623 W Main St (Loaded Nutrition + Second
    Skin Waxing) and 1890 McCullough Blvd (Style Society + Premier Aesthetics).
 
-2. **Xceed hosts one of the screens.** Exceed Technologies at 499 S Gloster is
+2. **Exceed hosts one of the screens.** Exceed Technologies at 499 S Gloster is
    an MCTV host venue, and its screen runs the longest loop in the market
    (19:59 against a 15:00 target).
 
@@ -42,7 +42,7 @@ plain paper first to check registration, and return the spreadsheet filled in.
    and field-sheet rows appear automatically.
 
 4. **Midtown Pointe screen count disagrees.** NTV360 says two licenses, the
-   sweep found one. Xceed should count the physical MCTV screens there.
+   sweep found one. Exceed should count the physical MCTV screens there.
 
 5. **Right Track Medical's license is cross-market.** License
    `f813363c-6319-40f8-a393-85c49a7f5f53` shows up in the Tupelo sweep *and* on

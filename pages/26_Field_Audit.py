@@ -206,7 +206,7 @@ with tab_packet:
 
     left, right = st.columns(2)
     with left:
-        prepared_for = st.text_input("Auditor / contractor", value="Xceed Technologies")
+        prepared_for = st.text_input("Auditor / contractor", value="Exceed Technologies")
         prepared_by = st.selectbox("Prepared by", get_team_names(config))
     with right:
         copies = st.number_input(

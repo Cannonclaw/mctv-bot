@@ -16,7 +16,7 @@ them the license numbers to match labels against. The two render from the same
 Usage:
     generator = FieldAuditGenerator(config, docx_service)
     path = generator.generate(rows, gaps, market="tupelo",
-                              prepared_for="Xceed Technologies")
+                              prepared_for="Exceed Technologies")
 """
 
 import logging
@@ -58,7 +58,7 @@ class FieldAuditGenerator:
     # ── Entry point ──────────────────────────────────────────────────────────
 
     def generate(self, rows: list[dict], gaps: list[dict], market: str,
-                 prepared_for: str = "Xceed Technologies",
+                 prepared_for: str = "Exceed Technologies",
                  prepared_by_name: str = "", sweep_date: str | None = None,
                  progress_callback=None) -> Path:
         """Build the brief and save it. Returns the .docx path.
