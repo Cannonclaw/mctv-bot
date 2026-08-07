@@ -22,6 +22,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import check_password
+from services.config_service import (
+    get_market_names,
+    get_team_first_names,
+    load_config,
+)
+from services.pipeline_service import advance_stage
+from services.portal_service import create_client
 from services.rate_service import (
     apply_tiers,
     market_rate_summary,
@@ -44,6 +51,13 @@ render_team_sidebar()
 
 MARKET_LABELS = {"oxford": "Oxford", "tupelo": "Tupelo",
                  "starkville": "Starkville", "special": "Special Venues"}
+
+# Same dropdown vocabulary the Clients page offers, so a client created from a
+# signed request is indistinguishable from one typed in by hand.
+_CFG = load_config()
+_TEAM_NAMES = get_team_first_names(_CFG) if _CFG.get("team") else []
+_CITY_OPTIONS = (get_market_names(_CFG, active_only=False) + ["Other"]
+                 if _CFG.get("markets") else [])
 
 
 def mmss(minutes: float) -> str:
@@ -172,6 +186,110 @@ def countersign_email(q: dict) -> tuple[str, str]:
     return subject, "\n".join(lines)
 
 
+def request_client_notes(q: dict) -> str:
+    """One-line summary of the signed agreement, for the client record's notes.
+
+    Quoted off the request row, never recomputed -- the client record must not
+    be able to disagree with the paper the client signed.
+    """
+    bits = []
+    if q.get("monthly_total"):
+        bits.append(f"${float(q['monthly_total']):,.0f}/mo")
+    if q.get("screens"):
+        bits.append(f"{q['screens']} screens")
+    if q.get("term_months"):
+        bits.append(f"{int(q['term_months'])} months"
+                    + (" PREPAID" if q.get("prepay") else ""))
+    if q.get("term_total"):
+        bits.append(f"term total ${float(q['term_total']):,.0f}")
+    if q.get("start_date"):
+        bits.append(f"start {q['start_date']}")
+    if q.get("signed_name"):
+        bits.append(f"signed by {q['signed_name']}")
+
+    note = f"Self-serve signed agreement {q.get('ref') or '(no ref)'}"
+    if bits:
+        note += ": " + ", ".join(bits)
+    return note + "."
+
+
+def convert_request_to_client(q: dict, assigned_rep: str = "",
+                              city: str = "", industry: str = "") -> tuple[str, str]:
+    """Create the client record a signed self-serve agreement earned.
+
+    Marking a request `converted` used to change a status string and nothing
+    else, so the customer who had *just signed* still had to be retyped by
+    hand on the Clients page (business, contact, email, phone) before anything
+    downstream -- portal invite, invoices, campaign records -- could reference
+    them, and their pipeline deal sat at Contract Sent / 90% until someone
+    remembered to close it.
+
+    Returns ("success" | "warning" | "error", message) instead of drawing, so
+    the write path can be read and reasoned about on its own.
+    """
+    biz = (q.get("business_name") or "").strip()
+    name = (q.get("contact_name") or "").strip()
+    email = (q.get("contact_email") or "").strip()
+    if not (biz and name and email):
+        return "error", ("This request is missing a business name, contact "
+                         "name or email, so there is nothing to create a "
+                         "client from.")
+
+    # `clients.contact_email` carries no unique constraint, so a second tap --
+    # or a customer Creed already added by hand -- would otherwise silently
+    # create a duplicate customer record.
+    existing = next(
+        (c for c in query_table("clients", select="id,business_name,contact_email")
+         if (c.get("contact_email") or "").strip().lower() == email.lower()),
+        None,
+    )
+    if existing:
+        update_row("contract_requests", q["id"], {"status": "converted"})
+        return "warning", (
+            f"**{existing.get('business_name') or biz}** is already a client "
+            f"({email}) — no duplicate was created. The request is marked "
+            "converted; check the Clients page if the details changed."
+        )
+
+    client = create_client(
+        business_name=biz,
+        contact_name=name,
+        contact_email=email,
+        client_type="advertiser",
+        contact_phone=(q.get("contact_phone") or "").strip(),
+        industry=industry.strip(),
+        city=city,
+        assigned_rep=assigned_rep,
+        lead_id=q.get("lead_id") or "",
+        notes=request_client_notes(q),
+    )
+    if not client:
+        return "error", ("Could not create the client record — nothing else "
+                         "was changed. Try again, or add them on the Clients "
+                         "page.")
+
+    # The deal the edge function opened at Contract Sent / 90% when they
+    # signed. `opportunity_id` is written back onto the request by
+    # contract-initiate; older or partial rows may not carry one.
+    opp_id = q.get("opportunity_id")
+    if opp_id:
+        if advance_stage(str(opp_id), "won", performed_by="Rate Card (self-serve)"):
+            deal_note = " Their pipeline deal is now **Won**."
+        else:
+            deal_note = (" Their pipeline deal could not be found — close it "
+                         "by hand on the Sales Pipeline page.")
+    else:
+        deal_note = (" No pipeline deal is linked to this request — check the "
+                     "Sales Pipeline page.")
+
+    update_row("contract_requests", q["id"], {"status": "converted"})
+    return "success", (
+        f"**{biz}** is now a client (advertiser, onboarding)." + deal_note
+        + " Invite them to the portal from the Clients page when you are "
+        "ready."
+    )
+
+
 st.markdown("### \U0001F91D Self-Serve Agreement Requests")
 
 requests = query_table("contract_requests", order="-created_at", limit=50)
@@ -223,12 +341,65 @@ else:
             if b1.button("✅ Mark countersigned", key=f"cr_counter_{q['id']}"):
                 update_row("contract_requests", q["id"], {"status": "countersigned"})
                 st.rerun()
-            if b2.button("\U0001F4C1 Mark converted", key=f"cr_convert_{q['id']}"):
-                update_row("contract_requests", q["id"], {"status": "converted"})
-                st.rerun()
+            if b2.button("\U0001F4C1 Convert to client", key=f"cr_convert_{q['id']}"):
+                st.session_state[f"cr_show_convert_{q['id']}"] = True
             if b3.button("\U0001F6AB Spam", key=f"cr_spam_{q['id']}"):
                 update_row("contract_requests", q["id"], {"status": "spam"})
                 st.rerun()
+
+            # Last mile of the sale: signed here -> a real customer everywhere
+            # else. Two steps on purpose (button, then confirm) so a stray tap
+            # in the inbox can't create a client record.
+            if st.session_state.get(f"cr_show_convert_{q['id']}"):
+                st.markdown("**Convert to client**")
+                st.caption(
+                    "Creates an **advertiser** client record from this signed "
+                    "request and closes its pipeline deal. Every field is "
+                    "copied off the agreement as signed — nothing is re-priced."
+                )
+                cv1, cv2, cv3 = st.columns(3)
+                _cv_rep = cv1.selectbox(
+                    "Assign rep", [""] + _TEAM_NAMES, key=f"cr_rep_{q['id']}")
+                _cv_city = cv2.selectbox(
+                    "City", [""] + _CITY_OPTIONS, key=f"cr_city_{q['id']}",
+                    format_func=lambda m: m or "—")
+                _cv_industry = cv3.text_input(
+                    "Industry", key=f"cr_ind_{q['id']}",
+                    placeholder="Dental, Restaurant, Fitness…")
+
+                cb1, cb2, cb3 = st.columns(3)
+                _do_convert = cb1.button(
+                    "Create client record", key=f"cr_do_convert_{q['id']}",
+                    type="primary", width="stretch")
+                _mark_only = cb2.button(
+                    "Just mark converted", key=f"cr_mark_only_{q['id']}",
+                    width="stretch",
+                    help="They are already a client — leave the client list alone.")
+                if cb3.button("Cancel", key=f"cr_cancel_convert_{q['id']}",
+                              width="stretch"):
+                    st.session_state.pop(f"cr_show_convert_{q['id']}", None)
+                    st.rerun()
+
+                if _mark_only:
+                    update_row("contract_requests", q["id"], {"status": "converted"})
+                    st.session_state.pop(f"cr_show_convert_{q['id']}", None)
+                    st.rerun()
+
+                if _do_convert:
+                    with st.spinner("Creating the client record…"):
+                        _lvl, _msg = convert_request_to_client(
+                            q, assigned_rep=_cv_rep, city=_cv_city,
+                            industry=_cv_industry)
+                    st.session_state.pop(f"cr_show_convert_{q['id']}", None)
+                    # Deliberately no st.rerun() here: a rerun would wipe the
+                    # only report of what was written. The status above
+                    # refreshes on the next interaction.
+                    if _lvl == "success":
+                        st.success(_msg)
+                    elif _lvl == "warning":
+                        st.warning(_msg)
+                    else:
+                        st.error(_msg)
 
             # Send the copy the client was promised. One tap opens your own
             # mail app with the whole confirmation already written -- ref,
@@ -261,7 +432,9 @@ else:
 
     st.caption(
         "Each signed request auto-creates a **Contract Sent** deal on the "
-        "Sales Pipeline page and a lead on the Leads page (source: website)."
+        "Sales Pipeline page and a lead on the Leads page (source: website). "
+        "Countersign → send the copy → **Convert to client**, which writes the "
+        "client record and moves that deal to Won for you."
     )
 
 st.divider()
