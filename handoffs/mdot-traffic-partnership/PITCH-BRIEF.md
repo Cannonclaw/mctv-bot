@@ -92,6 +92,33 @@ real venue, the mockup link, and a 15-minute ask. Do **not** attach a proposal.
    introduce us?"** Mikey's value is navigation, not a purchase order. If he leaves the
    meeting as our internal champion, the meeting was a win.
 
+## The four packages on the mockup
+
+The mockup's package toggle shows MDOT four ways to buy, each with its own scenic intro/outro
+world and a localized conditions board:
+
+- **Oxford** (75 screens) — flagship. Dusk-over-the-hills backdrop, Hwy 6 / Hwy 7 corridors.
+- **Tupelo** (25 screens) — Natchez Trace dawn backdrop. I-22, US 45, 45 Alt corridors.
+  Cheapest single-market pilot (~$700/mo anchor from the summer package).
+- **Golden Triangle** (33 screens = Starkville 30 + Columbus 2 + West Point 1) — cotton-field
+  dusk with the water tower. Sells the three-city footprint as one buy; MS 12 / US 82 /
+  MS 50 / US 45 / MS 25 corridors.
+- **Jackson** (expansion preview — clearly labeled, no live screens) — night skyline with
+  I-55/I-20 light trails. This is the "come grow with us" card: MDOT HQ is in Jackson, their
+  people will want to see their own city, and it shows the sponsorship arriving there on
+  day one of our expansion. Never pitch it as current inventory.
+
+**Production notes (internal):**
+- The scenic backdrops are original MCTV concept art built into the mockup — no stock
+  licensing needed for the pitch. For production, the intro/outro render as full-motion
+  video through our existing Creatomate pipeline (`services/creatomate_service.py`), and we
+  can commission real footage (Natchez Trace, the Square, Jackson skyline) once there's a
+  signed deal to justify it.
+- **The camera tile is a deliberate conversation starter.** MDOTtraffic.com runs live
+  traffic cameras (heaviest in the Jackson metro). Ask Mikey: who manages camera feeds, and
+  could feed access be part of the data partnership? A real MDOT camera on our screens makes
+  the segment appointment viewing — and it's a reason MDOT *wants* this deal beyond the logo.
+
 ## Money framing
 
 **Do not lead with a number.** Let Mikey tell us how MDOT spends on public outreach before

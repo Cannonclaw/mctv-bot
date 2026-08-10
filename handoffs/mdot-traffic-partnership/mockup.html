@@ -227,13 +227,12 @@
   .mdot-chip.big img { height: 6.5cqw; }
 
   /* ---------- intro / outro frames ---------- */
-  .frame { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .frame { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
   .frame[hidden] { display: none; }
   .f-intro, .f-outro {
     align-items: center;
     justify-content: center;
     text-align: center;
-    position: relative;
   }
   .f-intro::before, .f-outro::before {
     content: "";
@@ -241,7 +240,89 @@
     inset: 0;
     background: radial-gradient(60% 45% at 50% 62%, rgba(197,165,90,0.13), transparent 70%);
     pointer-events: none;
+    z-index: 1;
   }
+  .f-intro > *, .f-outro > * { position: relative; z-index: 2; }
+  .i-title, .o-title { text-shadow: 0 0.3cqw 2cqw rgba(0,0,0,0.55); }
+
+  /* ---------- scenery (animated backdrop art) ---------- */
+  .scene {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .scene svg { width: 100%; height: 100%; display: block; }
+  .scene .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,13,32,0.30) 0%, rgba(10,13,32,0.16) 45%, rgba(10,13,32,0.55) 100%);
+  }
+  .f-board .scene .scrim {
+    background: linear-gradient(180deg, rgba(13,16,38,0.90) 0%, rgba(13,16,38,0.86) 50%, rgba(13,16,38,0.93) 100%);
+  }
+  .f-board > .s-top, .f-board > .s-rule, .f-board > .s-body { position: relative; z-index: 2; }
+  .dashline {
+    animation: roadflow 26s linear infinite;
+  }
+  @keyframes roadflow { to { stroke-dashoffset: -460; } }
+  .drift { animation: skydrift 70s linear infinite alternate; }
+  @keyframes skydrift { to { transform: translateX(6%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .dashline, .drift { animation: none; }
+  }
+
+  /* ---------- live camera tile ---------- */
+  .cam {
+    flex: 1.15;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 0.16cqw solid rgba(255,255,255,0.22);
+    border-radius: 0.7cqw;
+    overflow: hidden;
+    background: #05070F;
+  }
+  .cam-view {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    filter: saturate(0.65) contrast(1.06) brightness(1.22);
+  }
+  .cam-view .scene { position: absolute; inset: 0; }
+  .cam-view::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+  }
+  .cam-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1cqw;
+    padding: 0.6cqw 1.2cqw;
+    background: rgba(0,0,0,0.55);
+    font-size: max(1cqw, 8px);
+    color: #C9CDE2;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .cam-bar .cam-live {
+    color: #FFFFFF;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    gap: 0.6cqw;
+    flex-shrink: 0;
+  }
+  .cam-bar .cam-live .dot { width: 0.7cqw; height: 0.7cqw; }
+  .cam-bar .cam-loc { overflow: hidden; text-overflow: ellipsis; }
+  .cam-bar .cam-time { font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .i-eyebrow {
     font-size: max(1.2cqw, 9px);
     font-weight: 700;
@@ -406,12 +487,12 @@
     text-align: center;
   }
 
-  .s-right { display: flex; flex-direction: column; gap: 1.6cqw; min-height: 0; }
+  .s-right { display: flex; flex-direction: column; gap: 1.1cqw; min-height: 0; }
   .alert {
-    background: rgba(224,101,83,0.14);
+    background: rgba(224,101,83,0.18);
     border: 0.16cqw solid rgba(224,101,83,0.65);
     border-radius: 0.7cqw;
-    padding: 1.4cqw 1.7cqw;
+    padding: 1cqw 1.4cqw;
   }
   .alert .a-tag {
     display: inline-block;
@@ -422,7 +503,7 @@
     background: #E06553;
     border-radius: 0.35cqw;
     padding: 0.35cqw 0.9cqw;
-    margin-bottom: 0.9cqw;
+    margin-bottom: 0.6cqw;
   }
   .alert .a-t { font-size: max(1.75cqw, 12px); font-weight: 700; line-height: 1.25; }
   .alert .a-d { font-size: max(1.25cqw, 9px); color: #D8DBEA; margin-top: 0.5cqw; }
@@ -432,10 +513,11 @@
     background: linear-gradient(135deg, rgba(197,165,90,0.22), rgba(197,165,90,0.08));
     border: 0.16cqw solid rgba(197,165,90,0.55);
     border-radius: 0.7cqw;
-    padding: 1.4cqw 1.7cqw;
+    padding: 1.1cqw 1.4cqw;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-height: 0;
   }
   .safety .sf-tag {
     font-size: max(1.05cqw, 8px);
@@ -446,12 +528,12 @@
     margin-bottom: 0.8cqw;
   }
   .safety .sf-t {
-    font-size: max(3.1cqw, 15px);
+    font-size: max(2.4cqw, 13px);
     font-weight: 900;
     line-height: 1.15;
     text-wrap: balance;
   }
-  .safety .sf-d { font-size: max(1.5cqw, 10px); color: #D8DBEA; margin-top: 0.8cqw; }
+  .safety .sf-d { font-size: max(1.3cqw, 9px); color: #D8DBEA; margin-top: 0.6cqw; }
   .safety .sf-foot {
     margin-top: auto;
     padding-top: 1cqw;
@@ -671,10 +753,11 @@
     segment and owns a dedicated safety-message slot on every play.
   </p>
 
-  <div class="toggle" role="group" aria-label="Choose a market to preview">
+  <div class="toggle" role="group" aria-label="Choose a package to preview">
     <button type="button" data-m="oxford" aria-pressed="true">Oxford <span class="n">75 screens</span></button>
-    <button type="button" data-m="starkville" aria-pressed="false">Starkville <span class="n">30 screens</span></button>
     <button type="button" data-m="tupelo" aria-pressed="false">Tupelo <span class="n">25 screens</span></button>
+    <button type="button" data-m="goldentriangle" aria-pressed="false">Golden Triangle <span class="n">33 screens</span></button>
+    <button type="button" data-m="jackson" aria-pressed="false">Jackson <span class="n">expansion preview</span></button>
   </div>
   <div class="toggle frames" role="group" aria-label="Choose a moment in the segment">
     <button type="button" data-f="intro" aria-pressed="false">Intro spot <span class="n">0:04</span></button>
@@ -688,6 +771,7 @@
   <div class="bezel">
     <div class="screen" role="group" aria-label="Digital billboard mockup">
       <div class="frame f-intro" hidden>
+        <div class="scene" id="scene-intro"></div>
         <div class="i-eyebrow">MCTV Network &middot; Traffic Update</div>
         <div class="i-title" id="intro-title">Oxford Road Conditions</div>
         <div class="i-rule"></div>
@@ -698,8 +782,9 @@
         <div class="i-live"><span class="dot"></span>Live from MDOTtraffic.com &middot; Updated every play</div>
       </div>
       <div class="frame f-board">
+      <div class="scene" id="scene-board"></div>
       <div class="s-top">
-        <div class="s-live"><span class="dot"></span>LIVE</div>
+        <div class="s-live" id="s-live"><span class="dot"></span>LIVE</div>
         <div class="s-title" id="scr-title">Oxford Road Conditions</div>
         <div class="s-sponsor">
           <div class="pby">Presented<br>by</div>
@@ -720,6 +805,14 @@
             <div class="a-t" id="alert-t"></div>
             <div class="a-d" id="alert-d"></div>
           </div>
+          <div class="cam">
+            <div class="cam-view"><div class="scene" id="scene-cam"></div></div>
+            <div class="cam-bar">
+              <span class="cam-live"><span class="dot"></span>LIVE CAM</span>
+              <span class="cam-loc" id="cam-loc"></span>
+              <span class="cam-time" id="cam-time"></span>
+            </div>
+          </div>
           <div class="safety">
             <div class="sf-tag">MDOT Safety Message</div>
             <div class="sf-t">Slow down. Move over.</div>
@@ -730,6 +823,7 @@
       </div>
       </div>
       <div class="frame f-outro" hidden>
+        <div class="scene" id="scene-outro"></div>
         <div class="o-tag">MDOT Safety Reminder</div>
         <div class="o-title">Drive safe, Mississippi.</div>
         <div class="o-sub">Live road conditions anytime &mdash; <b>MDOTtraffic.com</b> &middot; MDOT Traffic app</div>
@@ -749,9 +843,12 @@
   <p class="caption">
     Concept mockup with sample data, prepared by MCTV Elite Advertising for discussion with MDOT —
     not an MDOT publication. Live deployment pulls real-time conditions from MDOT's public traffic
-    feed. The MDOT logo appears to illustrate the proposed sponsorship; final logo usage is subject
-    to MDOT approval. Shown: the full 20-second segment — 4-second intro, 12-second conditions
-    board, 4-second outro — playing four times an hour, twelve hours a day, on every screen.
+    feed; the camera tile illustrates optional MDOT traffic-camera integration, and the scenic
+    backdrops stand in for full-motion video in the production intro and outro. The MDOT logo
+    appears to illustrate the proposed sponsorship; final usage is subject to MDOT approval.
+    Shown: the 20-second segment (4s intro &middot; 12s board &middot; 4s outro), four plays an
+    hour on every screen. The Jackson package is an expansion preview — no MCTV screens are live
+    there today.
   </p>
 
   <div class="stats">
@@ -828,6 +925,7 @@
   var MARKETS = {
     oxford: {
       title: "Oxford Road Conditions",
+      cam: "Hwy 6 at Jackson Ave",
       alertT: "MS 7 North near Abbeville",
       alertD: "Right lane closed for resurfacing. Expect short delays through Friday.",
       routes: [
@@ -838,20 +936,9 @@
         { sys: "MS", num: "7", r1: "Highway 7 South", r2: "Oxford → Water Valley", mins: 21, st: "normal" }
       ]
     },
-    starkville: {
-      title: "Starkville Road Conditions",
-      alertT: "MS 25 South near Sturgis",
-      alertD: "Mowing operations, shoulder work. Watch for slow-moving equipment.",
-      routes: [
-        { sys: "MS", num: "12", r1: "Highway 12", r2: "Downtown → MSU Campus", mins: 5, st: "normal" },
-        { sys: "US", num: "82", r1: "Highway 82 East", r2: "Starkville → Columbus", mins: 24, st: "normal" },
-        { sys: "US", num: "82", r1: "Highway 82 West", r2: "Starkville → Winona", mins: 52, st: "normal" },
-        { sys: "MS", num: "25", r1: "Highway 25 South", r2: "Starkville → Louisville", mins: 36, st: "slow" },
-        { sys: "MS", num: "182", r1: "Highway 182", r2: "MSU Campus → Downtown", mins: 4, st: "normal" }
-      ]
-    },
     tupelo: {
       title: "Tupelo Road Conditions",
+      cam: "I-22 at US 45",
       alertT: "US 45 North at West Main",
       alertD: "Signal maintenance in progress. Brief stops possible at the interchange.",
       routes: [
@@ -861,8 +948,137 @@
         { sys: "US-ALT", num: "45", r1: "Highway 45 Alt South", r2: "Tupelo → West Point", mins: 50, st: "normal" },
         { sys: "CITY", num: "ST", r1: "Gloster Street", r2: "North Gloster → Barnes Crossing", mins: 9, st: "normal" }
       ]
+    },
+    goldentriangle: {
+      title: "Golden Triangle Road Conditions",
+      cam: "US 82 at US 45 · Columbus",
+      alertT: "US 82 at the Tombigbee River bridge",
+      alertD: "Lane shift for joint repairs near Columbus. Watch for merging traffic.",
+      routes: [
+        { sys: "MS", num: "12", r1: "Highway 12", r2: "Downtown Starkville → MSU Campus", mins: 5, st: "normal" },
+        { sys: "US", num: "82", r1: "Highway 82 East", r2: "Starkville → Columbus", mins: 24, st: "normal" },
+        { sys: "MS", num: "50", r1: "Highway 50", r2: "West Point → Columbus", mins: 22, st: "normal" },
+        { sys: "US", num: "45", r1: "Highway 45 North", r2: "Columbus → Aberdeen", mins: 29, st: "normal" },
+        { sys: "MS", num: "25", r1: "Highway 25 South", r2: "Starkville → Louisville", mins: 36, st: "slow" }
+      ]
+    },
+    jackson: {
+      title: "Jackson Road Conditions",
+      cam: "I-55 at County Line Rd",
+      preview: true,
+      alertT: "I-20 East near Gallatin St",
+      alertD: "Bridge joint repairs. Two right lanes closed overnight.",
+      routes: [
+        { sys: "I", num: "55", r1: "Interstate 55 North", r2: "Downtown → Madison", mins: 18, st: "normal" },
+        { sys: "I", num: "55", r1: "Interstate 55 South", r2: "Downtown → Byram", mins: 14, st: "normal" },
+        { sys: "I", num: "20", r1: "Interstate 20 West", r2: "Jackson → Vicksburg", mins: 42, st: "normal" },
+        { sys: "I", num: "20", r1: "Interstate 20 East", r2: "Jackson → Brandon", mins: 16, st: "slow" },
+        { sys: "MS", num: "25", r1: "Lakeland Drive", r2: "Jackson → Flowood", mins: 12, st: "normal" }
+      ]
     }
   };
+
+  /* ---- scenery painter: serene animated roadway art per package ---- */
+  var SCENES = {
+    oxford:         { sky: ["#232B58", "#6E5385", "#E19A55"], sun: { x: 592, y: 200, r: 34, c: "#F5C86B" }, hills: ["#1C2346", "#161C3A"], road: "#12172F", motif: "trees" },
+    tupelo:         { sky: ["#16333D", "#2E5E5A", "#A8CBAF"], sun: { x: 588, y: 210, r: 27, c: "#F2E7B2" }, hills: ["#14313A", "#0F272E"], road: "#0F1E24", motif: "trace" },
+    goldentriangle: { sky: ["#33204E", "#7E3A5C", "#E08A54"], sun: { x: 592, y: 202, r: 36, c: "#F2A25C" }, hills: ["#2A1E45", "#20173A"], road: "#181230", motif: "cotton" },
+    jackson:        { sky: ["#0A0F26", "#141B3F", "#2A2458"], sun: { x: 560, y: 120, r: 13, c: "#DCE3FF" }, hills: ["#0B102A", "#080C20"], road: "#0A0E22", motif: "skyline" }
+  };
+
+  function motifSVG(s, h, uid) {
+    var out = "", i, x;
+    if (s.motif === "trees") {
+      var tx = [110, 205, 300, 555, 645, 725];
+      for (i = 0; i < tx.length; i++) {
+        x = tx[i];
+        var ty = h + 6 + (i % 3) * 8;
+        out += '<rect x="' + (x - 3) + '" y="' + (ty - 6) + '" width="6" height="26" fill="#0D1226"/>' +
+          '<circle cx="' + x + '" cy="' + (ty - 22) + '" r="20" fill="#131B33"/>' +
+          '<circle cx="' + (x - 12) + '" cy="' + (ty - 12) + '" r="14" fill="#11182E"/>' +
+          '<circle cx="' + (x + 12) + '" cy="' + (ty - 12) + '" r="14" fill="#11182E"/>';
+      }
+    } else if (s.motif === "trace") {
+      for (x = 8; x <= 340; x += 26) {
+        out += '<circle cx="' + x + '" cy="' + (h + 4 + (x * 7) % 19) + '" r="' + (16 + (x * 11) % 17) + '" fill="#0E2229"/>';
+      }
+      for (x = 462; x <= 792; x += 26) {
+        out += '<circle cx="' + x + '" cy="' + (h + 4 + (x * 7) % 19) + '" r="' + (16 + (x * 11) % 17) + '" fill="#0E2229"/>';
+      }
+      out += '<rect x="0" y="' + (h + 6) + '" width="800" height="34" fill="#DCEBDD" opacity="0.13" filter="url(#mist-' + uid + ')"/>';
+      out += '<rect x="0" y="' + (h - 8) + '" width="800" height="18" fill="#DCEBDD" opacity="0.08" filter="url(#mist-' + uid + ')"/>';
+    } else if (s.motif === "cotton") {
+      var rows = [[352, 40], [340, -80], [362, 130], [448, 760], [460, 880], [438, 670]];
+      for (i = 0; i < rows.length; i++) {
+        out += '<line x1="' + rows[i][0] + '" y1="' + (h + 4) + '" x2="' + rows[i][1] + '" y2="450" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>';
+      }
+      for (i = 0; i < 14; i++) {
+        var cx = (i * 61) % 280; var side = i % 2 ? cx + 30 : 770 - cx;
+        var cy = h + 60 + ((i * 37) % 120);
+        if (side > 330 && side < 470) continue;
+        out += '<circle cx="' + side + '" cy="' + cy + '" r="' + (1.2 + (i % 3) * 0.6) + '" fill="#F3EDE2" opacity="0.45"/>';
+      }
+      out += '<ellipse cx="700" cy="' + (h - 44) + '" rx="24" ry="18" fill="#171130"/>' +
+        '<rect x="697" y="' + (h - 28) + '" width="6" height="30" fill="#171130"/>' +
+        '<line x1="686" y1="' + (h - 32) + '" x2="678" y2="' + (h + 4) + '" stroke="#171130" stroke-width="3"/>' +
+        '<line x1="714" y1="' + (h - 32) + '" x2="722" y2="' + (h + 4) + '" stroke="#171130" stroke-width="3"/>';
+    } else if (s.motif === "skyline") {
+      var bw, bh, bx = 10;
+      for (i = 0; i < 13; i++) {
+        bw = 34 + (i * 13) % 22;
+        bh = 42 + (i * 29) % 84;
+        if (i === 6) bh = 132;
+        out += '<rect x="' + bx + '" y="' + (h - bh) + '" width="' + bw + '" height="' + bh + '" fill="#0A0E24"/>';
+        for (var wy = 0; wy < Math.floor(bh / 16); wy++) {
+          for (var wx = 0; wx < Math.floor(bw / 12); wx++) {
+            if ((i * 7 + wy * 5 + wx * 3) % 6 < 2) {
+              out += '<rect x="' + (bx + 4 + wx * 12) + '" y="' + (h - bh + 5 + wy * 16) + '" width="4" height="6" fill="#E8C87A" opacity="0.75"/>';
+            }
+          }
+        }
+        bx += bw + 8;
+      }
+      out += '<line x1="395" y1="' + (h + 12) + '" x2="180" y2="450" stroke="#F2E2C0" stroke-width="7" opacity="0.32" filter="url(#soft-' + uid + ')"/>' +
+        '<line x1="405" y1="' + (h + 12) + '" x2="620" y2="450" stroke="#E5484D" stroke-width="7" opacity="0.30" filter="url(#soft-' + uid + ')"/>';
+    }
+    return out;
+  }
+
+  function sceneSVG(key, uid) {
+    var s = SCENES[key];
+    var h = 250;
+    return '<svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs>' +
+        '<linearGradient id="sky-' + uid + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + s.sky[0] + '"/>' +
+          '<stop offset="0.55" stop-color="' + s.sky[1] + '"/>' +
+          '<stop offset="1" stop-color="' + s.sky[2] + '"/>' +
+        '</linearGradient>' +
+        '<filter id="soft-' + uid + '" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="13"/></filter>' +
+        '<filter id="mist-' + uid + '" x="-20%" y="-120%" width="140%" height="340%"><feGaussianBlur stdDeviation="7"/></filter>' +
+      '</defs>' +
+      '<rect x="0" y="0" width="800" height="' + h + '" fill="url(#sky-' + uid + ')"/>' +
+      '<circle class="drift" cx="' + s.sun.x + '" cy="' + s.sun.y + '" r="' + (s.sun.r * 2.6) + '" fill="' + s.sun.c + '" opacity="0.26" filter="url(#soft-' + uid + ')"/>' +
+      '<circle cx="' + s.sun.x + '" cy="' + s.sun.y + '" r="' + s.sun.r + '" fill="' + s.sun.c + '" opacity="0.92"/>' +
+      '<rect x="0" y="' + (h - 4) + '" width="800" height="' + (450 - h + 4) + '" fill="' + s.hills[1] + '"/>' +
+      '<ellipse cx="170" cy="' + (h + 56) + '" rx="430" ry="84" fill="' + s.hills[0] + '"/>' +
+      '<ellipse cx="660" cy="' + (h + 68) + '" rx="460" ry="96" fill="' + s.hills[1] + '"/>' +
+      motifSVG(s, h, uid) +
+      '<polygon points="368,' + h + ' 432,' + h + ' 660,450 140,450" fill="' + s.road + '"/>' +
+      '<polygon points="368,' + h + ' 373,' + h + ' 160,450 140,450" fill="rgba(255,255,255,0.10)"/>' +
+      '<polygon points="427,' + h + ' 432,' + h + ' 660,450 640,450" fill="rgba(255,255,255,0.10)"/>' +
+      '<line class="dashline" x1="400" y1="' + (h + 6) + '" x2="400" y2="450" stroke="#E8D28A" stroke-width="5" stroke-dasharray="18 28" opacity="0.75"/>' +
+      '<rect x="0" y="' + (h - 3) + '" width="800" height="3" fill="' + s.sky[2] + '" opacity="0.45" filter="url(#mist-' + uid + ')"/>' +
+    '</svg>';
+  }
+
+  function paintScenes(key) {
+    var mounts = [["scene-intro", "in", true], ["scene-board", "bd", true], ["scene-outro", "ou", true], ["scene-cam", "cm", false]];
+    for (var i = 0; i < mounts.length; i++) {
+      var el = document.getElementById(mounts[i][0]);
+      el.innerHTML = sceneSVG(key, mounts[i][1]) + (mounts[i][2] ? '<div class="scrim"></div>' : '');
+    }
+  }
   var COLORS = { normal: "#53B983", slow: "#E8A33C", incident: "#E06553" };
   var LABELS = { normal: "Normal", slow: "Slow", incident: "Incident" };
   var BADGE_CLASS = { MS: "ms", US: "us", "US-ALT": "us", I: "i", CITY: "city" };
@@ -895,6 +1111,14 @@
       btns[j].setAttribute("aria-pressed", btns[j].getAttribute("data-m") === key ? "true" : "false");
     }
     document.getElementById("intro-title").textContent = m.title;
+    document.getElementById("cam-loc").textContent = m.cam;
+    var live = document.getElementById("s-live");
+    if (m.preview) {
+      live.innerHTML = '<span class="dot" style="background:#E8A33C;animation:none"></span>PREVIEW';
+    } else {
+      live.innerHTML = '<span class="dot"></span>LIVE';
+    }
+    paintScenes(key);
     document.getElementById("toggle-status").textContent = "Previewing " + m.title;
   }
 
@@ -965,10 +1189,12 @@
     var h = d.getHours(), ampm = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
     var mn = d.getMinutes(); if (mn < 10) mn = "0" + mn;
+    var ss = d.getSeconds(); if (ss < 10) ss = "0" + ss;
     document.getElementById("clock").textContent = days[d.getDay()] + " · " + h + ":" + mn + " " + ampm;
+    document.getElementById("cam-time").textContent = h + ":" + mn + ":" + ss;
   }
   tick();
-  setInterval(tick, 15000);
+  setInterval(tick, 1000);
 
   render("oxford");
 </script>
