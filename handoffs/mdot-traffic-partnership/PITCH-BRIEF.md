@@ -26,6 +26,11 @@ message slot that comes with it."
   everyone in the room is about to get in a car.
 - **An owned safety-message slot, not just a logo.** Work zones, Click It or Ticket, move-over
   law, severe-weather alerts — MDOT controls the message, we handle the screens.
+- **Branded bookends on every play.** The segment opens on an MDOT intro slate and closes on
+  an MDOT outro ("Drive safe, Mississippi." + MDOTtraffic.com plug). The full 20-second
+  segment (4s intro + 12s conditions + 4s outro) plays 4×/hour, 12 hours a day, on 125+
+  screens — roughly **33+ hours of MDOT-branded airtime every day** across the network. Use
+  the "Play full segment" button on the mockup to run it in real time for Mikey.
 - **Zero infrastructure cost.** The screens are up, powered, and already showing this
   information. There is nothing to build, install, or maintain.
 - **It grows statewide on its own.** Active: Oxford (75), Starkville (30), Tupelo (25).
