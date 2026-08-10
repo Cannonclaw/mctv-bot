@@ -77,6 +77,11 @@ real venue, the mockup link, and a 15-minute ask. Do **not** attach a proposal.
 2. **Show the mockup.** Pull it up, flip between Oxford/Starkville/Tupelo. Point at the
    safety-message card: "That slot would be yours." Point at the roadmap: "And it follows us
    into every new city." Then stop talking and let him react.
+   **Morning-of move:** swap the sample travel times and work-zone alert for that day's real
+   conditions from MDOTtraffic.com (they're in the `MARKETS` object at the bottom of
+   `mockup.html`). It turns the mockup from an illustration into proof: "this is your feed,
+   on our screens, right now." MDOT staff know their active projects — a made-up work zone
+   is the one detail that could break the spell mid-demo.
 3. **The real ask.** Not "buy this." It's: **"Does this fit anything MDOT does? Who inside
    would care about it — public affairs, the safety office, a district engineer? Would you
    introduce us?"** Mikey's value is navigation, not a purchase order. If he leaves the
@@ -126,9 +131,16 @@ An MDOT logo on the network is a credibility asset worth more than the first che
 
 ## Ground rules
 
-- **Don't use MDOT's real logo in anything public until they approve it.** The mockup uses a
-  placeholder mark and says so in the caption.
+- **The mockup now uses MDOT's real logo — only inside the screen frame.** It's the official
+  mark (pulled from the public SVG on Wikimedia Commons, byte-identical to the source), shown
+  strictly to illustrate the proposed sponsorship, with a caption saying final usage is
+  subject to MDOT approval. Deliberately NOT used: a side-by-side MCTV × MDOT co-brand lockup
+  in the page header — that reads as an *existing* partnership and is the kind of thing that
+  gets a concept page forwarded to an agency's legal team instead of its comms team. Keep it
+  that way, and don't use the logo in any public-facing material until MDOT approves it.
 - The mockup is labeled "concept, sample data" — keep it that way until there's a signed
   agreement and real feed integration on the sponsor slot.
+- The sample safety message avoids specific legal claims ("fines double") in MDOT's voice —
+  if they engage, ask for their current campaign language rather than writing our own.
 - Everything in "Public-agency reality" above is our homework, not verified fact. Frame those
   as questions for Mikey, not claims.
