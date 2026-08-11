@@ -19,6 +19,7 @@
   --gold-lt:#E7CE8A; --gold-bg:#FFF6DE; --gold-dk:#7A5B00; --white:#FFFFFF;
   --ink:#2A2A2A; --muted:#5A5A5A; --light:#8A8A8A; --rule:#E4DFD3;
   --bar-track:#EFEAE0; --bar-a:#C7D3E8; --bar-b:#B0BFDC;
+  --hw1:#F7941D; --hw2:#E2231A; --hw-dk:#B33000; --hw-bg:#FFF1E6; --hw-lt:#F9B26B;
   --u:19.2px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -133,6 +134,14 @@ table.data tr.home td.em{color:var(--navy);}
 .bars .row.mctv .bl,.bars .row.mctv .bv{color:var(--navy); font-weight:700;}
 .bars .row.mctv .fill{background:var(--navy);}
 
+/* — HOTWORX co-brand accents — */
+.hwrule{width:calc(7*var(--u)); height:calc(.34*var(--u)); background:linear-gradient(90deg,var(--hw1),var(--hw2)); margin:calc(1.1*var(--u)) 0 calc(1.6*var(--u));}
+.hwnum{background:linear-gradient(135deg,var(--hw1),var(--hw2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.hwstrip{height:calc(.3*var(--u)); background:linear-gradient(90deg,var(--hw1),var(--hw2)); border-radius:calc(.5*var(--u)) calc(.5*var(--u)) 0 0; position:absolute; top:0; left:0; right:0;}
+.hwpromo{background:var(--hw-bg); border:1px solid var(--hw-lt); border-radius:calc(.5*var(--u)); color:var(--hw-dk); padding:calc(1.3*var(--u)) calc(1.6*var(--u));}
+.hwpromo b{letter-spacing:.13em; text-transform:uppercase;}
+.hwglow{mix-blend-mode:screen;}
+
 /* ── book mode (?print=1): imposes each 16:9 page on an 11 x 6.5in sheet with a
    ~0.32in white margin on every side — the trim line falls in clear white, so no
    bleed is needed. Same treatment as the Smith Murphy coil book. ── */
@@ -149,11 +158,13 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
   <div class="scrim-h"></div><div class="scrim-v"></div>
   <img src="assets/img/mctv_logo_white.png" alt="MCTV Elite Advertising"
        style="position:absolute; top:calc(2.6*var(--u)); left:calc(5.5*var(--u)); width:calc(13*var(--u));" />
+  <img src="assets/img/hotworx-logo.png" alt="HOTWORX" class="hwglow"
+       style="position:absolute; top:calc(1.2*var(--u)); right:calc(4.6*var(--u)); width:calc(9.5*var(--u));" />
   <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(9.5*var(--u)); right:calc(30*var(--u));">
     <div style="color:#fff; font-weight:600; letter-spacing:.24em; text-transform:uppercase; font-size:calc(1.02*var(--u));">Advertiser Partnership Proposal</div>
-    <div class="goldrule"></div>
+    <div class="hwrule"></div>
     <h1 class="display">Your studio,<br/>in every room in Oxford.</h1>
-    <div style="margin-top:calc(2.2*var(--u));" class="chip">HOTWORX Oxford</div>
+    <div style="margin-top:calc(2.2*var(--u)); border-color:var(--hw1); background:rgba(226,35,26,.18);" class="chip">HOTWORX Oxford</div>
   </div>
   <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(2.4*var(--u)); right:calc(5.5*var(--u)); display:flex; justify-content:space-between; color:rgba(255,255,255,.85); font-size:calc(.9*var(--u)); letter-spacing:.13em; text-transform:uppercase; font-weight:600;">
     <span>Prepared for Alyssa Farrell · HOTWORX Oxford</span>
@@ -169,7 +180,7 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
   </div>
   <div class="pad" style="top:calc(7.5*var(--u));">
     <div class="eyebrow">You saw one of our screens. Here's the rest of the story.</div>
-    <div class="goldrule"></div>
+    <div class="hwrule"></div>
     <h2 style="max-width:30ch;">Memberships are won<br/>by being seen again and again.</h2>
     <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.2*var(--u));">
       <div>
@@ -181,12 +192,12 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
         </ul>
       </div>
       <div class="card" style="padding:calc(2*var(--u));">
-        <div class="label" style="color:var(--gold-dk); margin-bottom:calc(1.2*var(--u));">Your studio, on paper</div>
+        <div class="label" style="color:var(--hw-dk); margin-bottom:calc(1.2*var(--u));">Your studio, on paper</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.4*var(--u));">
-          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">24/7</div><div class="label">Studio access, every day</div></div>
-          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">3D</div><div class="label">Heat + infrared + exercise</div></div>
-          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">15–30</div><div class="label">Minute sessions, virtually coached</div></div>
-          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">1</div><div class="label">Infrared studio of its kind in Oxford</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">24/7</div><div class="label">Studio access, every day</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">3D</div><div class="label">Heat + infrared + exercise</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">15–30</div><div class="label">Minute sessions, virtually coached</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">1</div><div class="label">Infrared studio of its kind in Oxford</div></div>
         </div>
         <p class="micro" style="margin-top:calc(1.4*var(--u));">A story this different sells itself — once people have heard it. Advertising is how a new-category studio becomes a household name.</p>
       </div>
@@ -299,21 +310,21 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
   </div>
   <div class="pad" style="top:calc(7.5*var(--u));">
     <div class="eyebrow">Three spots, three reasons to join</div>
-    <div class="goldrule"></div>
+    <div class="hwrule"></div>
     <h2>What we'd put on screen for you.</h2>
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.6*var(--u)); margin-top:calc(2.4*var(--u));">
-      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--navy);">
-        <div class="label" style="color:var(--gold-dk);">Spot 01 · The category</div>
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 01 · The category</div>
         <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Oxford's 24-hour infrared studio."</h3>
         <p class="body">Most of Oxford still doesn't know what an infrared workout is. This spot plants the flag: 3D training, 15–30 minute sessions, open around the clock — a workout that fits any schedule.</p>
       </div>
-      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--gold);">
-        <div class="label" style="color:var(--gold-dk);">Spot 02 · The seasons</div>
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 02 · The seasons</div>
         <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Sweat now. Glow later."</h3>
         <p class="body">Your corporate campaigns — Summer Body Series, New Year's resolutions, the Burn Off app — swapped quarterly so the studio stays top-of-mind at every fitness moment of the year.</p>
       </div>
-      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--navy);">
-        <div class="label" style="color:var(--gold-dk);">Spot 03 · The invitation</div>
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 03 · The invitation</div>
         <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Bring a friend, bring the heat."</h3>
         <p class="body">Trial sessions and buddy passes for the audience that's been thinking about it — a clear, low-commitment first step, repeated 1,500+ times a month on every screen you sponsor.</p>
       </div>
@@ -322,11 +333,11 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
       <div class="promo" style="display:flex; align-items:center;">
         <div><b>Every spot ends the same way —</b>&nbsp; your logo, your offer, and your booking line, held on screen for a full three seconds — long enough to read, remember, and act on. Shown right: the closing frame, simulated — final creative uses HOTWORX brand assets.</div>
       </div>
-      <div style="height:calc(12*var(--u)); background:linear-gradient(160deg,#131C26 0%,#0B121A 100%); border-radius:calc(.4*var(--u)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--rule);">
-        <div style="color:rgba(255,255,255,.75); font-weight:600; letter-spacing:.30em; text-transform:uppercase; font-size:calc(.6*var(--u));">HOTWORX Oxford</div>
-        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); color:#fff; margin:calc(.5*var(--u)) 0;">Earn the burn.</div>
-        <div style="width:calc(4*var(--u)); height:2px; background:var(--gold); margin-bottom:calc(.6*var(--u));"></div>
-        <div style="color:var(--gold-lt); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.62*var(--u));">Book your trial session · hotworx.net</div>
+      <div style="height:calc(12*var(--u)); background:linear-gradient(160deg,#1A1210 0%,#0D0908 100%); border-radius:calc(.4*var(--u)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--rule); position:relative; overflow:hidden;">
+        <img src="assets/img/hotworx-logo.png" alt="HOTWORX" class="hwglow" style="width:calc(4.6*var(--u)); margin-bottom:calc(.5*var(--u));" />
+        <div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); margin:calc(.2*var(--u)) 0 calc(.5*var(--u));">Earn the burn.</div>
+        <div style="width:calc(4*var(--u)); height:2px; background:linear-gradient(90deg,var(--hw1),var(--hw2)); margin-bottom:calc(.6*var(--u));"></div>
+        <div style="color:var(--hw-lt); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.62*var(--u));">Book your trial session · hotworx.net</div>
       </div>
     </div>
   </div>
@@ -341,7 +352,7 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
   </div>
   <div class="pad" style="top:calc(7.5*var(--u));">
     <div class="eyebrow">This part is already paid for</div>
-    <div class="goldrule"></div>
+    <div class="hwrule"></div>
     <h2>Your creative is already done.<br/>We'll put it to work.</h2>
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:calc(1.2*var(--u)); margin-top:calc(2*var(--u)); height:calc(19*var(--u));">
       <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-summer-body.jpg" alt="Summer Body Series campaign graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
@@ -350,7 +361,7 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
       <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-24hr-studio.jpg" alt="HOTWORX 24-hour infrared fitness studio graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.6*var(--u)); margin-top:calc(1.6*var(--u));">
-      <div class="promo"><b>Real HOTWORX campaign creative</b> — franchise graphics like these are ready to run on 75 Oxford screens tomorrow. On social they get scrolled past in a second; on MCTV they play full-screen, every 15 minutes, all over town.</div>
+      <div class="hwpromo"><b>Real HOTWORX campaign creative</b> — franchise graphics like these are ready to run on 75 Oxford screens tomorrow. On social they get scrolled past in a second; on MCTV they play full-screen, every 15 minutes, all over town.</div>
       <div class="card" style="padding:calc(1.3*var(--u)) calc(1.6*var(--u));">
         <p class="body"><b style="color:var(--ink);">Want something Oxford-specific?</b> Our team produces your :15 spot and refreshes it quarterly. Every ad we make belongs to you — run it on social, your website, in the studio.</p>
       </div>
@@ -456,10 +467,11 @@ body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
     <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
     <div class="sect">Next Steps</div>
   </div>
+  <img src="assets/img/hotworx-flame.png" alt="" class="hwglow" style="position:absolute; right:calc(-7*var(--u)); top:calc(2*var(--u)); width:calc(32*var(--u)); opacity:.22;" />
   <div class="pad" style="top:calc(8.5*var(--u));">
     <div class="eyebrow">From this proposal to on-screen in two weeks</div>
-    <div class="goldrule"></div>
-    <h2 style="color:#fff;">Let's put HOTWORX<br/>on 75 Oxford screens.</h2>
+    <div class="hwrule"></div>
+    <h2 style="color:#fff;">Let's put <span class="hwnum" style="background:linear-gradient(100deg,var(--hw-lt),var(--hw1)); -webkit-background-clip:text; background-clip:text;">HOTWORX</span><br/>on 75 Oxford screens.</h2>
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.4*var(--u)); margin-top:calc(2.4*var(--u));">
       <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
         <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">1</div>
