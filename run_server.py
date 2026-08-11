@@ -1,13 +1,13 @@
 # Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
 # Proprietary and confidential. Unauthorized copying, distribution,
 # or modification of this file is strictly prohibited.
-"""Container entrypoint: register the public /rates route, then run Streamlit.
+"""Container entrypoint: register the public routes, then run Streamlit.
 
 `streamlit run app.py` builds its HTTP routes before it ever executes
-app.py, so the extra public route has to be registered from a wrapper that
-imports server_routes first (see the module docstring there). Everything
-else about how the app starts is identical to the plain
-`streamlit run app.py` this replaced.
+app.py, so the extra public routes (/rates, /board, /board/events.json)
+have to be registered from a wrapper that imports server_routes first (see
+the module docstring there). Everything else about how the app starts is
+identical to the plain `streamlit run app.py` this replaced.
 """
 
 import logging

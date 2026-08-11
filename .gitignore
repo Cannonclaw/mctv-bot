@@ -5,8 +5,10 @@ output/
 !output/**/.gitkeep
 data/leads/*
 data/logos/*
+data/venue_events/*
 !data/leads/.gitkeep
 !data/logos/.gitkeep
+!data/venue_events/.gitkeep
 config/qb_tokens.json
 .claude/
 TRADE_SECRETS.md

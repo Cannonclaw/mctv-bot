@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Today's Schedule — MCTV Elite Advertising</title>
+<!--
+  Lobby feed board. Served at GET /board?venue=<slug> (see server_routes.py),
+  data from GET /board/events.json?venue=<slug>.
+
+  Built for a 1920x1080 screen running unattended: no interaction, no
+  scrollbars, everything sized in vw/vh so it fills whatever it lands on. Long
+  days paginate rather than overflow. All text goes in via textContent — an
+  event title typed by a venue never becomes markup.
+-->
+<style>
+  :root{
+    --navy:#0a1220;
+    --navy2:#141f33;
+    --panel:rgba(255,255,255,0.045);
+    --panel-line:rgba(255,255,255,0.10);
+    --gold:#d4a017;
+    --gold-light:#e8b923;
+    --ink:#ffffff;
+    --mut:#8fa2b8;
+    --mut-dim:#5e7189;
+    --live:#3fbf6a;
+    --pad:2.2vw;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  /* The sections below set display:flex, which outranks the UA rule for
+     [hidden] — without this, hiding one does nothing. */
+  [hidden]{display:none !important}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:radial-gradient(120% 90% at 12% 0%, var(--navy2) 0%, var(--navy) 62%);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    font-size:1.05vw;
+    -webkit-font-smoothing:antialiased;
+  }
+  .board{height:100%;display:flex;flex-direction:column;padding:var(--pad)}
+
+  /* ── Header ─────────────────────────────────────────────────────────── */
+  header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:2vw;
+    padding-bottom:1.1vh;border-bottom:0.28vh solid var(--gold);flex:none;
+  }
+  .venue{min-width:0}
+  .venue h1{
+    font-size:3.5vh;font-weight:800;letter-spacing:-0.02em;line-height:1.05;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .venue p{color:var(--gold);font-size:1.75vh;font-weight:700;
+           letter-spacing:0.18em;text-transform:uppercase;margin-top:0.7vh}
+  .clockbox{text-align:right;flex:none}
+  .clock{font-size:5.4vh;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .clock .ampm{font-size:2.4vh;font-weight:700;color:var(--mut);margin-left:0.5vw}
+  .datestr{color:var(--mut);font-size:1.9vh;font-weight:600;margin-top:0.6vh}
+
+  /* ── Now band ───────────────────────────────────────────────────────── */
+  .band{flex:none;margin-top:1.8vh}
+  .bandlabel{
+    display:flex;align-items:center;gap:0.7vw;
+    font-size:1.6vh;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:0.9vh;
+  }
+  .dot{
+    width:1.1vh;height:1.1vh;border-radius:50%;background:var(--live);flex:none;
+    box-shadow:0 0 0 0 rgba(63,191,106,0.55);animation:pulse 2.4s infinite;
+  }
+  @keyframes pulse{
+    70%{box-shadow:0 0 0 1.4vh rgba(63,191,106,0)}
+    100%{box-shadow:0 0 0 0 rgba(63,191,106,0)}
+  }
+  .nowgrid{display:grid;grid-template-columns:1fr;gap:1.1vh}
+  .nowgrid.two{grid-template-columns:1fr 1fr}
+  .nowcard{
+    background:linear-gradient(100deg,rgba(212,160,23,0.16) 0%,rgba(212,160,23,0.05) 60%);
+    border:0.18vh solid rgba(212,160,23,0.42);border-left:0.7vw solid var(--gold);
+    border-radius:0.9vh;padding:1.6vh 1.8vw;display:flex;align-items:center;
+    gap:1.8vw;min-width:0;
+  }
+  .nowcard .when{flex:none;text-align:left}
+  .nowcard .when .t{font-size:3.1vh;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+  .nowcard .when .r{color:var(--gold);font-size:1.8vh;font-weight:700;margin-top:0.4vh}
+  .nowcard .what{min-width:0;flex:1}
+  /* Two-up cards are narrow and conference titles are long — wrap to two lines
+     rather than cutting "Mississippi Tourism Associati…" mid-word. */
+  .nowcard .what h2{
+    font-size:3.4vh;font-weight:800;line-height:1.15;overflow:hidden;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  }
+  .nowcard .what .org{color:var(--mut);font-size:2vh;font-weight:600;margin-top:0.5vh;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nowcard .what .note{color:var(--gold-light);font-size:1.7vh;font-weight:600;margin-top:0.5vh}
+  .nowgrid.two .nowcard .what h2{font-size:2.7vh}
+  .nowgrid.two .nowcard .when .t{font-size:2.5vh}
+
+  /* ── Schedule list ──────────────────────────────────────────────────── */
+  .list{flex:1;min-height:0;margin-top:2vh;display:flex;flex-direction:column}
+  .listhead{
+    display:flex;align-items:baseline;justify-content:space-between;
+    font-size:1.6vh;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--mut);margin-bottom:1vh;flex:none;
+  }
+  .pageind{color:var(--mut-dim);letter-spacing:0.12em}
+  .rows{flex:1;min-height:0;display:flex;flex-direction:column;gap:0.9vh}
+  .row{
+    display:grid;grid-template-columns:15vw 1fr 16vw;align-items:center;gap:1.5vw;
+    background:var(--panel);border:0.14vh solid var(--panel-line);
+    border-radius:0.7vh;padding:1.35vh 1.5vw;min-width:0;
+    /* Rows share out whatever height is left, so a two-event day fills the
+       screen instead of stranding a third of it empty. The cap stops a single
+       row from becoming a banner. */
+    flex:1 1 0;min-height:8.5vh;max-height:28vh;
+  }
+  .row .time{font-size:2.3vh;font-weight:800;font-variant-numeric:tabular-nums;
+             white-space:nowrap}
+  .row .title{min-width:0}
+  .row .title .n{font-size:2.4vh;font-weight:700;line-height:1.2;
+                 overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .title .o{color:var(--mut);font-size:1.7vh;font-weight:600;margin-top:0.35vh;
+                 overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .room{
+    text-align:right;font-size:2vh;font-weight:800;color:var(--gold);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .row.private .title .n{color:var(--mut);font-style:italic;font-weight:600}
+  .row.ended{opacity:0.38}
+  .row.ended .room{color:var(--mut-dim)}
+  .row.cancelled .title .n{text-decoration:line-through;color:var(--mut)}
+  .row.soon{border-color:rgba(212,160,23,0.45);background:rgba(212,160,23,0.07)}
+  .pill{
+    display:inline-block;font-size:1.35vh;font-weight:800;letter-spacing:0.14em;
+    text-transform:uppercase;padding:0.25vh 0.6vw;border-radius:0.4vh;
+    margin-left:0.7vw;vertical-align:middle;
+  }
+  .pill.soon{background:var(--gold);color:var(--navy)}
+  .pill.cancelled{background:rgba(255,255,255,0.14);color:var(--mut)}
+
+  /* ── Empty state ────────────────────────────────────────────────────── */
+  .empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:1.2vh;
+  }
+  .empty .big{font-size:4.6vh;font-weight:800}
+  .empty .sub{color:var(--mut);font-size:2.3vh;font-weight:600;max-width:60vw}
+  .empty .next{
+    margin-top:1.5vh;border-top:0.14vh solid var(--panel-line);padding-top:1.8vh;
+    width:min(70vw,100%);
+  }
+  .empty .next .lbl{color:var(--gold);font-size:1.6vh;font-weight:800;
+                    letter-spacing:0.22em;text-transform:uppercase;margin-bottom:1vh}
+
+  /* ── Footer ─────────────────────────────────────────────────────────── */
+  footer{
+    flex:none;margin-top:1.6vh;padding-top:1.1vh;border-top:0.14vh solid var(--panel-line);
+    display:flex;align-items:center;justify-content:space-between;gap:2vw;
+    color:var(--mut-dim);font-size:1.5vh;font-weight:600;
+  }
+  .brand{display:flex;align-items:center;gap:0.7vw;letter-spacing:0.05em}
+  .brand b{color:var(--ink);font-weight:800;letter-spacing:0.02em}
+  .brand b span{color:var(--gold)}
+  .stale{color:#c9873a;font-weight:700;visibility:hidden}
+  .stale.show{visibility:visible}
+</style>
+</head>
+<body>
+<div class="board">
+  <header>
+    <div class="venue">
+      <h1 id="venueName">Loading…</h1>
+      <p id="venueSub">Today's Schedule</p>
+    </div>
+    <div class="clockbox">
+      <div class="clock"><span id="clockTime">—</span><span class="ampm" id="clockAmPm"></span></div>
+      <div class="datestr" id="dateStr"></div>
+    </div>
+  </header>
+
+  <section class="band" id="nowBand" hidden>
+    <div class="bandlabel"><span class="dot"></span><span id="nowLabel">Happening Now</span></div>
+    <div class="nowgrid" id="nowGrid"></div>
+  </section>
+
+  <section class="list" id="listSection">
+    <div class="listhead">
+      <span id="listLabel">Today's Schedule</span>
+      <span class="pageind" id="pageInd"></span>
+    </div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section class="empty" id="emptyState" hidden>
+    <div class="big" id="emptyBig">No events scheduled today</div>
+    <div class="sub" id="emptySub">The Conference Center is open for tours and bookings.</div>
+    <div class="next" id="emptyNext" hidden>
+      <div class="lbl" id="emptyNextLabel">Coming Up</div>
+      <div class="rows" id="emptyRows"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="brand"><b>MCTV <span>ELITE</span></b> · North Mississippi's Indoor Digital Billboard Network</div>
+    <div><span class="stale" id="stale">Schedule may be out of date</span></div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var params    = new URLSearchParams(location.search);
+  var VENUE     = params.get("venue") || "oxford-conference-center";
+  var DATA_URL  = "/board/events.json?venue=" + encodeURIComponent(VENUE);
+
+  var FETCH_MS   = 60 * 1000;        // pull the schedule once a minute
+  var RENDER_MS  = 10 * 1000;        // re-derive now/next between fetches
+  var PAGE_MS    = 14 * 1000;        // rotate long days
+  var RELOAD_MS  = 60 * 60 * 1000;   // pick up a new board.html once an hour
+  var STALE_MS   = 10 * 60 * 1000;   // say so if the data stops arriving
+  var ROWS_PER_PAGE = 6;
+  var MAX_NOW_CARDS = 2;
+  var LEAD_IN_MIN = 15;              // overwritten by the payload
+  var LINGER_MIN  = 20;
+
+  var payload = null;                // last good response
+  var lastOk  = 0;
+  var page    = 0;
+
+  function $(id){ return document.getElementById(id); }
+
+  function setText(el, value){ el.textContent = value == null ? "" : String(value); }
+
+  // Everything on screen reads in the VENUE's timezone, not the media player's.
+  // A stick PC that came out of the box on UTC must not put the 5:30 reception
+  // at 10:30 PM.
+  function venueTz(){
+    return (payload && payload.venue && payload.venue.timezone) || undefined;
+  }
+
+  function fmt(opts){
+    try {
+      return new Intl.DateTimeFormat(undefined,
+        Object.assign({ timeZone: venueTz() }, opts));
+    } catch(e){
+      return new Intl.DateTimeFormat(undefined, opts);  // unknown zone: local
+    }
+  }
+
+  function clockParts(d){
+    var parts = {};
+    fmt({ hour:"numeric", minute:"2-digit", hour12:true })
+      .formatToParts(d).forEach(function(p){ parts[p.type] = p.value; });
+    return {
+      t: (parts.hour || "") + ":" + (parts.minute || ""),
+      ap: (parts.dayPeriod || "").toUpperCase()
+    };
+  }
+
+  // Event times come pre-formatted by the server, which already knows the
+  // venue's timezone — no need to re-derive them here.
+  function rangeLabel(ev){
+    return ev.time_label || "";
+  }
+
+  // Same rule as venue_events_service.event_state, re-run locally so the
+  // highlight moves on time instead of waiting for the next fetch.
+  function stateFor(ev, now){
+    if(ev.status === "cancelled") return "cancelled";
+    if(!ev.starts_at) return "upcoming";
+    var start = new Date(ev.starts_at).getTime();
+    if(ev.all_day) return "on";
+    var end    = ev.ends_at ? new Date(ev.ends_at).getTime() : start;
+    var finish = end + LINGER_MIN * 60000;
+    var close  = start - LEAD_IN_MIN * 60000;
+    if(now >= finish) return "ended";
+    if(now >= start)  return "on";
+    if(now >= close)  return "soon";
+    return "upcoming";
+  }
+
+  function tickClock(){
+    var now = new Date(), p = clockParts(now);
+    setText($("clockTime"), p.t);
+    setText($("clockAmPm"), p.ap);
+    setText($("dateStr"), fmt({ weekday:"long", month:"long", day:"numeric" }).format(now));
+    $("stale").classList.toggle("show", lastOk > 0 && (Date.now() - lastOk) > STALE_MS);
+  }
+
+  function nowCard(ev){
+    var card = document.createElement("div");
+    card.className = "nowcard";
+
+    var when = document.createElement("div");
+    when.className = "when";
+    var t = document.createElement("div");
+    t.className = "t";
+    setText(t, rangeLabel(ev));
+    when.appendChild(t);
+    if(ev.room){
+      var r = document.createElement("div");
+      r.className = "r";
+      setText(r, ev.room);
+      when.appendChild(r);
+    }
+
+    var what = document.createElement("div");
+    what.className = "what";
+    var h = document.createElement("h2");
+    setText(h, ev.title);
+    what.appendChild(h);
+    if(ev.host_org){
+      var o = document.createElement("div");
+      o.className = "org";
+      setText(o, ev.host_org);
+      what.appendChild(o);
+    }
+    if(ev.note){
+      var n = document.createElement("div");
+      n.className = "note";
+      setText(n, ev.note);
+      what.appendChild(n);
+    }
+
+    card.appendChild(when);
+    card.appendChild(what);
+    return card;
+  }
+
+  function scheduleRow(ev, state){
+    var row = document.createElement("div");
+    row.className = "row " + state + (ev.is_private ? " private" : "");
+
+    var time = document.createElement("div");
+    time.className = "time";
+    setText(time, rangeLabel(ev));
+
+    var title = document.createElement("div");
+    title.className = "title";
+    var n = document.createElement("div");
+    n.className = "n";
+    setText(n, ev.title);
+    if(state === "soon" || state === "cancelled"){
+      var pill = document.createElement("span");
+      pill.className = "pill " + state;
+      setText(pill, state === "soon" ? "Starting Soon" : "Cancelled");
+      n.appendChild(pill);
+    }
+    title.appendChild(n);
+    if(ev.host_org){
+      var o = document.createElement("div");
+      o.className = "o";
+      setText(o, ev.host_org);
+      title.appendChild(o);
+    }
+
+    var room = document.createElement("div");
+    room.className = "room";
+    setText(room, ev.room || "");
+
+    row.appendChild(time);
+    row.appendChild(title);
+    row.appendChild(room);
+    return row;
+  }
+
+  function fill(container, events, now){
+    container.replaceChildren();
+    events.forEach(function(ev){
+      container.appendChild(scheduleRow(ev, stateFor(ev, now)));
+    });
+  }
+
+  function render(){
+    tickClock();
+    if(!payload) return;
+
+    var now = Date.now();
+    setText($("venueName"), payload.venue.name);
+    setText($("venueSub"), payload.venue.subtitle);
+    document.title = payload.venue.name + " — Today's Schedule";
+
+    var events = payload.events || [];
+    var decorated = events.map(function(ev){
+      return { ev: ev, state: stateFor(ev, now) };
+    });
+
+    var onNow = decorated.filter(function(d){ return d.state === "on"; });
+    var ahead = decorated.filter(function(d){
+      return d.state === "soon" || d.state === "upcoming";
+    });
+
+    // Nothing running: promote the next event or two into the band instead of
+    // leaving a dead strip across the top of the screen.
+    var band     = $("nowBand");
+    var grid     = $("nowGrid");
+    var featured = onNow.length ? onNow : ahead.slice(0, MAX_NOW_CARDS);
+    var isNow    = onNow.length > 0;
+
+    if(featured.length){
+      setText($("nowLabel"), isNow ? "Happening Now" : "Up Next");
+      grid.replaceChildren();
+      featured.slice(0, MAX_NOW_CARDS).forEach(function(d){
+        grid.appendChild(nowCard(d.ev));
+      });
+      grid.className = "nowgrid" + (featured.length > 1 ? " two" : "");
+      band.hidden = false;
+    } else {
+      band.hidden = true;
+    }
+
+    // The list carries the rest of the day, minus whatever is in the band.
+    var featuredIds = featured.slice(0, MAX_NOW_CARDS).map(function(d){ return d.ev.id; });
+    var rest = decorated.filter(function(d){
+      return featuredIds.indexOf(d.ev.id) === -1 && d.state !== "ended";
+    }).map(function(d){ return d.ev; });
+
+    var hasAnything = featured.length > 0 || rest.length > 0;
+
+    if(hasAnything){
+      $("listSection").hidden = rest.length === 0;
+      $("emptyState").hidden = true;
+
+      if(rest.length){
+        var pages = Math.max(1, Math.ceil(rest.length / ROWS_PER_PAGE));
+        if(page >= pages) page = 0;
+        var slice = rest.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
+        setText($("listLabel"), isNow ? "Also Today" : "Today's Schedule");
+        setText($("pageInd"), pages > 1 ? (page + 1) + " / " + pages : "");
+        fill($("rows"), slice, now);
+      }
+    } else {
+      $("listSection").hidden = true;
+      $("emptyState").hidden = false;
+
+      var look = payload.lookahead || {};
+      var lookEvents = look.events || [];
+      setText($("emptyBig"), (events.length ? "That's a wrap for today" : "No events scheduled today"));
+      setText($("emptySub"), "Ask at the front desk about booking " + payload.venue.name + ".");
+      $("emptyNext").hidden = lookEvents.length === 0;
+      if(lookEvents.length){
+        setText($("emptyNextLabel"), look.day_label ? "Coming Up · " + look.day_label : "Coming Up");
+        fill($("emptyRows"), lookEvents.slice(0, ROWS_PER_PAGE), now);
+      }
+    }
+  }
+
+  function load(){
+    fetch(DATA_URL, { cache: "no-store" })
+      .then(function(res){
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        if(!data || !data.venue) throw new Error("unexpected payload");
+        payload = data;
+        lastOk = Date.now();
+        if(typeof data.lead_in_minutes === "number") LEAD_IN_MIN = data.lead_in_minutes;
+        if(typeof data.linger_minutes === "number")  LINGER_MIN  = data.linger_minutes;
+        page = 0;
+        render();
+      })
+      .catch(function(err){
+        // Keep the last good schedule on screen — a stale board beats a blank
+        // one — and let the stale marker do the talking.
+        console.warn("board: schedule fetch failed", err);
+        if(!payload){
+          setText($("venueName"), "Schedule unavailable");
+          setText($("venueSub"), "Reconnecting");
+        }
+        render();
+      });
+  }
+
+  function nextPage(){
+    page += 1;
+    render();
+  }
+
+  tickClock();
+  load();
+  setInterval(tickClock, 1000);
+  setInterval(load, FETCH_MS);
+  setInterval(render, RENDER_MS);
+  setInterval(nextPage, PAGE_MS);
+  setInterval(function(){ location.reload(); }, RELOAD_MS);
+})();
+</script>
+</body>
+</html>
