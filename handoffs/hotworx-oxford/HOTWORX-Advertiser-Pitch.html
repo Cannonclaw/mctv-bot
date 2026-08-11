@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>HOTWORX Oxford × MCTV — Advertiser Proposal</title>
+<style>
+/* — local variable TTFs (in place of assets/fonts/ttf.css) — */
+@font-face{font-family:'Playfair Display'; src:url('assets/fonts/PlayfairDisplay.ttf') format('truetype'); font-weight:400 900; font-style:normal;}
+@font-face{font-family:'Playfair Display'; src:url('assets/fonts/PlayfairDisplay-Italic.ttf') format('truetype'); font-weight:400 900; font-style:italic;}
+@font-face{font-family:'Work Sans'; src:url('assets/fonts/WorkSans.ttf') format('truetype'); font-weight:100 900; font-style:normal;}
+@font-face{font-family:'Work Sans'; src:url('assets/fonts/WorkSans-Italic.ttf') format('truetype'); font-weight:100 900; font-style:italic;}
+
+/* ============================================================
+   MCTV Elite Advertising — deck chassis per Design.md v1.0
+   Canvas 1920×1080 · 1u = 19.2px · cream/navy/gold
+   ============================================================ */
+:root{
+  --cream:#FAF6EF; --navy:#00377E; --navy-dk:#002A5E; --gold:#C9A227;
+  --gold-lt:#E7CE8A; --gold-bg:#FFF6DE; --gold-dk:#7A5B00; --white:#FFFFFF;
+  --ink:#2A2A2A; --muted:#5A5A5A; --light:#8A8A8A; --rule:#E4DFD3;
+  --bar-track:#EFEAE0; --bar-a:#C7D3E8; --bar-b:#B0BFDC;
+  --hw1:#F7941D; --hw2:#E2231A; --hw-dk:#B33000; --hw-bg:#FFF1E6; --hw-lt:#F9B26B;
+  --u:19.2px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:#DDD8CC;}
+body{font-family:'Work Sans','Segoe UI',system-ui,sans-serif; color:var(--ink);}
+
+.page{
+  width:1920px; height:1080px; position:relative; overflow:hidden;
+  background:var(--cream); margin:24px auto;
+  box-shadow:0 6px 30px rgba(0,0,0,.18);
+}
+@media print{
+  html,body{background:none;}
+  .page{margin:0; box-shadow:none; page-break-after:always;}
+  .page:last-child{page-break-after:auto;}
+}
+@page{size:1920px 1080px; margin:0;}
+
+/* — page furniture — */
+.pad{position:absolute; inset:calc(5.5 * var(--u));}
+.hdr{
+  position:absolute; top:calc(2.4 * var(--u)); left:calc(5.5 * var(--u)); right:calc(5.5 * var(--u));
+  display:flex; justify-content:space-between; align-items:baseline;
+}
+.wordmark{line-height:1;}
+.wordmark .wm1{font-family:'Playfair Display',Georgia,serif; font-weight:600; letter-spacing:.22em; font-size:calc(1.35*var(--u)); color:var(--navy);}
+.wordmark .wm2{font-family:'Work Sans',sans-serif; font-weight:600; letter-spacing:.30em; font-size:calc(.42*var(--u)); color:var(--gold-dk); margin-top:calc(.28*var(--u));}
+.dark .wordmark .wm1{color:#fff;}
+.dark .wordmark .wm2{color:var(--gold-lt);}
+.hdr .sect{font-weight:600; letter-spacing:.19em; text-transform:uppercase; font-size:calc(.86*var(--u)); color:var(--navy);}
+.dark .hdr .sect{color:var(--gold-lt);}
+.ftr{
+  position:absolute; bottom:calc(2.2 * var(--u)); left:calc(5.5 * var(--u)); right:calc(5.5 * var(--u));
+  display:flex; justify-content:space-between; align-items:baseline;
+}
+.ftr .fl{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--navy);}
+.ftr .folio{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.1*var(--u)); color:var(--navy);}
+.dark .ftr .fl,.dark .ftr .folio{color:var(--gold-lt);}
+
+/* — type — */
+.eyebrow{font-weight:600; letter-spacing:.19em; text-transform:uppercase; font-size:calc(1.02*var(--u)); color:var(--navy);}
+.dark .eyebrow{color:var(--gold-lt);}
+.goldrule{width:calc(7*var(--u)); height:calc(.34*var(--u)); background:var(--gold); margin:calc(1.1*var(--u)) 0 calc(1.6*var(--u));}
+h1.display{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(6.4*var(--u)); line-height:.98; letter-spacing:-0.012em; color:#fff;}
+h2{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(3.9*var(--u)); line-height:1.03; letter-spacing:-0.008em; color:var(--navy);}
+h3{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.1*var(--u)); color:var(--navy);}
+.lead{font-weight:500; font-size:calc(1.42*var(--u)); line-height:1.45; color:var(--ink);}
+p.body,li.body{font-weight:400; font-size:calc(1.16*var(--u)); line-height:1.55; color:var(--muted);}
+.small{font-size:calc(.98*var(--u)); color:var(--muted);}
+.micro{font-size:calc(.82*var(--u)); color:var(--light);}
+.label{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--muted);}
+
+/* — bullets — */
+ul.dash{list-style:none;}
+ul.dash li{position:relative; padding-left:calc(1.9*var(--u)); margin-bottom:calc(.85*var(--u));}
+ul.dash li::before{content:"—"; position:absolute; left:0; color:var(--gold); font-weight:700;}
+
+/* — cards & stats — */
+.statrow{display:grid; grid-template-columns:repeat(5,1fr); gap:calc(1.2*var(--u));}
+.stat{background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); text-align:center; padding:calc(1.7*var(--u)) calc(.8*var(--u)) calc(1.5*var(--u));}
+.stat .n{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.9*var(--u)); line-height:1; color:var(--navy);}
+.stat .l{margin-top:calc(.75*var(--u)); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--muted);}
+
+.card{background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u));}
+
+/* — pricing — */
+.pricegrid{display:grid; grid-template-columns:repeat(4,1fr); gap:calc(1.2*var(--u));}
+.price{position:relative; background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); padding:calc(1.6*var(--u)) calc(1.4*var(--u)); display:flex; flex-direction:column;}
+.price .tier{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.82*var(--u)); color:var(--muted);}
+.price .amt{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(3.15*var(--u)); color:var(--navy); margin-top:calc(.6*var(--u));}
+.price .amt span{font-family:'Work Sans',sans-serif; font-weight:500; font-size:calc(1.05*var(--u)); color:var(--muted);}
+.price .det{border-top:1px solid var(--rule); margin-top:calc(1*var(--u)); padding-top:calc(.9*var(--u)); font-size:calc(.95*var(--u)); color:var(--muted); line-height:1.55;}
+.price .note{margin-top:auto; padding-top:calc(.9*var(--u)); font-style:italic; font-size:calc(.82*var(--u)); color:var(--light);}
+.price.feature{background:var(--navy); border-color:var(--navy);}
+.price.feature .tier{color:var(--gold-lt);}
+.price.feature .amt{color:#fff;}
+.price.feature .amt span{color:rgba(255,255,255,.75);}
+.price.feature .det{color:rgba(255,255,255,.82); border-color:rgba(255,255,255,.25);}
+.price.feature .note{color:var(--gold-lt);}
+.flag{position:absolute; top:calc(-.85*var(--u)); left:calc(1.2*var(--u)); background:var(--gold); color:#3A2C00; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.7*var(--u)); padding:calc(.35*var(--u)) calc(.8*var(--u)); border-radius:calc(.25*var(--u));}
+
+/* — promo — */
+.promo{background:var(--gold-bg); border:1px solid var(--gold-lt); border-radius:calc(.5*var(--u)); color:var(--gold-dk); padding:calc(1.3*var(--u)) calc(1.6*var(--u));}
+.promo b{letter-spacing:.13em; text-transform:uppercase;}
+
+/* — dark pages — */
+.dark{background:linear-gradient(180deg,var(--navy) 0%,var(--navy-dk) 100%);}
+.dark h2,.dark h3{color:#fff;}
+.dark p.body,.dark .lead{color:rgba(255,255,255,.82);}
+
+/* — cover — */
+.cover-photo{position:absolute; inset:0; background-size:cover; background-position:center;}
+.scrim-h{position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,20,50,.78) 0%,rgba(0,20,50,.55) 40%,rgba(0,20,50,0) 78%);}
+.scrim-v{position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,20,50,.30) 0%,rgba(0,20,50,.12) 45%,rgba(0,20,50,.82) 100%);}
+
+.chip{display:inline-block; border:1.5px solid rgba(255,255,255,.85); color:#fff; letter-spacing:.19em; text-transform:uppercase; font-weight:600; font-size:calc(.9*var(--u)); padding:calc(.55*var(--u)) calc(1.3*var(--u)); border-radius:calc(.25*var(--u));}
+
+/* — tables — */
+table.data{width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); overflow:hidden;}
+table.data th{background:var(--navy); color:#fff; font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:calc(.82*var(--u)); padding:calc(1*var(--u)) calc(1.2*var(--u)); text-align:left;}
+table.data td{padding:calc(.95*var(--u)) calc(1.2*var(--u)); border-top:1px solid var(--rule); font-size:calc(1.02*var(--u)); color:var(--muted);}
+table.data td.em{font-family:'Playfair Display',serif; font-weight:700; color:var(--navy); font-size:calc(1.25*var(--u));}
+table.data tr.home td{background:var(--gold-bg); color:var(--gold-dk);}
+table.data tr.home td.em{color:var(--navy);}
+
+/* — comparison bars — */
+.bars .row{display:grid; grid-template-columns:calc(13*var(--u)) 1fr calc(6*var(--u)); align-items:center; gap:calc(1*var(--u)); margin-bottom:calc(.95*var(--u));}
+.bars .bl{font-size:calc(.98*var(--u)); color:var(--muted); text-align:right;}
+.bars .track{height:calc(1.15*var(--u)); background:var(--bar-track); border-radius:999px; overflow:hidden;}
+.bars .fill{height:100%; background:var(--bar-a); border-radius:999px;}
+.bars .bv{font-size:calc(.98*var(--u)); color:var(--muted);}
+.bars .row.mctv .bl,.bars .row.mctv .bv{color:var(--navy); font-weight:700;}
+.bars .row.mctv .fill{background:var(--navy);}
+
+/* — HOTWORX co-brand accents — */
+.hwrule{width:calc(7*var(--u)); height:calc(.34*var(--u)); background:linear-gradient(90deg,var(--hw1),var(--hw2)); margin:calc(1.1*var(--u)) 0 calc(1.6*var(--u));}
+.hwnum{background:linear-gradient(135deg,var(--hw1),var(--hw2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.hwstrip{height:calc(.3*var(--u)); background:linear-gradient(90deg,var(--hw1),var(--hw2)); border-radius:calc(.5*var(--u)) calc(.5*var(--u)) 0 0; position:absolute; top:0; left:0; right:0;}
+.hwpromo{background:var(--hw-bg); border:1px solid var(--hw-lt); border-radius:calc(.5*var(--u)); color:var(--hw-dk); padding:calc(1.3*var(--u)) calc(1.6*var(--u));}
+.hwpromo b{letter-spacing:.13em; text-transform:uppercase;}
+.hwglow{mix-blend-mode:screen;}
+
+/* ── book mode (?print=1): imposes each 16:9 page on an 11 x 6.5in sheet with a
+   ~0.32in white margin on every side — the trim line falls in clear white, so no
+   bleed is needed. Same treatment as the Smith Murphy coil book. ── */
+body.printbook{background:#fff;}
+body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
+</style>
+<script>if (location.search.indexOf('print') !== -1) document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('printbook'); var s = document.createElement('style'); s.textContent = '@page{size:11in 6.5in; margin:0.34in 0.325in;}'; document.head.appendChild(s); });</script>
+</head>
+<body>
+
+<!-- ═══════════════ 1 · COVER ═══════════════ -->
+<section class="page dark">
+  <div class="cover-photo" style="background-image:url('assets/img/hotworx-cycle-sauna.jpg');"></div>
+  <div class="scrim-h"></div><div class="scrim-v"></div>
+  <img src="assets/img/mctv_logo_white.png" alt="MCTV Elite Advertising"
+       style="position:absolute; top:calc(2.6*var(--u)); left:calc(5.5*var(--u)); width:calc(13*var(--u));" />
+  <img src="assets/img/hotworx-logo.png" alt="HOTWORX" class="hwglow"
+       style="position:absolute; top:calc(1.2*var(--u)); right:calc(4.6*var(--u)); width:calc(9.5*var(--u));" />
+  <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(9.5*var(--u)); right:calc(30*var(--u));">
+    <div style="color:#fff; font-weight:600; letter-spacing:.24em; text-transform:uppercase; font-size:calc(1.02*var(--u));">Advertiser Partnership Proposal</div>
+    <div class="hwrule"></div>
+    <h1 class="display">Your studio,<br/>in every room in Oxford.</h1>
+    <div style="margin-top:calc(2.2*var(--u)); border-color:var(--hw1); background:rgba(226,35,26,.18);" class="chip">HOTWORX Oxford</div>
+  </div>
+  <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(2.4*var(--u)); right:calc(5.5*var(--u)); display:flex; justify-content:space-between; color:rgba(255,255,255,.85); font-size:calc(.9*var(--u)); letter-spacing:.13em; text-transform:uppercase; font-weight:600;">
+    <span>Prepared for Alyssa Farrell · HOTWORX Oxford</span>
+    <span>August 11, 2026</span>
+  </div>
+</section>
+
+<!-- ═══════════════ 2 · THE OPPORTUNITY ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Opportunity</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">You saw one of our screens. Here's the rest of the story.</div>
+    <div class="hwrule"></div>
+    <h2 style="max-width:30ch;">Memberships are won<br/>by being seen again and again.</h2>
+    <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.2*var(--u));">
+      <div>
+        <p class="lead" style="margin-bottom:calc(1.4*var(--u));">Joining a gym starts as a thought that needs repeating. HOTWORX competes for every Oxford resident who's been meaning to get back in shape — and that decision gets made in the weeks between the first thought and the first visit.</p>
+        <ul class="dash">
+          <li class="body">Your future members are already sitting in front of MCTV screens — in the restaurants, salons, clinics, and waiting rooms of Oxford, with an average of 55+ minutes on their hands per visit.</li>
+          <li class="body">Fitness is a repetition sale. When Oxford keeps seeing HOTWORX everywhere it eats, shops, and waits, you're the studio they call the day they finally decide.</li>
+          <li class="body">You found us because you noticed a screen in a local business. That's the product working — and your members will notice you the exact same way.</li>
+        </ul>
+      </div>
+      <div class="card" style="padding:calc(2*var(--u));">
+        <div class="label" style="color:var(--hw-dk); margin-bottom:calc(1.2*var(--u));">Your studio, on paper</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.4*var(--u));">
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">24/7</div><div class="label">Studio access, every day</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">3D</div><div class="label">Heat + infrared + exercise</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">15–30</div><div class="label">Minute sessions, virtually coached</div></div>
+          <div><div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u));">1</div><div class="label">Infrared studio of its kind in Oxford</div></div>
+        </div>
+        <p class="micro" style="margin-top:calc(1.4*var(--u));">A story this different sells itself — once people have heard it. Advertising is how a new-category studio becomes a household name.</p>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">02</span></div>
+</section>
+
+<!-- ═══════════════ 3 · THE MCTV NETWORK ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Home Network</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">North Mississippi's indoor digital billboard network</div>
+    <div class="goldrule"></div>
+    <h2>Screens where your members<br/>already sit and wait.</h2>
+    <div class="statrow" style="margin-top:calc(2.4*var(--u));">
+      <div class="stat"><div class="n">125+</div><div class="l">Digital Screens</div></div>
+      <div class="stat"><div class="n">100+</div><div class="l">Premier Venues</div></div>
+      <div class="stat"><div class="n">1.9M+</div><div class="l">Impressions / mo</div></div>
+      <div class="stat"><div class="n">55+</div><div class="l">Min Avg Dwell</div></div>
+      <div class="stat"><div class="n">75</div><div class="l">Screens in Oxford</div></div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.4*var(--u)); align-items:center;">
+      <div>
+        <p class="lead" style="margin-bottom:calc(1.2*var(--u));">Restaurants, clinics, salons, retail, the airport — full-motion screens inside the businesses of <b>Oxford, Tupelo, and the Golden Triangle</b>. Oxford is the heart of it: 75 screens from the Square to Highway 6.</p>
+        <p class="body">Your spot can't be skipped, muted, or scrolled past. It plays in rooms where people wait with time on their hands — 1,500+ plays per screen every month.</p>
+      </div>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-shirt-shop.jpg" alt="MCTV screen running in a host venue on the Oxford Square" style="width:100%; height:calc(19*var(--u)); object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption class="micro" style="margin-top:calc(.6*var(--u));">An MCTV screen in the wild — host venue, Oxford Square.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">03</span></div>
+</section>
+
+<!-- ═══════════════ 4 · THE PRODUCT ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">How It Works</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Full-motion, silent, unskippable</div>
+    <div class="goldrule"></div>
+    <h2>Your studio, on a loop,<br/>all day, every day.</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.2*var(--u)); align-items:start;">
+      <div>
+        <ul class="dash">
+          <li class="body"><b style="color:var(--ink);">:15 full-motion spot, produced by MCTV.</b> We design the creative — or run the polished campaign graphics HOTWORX corporate already hands you. You approve before anything airs.</li>
+          <li class="body"><b style="color:var(--ink);">Designed to be read, not heard.</b> Screens run silent, so the message is built into bold on-screen text — it works in a waiting room the way a billboard works on a highway.</li>
+          <li class="body"><b style="color:var(--ink);">Every 15 minutes, on every screen you buy.</b> A guaranteed rotation, 1,500+ plays per screen per month — not an algorithm deciding who sees you.</li>
+          <li class="body"><b style="color:var(--ink);">Category exclusivity available.</b> Lock competing fitness studios out of the screens you sponsor.</li>
+        </ul>
+      </div>
+      <figure>
+        <img src="assets/img/wild-porch.jpg" alt="MCTV screen on a restaurant patio" style="width:100%; height:calc(21*var(--u)); object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption class="micro" style="margin-top:calc(.6*var(--u));">Captive-audience placement — an average of 55+ minutes of dwell time per visit.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">04</span></div>
+</section>
+
+<!-- ═══════════════ 5 · IN THE WILD ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Network</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Real screens, real venues, photographed in market</div>
+    <div class="goldrule"></div>
+    <h2>The network, in the wild.</h2>
+    <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr; grid-template-rows:calc(14.5*var(--u)) calc(14.5*var(--u)); gap:calc(1.1*var(--u)); margin-top:calc(1.8*var(--u));">
+      <figure style="grid-row:1 / 3; position:relative;">
+        <img src="assets/img/wild-four-corners.jpg" alt="MCTV screen at 4 Corners, Oxford" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Client ad · convenience</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-opc.png" alt="MCTV screen at the Oxford Park Commission" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Oxford Park Commission</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-frontdesk.jpg" alt="MCTV screen above a front desk" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Service counter</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-counter.jpg" alt="MCTV screen at a concessions counter" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Concessions counter</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-shirt-shop.jpg" alt="MCTV screen in an Oxford retail shop" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Retail &amp; dining</figcaption>
+      </figure>
+    </div>
+    <p class="small" style="margin-top:calc(1.2*var(--u));">Wall-mounted 1080p displays inside the businesses people already visit — fuel stops, parks, bars, waiting rooms, salons, and shops. Your spot rides every one of them.</p>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">05</span></div>
+</section>
+
+<!-- ═══════════════ 6 · CAMPAIGN CONCEPTS ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Campaign</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Three spots, three reasons to join</div>
+    <div class="hwrule"></div>
+    <h2>What we'd put on screen for you.</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.6*var(--u)); margin-top:calc(2.4*var(--u));">
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 01 · The category</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Oxford's 24-hour infrared studio."</h3>
+        <p class="body">Most of Oxford still doesn't know what an infrared workout is. This spot plants the flag: 3D training, 15–30 minute sessions, open around the clock — a workout that fits any schedule.</p>
+      </div>
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 02 · The seasons</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Sweat now. Glow later."</h3>
+        <p class="body">Your corporate campaigns — Summer Body Series, New Year's resolutions, the Burn Off app — swapped quarterly so the studio stays top-of-mind at every fitness moment of the year.</p>
+      </div>
+      <div class="card" style="padding:calc(1.8*var(--u)); position:relative; overflow:hidden;"><div class="hwstrip"></div>
+        <div class="label" style="color:var(--hw-dk);">Spot 03 · The invitation</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Bring a friend, bring the heat."</h3>
+        <p class="body">Trial sessions and buddy passes for the audience that's been thinking about it — a clear, low-commitment first step, repeated 1,500+ times a month on every screen you sponsor.</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr calc(21.4*var(--u)); gap:calc(1.6*var(--u)); margin-top:calc(1.2*var(--u)); align-items:stretch;">
+      <div class="promo" style="display:flex; align-items:center;">
+        <div><b>Every spot ends the same way —</b>&nbsp; your logo, your offer, and your booking line, held on screen for a full three seconds — long enough to read, remember, and act on. Shown right: the closing frame, simulated — final creative uses HOTWORX brand assets.</div>
+      </div>
+      <div style="height:calc(12*var(--u)); background:linear-gradient(160deg,#1A1210 0%,#0D0908 100%); border-radius:calc(.4*var(--u)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--rule); position:relative; overflow:hidden;">
+        <img src="assets/img/hotworx-logo.png" alt="HOTWORX" class="hwglow" style="width:calc(4.6*var(--u)); margin-bottom:calc(.5*var(--u));" />
+        <div class="hwnum" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); margin:calc(.2*var(--u)) 0 calc(.5*var(--u));">Earn the burn.</div>
+        <div style="width:calc(4*var(--u)); height:2px; background:linear-gradient(90deg,var(--hw1),var(--hw2)); margin-bottom:calc(.6*var(--u));"></div>
+        <div style="color:var(--hw-lt); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.62*var(--u));">Book your trial session · hotworx.net</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">06</span></div>
+</section>
+
+<!-- ═══════════════ 7 · CREATIVE ALREADY DONE ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Your Creative</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">This part is already paid for</div>
+    <div class="hwrule"></div>
+    <h2>Your creative is already done.<br/>We'll put it to work.</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:calc(1.2*var(--u)); margin-top:calc(2*var(--u)); height:calc(19*var(--u));">
+      <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-summer-body.jpg" alt="Summer Body Series campaign graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
+      <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-burnoff-app.jpg" alt="HOTWORX Burn Off app campaign graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
+      <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-sweat-now.jpg" alt="Sweat Now Glow Later campaign graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
+      <figure class="card" style="display:flex; align-items:center; justify-content:center; overflow:hidden; padding:calc(.5*var(--u));"><img src="assets/img/promo-24hr-studio.jpg" alt="HOTWORX 24-hour infrared fitness studio graphic" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:calc(.3*var(--u));" /></figure>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.6*var(--u)); margin-top:calc(1.6*var(--u));">
+      <div class="hwpromo"><b>Real HOTWORX campaign creative</b> — franchise graphics like these are ready to run on 75 Oxford screens tomorrow. On social they get scrolled past in a second; on MCTV they play full-screen, every 15 minutes, all over town.</div>
+      <div class="card" style="padding:calc(1.3*var(--u)) calc(1.6*var(--u));">
+        <p class="body"><b style="color:var(--ink);">Want something Oxford-specific?</b> Our team produces your :15 spot and refreshes it quarterly. Every ad we make belongs to you — run it on social, your website, in the studio.</p>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">07</span></div>
+</section>
+
+<!-- ═══════════════ 8 · VALUE COMPARISON ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Math</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Cost per thousand impressions, by medium</div>
+    <div class="goldrule"></div>
+    <h2>The least expensive way to reach<br/>a thousand people.</h2>
+    <div style="display:grid; grid-template-columns:1.25fr 1fr; gap:calc(3.5*var(--u)); margin-top:calc(2.6*var(--u)); align-items:center;">
+      <div class="bars">
+        <div class="row"><div class="bl">Magazine</div><div class="track"><div class="fill" style="width:100%;"></div></div><div class="bv">$65.00</div></div>
+        <div class="row"><div class="bl">Television</div><div class="track"><div class="fill" style="width:54%;"></div></div><div class="bv">$35.00</div></div>
+        <div class="row"><div class="bl">Radio</div><div class="track"><div class="fill" style="width:41%;"></div></div><div class="bv">$27.00</div></div>
+        <div class="row"><div class="bl">Social Media</div><div class="track"><div class="fill" style="width:30%;"></div></div><div class="bv">$19.51</div></div>
+        <div class="row"><div class="bl">Outdoor Billboards</div><div class="track"><div class="fill" style="width:9%;"></div></div><div class="bv">$6.00</div></div>
+        <div class="row mctv"><div class="bl">MCTV Indoor Network</div><div class="track"><div class="fill" style="width:4%;"></div></div><div class="bv">$2.63</div></div>
+      </div>
+      <div>
+        <div class="card" style="padding:calc(2*var(--u)); text-align:center;">
+          <div class="label">MCTV cost per 1,000 impressions</div>
+          <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(5*var(--u)); color:var(--navy); margin:calc(.6*var(--u)) 0;">$2.63</div>
+          <p class="small">Indoor digital reaches the same local audience as broadcast at a fraction of the cost — and the spend never disappears into an auction or an algorithm.</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.2*var(--u)); margin-top:calc(2.2*var(--u));">
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">84%</div><div class="l">Ad recall — highest of any traditional medium</div></div>
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">2.5×</div><div class="l">Impact of full-motion video vs static</div></div>
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">0</div><div class="l">Skip buttons, mute switches, or scroll-pasts</div></div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">08</span></div>
+</section>
+
+<!-- ═══════════════ 9 · INVESTMENT ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Investment</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Home network packages · month to month</div>
+    <div class="goldrule"></div>
+    <div class="pricegrid" style="margin-top:calc(1.6*var(--u));">
+      <div class="price">
+        <div class="tier">20 Screens</div>
+        <div class="amt">$500<span>/mo</span></div>
+        <div class="det">30,000+ plays per month<br/>Entry network reach</div>
+        <div class="note">$25 per 1,000 plays</div>
+      </div>
+      <div class="price feature">
+        <div class="flag">Our Recommendation</div>
+        <div class="tier">40 Screens</div>
+        <div class="amt">$800<span>/mo</span></div>
+        <div class="det">60,000+ plays per month<br/>Oxford market saturation</div>
+        <div class="note">$20 per 1,000 plays</div>
+      </div>
+      <div class="price">
+        <div class="tier">80 Screens</div>
+        <div class="amt">$1,400<span>/mo</span></div>
+        <div class="det">120,000+ plays per month<br/>Multi-market coverage</div>
+        <div class="note">$17.50 per 1,000 plays</div>
+      </div>
+      <div class="price">
+        <div class="flag">Best Value</div>
+        <div class="tier">125+ Screens</div>
+        <div class="amt">$2,000<span>/mo</span></div>
+        <div class="det">187,500+ plays per month<br/>The entire MCTV network</div>
+        <div class="note">$16 per 1,000 plays</div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.6*var(--u)); margin-top:calc(2*var(--u));">
+      <div class="card" style="padding:calc(1.6*var(--u));">
+        <div class="label" style="color:var(--gold-dk); margin-bottom:calc(.8*var(--u));">What every package includes</div>
+        <ul class="dash" style="margin-top:calc(.4*var(--u));">
+          <li class="body">:15 spot every 15 minutes on every screen you buy — 12 hours a day, 7 days a week</li>
+          <li class="body">Produced creative and quarterly refreshes, approved by you before airing</li>
+          <li class="body">Fitness-studio category exclusivity available on sponsored screens</li>
+        </ul>
+      </div>
+      <div class="promo" style="display:flex; flex-direction:column; justify-content:center;">
+        <div style="margin-bottom:calc(.9*var(--u));"><b>Suggested opening play —</b>&nbsp; 40 Oxford screens at <b>$800/mo</b>: over half the hometown network, about <b>67¢ a screen a day</b>, wrapped around the Square, campus, and Highway 6 — everywhere your members live and eat.</div>
+        <div>Month to month, no annual lock-in. The one-time $250 ad-creation fee is <b>waived</b> — your HOTWORX corporate creative is ready to run.</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">HOTWORX Oxford × MCTV</span><span class="folio">09</span></div>
+</section>
+
+<!-- ═══════════════ 10 · NEXT STEPS / CONTACT ═══════════════ -->
+<section class="page dark">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Next Steps</div>
+  </div>
+  <img src="assets/img/hotworx-flame.png" alt="" class="hwglow" style="position:absolute; right:calc(-7*var(--u)); top:calc(2*var(--u)); width:calc(32*var(--u)); opacity:.22;" />
+  <div class="pad" style="top:calc(8.5*var(--u));">
+    <div class="eyebrow">From this proposal to on-screen in two weeks</div>
+    <div class="hwrule"></div>
+    <h2 style="color:#fff;">Let's put <span class="hwnum" style="background:linear-gradient(100deg,var(--hw-lt),var(--hw1)); -webkit-background-clip:text; background-clip:text;">HOTWORX</span><br/>on 75 Oxford screens.</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.4*var(--u)); margin-top:calc(2.4*var(--u));">
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">1</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">Pick the package. We'll walk the Oxford venue list with you and confirm fitness-studio exclusivity on your screens.</p>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">2</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">Hand us your corporate creative — or we produce your :15 spot from scratch. You approve every frame before it airs.</p>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">3</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">Live within two weeks. Month-to-month terms, no pressure — the results carry the renewal.</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.4*var(--u)); margin-top:calc(2.6*var(--u)); border-top:1px solid rgba(255,255,255,.25); padding-top:calc(2*var(--u));">
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/mary_michael_headshot.png" alt="Mary Michael Cannon" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">Mary Michael Cannon</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">CEO &amp; Founder</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">mmc@mctvofms.com<br/>662-801-5677</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/creed_headshot.png" alt="T. Creed Cannon" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">T. Creed Cannon</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">Owner</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">creed@mctvofms.com<br/>601-201-8202</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/swayze_headshot.png" alt="Swayze Hollingsworth" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">Swayze Hollingsworth</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">Director of Sales</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">swayze@mctvofms.com<br/>662-907-0404</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">MCTV Digital, Inc. · mctvofms.com</span><span class="folio">10</span></div>
+</section>
+
+</body>
+</html>
