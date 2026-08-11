@@ -758,6 +758,7 @@
     <button type="button" data-m="tupelo" aria-pressed="false">Tupelo <span class="n">25 screens</span></button>
     <button type="button" data-m="goldentriangle" aria-pressed="false">Golden Triangle <span class="n">33 screens</span></button>
     <button type="button" data-m="jackson" aria-pressed="false">Jackson <span class="n">expansion preview</span></button>
+    <button type="button" data-m="hattiesburg" aria-pressed="false">Hattiesburg <span class="n">expansion preview</span></button>
   </div>
   <div class="toggle frames" role="group" aria-label="Choose a moment in the segment">
     <button type="button" data-f="intro" aria-pressed="false">Intro spot <span class="n">0:04</span></button>
@@ -847,8 +848,8 @@
     backdrops stand in for full-motion video in the production intro and outro. The MDOT logo
     appears to illustrate the proposed sponsorship; final usage is subject to MDOT approval.
     Shown: the 20-second segment (4s intro &middot; 12s board &middot; 4s outro), four plays an
-    hour on every screen. The Jackson package is an expansion preview — no MCTV screens are live
-    there today.
+    hour on every screen. The Jackson and Hattiesburg packages are expansion previews — no MCTV
+    screens are live there today.
   </p>
 
   <div class="stats">
@@ -975,6 +976,20 @@
         { sys: "I", num: "20", r1: "Interstate 20 East", r2: "Jackson → Brandon", mins: 16, st: "slow" },
         { sys: "MS", num: "25", r1: "Lakeland Drive", r2: "Jackson → Flowood", mins: 12, st: "normal" }
       ]
+    },
+    hattiesburg: {
+      title: "Hattiesburg Road Conditions",
+      cam: "US 49 at Hardy St",
+      preview: true,
+      alertT: "I-59 at the US 98 interchange",
+      alertD: "Overnight paving operations. Left lane closed southbound.",
+      routes: [
+        { sys: "US", num: "49", r1: "Highway 49 North", r2: "Hattiesburg → Jackson", mins: 85, st: "normal" },
+        { sys: "US", num: "49", r1: "Highway 49 South", r2: "Hattiesburg → Gulfport", mins: 66, st: "normal" },
+        { sys: "I", num: "59", r1: "Interstate 59 North", r2: "Hattiesburg → Laurel", mins: 27, st: "slow" },
+        { sys: "US", num: "98", r1: "Highway 98 West", r2: "Hattiesburg → Columbia", mins: 32, st: "normal" },
+        { sys: "CITY", num: "ST", r1: "Hardy Street", r2: "USM → Downtown", mins: 8, st: "normal" }
+      ]
     }
   };
 
@@ -983,7 +998,8 @@
     oxford:         { sky: ["#232B58", "#6E5385", "#E19A55"], sun: { x: 592, y: 200, r: 34, c: "#F5C86B" }, hills: ["#1C2346", "#161C3A"], road: "#12172F", motif: "trees" },
     tupelo:         { sky: ["#16333D", "#2E5E5A", "#A8CBAF"], sun: { x: 588, y: 210, r: 27, c: "#F2E7B2" }, hills: ["#14313A", "#0F272E"], road: "#0F1E24", motif: "trace" },
     goldentriangle: { sky: ["#33204E", "#7E3A5C", "#E08A54"], sun: { x: 592, y: 202, r: 36, c: "#F2A25C" }, hills: ["#2A1E45", "#20173A"], road: "#181230", motif: "cotton" },
-    jackson:        { sky: ["#0A0F26", "#141B3F", "#2A2458"], sun: { x: 560, y: 120, r: 13, c: "#DCE3FF" }, hills: ["#0B102A", "#080C20"], road: "#0A0E22", motif: "skyline" }
+    jackson:        { sky: ["#0A0F26", "#141B3F", "#2A2458"], sun: { x: 560, y: 120, r: 13, c: "#DCE3FF" }, hills: ["#0B102A", "#080C20"], road: "#0A0E22", motif: "skyline" },
+    hattiesburg:    { sky: ["#2C3A2E", "#6B6B3F", "#E8C069"], sun: { x: 592, y: 204, r: 32, c: "#F7D98A" }, hills: ["#1B2A20", "#141F18"], road: "#121A14", motif: "pines" }
   };
 
   function motifSVG(s, h, uid) {
@@ -1022,6 +1038,21 @@
         '<rect x="697" y="' + (h - 28) + '" width="6" height="30" fill="#171130"/>' +
         '<line x1="686" y1="' + (h - 32) + '" x2="678" y2="' + (h + 4) + '" stroke="#171130" stroke-width="3"/>' +
         '<line x1="714" y1="' + (h - 32) + '" x2="722" y2="' + (h + 4) + '" stroke="#171130" stroke-width="3"/>';
+    } else if (s.motif === "pines") {
+      var px = [36, 96, 158, 226, 292, 344, 468, 528, 592, 660, 716, 774];
+      for (i = 0; i < px.length; i++) {
+        x = px[i];
+        var ph = 46 + (x * 13) % 34;
+        var py = h + 8 + (x * 7) % 14;
+        var pw = 16 + (x * 11) % 10;
+        out += '<rect x="' + (x - 2) + '" y="' + (py - 10) + '" width="4" height="18" fill="#0F1A12"/>';
+        for (var t = 0; t < 3; t++) {
+          var tw = pw - t * 4;
+          var ty = py - 12 - t * (ph / 3.2);
+          out += '<polygon points="' + (x - tw) + ',' + ty + ' ' + (x + tw) + ',' + ty + ' ' + x + ',' + (ty - ph / 2.4) + '" fill="#0F1A12"/>';
+        }
+      }
+      out += '<rect x="0" y="' + (h + 10) + '" width="800" height="22" fill="#F2E2AE" opacity="0.08" filter="url(#mist-' + uid + ')"/>';
     } else if (s.motif === "skyline") {
       var bw, bh, bx = 10;
       for (i = 0; i < 13; i++) {

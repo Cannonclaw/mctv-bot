@@ -107,6 +107,10 @@ world and a localized conditions board:
   I-55/I-20 light trails. This is the "come grow with us" card: MDOT HQ is in Jackson, their
   people will want to see their own city, and it shows the sponsorship arriving there on
   day one of our expansion. Never pitch it as current inventory.
+- **Hattiesburg** (expansion preview — same rules as Jackson) — Pine Belt golden hour with
+  longleaf pine silhouettes. US 49 (Jackson/Gulfport), I-59 (Laurel), US 98 (Columbia), and
+  Hardy Street corridors. Hub City sits at the crossroads of the whole southern half of the
+  state — the package that shows MDOT the segment working between Jackson and the Coast.
 
 **Production notes (internal):**
 - The scenic backdrops are original MCTV concept art built into the mockup — no stock
