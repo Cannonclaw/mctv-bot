@@ -38,6 +38,17 @@ message slot that comes with it."
   Gulf Coast. MDOT's branding extends to every new market automatically — a statewide agency
   ends up with statewide coverage without renegotiating.
 
+## Sharing the mockup
+
+Text him the link: **https://mctv-bot.onrender.com/mdot** — served by our own app (same
+mechanism as the `/rates` calculator), no login, opens straight to the mockup on any phone.
+It goes live the moment the MDOT branch merges to `main`; check it loads on your own phone
+before you send it to anyone.
+
+Do not send the raw `mockup.html` file — texted HTML attachments open badly (or not at all)
+on most phones. If you ever need an offline copy for a meeting with no signal, open the page
+and save it, or screenshot the intro / board / outro frames.
+
 ## First touch (friend mode, not sales mode)
 
 Keep it personal, short, and curiosity-driven. One text or email, one photo of a screen in a
@@ -49,7 +60,7 @@ real venue, the mockup link, and a 15-minute ask. Do **not** attach a proposal.
 > network of 125+ TV screens in restaurants, gyms, and waiting rooms across Oxford, Starkville,
 > and Tupelo. Our screens already show live road conditions pulled from MDOT's traffic feed,
 > and it got me thinking about something that could be good for y'all. Mocked up what it could
-> look like: [mockup link]. Got 15 minutes this week for a call? No pitch deck, I promise.
+> look like: https://mctv-bot.onrender.com/mdot. Got 15 minutes this week for a call? No pitch deck, I promise.
 
 **Email draft (if he's more of an email guy):**
 
@@ -67,7 +78,7 @@ real venue, the mockup link, and a 15-minute ask. Do **not** attach a proposal.
 >
 > I put together a quick mockup of what it would look like if MDOT made it official — your
 > name on the segment, plus a safety-message slot y'all would control (work zones, seat
-> belts, weather): [mockup link]
+> belts, weather): https://mctv-bot.onrender.com/mdot
 >
 > No idea if this fits anything MDOT does, honestly — that's why I'm coming to you first.
 > Got 15 minutes this week?
