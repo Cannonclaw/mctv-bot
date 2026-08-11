@@ -1,0 +1,3 @@
+# CSV collateral is a byte-copy of OneDrive\mctv-rate-quote\sales\ — keep its
+# RFC 4180 CRLF line endings intact so it opens cleanly in Excel.
+assets/sales/*.csv -text
