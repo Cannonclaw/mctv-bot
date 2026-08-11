@@ -1,0 +1,656 @@
+<title>Starkville Athletic Club Partnership</title>
+<style>
+  /* ── Tokens: light is the default ground; both dark states redefine ───── */
+  :root{
+    --ground:#F5F7FA;
+    --surface:#FFFFFF;
+    --sunk:#ECEFF4;
+    --line:#D8DFE8;
+    --hair:#C3CDD9;
+    --ink:#0A1220;
+    --ink-soft:#3D4A5C;
+    --mut:#6B7B8F;
+    --gold:#9A7411;
+    --gold-on-light:#8A6710;
+    --live:#1F8F4A;
+    --shadow:0 1px 2px rgba(10,18,32,.06);
+    /* The board is a device rendering — it stays dark in every theme. */
+    --bd-navy:#0A1220;
+    --bd-navy2:#141F33;
+    --bd-panel:rgba(255,255,255,.045);
+    --bd-line:rgba(255,255,255,.10);
+    --bd-gold:#D4A017;
+    --bd-gold-lt:#E8B923;
+    --bd-ink:#FFFFFF;
+    --bd-mut:#8FA2B8;
+    --bd-dim:#5E7189;
+    --bd-live:#3FBF6A;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0B111B;
+      --surface:#131C2A;
+      --sunk:#0F1724;
+      --line:#25313F;
+      --hair:#34424F;
+      --ink:#EEF3F8;
+      --ink-soft:#B9C6D4;
+      --mut:#8497A9;
+      --gold:#E8B923;
+      --gold-on-light:#E8B923;
+      --live:#3FBF6A;
+      --shadow:0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0B111B;
+    --surface:#131C2A;
+    --sunk:#0F1724;
+    --line:#25313F;
+    --hair:#34424F;
+    --ink:#EEF3F8;
+    --ink-soft:#B9C6D4;
+    --mut:#8497A9;
+    --gold:#E8B923;
+    --gold-on-light:#E8B923;
+    --live:#3FBF6A;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:60rem;margin:0 auto;padding:0 1.5rem 5rem}
+
+  /* ── Shared type roles ────────────────────────────────────────────────── */
+  .mono{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace}
+  .eyebrow{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold-on-light);
+  }
+  h1,h2,h3{text-wrap:balance;margin:0}
+  h1{font-size:clamp(2.1rem,5.5vw,3.1rem);font-weight:800;letter-spacing:-.03em;line-height:1.04}
+  h2{font-size:clamp(1.5rem,3.4vw,2rem);font-weight:800;letter-spacing:-.02em;line-height:1.12}
+  h3{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+  p{margin:0;max-width:65ch}
+  .lede{font-size:1.13rem;color:var(--ink-soft);max-width:62ch}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ── Masthead ─────────────────────────────────────────────────────────── */
+  header.top{border-bottom:1px solid var(--line);background:var(--surface)}
+  .top-in{
+    max-width:60rem;margin:0 auto;padding:1.1rem 1.5rem;
+    display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;
+  }
+  .brand{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-weight:700;letter-spacing:.3em;font-size:.8rem;
+  }
+  .brand span{color:var(--gold-on-light)}
+  .meta{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);
+    text-align:right;
+  }
+
+  .hero{padding:4rem 0 3rem;display:flex;flex-direction:column;gap:1.5rem}
+  .hero .for{
+    display:flex;flex-direction:column;gap:.35rem;
+    border-left:2px solid var(--gold);padding-left:1rem;
+  }
+  .hero .for .who{font-size:1.05rem;font-weight:700}
+  .hero .for .role{font-size:.9rem;color:var(--mut)}
+
+  /* ── Section rhythm ───────────────────────────────────────────────────── */
+  section{padding:3.25rem 0;border-top:1px solid var(--line)}
+  .sec-head{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.75rem}
+  .stack{display:flex;flex-direction:column;gap:1.15rem}
+  .stack-tight{display:flex;flex-direction:column;gap:.6rem}
+
+  /* ── Three-up points ──────────────────────────────────────────────────── */
+  .points{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1.5rem}
+  .point{display:flex;flex-direction:column;gap:.45rem;padding-top:.9rem;border-top:2px solid var(--gold)}
+  .point p{font-size:.95rem;color:var(--ink-soft)}
+
+  /* ── The board device ─────────────────────────────────────────────────── */
+  .device{
+    background:radial-gradient(120% 90% at 12% 0%, var(--bd-navy2) 0%, var(--bd-navy) 62%);
+    border:1px solid #253347;border-radius:4px;overflow:hidden;
+    color:var(--bd-ink);box-shadow:0 18px 40px -24px rgba(10,18,32,.65);
+  }
+  .device-cap{
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding:.5rem .85rem;background:#060B14;border-bottom:1px solid #1B2536;
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--bd-dim);
+  }
+  .board{padding:1.4rem 1.5rem 1.6rem;display:flex;flex-direction:column;gap:1.1rem}
+  .bd-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;
+    padding-bottom:.85rem;border-bottom:2px solid var(--bd-gold);flex-wrap:wrap;
+  }
+  .bd-head h3{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;color:var(--bd-ink)}
+  .bd-head .sub{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    color:var(--bd-gold);font-size:.66rem;font-weight:700;letter-spacing:.2em;
+    text-transform:uppercase;margin-top:.4rem;
+  }
+  .bd-clock{text-align:right;flex:none}
+  .bd-clock .t{font-size:2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .bd-clock .t .ap{font-size:.85rem;color:var(--bd-mut);margin-left:.3rem}
+  .bd-clock .d{color:var(--bd-mut);font-size:.75rem;font-weight:600;margin-top:.3rem}
+
+  .bd-label{
+    display:flex;align-items:center;gap:.5rem;
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--bd-gold);
+  }
+  .dot{
+    width:.5rem;height:.5rem;border-radius:50%;background:var(--bd-live);flex:none;
+    box-shadow:0 0 0 0 rgba(63,191,106,.55);animation:pulse 2.4s infinite;
+  }
+  @keyframes pulse{70%{box-shadow:0 0 0 .6rem rgba(63,191,106,0)}100%{box-shadow:0 0 0 0 rgba(63,191,106,0)}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+
+  .nowcard{
+    background:linear-gradient(100deg,rgba(212,160,23,.16) 0%,rgba(212,160,23,.05) 60%);
+    border:1px solid rgba(212,160,23,.42);border-left:5px solid var(--bd-gold);
+    border-radius:3px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:1.2rem;
+    margin-top:.6rem;flex-wrap:wrap;
+  }
+  .nowcard .when{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+  .nowcard .what{min-width:0;flex:1}
+  .nowcard .what .ttl{font-size:1.15rem;font-weight:800;line-height:1.2}
+  .nowcard .what .rm{color:var(--bd-gold-lt);font-size:.8rem;font-weight:600;margin-top:.2rem}
+
+  .bd-rows{display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem}
+  .bd-row{
+    display:grid;grid-template-columns:5.5rem 1fr 7.5rem;align-items:center;gap:1rem;
+    background:var(--bd-panel);border:1px solid var(--bd-line);border-radius:3px;
+    padding:.6rem .9rem;min-width:0;
+  }
+  .bd-row .tm{font-size:.86rem;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bd-row .ti{font-size:.92rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bd-row .rm{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.72rem;color:var(--bd-mut);text-align:right;white-space:nowrap;
+  }
+  .bd-row.private .ti{color:var(--bd-dim);font-style:italic}
+  .bd-row.done{opacity:.42}
+  .bd-foot{
+    display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--bd-dim);
+    border-top:1px solid var(--bd-line);padding-top:.7rem;margin-top:.3rem;
+  }
+  .caption{font-size:.85rem;color:var(--mut);margin-top:.75rem;max-width:60ch}
+
+  /* ── Figures ──────────────────────────────────────────────────────────── */
+  .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+  .fig{background:var(--surface);padding:1.1rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+  .fig .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--gold-on-light)}
+  .fig .k{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);line-height:1.4;
+  }
+
+  /* ── Tables ───────────────────────────────────────────────────────────── */
+  .tw{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:32rem}
+  th,td{text-align:left;padding:.65rem .85rem;border-bottom:1px solid var(--line);font-size:.9rem}
+  th{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);font-weight:700;
+    background:var(--sunk);
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+
+  /* ── Offer ladder ─────────────────────────────────────────────────────── */
+  .ladder{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--surface)}
+  .rung{display:grid;grid-template-columns:1fr auto;gap:1rem 1.5rem;padding:1.15rem 1.25rem;border-bottom:1px solid var(--line);align-items:start}
+  .rung:last-child{border-bottom:0}
+  .rung.free{background:var(--sunk)}
+  .rung .nm{display:flex;flex-direction:column;gap:.3rem}
+  .rung .nm .t{font-size:1.02rem;font-weight:700}
+  .rung .nm .d{font-size:.88rem;color:var(--ink-soft);max-width:44ch}
+  .rung .pr{text-align:right;white-space:nowrap}
+  .rung .pr .p{font-size:1.3rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .rung .pr .u{
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);
+  }
+  .tag{
+    display:inline-block;font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:.2rem .45rem;border:1px solid var(--live);color:var(--live);border-radius:2px;
+  }
+
+  /* ── Pull quote / callout ─────────────────────────────────────────────── */
+  .call{border-left:3px solid var(--gold);padding:.15rem 0 .15rem 1.15rem;display:flex;flex-direction:column;gap:.5rem}
+  .call p{font-size:1.02rem}
+
+  ul.plain{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.65rem}
+  ul.plain li{display:grid;grid-template-columns:auto 1fr;gap:.7rem;align-items:baseline;font-size:.97rem;color:var(--ink-soft)}
+  ul.plain li::before{content:"";width:.35rem;height:.35rem;background:var(--gold);border-radius:50%;transform:translateY(-.15rem)}
+
+  ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:.9rem}
+  ol.steps li{counter-increment:s;display:grid;grid-template-columns:1.9rem 1fr;gap:.9rem;align-items:baseline}
+  ol.steps li::before{
+    content:counter(s);
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.75rem;font-weight:700;color:var(--gold-on-light);
+    border-bottom:1px solid var(--gold);padding-bottom:.1rem;
+  }
+
+  footer.end{border-top:2px solid var(--gold);margin-top:3.5rem;padding-top:1.75rem;display:flex;flex-direction:column;gap:.6rem}
+  .contact{display:flex;flex-wrap:wrap;gap:.4rem 1.25rem;font-size:.92rem;color:var(--ink-soft)}
+  .contact b{color:var(--ink)}
+  .fineprint{font-size:.78rem;color:var(--mut);max-width:60ch}
+
+  @media (max-width:34rem){
+    .bd-row{grid-template-columns:4.5rem 1fr;gap:.5rem}
+    .bd-row .rm{grid-column:2;text-align:left;margin-top:-.2rem}
+    .rung{grid-template-columns:1fr}
+    .rung .pr{text-align:left}
+  }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">MCTV<span>&nbsp;/&nbsp;</span>ELITE ADVERTISING</div>
+    <div class="meta">Partnership Proposal<br>August 2026</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Starkville, Mississippi</div>
+    <h1>Screens, and a board that runs your club.</h1>
+    <p class="lede">
+      A hosting partnership for Starkville Athletic Club: five screens on your walls, a live
+      schedule board in your lobby, and your name on screens all over town. None of it costs
+      you anything.
+    </p>
+    <div class="for">
+      <div class="who">Prepared for Joe Underwood</div>
+      <div class="role">Owner, Starkville Athletic Club</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">What we are proposing</div>
+      <h2>Three things, one partnership</h2>
+    </div>
+    <div class="points">
+      <div class="point">
+        <h3>Five screens, installed free</h3>
+        <p>Front desk, cardio floor, and the spots where members wait. We buy the hardware,
+           we mount it, we maintain it.</p>
+      </div>
+      <div class="point">
+        <h3>A live club board</h3>
+        <p>Your class schedule, court times, and closures on the lobby screen — updating
+           itself all day so your front desk stops answering the same question.</p>
+      </div>
+      <div class="point">
+        <h3>Your ad across Starkville</h3>
+        <p>Ten screens in other local businesses running your club's ad, free, for as long
+           as you host.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">The lobby board</div>
+      <h2>This is what your members would walk past</h2>
+      <p class="lede">
+        We built this for the Oxford Conference Center and it runs there now. Below is the
+        same board with your club's day on it — live, running in your timezone, right now.
+      </p>
+    </div>
+
+    <div class="device">
+      <div class="device-cap">
+        <span>Lobby Display &mdash; 1920 &times; 1080</span>
+        <span id="cap-status">Live</span>
+      </div>
+      <div class="board">
+        <div class="bd-head">
+          <div>
+            <h3>Starkville Athletic Club</h3>
+            <div class="sub">Today at the Club</div>
+          </div>
+          <div class="bd-clock">
+            <div class="t"><span id="clk">—:—</span><span class="ap" id="ampm"></span></div>
+            <div class="d" id="dstr">&nbsp;</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bd-label"><span class="dot"></span>On the floor now</div>
+          <div class="nowcard">
+            <div class="when" id="now-when">—</div>
+            <div class="what">
+              <div class="ttl" id="now-title">—</div>
+              <div class="rm" id="now-room">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bd-label" style="color:var(--bd-mut)">Today's schedule</div>
+          <div class="bd-rows" id="rows"></div>
+        </div>
+
+        <div class="bd-foot">
+          <span>Schedule changes? Front desk updates it in seconds.</span>
+          <span>MCTVofMS.com</span>
+        </div>
+      </div>
+    </div>
+    <p class="caption">
+      A real board, not a picture of one — the clock and the highlighted class are running on
+      Starkville time as you read this.
+    </p>
+
+    <div class="stack" style="margin-top:2.25rem">
+      <h3>Why this matters more in a gym than anywhere else</h3>
+      <ul class="plain">
+        <li><span>Your schedule changes constantly, and right now it lives on a printed sheet
+          that is out of date by Wednesday. The board is never out of date.</span></li>
+        <li><span>Members ask the front desk what time spin starts. They stop asking.</span></li>
+        <li><span>Holiday hours, pool closures, and a court going down for repair reach every
+          member who walks in, the moment you post them.</span></li>
+        <li><span>Private bookings show the room and the time but never the name — a corporate
+          rental or a birthday party reads simply as "Private Event."</span></li>
+        <li><span>On MSU game days you can put tip-off time and adjusted hours on the board and
+          be done with it.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">What it costs you</div>
+      <h2>Nothing. Here is how that works.</h2>
+      <p class="lede">
+        We make our money selling ad slots in the rotation to other local businesses. Your club
+        makes our Starkville network worth more to them. That is why hosting is free — you are
+        not the customer for it.
+      </p>
+    </div>
+
+    <div class="figs">
+      <div class="fig"><div class="v">$0</div><div class="k">Your monthly cost</div></div>
+      <div class="fig"><div class="v">5</div><div class="k">Screens at your club</div></div>
+      <div class="fig"><div class="v">10</div><div class="k">Free screens around Starkville</div></div>
+      <div class="fig"><div class="v">28,800</div><div class="k">Ad plays per month</div></div>
+    </div>
+
+    <div class="stack" style="margin-top:1.75rem">
+      <p>Your own ad plays <b>8 times an hour</b> on all five of your screens — 14,400 plays a
+        month in front of your members, promoting personal training, class packages, or guest
+        passes. On top of that you get <b>4 plays an hour on 10 screens in other Starkville
+        businesses</b>, reaching people who have never walked into your club. That second piece
+        alone is a $350 per month package at our published rates.</p>
+      <div class="call">
+        <p>We design the ads and refresh them quarterly at no charge. Everything we make for you
+          is <b>yours</b> — put it on social, your website, print, anywhere you want.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">The network you would join</div>
+      <h2>25 Starkville businesses, 31 screens</h2>
+      <p class="lede">
+        Restaurants, clinics, pharmacies, salons, and shops — the rooms where people in this
+        town sit still. Measured monthly through our NTV360 dashboard.
+      </p>
+    </div>
+
+    <div class="figs">
+      <div class="fig"><div class="v">25</div><div class="k">Starkville venues</div></div>
+      <div class="fig"><div class="v">31</div><div class="k">Screens</div></div>
+      <div class="fig"><div class="v">491K</div><div class="k">Monthly impressions</div></div>
+      <div class="fig"><div class="v">52<span style="font-size:1rem"> min</span></div><div class="k">Average dwell per visit</div></div>
+    </div>
+
+    <div class="stack" style="margin-top:1.75rem">
+      <h3>A gym is the strongest room on a network like this</h3>
+      <p>Across the fitness venues already on our network, members average <b>57 minutes</b> per
+        visit and come back several times a week. Almost nothing else we host holds people that
+        long, that often. Your screens would outperform our network average — and that cuts both
+        ways: it is exactly why we want you on it.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Something you should know</div>
+      <h2>There is not one gym on a Starkville screen</h2>
+    </div>
+    <div class="stack">
+      <p>Every fitness business on the MCTV network today is in Oxford or Tupelo. Not one is in
+        Starkville. We are opening a run of Starkville partnerships this fall, so that will not
+        stay true forever.</p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Fitness venue on the network</th><th>Market</th><th class="r">Screens</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Built Different Fitness</td><td>Oxford</td><td class="r">1</td></tr>
+            <tr><td>Rebel Body Fitness</td><td>Oxford</td><td class="r">1</td></tr>
+            <tr><td>CrossFit Tupelo</td><td>Tupelo</td><td class="r">1</td></tr>
+            <tr><td><b>Starkville</b></td><td><b>&mdash;</b></td><td class="r"><b>0</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Category exclusivity is how you keep it that way. For as long as your agreement runs,
+        MCTV will not put a competing gym, fitness studio, health club, or personal training
+        facility on any Starkville screen. It goes in the contract, and if we ever slip, we pull
+        the competing ad within 24 hours and credit you for the time it ran.</p>
+      <p class="fineprint">
+        The category covers gyms and training facilities. It does not cover supplement shops,
+        med-spas, or wellness clinics — two of those are already host venues here and will keep
+        running their own ads. We would rather say that now than have it surprise you later.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">If you want to go further</div>
+      <h2>Reaching past the ten free screens</h2>
+      <p class="lede">
+        Hosting is free and stays free. These are host-partner rates, well under our published
+        pricing, if you want your club in front of more of Starkville.
+      </p>
+    </div>
+
+    <div class="ladder">
+      <div class="rung free">
+        <div class="nm">
+          <div class="t">Host partnership <span class="tag">Included</span></div>
+          <div class="d">Five screens at your club, the lobby board, content design and
+            refreshes, and 10 free screens around Starkville.</div>
+        </div>
+        <div class="pr"><div class="p">$0</div><div class="u">For life</div></div>
+      </div>
+      <div class="rung">
+        <div class="nm">
+          <div class="t">Starkville host rate</div>
+          <div class="d">Your ad across a 10-screen block of the longest-dwell venues in
+            town — about 147,000 impressions a month. Published rate for ten screens is $350.</div>
+        </div>
+        <div class="pr"><div class="p">$199</div><div class="u">Per month</div></div>
+      </div>
+      <div class="rung">
+        <div class="nm">
+          <div class="t">Full Starkville territory</div>
+          <div class="d">Every screen we have in town — all 25 venues and 31 screens, roughly
+            491,000 impressions a month.</div>
+        </div>
+        <div class="pr"><div class="p">$599</div><div class="u">Per month</div></div>
+      </div>
+      <div class="rung">
+        <div class="nm">
+          <div class="t">Fitness category exclusivity</div>
+          <div class="d">No competing gym on a Starkville screen. Added to either package
+            above. Twelve-month term.</div>
+        </div>
+        <div class="pr"><div class="p">+$200</div><div class="u">Per month</div></div>
+      </div>
+      <div class="rung">
+        <div class="nm">
+          <div class="t">Mississippi State season sponsorship</div>
+          <div class="d">All 30 Starkville screens, September through bowl season. We do not
+            have an athletics sponsor this year and the season starts next month. List rate is
+            $800 a month.</div>
+        </div>
+        <div class="pr"><div class="p">$599</div><div class="u">Per month &times; 4</div></div>
+      </div>
+    </div>
+
+    <p class="caption">
+      Six-month minimum on any paid package. Pay six months upfront and the seventh is free;
+      pay twelve and the thirteenth and fourteenth are free.
+    </p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Getting started</div>
+      <h2>What happens next</h2>
+    </div>
+    <ol class="steps">
+      <li><span><b>We walk the club.</b> You show us the space, we agree where the five screens
+        and the lobby board go.</span></li>
+      <li><span><b>You sign the hosting agreement.</b> One page of real terms. No cost, no
+        obligation to buy advertising.</span></li>
+      <li><span><b>We install</b> — usually within two weeks.</span></li>
+      <li><span><b>We build your content and load your schedule.</b> You approve everything
+        before it goes live.</span></li>
+      <li><span><b>You get a report every month</b> — plays, venues, impressions, and cost per
+        thousand, straight from the NTV360 dashboard. No guessing whether it worked.</span></li>
+    </ol>
+
+    <footer class="end">
+      <div class="eyebrow">Your contact</div>
+      <div class="contact">
+        <span><b>T. Creed Cannon</b></span>
+        <span>Owner &amp; Managing Partner</span>
+        <span>creed@mctvofms.com</span>
+        <span>(601) 201-8202</span>
+        <span>MCTVofMS.com</span>
+      </div>
+      <p class="fineprint">
+        Network figures are measured through the NTV360 dashboard. MCTV Elite Advertising is
+        North Mississippi's indoor digital billboard network — 125+ screens across Oxford,
+        Starkville, Tupelo, Columbus, and West Point.
+      </p>
+    </footer>
+  </section>
+
+</div>
+
+<script>
+  // Club day, in Starkville time. Minutes from midnight -> what is on.
+  var TZ = 'America/Chicago';
+  var DAY = [
+    { s:  5*60+30, e:  6*60+15, t:'Sunrise Spin',                r:'Studio 1' },
+    { s:  6*60,    e: 22*60,    t:'Open Gym &amp; Weight Floor',     r:'Main Floor' },
+    { s:  8*60+30, e:  9*60+15, t:'Silver Strength (55+)',       r:'Studio 2' },
+    { s:  9*60,    e: 12*60,    t:'Summer Kids Camp',            r:'Court 2' },
+    { s: 12*60,    e: 12*60+45, t:'Lunch Express HIIT',          r:'Studio 1' },
+    { s: 16*60,    e: 17*60,    t:'Youth Basketball Skills',     r:'Court 1' },
+    { s: 17*60+30, e: 18*60+15, t:'Power Hour Spin',             r:'Studio 1' },
+    { s: 18*60+30, e: 19*60+30, t:'Yoga &amp; Mobility',             r:'Studio 2' },
+    { s: 19*60,    e: 21*60,    t:'Private Event',               r:'Court 1', p:true }
+  ];
+
+  function parts(){
+    var f = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, hour:'numeric', minute:'2-digit', hour12:true,
+      weekday:'long', month:'long', day:'numeric'
+    });
+    var o = {};
+    f.formatToParts(new Date()).forEach(function(p){ o[p.type] = p.value; });
+    return o;
+  }
+
+  function minutesNow(){
+    var f = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour:'numeric', minute:'2-digit', hour12:false });
+    var o = {};
+    f.formatToParts(new Date()).forEach(function(p){ o[p.type] = p.value; });
+    return (parseInt(o.hour,10) % 24) * 60 + parseInt(o.minute,10);
+  }
+
+  function label(m){
+    var h = Math.floor(m/60), mm = m%60, ap = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12; if(h12 === 0) h12 = 12;
+    return h12 + ':' + String(mm).padStart(2,'0') + ' ' + ap;
+  }
+
+  function paint(){
+    var p = parts();
+    document.getElementById('clk').textContent  = p.hour + ':' + p.minute;
+    document.getElementById('ampm').textContent = p.dayPeriod || '';
+    document.getElementById('dstr').textContent = p.weekday + ', ' + p.month + ' ' + p.day;
+
+    var now = minutesNow();
+
+    // "On the floor now" prefers a real class over the all-day open-gym block.
+    var live = DAY.filter(function(x){ return now >= x.s && now < x.e; });
+    var pick = live.filter(function(x){ return x.e - x.s < 240; })[0] || live[0];
+    var upcoming = DAY.filter(function(x){ return x.s > now; })[0];
+
+    var w = document.getElementById('now-when'),
+        t = document.getElementById('now-title'),
+        r = document.getElementById('now-room');
+    if(pick){
+      // An all-day block (open gym) should read "Now", not its 6 AM start time.
+      w.textContent = (pick.e - pick.s >= 240) ? 'Now' : label(pick.s);
+      t.innerHTML   = pick.p ? 'Private Event' : pick.t;
+      r.textContent = pick.r + ' · until ' + label(pick.e);
+    } else if(upcoming){
+      w.textContent = label(upcoming.s);
+      t.innerHTML   = 'Next: ' + (upcoming.p ? 'Private Event' : upcoming.t);
+      r.textContent = upcoming.r;
+    } else {
+      w.textContent = '—';
+      t.innerHTML   = 'Club closed for the evening';
+      r.textContent = 'Opens 5:00 AM';
+    }
+
+    var rows = DAY.map(function(x){
+      var cls = 'bd-row' + (x.p ? ' private' : '') + (x.e <= now ? ' done' : '');
+      var title = x.p ? 'Private Event' : x.t;
+      return '<div class="' + cls + '">' +
+               '<div class="tm">' + label(x.s) + '</div>' +
+               '<div class="ti">' + title + '</div>' +
+               '<div class="rm">' + x.r + '</div>' +
+             '</div>';
+    }).join('');
+    document.getElementById('rows').innerHTML = rows;
+  }
+
+  paint();
+  setInterval(paint, 15000);
+</script>
