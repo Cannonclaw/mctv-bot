@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HOTWORX Oxford — MCTV Elite Advertising Pitch</title>
+<style>
+  /* ── MCTV brand system v1.0 (Oxford Conference Center chassis) ─────────── */
+  @font-face {
+    font-family: "Playfair Display";
+    src: url("assets/fonts/PlayfairDisplay.ttf") format("truetype");
+    font-weight: 400 900; font-style: normal;
+  }
+  @font-face {
+    font-family: "Playfair Display";
+    src: url("assets/fonts/PlayfairDisplay-Italic.ttf") format("truetype");
+    font-weight: 400 900; font-style: italic;
+  }
+  @font-face {
+    font-family: "Work Sans";
+    src: url("assets/fonts/WorkSans.ttf") format("truetype");
+    font-weight: 100 900; font-style: normal;
+  }
+  @font-face {
+    font-family: "Work Sans";
+    src: url("assets/fonts/WorkSans-Italic.ttf") format("truetype");
+    font-weight: 100 900; font-style: italic;
+  }
+
+  :root {
+    --cream: #FAF6EF;
+    --navy:  #00377E;
+    --navy-deep: #002357;
+    --gold:  #C9A227;
+    --ink:   #1C2430;
+    --muted: #5A6472;
+    --hairline: rgba(0,55,126,.16);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #E7E2D8; }
+  body { font-family: "Work Sans", Arial, sans-serif; color: var(--ink); }
+
+  @page { size: letter; margin: 0; }
+  .page {
+    width: 8.5in; height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    padding: .85in .8in .75in;
+    display: flex; flex-direction: column;
+  }
+  @media screen { .page { margin: 24px auto; box-shadow: 0 10px 40px rgba(0,0,0,.18); } }
+
+  /* header / footer */
+  .hdr {
+    position: absolute; top: .42in; left: .8in; right: .8in;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 8.5pt; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--navy); font-weight: 600;
+  }
+  .hdr img { height: .21in; display: block; }
+  .ftr {
+    position: absolute; bottom: .4in; left: .8in; right: .8in;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 8pt; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .dark .hdr, .dark .ftr { color: rgba(255,255,255,.75); }
+
+  /* type */
+  .eyebrow {
+    font-size: 9.5pt; letter-spacing: .24em; text-transform: uppercase;
+    font-weight: 600; color: var(--gold); margin-bottom: 10pt;
+  }
+  .goldrule { width: .55in; height: 3.5px; background: var(--gold); margin: 14pt 0 18pt; }
+  h1, h2, .display { font-family: "Playfair Display", Georgia, serif; color: var(--navy); }
+  h1 { font-size: 40pt; line-height: 1.06; font-weight: 800; }
+  h2 { font-size: 27pt; line-height: 1.1; font-weight: 800; margin-bottom: 6pt; }
+  h3 { font-size: 12pt; font-weight: 700; color: var(--navy); margin-bottom: 4pt; }
+  p  { font-size: 10.5pt; line-height: 1.55; color: var(--ink); }
+  p.lede { font-size: 12pt; line-height: 1.55; }
+  .dark h1, .dark h2, .dark .display { color: #fff; }
+  .dark p { color: rgba(255,255,255,.88); }
+
+  /* stat row */
+  .stats { display: flex; gap: .3in; margin: 18pt 0; }
+  .stat { flex: 1; border-top: 3.5px solid var(--gold); padding-top: 9pt; }
+  .stat .n { font-family: "Playfair Display", serif; font-size: 26pt; font-weight: 800; color: var(--navy); line-height: 1; }
+  .stat .l { font-size: 8.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 5pt; font-weight: 600; }
+  .dark .stat .n { color: #fff; }
+  .dark .stat .l { color: rgba(255,255,255,.7); }
+
+  /* cards */
+  .card {
+    background: #fff; border: 1px solid var(--hairline); border-radius: 6px;
+    padding: 14pt 15pt; box-shadow: 0 2px 10px rgba(0,55,126,.05);
+  }
+  .card.goldtop { border-top: 3.5px solid var(--gold); }
+
+  /* price cards */
+  .prices { display: flex; gap: .22in; align-items: stretch; }
+  .price {
+    flex: 1; background: #fff; border: 1px solid var(--hairline); border-radius: 6px;
+    padding: 15pt 14pt; display: flex; flex-direction: column;
+  }
+  .price .tier { font-size: 9pt; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; color: var(--navy); }
+  .price .amt { font-family: "Playfair Display", serif; font-size: 29pt; font-weight: 800; color: var(--navy); margin: 8pt 0 1pt; }
+  .price .per { font-size: 8.5pt; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 9pt; }
+  .price ul { list-style: none; margin-top: 2pt; }
+  .price li { font-size: 9.3pt; line-height: 1.45; padding: 4.5pt 0 4.5pt 14pt; position: relative; border-top: 1px solid rgba(0,55,126,.09); }
+  .price li::before { content: ""; position: absolute; left: 0; top: 10.5pt; width: 6px; height: 6px; background: var(--gold); border-radius: 1px; }
+  .price.feature { background: var(--navy); border-color: var(--navy); }
+  .price.feature .tier { color: var(--gold); }
+  .price.feature .amt { color: #fff; }
+  .price.feature .per { color: rgba(255,255,255,.65); }
+  .price.feature li { color: rgba(255,255,255,.92); border-top-color: rgba(255,255,255,.14); }
+  .flag {
+    align-self: flex-start; font-size: 7.5pt; letter-spacing: .16em; text-transform: uppercase;
+    font-weight: 700; color: var(--navy-deep); background: var(--gold);
+    padding: 3pt 7pt; border-radius: 3px; margin-bottom: 8pt;
+  }
+
+  /* promo callout */
+  .promo {
+    background: var(--gold); border-radius: 6px; padding: 13pt 16pt;
+    color: var(--navy-deep);
+  }
+  .promo strong { font-family: "Playfair Display", serif; font-size: 13pt; }
+  .promo p { color: var(--navy-deep); font-size: 10pt; }
+
+  /* dark page */
+  .page.dark { background: var(--navy); }
+  .page.dark.deep { background: var(--navy-deep); }
+
+  /* cover */
+  .cover-photo, .scrim { position: absolute; inset: 0; }
+  .cover-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scrim-heavy { background: linear-gradient(180deg, rgba(0,25,60,.55) 0%, rgba(0,25,60,.38) 42%, rgba(0,20,50,.9) 100%); }
+  .scrim-full  { background: rgba(0,26,61,.87); }
+
+  /* photo frames */
+  .photo { border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); background: #fff; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .caption { font-size: 8pt; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 5pt; font-weight: 600; }
+
+  /* data table */
+  table.data { width: 100%; border-collapse: collapse; }
+  table.data th { text-align: left; font-size: 8.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--navy); padding: 6pt 8pt; border-bottom: 2px solid var(--navy); }
+  table.data td { font-size: 10pt; padding: 7pt 8pt; border-bottom: 1px solid var(--hairline); }
+  table.data td.num { font-weight: 700; color: var(--navy); }
+
+  .two-col { display: flex; gap: .32in; }
+  .grow { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── PAGE 1 · COVER ──────────────────────────────────────────────────── -->
+<section class="page dark" style="padding:0;">
+  <div class="cover-photo"><img src="assets/img/hotworx-cycle-sauna.jpg" alt=""></div>
+  <div class="scrim scrim-heavy"></div>
+  <div style="position:relative; height:100%; display:flex; flex-direction:column; padding:.85in .8in .7in;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <img src="assets/img/mctv_logo_white.png" alt="MCTV Elite Advertising" style="height:.42in;">
+      <img src="assets/img/hotworx-logo.png" alt="HOTWORX" style="height:.62in; border-radius:6px;">
+    </div>
+    <div style="flex:1;"></div>
+    <div>
+      <div class="eyebrow" style="color:var(--gold);">Be seen. Be noticed. Be remembered.</div>
+      <h1 style="color:#fff; font-size:44pt;">Your studio,<br>in every room<br>in Oxford.</h1>
+      <div class="goldrule"></div>
+      <p style="color:rgba(255,255,255,.92); font-size:12pt; max-width:5.4in;">
+        An advertising partnership proposal for <strong>HOTWORX Oxford</strong> from
+        MCTV Elite Advertising — North Mississippi's indoor digital billboard network.
+      </p>
+      <p style="color:rgba(255,255,255,.65); font-size:9.5pt; margin-top:16pt; letter-spacing:.08em;">
+        PREPARED FOR ALYSSA FARRELL &nbsp;·&nbsp; HOTWORX OXFORD &nbsp;·&nbsp; AUGUST 2026
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── PAGE 2 · THE OPPORTUNITY ────────────────────────────────────────── -->
+<section class="page">
+  <div class="hdr"><img src="assets/img/mctv_logo_trim.png" alt="MCTV" style="mix-blend-mode:multiply;"><span>The Opportunity</span></div>
+  <div style="height:.25in;"></div>
+  <div class="eyebrow">You saw one of our screens. Here's the rest.</div>
+  <h2>Oxford already spends an hour<br>a visit where our screens hang.</h2>
+  <div class="goldrule"></div>
+  <p class="lede" style="max-width:6.3in;">
+    You told us you spotted an MCTV screen in a local business. That one screen has
+    74 brothers and sisters across Oxford — in the restaurants, salons, and waiting
+    rooms where your future members already sit with time on their hands.
+  </p>
+  <div class="stats">
+    <div class="stat"><div class="n">125+</div><div class="l">Screens network-wide</div></div>
+    <div class="stat"><div class="n">1.9M+</div><div class="l">Monthly impressions</div></div>
+    <div class="stat"><div class="n">55</div><div class="l">Avg. minutes per visit</div></div>
+    <div class="stat"><div class="n">4×</div><div class="l">Plays per hour, per screen</div></div>
+  </div>
+  <div class="two-col" style="margin-top:6pt; flex:1; min-height:0; margin-bottom:.42in;">
+    <div class="grow" style="display:flex; flex-direction:column; gap:10pt;">
+      <div class="card goldtop">
+        <h3>Nobody can skip you</h3>
+        <p>These ads can't be paused, blocked, muted, or scrolled past. Your spot plays
+        four times an hour on every screen in your package, twelve hours a day, seven
+        days a week.</p>
+      </div>
+      <div class="card">
+        <h3>A captive, local audience</h3>
+        <p>These aren't passersby with two seconds to glance at a billboard. They're
+        seated customers averaging 55 minutes per visit — long enough to see your
+        message, digest it, and remember it on the drive home.</p>
+      </div>
+      <div class="card">
+        <h3>Built for a fitness brand</h3>
+        <p>Joining a gym starts as a thought that needs repeating. When Oxford keeps
+        seeing HOTWORX everywhere it goes, you're the studio they call.</p>
+      </div>
+    </div>
+    <div style="width:2.55in; display:flex; flex-direction:column;">
+      <div class="photo" style="flex:1;"><img src="assets/img/hotworx-studio-entrance.jpg" alt=""></div>
+      <div class="caption">HOTWORX Oxford — 24-hour infrared fitness</div>
+    </div>
+  </div>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 02</span></div>
+</section>
+
+<!-- ── PAGE 3 · WHERE YOU'LL BE SEEN ───────────────────────────────────── -->
+<section class="page">
+  <div class="hdr"><img src="assets/img/mctv_logo_trim.png" alt="MCTV" style="mix-blend-mode:multiply;"><span>Where You'll Be Seen</span></div>
+  <div style="height:.25in;"></div>
+  <div class="eyebrow">75 screens across Oxford</div>
+  <h2>Everywhere Oxford eats,<br>shops, and plays.</h2>
+  <div class="goldrule"></div>
+  <p style="max-width:6.4in;">
+    Oxford is the heart of the MCTV network — 75 screens from the Square to University
+    Avenue to Highway 6. We keep viewers watching by mixing ads with local weather,
+    news, trivia, and sports, so your spot lands on eyes that are already looking up.
+  </p>
+  <div style="display:flex; gap:.22in; margin:14pt 0;">
+    <div style="flex:1;">
+      <div class="photo" style="height:2.5in;"><img src="assets/img/wild-shirt-shop.jpg" alt=""></div>
+      <div class="caption">Retail — Oxford Shirt Co.</div>
+    </div>
+    <div style="flex:1;">
+      <div class="photo" style="height:2.5in;"><img src="assets/img/wild-four-corners.jpg" alt=""></div>
+      <div class="caption">Convenience — 4 Corners, Oxford</div>
+    </div>
+    <div style="flex:1;">
+      <div class="photo" style="height:2.5in;"><img src="assets/img/wild-porch.jpg" alt=""></div>
+      <div class="caption">Dining — patio screens</div>
+    </div>
+  </div>
+  <div class="card" style="padding:10pt; flex:1; min-height:0; display:flex; flex-direction:column;">
+    <div class="photo" style="flex:1; min-height:0; border:none; border-radius:4px;"><img src="assets/img/brands-wall.png" alt="Brands MCTV works with"></div>
+  </div>
+  <p style="font-size:8.5pt; color:var(--muted); margin-top:6pt;">
+    A few of the local names already on MCTV screens. We partner only with reputable
+    local businesses — good company for your brand to keep.
+  </p>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 03</span></div>
+</section>
+
+<!-- ── PAGE 4 · YOUR CREATIVE IS ALREADY DONE ──────────────────────────── -->
+<section class="page">
+  <div class="hdr"><img src="assets/img/mctv_logo_trim.png" alt="MCTV" style="mix-blend-mode:multiply;"><span>Your Creative</span></div>
+  <div style="height:.25in;"></div>
+  <div class="eyebrow">This part is easy</div>
+  <h2>Your creative is already done.<br>We'll put it to work.</h2>
+  <div class="goldrule"></div>
+  <p style="max-width:6.4in;">
+    HOTWORX corporate hands you polished campaign graphics all year long — Summer Body
+    Series, the Burn Off app, bring-a-friend pushes. Today those live on a social feed
+    that gets scrolled past in a second. On MCTV, the same creative plays full-screen,
+    four times an hour, all over town.
+  </p>
+  <div style="display:flex; gap:.2in; margin:14pt 0; height:2.75in; align-items:center;">
+    <div class="photo" style="flex:1; height:100%; display:flex; align-items:center; background:#fff;"><img src="assets/img/promo-summer-body.jpg" alt="" style="object-fit:contain;"></div>
+    <div class="photo" style="flex:1; height:100%; display:flex; align-items:center; background:#fff;"><img src="assets/img/promo-burnoff-app.jpg" alt="" style="object-fit:contain;"></div>
+    <div class="photo" style="flex:1; height:100%; display:flex; align-items:center; background:#fff;"><img src="assets/img/promo-sweat-now.jpg" alt="" style="object-fit:contain;"></div>
+    <div class="photo" style="flex:1; height:100%; display:flex; align-items:center; background:#fff;"><img src="assets/img/promo-24hr-studio.jpg" alt="" style="object-fit:contain;"></div>
+  </div>
+  <p style="font-size:8.5pt; color:var(--muted); margin-top:-8pt;">
+    Real HOTWORX campaign creative — ready to run on 75 Oxford screens tomorrow.
+  </p>
+  <div class="two-col" style="margin-top:12pt;">
+    <div class="card goldtop grow">
+      <h3>Free custom design, forever</h3>
+      <p>Want something Oxford-specific? Our team designs your 15-second spot at no
+      extra cost, with fresh versions every quarter to match seasons and promos.</p>
+    </div>
+    <div class="card goldtop grow">
+      <h3>You own every ad we make</h3>
+      <p>Every piece of content we create belongs to you. Run it on social, your
+      website, in the studio — your investment works past our screens.</p>
+    </div>
+  </div>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 04</span></div>
+</section>
+
+<!-- ── PAGE 5 · PACKAGES ───────────────────────────────────────────────── -->
+<section class="page">
+  <div class="hdr"><img src="assets/img/mctv_logo_trim.png" alt="MCTV" style="mix-blend-mode:multiply;"><span>Packages</span></div>
+  <div style="height:.25in;"></div>
+  <div class="eyebrow">Simple, flat, month-to-month pricing</div>
+  <h2>Pick your footprint.</h2>
+  <div class="goldrule"></div>
+  <div class="prices" style="margin-top:4pt;">
+    <div class="price">
+      <div class="tier">Starter · 10 Screens</div>
+      <div class="amt">$350<span style="font-size:11pt; font-weight:400;">/mo</span></div>
+      <div class="per">$35 per screen</div>
+      <ul>
+        <li>15,000 ad plays every month</li>
+        <li>15-second spot, 4 plays per hour</li>
+        <li>Your pick of Oxford venues</li>
+        <li>NTV360 analytics dashboard</li>
+      </ul>
+    </div>
+    <div class="price feature">
+      <div class="flag">Our recommendation</div>
+      <div class="tier">Growth · 20 Screens</div>
+      <div class="amt">$500<span style="font-size:11pt; font-weight:400;">/mo</span></div>
+      <div class="per">$25 per screen · about 83¢ a day</div>
+      <ul>
+        <li>30,000 ad plays every month</li>
+        <li>15-second spot, 4 plays per hour</li>
+        <li>Blankets Oxford's busiest venues</li>
+        <li>Free custom creative + refreshes</li>
+        <li>NTV360 analytics dashboard</li>
+      </ul>
+    </div>
+    <div class="price">
+      <div class="tier">Dominance · 40 Screens</div>
+      <div class="amt">$800<span style="font-size:11pt; font-weight:400;">/mo</span></div>
+      <div class="per">$20 per screen</div>
+      <ul>
+        <li>60,000 ad plays every month</li>
+        <li>15-second spot, 4 plays per hour</li>
+        <li>Over half the Oxford network</li>
+        <li>NTV360 analytics dashboard</li>
+      </ul>
+    </div>
+  </div>
+  <div style="height:12pt;"></div>
+  <div class="promo">
+    <strong>Want the whole network?</strong>
+    <p style="margin-top:3pt;">75+ screens across all five markets runs $1,300/month —
+    every current and future MCTV screen, Oxford to Tupelo. Ask us about it.</p>
+  </div>
+  <div style="height:10pt;"></div>
+  <table class="data">
+    <tr><th>What every package includes</th><th style="text-align:right;">Details</th></tr>
+    <tr><td>Ad frequency</td><td class="num" style="text-align:right;">4 plays/hour · 12 hours/day · 7 days/week</td></tr>
+    <tr><td>Creative design &amp; quarterly refreshes</td><td class="num" style="text-align:right;">Included, no charge</td></tr>
+    <tr><td>Real-time reporting</td><td class="num" style="text-align:right;">NTV360 dashboard access</td></tr>
+    <tr><td>Content ownership</td><td class="num" style="text-align:right;">Every ad we make is yours</td></tr>
+  </table>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 05</span></div>
+</section>
+
+<!-- ── PAGE 6 · DARK STAT PAGE ─────────────────────────────────────────── -->
+<section class="page dark deep" style="justify-content:center; align-items:center; text-align:center;">
+  <div class="hdr"><img src="assets/img/mctv_logo_white.png" alt="MCTV" style="height:.24in;"><span>The Math</span></div>
+  <div class="eyebrow">On the 20-screen package</div>
+  <div class="display" style="font-size:95pt; font-weight:900; color:var(--gold); line-height:1;">30,000</div>
+  <p style="font-size:15pt; color:#fff; margin-top:14pt; font-weight:500;">
+    HOTWORX ad plays across Oxford. Every month.
+  </p>
+  <div class="goldrule" style="margin:22pt auto;"></div>
+  <p style="max-width:5.6in; color:rgba(255,255,255,.85);">
+    Roughly 1,500 plays per venue per month — each one unskippable, each one in front
+    of a seated local audience. No other channel in Oxford puts your studio in the
+    room this often for $500.
+  </p>
+  <div class="stats" style="width:6.2in; margin-top:30pt;">
+    <div class="stat"><div class="n">409K+</div><div class="l">Monthly venue visitors</div></div>
+    <div class="stat"><div class="n">$25</div><div class="l">Per screen, per month</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">Ads skipped or blocked</div></div>
+  </div>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 06</span></div>
+</section>
+
+<!-- ── PAGE 7 · GETTING STARTED + TEAM ─────────────────────────────────── -->
+<section class="page">
+  <div class="hdr"><img src="assets/img/mctv_logo_trim.png" alt="MCTV" style="mix-blend-mode:multiply;"><span>Getting Started</span></div>
+  <div style="height:.25in;"></div>
+  <div class="eyebrow">Live on screens within a week</div>
+  <h2>Three steps. We do the heavy lifting.</h2>
+  <div class="goldrule"></div>
+  <div style="display:flex; gap:.25in;">
+    <div class="card grow">
+      <div class="display" style="font-size:26pt; font-weight:800; color:var(--gold);">1</div>
+      <h3 style="margin-top:4pt;">Pick your package</h3>
+      <p>Choose your screen count. We'll walk the Oxford venue list with you and place
+      you where your future members already go.</p>
+    </div>
+    <div class="card grow">
+      <div class="display" style="font-size:26pt; font-weight:800; color:var(--gold);">2</div>
+      <h3 style="margin-top:4pt;">Hand us your creative</h3>
+      <p>Send the HOTWORX graphics you already have, or let our designers build your
+      spot from scratch. Either way it costs you nothing.</p>
+    </div>
+    <div class="card grow">
+      <div class="display" style="font-size:26pt; font-weight:800; color:var(--gold);">3</div>
+      <h3 style="margin-top:4pt;">Watch it work</h3>
+      <p>Your ad goes live across Oxford, and your NTV360 dashboard shows plays and
+      impressions in real time from day one.</p>
+    </div>
+  </div>
+  <div style="height:22pt;"></div>
+  <div class="eyebrow">Your MCTV team</div>
+  <div style="display:flex; gap:.25in;">
+    <div class="card grow" style="text-align:center; padding-top:18pt;">
+      <img src="assets/img/creed_headshot.png" alt="" style="width:1.15in; height:1.15in; border-radius:50%; object-fit:cover; border:3px solid var(--gold);">
+      <h3 style="margin-top:8pt;">T. Creed Cannon</h3>
+      <p style="font-size:8.5pt; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Owner / Managing Partner</p>
+      <p style="font-size:9.5pt; margin-top:6pt;">(601) 201-8202<br>creed@mctvofms.com</p>
+    </div>
+    <div class="card grow" style="text-align:center; padding-top:18pt;">
+      <img src="assets/img/mary_michael_headshot.png" alt="" style="width:1.15in; height:1.15in; border-radius:50%; object-fit:cover; border:3px solid var(--gold);">
+      <h3 style="margin-top:8pt;">Mary Michael Cannon</h3>
+      <p style="font-size:8.5pt; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Owner / Managing Partner</p>
+      <p style="font-size:9.5pt; margin-top:6pt;">(662) 801-5677<br>mmc@mctvofms.com</p>
+    </div>
+    <div class="card grow" style="text-align:center; padding-top:18pt;">
+      <img src="assets/img/swayze_headshot.png" alt="" style="width:1.15in; height:1.15in; border-radius:50%; object-fit:cover; border:3px solid var(--gold);">
+      <h3 style="margin-top:8pt;">Swayze Hollingsworth</h3>
+      <p style="font-size:8.5pt; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Director of Sales</p>
+      <p style="font-size:9.5pt; margin-top:6pt;">(662) 907-0404<br>swayze@mctvofms.com</p>
+    </div>
+  </div>
+  <div style="height:14pt;"></div>
+  <div class="promo">
+    <strong>No pressure — come see it first.</strong>
+    <p style="margin-top:3pt;">You said you're exploring. Grab coffee with us on the
+    Square and we'll show you the network live, plays and all. Ten minutes, no pitch
+    deck, no obligation.</p>
+  </div>
+  <div class="ftr"><span>MCTV Elite Advertising</span><span>www.mctvofms.com · 07</span></div>
+</section>
+
+<!-- ── PAGE 8 · BACK COVER ─────────────────────────────────────────────── -->
+<section class="page dark" style="padding:0; page-break-after:auto;">
+  <div class="cover-photo"><img src="assets/img/oxford-courthouse.jpg" alt=""></div>
+  <div class="scrim" style="background:linear-gradient(180deg, rgba(0,22,54,.82) 0%, rgba(0,22,54,.66) 50%, rgba(0,18,46,.9) 100%);"></div>
+  <div style="position:relative; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:.85in .8in;">
+    <img src="assets/img/mctv_logo_white.png" alt="MCTV Elite Advertising" style="height:.55in;">
+    <div class="goldrule" style="margin:20pt auto;"></div>
+    <div class="display" style="font-size:30pt; font-weight:800; color:#fff;">Thank you, Alyssa.</div>
+    <p style="color:rgba(255,255,255,.9); font-size:11.5pt; max-width:5in; margin-top:12pt;">
+      Oxford is our home too. We'd love to put HOTWORX in every room in it.
+    </p>
+    <p style="color:rgba(255,255,255,.65); font-size:9.5pt; margin-top:26pt; letter-spacing:.12em;">
+      WWW.MCTVOFMS.COM &nbsp;·&nbsp; OXFORD, MISSISSIPPI<br><br>
+      BE SEEN. BE NOTICED. BE REMEMBERED.
+    </p>
+  </div>
+</section>
+
+</body>
+</html>
