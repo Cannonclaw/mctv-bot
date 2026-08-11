@@ -80,6 +80,8 @@ services/                       # Business logic and integrations
   leads_service.py              # Lead CRUD + scoring (intake form submissions)
   loop_inventory_service.py     # Reads the n-compass whitelist sweep (screen_loops,
                                 #   dark_content) — measured loop length per screen
+  venue_events_service.py       # Venue schedules (venue_events) + the payload the
+                                #   lobby feed board polls; masks private bookings
   screen_inventory_service.py   # Manual book of record: what creative plays where
                                 #   (loop_items + per-screen overrides), plus the two
                                 #   reconciliations (vs sweep, vs Encompass export)
@@ -110,10 +112,15 @@ assets/
   team/                         # 3 headshots + 6 team cards (2 per person)
   screens/                      # Community screen photos by city (Oxford, Starkville, etc.)
 
+static/                         # Public pages served outside Streamlit
+  rates.html                    # Self-serve rate calculator (GET /rates)
+  board.html                    # Venue lobby feed board (GET /board)
+
 scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)
   fix_rls_policies.sql          # RLS policy audit/fix
   apply_updates.sql             # Schema migration script
+  seed_venue_events.py          # Sample Conference Center schedule for local dev
   contract_flow_test.py         # Contract lifecycle test
   integration_test.py           # Full integration test
 
@@ -208,6 +215,37 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
   passes them into every tab (`items=` / `overrides=` / `screens=` params) — same
   convention as the Pipeline page.
 
+### Venue Feed Board
+The lobby schedule board for host venues that run programming — the Oxford
+Conference Center is the first. An airport-style board on the MCTV screen in
+the lobby: what is happening now, what is next, which room.
+
+- **Public routes** (`server_routes.py`, installed from `run_server.py` before
+  Streamlit boots — same Tornado/ASGI double patch as `/rates`):
+  - `GET /board?venue=<slug>` — the board (`static/board.html`), default venue
+    `oxford-conference-center`
+  - `GET /board/events.json?venue=<slug>` — the schedule it polls, cached 30s
+    per venue so a venue's screens share one Supabase read
+- **Data** (`venue_events_service` → `venue_events`, migration 025): one row per
+  event per venue, entered by hand. Supabase REST with a local JSON fallback
+  (`data/venue_events/`, gitignored) so the board still renders offline.
+- **Privacy rule**: `is_private` rows keep their room but render as
+  "Private Event" — masking happens in `mask()` on the way out, never in the
+  table, and the entered title is discarded rather than trusted. `venue_events`
+  has no anon RLS policy for the same reason: the board reads through our route
+  with the service key, so the raw schedule never leaves the server.
+- **Timezone**: every label is formatted server-side in the venue's timezone
+  (`America/Chicago`), and the board's clock uses `Intl` with that zone — a
+  media player sitting on UTC must not move the 5:30 reception to 10:30.
+- **Board behaviour**: polls every 60s, re-derives now/next locally every 10s
+  (so the highlight moves on time), rotates pages every 14s when the day runs
+  longer than 6 rows, reloads the page hourly. A failed fetch keeps the last
+  good schedule on screen and raises the stale marker rather than going blank.
+- **Adding a venue**: a `BOARD_VENUES` entry plus rows in `venue_events`. An
+  unknown slug still renders, titled off the slug.
+- `python scripts/seed_venue_events.py` fills the local file with a sample day;
+  migration 025 seeds the same thing server-side (`created_by = 'sample'`).
+
 ### Contract System
 5 contract types, each with dedicated clause sets:
 - **Advertiser** (8 clauses) — standard advertising partnership
@@ -284,6 +322,9 @@ applied by hand in the Supabase SQL editor):
   but not twice in one
 - `loop_item_screens` — per-screen include/exclude overrides on `loop_items`
   (migration 024); cascades on item delete
+- `venue_events` — venue schedules behind the lobby feed board (migration 025).
+  `(venue_slug, starts_at, lower(title))` is unique to catch double entry;
+  service_role + authenticated only, no anon policy (see Venue Feed Board)
 
 Storage buckets: `contracts`, `invoices`, `creative-assets`
 

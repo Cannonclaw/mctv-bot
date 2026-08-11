@@ -17,6 +17,6 @@ RUN mkdir -p output/proposals output/reports output/emails output/videos output/
 
 EXPOSE 8501
 
-# run_server.py registers the public /rates route, then runs app.py with
+# run_server.py registers the public /rates and /board routes, then runs app.py with
 # these exact flags. See server_routes.py.
 CMD ["python", "run_server.py"]

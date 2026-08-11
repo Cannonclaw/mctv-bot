@@ -1,7 +1,8 @@
 # MDOT Traffic Sponsorship — Pitch Brief
 
-**Internal only — do not forward.** The companion file `mockup.html` is the show-piece and is
-safe to put in front of MDOT; this brief is not.
+**Internal only — do not forward.** The mockup (`static/mdot.html`, served at
+https://mctv-bot.onrender.com/mdot) is the show-piece and is safe to put in front of MDOT;
+this brief is not.
 
 **Contact:** Mikey Flood, Mississippi Department of Transportation (personal friend of Creed's).
 He most likely does not know the MCTV network exists. That is a feature, not a bug — the first
@@ -45,9 +46,13 @@ mechanism as the `/rates` calculator), no login, opens straight to the mockup on
 It goes live the moment the MDOT branch merges to `main`; check it loads on your own phone
 before you send it to anyone.
 
-Do not send the raw `mockup.html` file — texted HTML attachments open badly (or not at all)
-on most phones. If you ever need an offline copy for a meeting with no signal, open the page
-and save it, or screenshot the intro / board / outro frames.
+Do not send the raw HTML file — texted HTML attachments open badly (or not at all) on most
+phones. If you ever need an offline copy for a meeting with no signal, open the page and
+save it, or screenshot the intro / board / outro frames.
+
+The page itself lives at `static/mdot.html` (one copy, same folder as the rate calculator
+and the lobby board). That is the file to edit when you swap in real MDOTtraffic data before
+a meeting — the `MARKETS` object near the bottom.
 
 ## First touch (friend mode, not sales mode)
 
@@ -95,7 +100,7 @@ real venue, the mockup link, and a 15-minute ask. Do **not** attach a proposal.
    into every new city." Then stop talking and let him react.
    **Morning-of move:** swap the sample travel times and work-zone alert for that day's real
    conditions from MDOTtraffic.com (they're in the `MARKETS` object at the bottom of
-   `mockup.html`). It turns the mockup from an illustration into proof: "this is your feed,
+   `static/mdot.html`). It turns the mockup from an illustration into proof: "this is your feed,
    on our screens, right now." MDOT staff know their active projects — a made-up work zone
    is the one detail that could break the spell mid-demo.
 3. **The real ask.** Not "buy this." It's: **"Does this fit anything MDOT does? Who inside
