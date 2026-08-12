@@ -112,6 +112,14 @@ Starkville screen.**
 | CrossFit Tupelo | Tupelo | 1 |
 | Her Gym | Tupelo | 1 |
 
+**Rebel Body Fitness is on the partner logo wall on slide 05, and its logo says so.** That
+slide used to be captioned "not one of them is a gym," which the wall itself contradicts in
+plain sight. It now names the exception before Joe can: *the one gym on it, Rebel Body
+Fitness, is in Oxford — there is not one on a Starkville screen.* Say it the same way. Naming
+it first is worth more than the half-second of surprise it costs, because the alternative is
+Joe spotting a gym logo under a line claiming there are none, and then not believing slide 12
+either.
+
 Source: `data/network_dashboard.json` for the first three; **Her Gym** appears in
 `static/rates.html` and in the published media kit's Tupelo host list but is not yet in the
 dashboard export, which is why earlier drafts missed it. Four gyms, all Oxford or Tupelo,
