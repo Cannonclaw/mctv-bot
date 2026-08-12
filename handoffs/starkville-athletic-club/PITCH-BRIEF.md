@@ -61,6 +61,16 @@ only staffed until six: that is the single strongest argument for the lobby boar
 for most of the hours his building is occupied there is nobody at the desk to answer
 anything. The board is the only thing that can.
 
+### One note on the March visit
+
+Swayze had booked an appointment; he and Creed drove out and were turned away at the door by a
+marketing staffer. The meeting never happened, so **do not assume Joe ever saw that proposal.**
+
+That is the only reason it matters. **Joe telephoned Creed directly on Friday, August 7** — the
+owner initiated this himself, which is a different situation entirely and not one that needs
+managing. Get the staffer's name at reception and use it if she is in the room, and leave it
+there. Nothing about being sent away belongs in the meeting.
+
 **Confirm in the room — we do not have these yet:**
 
 - **Actual hours.** Directory listings show staffed hours (Mon–Thu 8–6, Fri 8–12, closed
@@ -276,10 +286,13 @@ and it costs one sentence. Then ask about the club — membership, busiest hours
 trying to grow. Let him talk. He asked for this meeting; find out what he actually wants
 before pitching anything.
 
-**Then own the history, before he raises it.** Swayze sent this club a media kit in
-**March 2025** (Canva `DAGiDZtzRf8`, "Starkville Athletic Club-Proposal") and it was
-delivered. Slide 03 puts that offer on screen next to today's, because getting caught not
-knowing what we already told him is the one avoidable way to lose credibility in this room.
+**Then the March 2025 history — carefully.** A proposal for this club exists from
+**March 2025** (Canva `DAGiDZtzRf8`, by Swayze), but the appointment it was built for never
+happened — see §2. **Do not assume Joe ever saw it.**
+
+Slide 03 is therefore worded as *"what we could offer this club eighteen months ago"* rather
+than *"the offer we made you."* It works whether he read it or never heard of it, and it
+never hints that we were turned away. That detail stays out of the room entirely.
 
 | | March 2025 | Today |
 | --- | --- | --- |
