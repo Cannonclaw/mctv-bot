@@ -69,6 +69,9 @@ anything. The board is the only thing that can.
 - **The real class schedule.** We have the class *names* right (Tribe Fit, Tribe Yoga, barre)
   but the times on the demo board are placeholders. Ask him to send the schedule; loading his
   real one is the fastest way to make the board feel like his.
+- **The MSU home schedule, before the deck is printed.** The game-day slide asserts seven home
+  games and a September opener. That came off public schedule listings, not a repo file —
+  check it against hailstate.com so a wrong date is not the thing Joe notices.
 - Membership count and average member visits per week
 - Square footage and which rooms genuinely warrant a screen. The five named rooms plus the
   front desk support the 5-screen number — it is no longer a guess, but walk it anyway.
@@ -298,6 +301,20 @@ No catch, no fine print.
 
 **When he asks about advertising more widely** — and a gym owner will — go to $199. Frame it
 against the $350 published tier, not against the calculator list.
+
+**The game-day slide is the reason to talk about the season package.** Mississippi State
+plays seven home games this fall and 60,000+ people come into town for each one. They do not
+spend the day in the stadium — they fill the restaurants and bars, and **eight of our 25
+Starkville venues are restaurants and bars carrying 51% of everything the network delivers in
+a month** (`data/network_dashboard.json`). That is the honest argument for the $599 × 4
+athletics package, and it does not require any claim of affiliation with the university.
+
+> **Do not print or display any Mississippi State mark.** The Bulldog, the M-State logo and
+> "Hail State" are registered MSU trademarks. We are *selling* a season package, which makes an
+> implied affiliation exactly the thing a university licensing office acts on. The deck uses
+> maroon as a colour and names Mississippi State factually — nothing more. If Creed wants
+> officially branded inventory, that is a licence conversation with MSU or its multimedia
+> rights holder, not a design decision.
 
 **Hold exclusivity for last.** "One thing you should know. Right now there is not a single
 gym on a Starkville screen. Not one. That will not stay true forever — we are opening a run
