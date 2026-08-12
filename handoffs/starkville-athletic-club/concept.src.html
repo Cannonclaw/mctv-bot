@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Starkville Athletic Club × MCTV — Concept Sheet</title>
+<style>
+@font-face{font-family:'Playfair Display'; src:url('__FONT_PLAYFAIR__') format('truetype'); font-weight:400 900; font-style:normal;}
+@font-face{font-family:'Work Sans'; src:url('__FONT_WORKSANS__') format('truetype'); font-weight:100 900; font-style:normal;}
+
+/* ============================================================
+   MCTV concept sheet — one page, US Letter portrait.
+
+   Deliberately NOT built on the deck's --u grid. The deck is a
+   1920px landscape canvas where 1u is 1% of a very wide page; the
+   same multipliers on a 7.2in column would set body copy at six
+   point. Colours and typefaces carry the brand across; the scale
+   is its own. Sizes are in points because this is print-first —
+   it is an email attachment that has to survive being printed on
+   a home inkjet.
+   ============================================================ */
+:root{
+  --cream:#FAF6EF; --navy:#00377E; --gold:#C9A227; --gold-dk:#7A5B00;
+  --gold-bg:#FFF6DE; --white:#fff; --ink:#2A2A2A; --muted:#5A5A5A;
+  --light:#8A8A8A; --rule:#E4DFD3;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:#DDD8CC;}
+body{font-family:'Work Sans','Segoe UI',system-ui,sans-serif; color:var(--ink);}
+
+.sheet{
+  width:7.2in; min-height:10in; background:var(--cream);
+  padding:0; margin:0.3in auto; position:relative;
+  box-shadow:0 6px 30px rgba(0,0,0,.18);
+  display:flex; flex-direction:column;
+}
+@media print{
+  html,body{background:none;}
+  .sheet{margin:0; box-shadow:none; width:auto; min-height:0;}
+}
+@page{size:letter portrait; margin:0.5in 0.65in;}
+
+/* — masthead band — */
+.band{
+  height:1.22in; position:relative; overflow:hidden;
+  background-size:cover; background-position:center 62%;
+}
+.band .scrim{
+  position:absolute; inset:0;
+  background:linear-gradient(90deg,rgba(0,20,50,.86) 0%,rgba(0,20,50,.62) 46%,rgba(0,20,50,.28) 100%);
+}
+.band .inner{
+  position:absolute; inset:0; padding:0.22in 0.3in;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.wordmark .wm1{font-family:'Playfair Display',Georgia,serif; font-weight:600;
+  letter-spacing:.22em; font-size:13pt; color:#fff; line-height:1;}
+.wordmark .wm2{font-weight:600; letter-spacing:.30em; font-size:5.2pt;
+  color:#E7CE8A; margin-top:2.4pt;}
+.band .who{font-weight:600; letter-spacing:.17em; text-transform:uppercase;
+  font-size:7.4pt; color:#E7CE8A;}
+
+/* — body — */
+.pad{padding:0.28in 0.3in 0.22in; flex:1; display:flex; flex-direction:column;}
+.eyebrow{font-weight:600; letter-spacing:.18em; text-transform:uppercase;
+  font-size:7.4pt; color:var(--navy);}
+.goldrule{width:0.62in; height:2.4pt; background:var(--gold); margin:6pt 0 9pt;}
+h1{font-family:'Playfair Display',serif; font-weight:700; font-size:26pt;
+  line-height:1.06; letter-spacing:-0.012em; color:var(--navy);}
+.deckline{font-size:10.1pt; line-height:1.48; color:var(--ink); margin-top:8pt; max-width:5.9in;}
+p.body{font-size:9.4pt; line-height:1.52; color:var(--muted);}
+
+/* — the three items — */
+.items{margin-top:11pt; border-top:1px solid var(--rule);}
+.item{display:grid; grid-template-columns:0.44in 1fr; gap:0 10pt;
+  padding:8pt 0; border-bottom:1px solid var(--rule);}
+.item .num{font-family:'Playfair Display',serif; font-weight:700;
+  font-size:15pt; color:var(--gold); line-height:1; padding-top:1pt;}
+.item h2{font-family:'Playfair Display',serif; font-weight:700;
+  font-size:11.4pt; color:var(--navy); line-height:1.2;}
+.item p{font-size:9.2pt; line-height:1.5; color:var(--muted); margin-top:3.5pt;}
+
+/* — the town strip — */
+.strip{
+  margin-top:11pt; background:var(--navy); color:#fff;
+  padding:10pt 14pt; display:flex; justify-content:space-between; align-items:center;
+}
+.strip .sl{font-weight:600; letter-spacing:.15em; text-transform:uppercase;
+  font-size:6.8pt; color:#E7CE8A;}
+.strip .stats{display:flex; gap:20pt;}
+.strip .st{text-align:right;}
+.strip .st .n{font-family:'Playfair Display',serif; font-weight:700; font-size:14pt; line-height:1;}
+.strip .st .l{font-size:6.4pt; letter-spacing:.07em; color:#C9D4E6; margin-top:2.5pt;}
+
+/* — the ask — */
+.ask{margin-top:11pt; background:var(--gold-bg); border-left:3pt solid var(--gold);
+  padding:9pt 12pt;}
+.ask b{font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+  font-size:7.2pt; color:var(--gold-dk);}
+.ask p{font-size:9.2pt; line-height:1.5; color:var(--ink); margin-top:4pt;}
+
+/* — sign-off — */
+.sig{margin-top:auto; padding-top:11pt; border-top:1px solid var(--rule);
+  display:flex; justify-content:space-between; align-items:flex-end;}
+.sig .name{font-family:'Playfair Display',serif; font-weight:700; font-size:11pt; color:var(--navy);}
+.sig .role{font-size:7.2pt; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--muted); margin-top:2.5pt;}
+.sig .contact{font-size:8.6pt; color:var(--muted); text-align:right; line-height:1.6;}
+.foot{font-size:6.8pt; color:var(--light); margin-top:7pt; letter-spacing:.02em;}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="band" style="background-image:url('__BAND__')">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+      <div class="who">Starkville Athletic Club &times; MCTV &middot; Wednesday 12 August, 10:30 AM</div>
+    </div>
+  </div>
+
+  <div class="pad">
+
+    <div class="eyebrow">Concept sheet &middot; Host partnership</div>
+    <div class="goldrule"></div>
+
+    <h1>Five screens, a lobby<br />board, and no invoice.</h1>
+
+    <p class="deckline">You have run this club since 1975. We are a family business too,
+      and we would rather build the Starkville side of our network around a place that has
+      been here fifty-one years than around whatever opens next. Here is what we would like
+      to show you Wednesday.</p>
+
+    <div class="items">
+
+      <div class="item">
+        <div class="num">01</div>
+        <div>
+          <h2>A live schedule board in your lobby</h2>
+          <p>Think of the departures board at an airport. Your classes, your rooms, what is on
+            now and what is next &mdash; on a screen in the lobby, on Starkville time, current
+            at whatever hour somebody walks in. You post a change once and every member who
+            comes through the door sees it. We built it and we run it; it is live now at the
+            Oxford Conference Center.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="num">02</div>
+        <div>
+          <h2>Five screens in the club, at no cost to you</h2>
+          <p>Hardware, installation, the ad we build for you, and the day-to-day management.
+            All of it ours. Your own spot runs eight times an hour on your own screens. There
+            is no bill, no setup fee, and no term on the host side &mdash; we would walk the
+            building with you and agree where the five go.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="num">03</div>
+        <div>
+          <h2>Ten more screens around Starkville, also free</h2>
+          <p>Your ad also runs on ten screens in other Starkville businesses &mdash;
+            restaurants, the coffee bar, the skating rink, the pharmacy. Rooms where people
+            sit still. Between those and your own five, that is roughly 28,800 plays a month,
+            at no cost, for as long as you host us.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="strip">
+      <div class="sl">The Starkville network today</div>
+      <div class="stats">
+        <div class="st"><div class="n">25</div><div class="l">VENUES</div></div>
+        <div class="st"><div class="n">31</div><div class="l">SCREENS</div></div>
+        <div class="st"><div class="n">491,448</div><div class="l">IMPRESSIONS / MONTH</div></div>
+      </div>
+    </div>
+
+    <div class="ask">
+      <b>Nothing to prepare</b>
+      <p>No homework in this. If your class schedule is handy, bring it &mdash; loading
+        your real one into the board beats describing it. Otherwise just show us the building.</p>
+    </div>
+
+    <div class="sig">
+      <div>
+        <div class="name">Creed Cannon</div>
+        <div class="role">MCTV Elite Advertising</div>
+      </div>
+      <div class="contact">
+        601-405-5054<br />creed@mctvofms.com &middot; mctvofms.com
+      </div>
+    </div>
+
+    <div class="foot">MCTV Digital, Inc. &middot; The Indoor Billboard Company &middot; North Mississippi.
+      Starkville figures are measured on our own network. Photograph: Davis Wade Stadium, from our
+      Golden Triangle media kit.</div>
+
+  </div>
+</div>
+
+</body>
+</html>

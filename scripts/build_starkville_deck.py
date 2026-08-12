@@ -218,12 +218,76 @@ def to_pdf(src: Path) -> None:
     print(f"wrote {pdf.relative_to(ROOT)} — {pdf.stat().st_size / 1024 / 1024:.2f} MB")
 
 
+# The concept sheet is a different animal from the deck: one page, portrait, and
+# meant to be opened cold in an inbox on a phone before anybody has been pitched.
+# It shares the brand (colours, Playfair over Work Sans, the wordmark) and nothing
+# else — see the note at the top of concept.src.html for why it does not inherit
+# the deck's unit grid. The band photo is sized small on purpose: this rides on an
+# email, and a 3MB attachment from a stranger does not get opened.
+def build_concept(pdf: bool = False) -> Path:
+    src = DECK / "concept.src.html"
+    html = src.read_text()
+    for token, name in FONTS.items():
+        if token in html:
+            html = html.replace(token, font_uri(name))
+    html = html.replace("__BAND__", image_uri("davis-wade.jpg", (1500, 470), 80, None))
+
+    leftover = sorted(set(re.findall(r"__[A-Z_]+__", html)))
+    if leftover:
+        sys.exit(f"unsubstituted tokens remain in concept sheet: {leftover}")
+
+    out = DECK / "STARKVILLE-Concept-Sheet.html"
+    out.write_text(html)
+    print(f"built {out.relative_to(ROOT)} — {out.stat().st_size / 1024:.0f} KB")
+    if pdf:
+        concept_pdf(out)
+    return out
+
+
+def concept_pdf(src: Path) -> Path:
+    """Print the concept sheet to a one-page US Letter portrait PDF."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        sys.exit("PDF export needs Playwright: pip install playwright")
+
+    pdf = src.with_suffix(".pdf")
+    with sync_playwright() as p:
+        pinned = sorted(Path("/opt/pw-browsers").glob("chromium-*/chrome-linux/chrome"))
+        launch = {"executable_path": str(pinned[-1])} if pinned else {}
+        browser = p.chromium.launch(**launch)
+        page = browser.new_page(viewport={"width": 900, "height": 1200})
+        page.goto(src.as_uri())
+        page.wait_for_timeout(2000)
+        # The whole point of a concept sheet is that it is one page. Letter minus
+        # the 0.5in @page margins leaves 10in, and the sheet renders at the same
+        # 7.2in column on screen as it does in print, so this measurement holds.
+        # It has already caught one silent spill onto a second page.
+        height_in = page.evaluate(
+            "() => document.querySelector('.sheet').scrollHeight / 96")
+        if height_in > 10.0:
+            sys.exit(f"concept sheet is {height_in:.3f}in tall — over the 10in "
+                     f"page by {(height_in - 10) * 72:.1f}pt, so it would print "
+                     f"on two pages. Trim copy or spacing.")
+        print(f"  sheet height {height_in:.3f}in of 10.0in")
+        page.pdf(path=str(pdf), format="Letter", print_background=True,
+                 prefer_css_page_size=True)
+        browser.close()
+    print(f"wrote {pdf.relative_to(ROOT)} — {pdf.stat().st_size / 1024:.0f} KB")
+    return pdf
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pdf", action="store_true", help="also print the deck to PDF")
     ap.add_argument("--print-package", action="store_true",
                     help="also impose the deck on US Letter landscape for a copy shop")
+    ap.add_argument("--concept", action="store_true",
+                    help="build the one-page concept sheet instead of the deck")
     args = ap.parse_args()
+    if args.concept:
+        build_concept(pdf=args.pdf)
+        sys.exit(0)
     built = build()
     if args.pdf:
         to_pdf(built)
