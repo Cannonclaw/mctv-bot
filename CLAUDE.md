@@ -195,7 +195,7 @@ Three login paths in `app.py`:
 Portal access restricted to team emails only (configurable allowlist in `auth.py`).
 
 ## Configuration
-- `config/config.json` — Company info, 4 pricing tiers (10/20/40/75+ screens), team members, 5 markets, venue categories, industry benchmarks (7 media channels), social proof, contract terms
+- `config/config.json` — Company info, 5 pricing tiers (10/20/40/75/125+ screens), team members, 5 markets, venue categories, industry benchmarks (7 media channels), social proof, contract terms
 - `config/prompts.json` — Claude API prompt templates (system + per-section per-type)
 - Environment variables:
   - `ANTHROPIC_API_KEY` — Claude API
@@ -222,6 +222,6 @@ twilio>=9.0.0
 - Supabase client uses raw REST API (`urllib`) rather than the supabase-py SDK for queries
 - Copyright headers on all source files — `MCTV Digital, Inc.` proprietary notice
 - `output/` directory is gitignored — all generated documents are ephemeral
-- Pricing tiers: $350/mo (10 screens), $500/mo (20), $800/mo (40), $1,300/mo (75+)
+- Pricing tiers: $350/mo (10 screens), $500/mo (20), $800/mo (40), $1,300/mo (75), $2,000/mo (125+ — whole-network takeover). Locked; append new tiers LAST (`recommended_tier` is an index into `elite_tiers`) and mirror any change in BOTH `config/config.json` `pricing.elite_tiers` and `services/pipeline_service.py` `TIERS`
 - CPM calculations use `get_tier_impressions()` which pro-rates from 1.9M monthly network impressions
 - Email sends from `portal@mctvofms.com` (shared mailbox) but authenticates as `creed@mctvofms.com` via Microsoft 365 SMTP. Three files have SMTP code: `notification_service.py`, `leads_service.py`, `briefing_service.py` — all use `SMTP_FROM` for the sender address

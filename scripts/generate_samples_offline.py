@@ -394,7 +394,7 @@ def build_sample(config: dict, sample: dict, scheme: str = "original") -> Path:
         "Local businesses have more advertising options than ever. "
         "Here is how MCTV stacks up against the alternatives."
     )
-    # monthly_rate=0 → uses config range ("$350 - $1,300") instead of a specific price
+    # monthly_rate=0 → uses config range ("$350 - $2,000") instead of a specific price
     # monthly_impressions=0 → uses generic CPM ("$1 - $3") instead of calculating
     docx.add_competitive_comparison(doc, monthly_rate=0, screen_count=20,
                                      monthly_impressions=0)

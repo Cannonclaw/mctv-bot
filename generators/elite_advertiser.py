@@ -191,7 +191,8 @@ class EliteAdvertiserProposal(BaseProposal):
                     f"{CPM_BENCHMARK_TEXT}"
                 )
         else:
-            # Standard 4-tier pricing table — highlight tier 2 (index 1) as recommended
+            # Standard pricing table, straight from config's elite_tiers (five
+            # since the $2,000 network takeover) — highlight tier 2 as recommended
             tiers = get_all_tiers(self.config)
             recommended = 1 if len(tiers) > 1 else None
             self.docx.add_pricing_table(doc, tiers, recommended_idx=recommended)

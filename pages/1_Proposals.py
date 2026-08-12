@@ -658,7 +658,19 @@ if proposal_type == "Elite Advertiser":
     else:
         custom_screens = 0
         custom_rate = 0.0
-        st.info("Standard 4-tier pricing will be shown: $350/10 screens, $500/20, $800/40, $1,300/75+")
+        # Read the ladder out of config rather than naming it here: this caption
+        # still named four tiers topping out at $1,300 ten days after the
+        # $2,000 network takeover shipped (2026-08-02), so a rep never knew the
+        # top package was already in the document they had just generated —
+        # the proposal itself builds its table from config. Dollar signs escaped:
+        # Streamlit reads a bare $...$ pair as LaTeX and swallows the text
+        # between them (the old caption had two such pairs).
+        _tier_line = "  |  ".join(
+            "\\${:,.0f} / {}".format(t.get("monthly_rate", 0), t.get("name", "?"))
+            for t in get_all_tiers(config)
+        )
+        st.info(f"Standard tier pricing will be shown: {_tier_line}"
+                if _tier_line else "Standard tier pricing will be shown.")
 
     # Pre-fill notes with sponsorship narrative when a preset is in use
     default_notes = ""

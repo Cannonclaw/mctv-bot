@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import check_password
+from services.config_service import load_config
 
 st.set_page_config(
     page_title="Sales Coach - MCTV Bot",
@@ -44,10 +45,28 @@ st.caption(
 )
 
 
+# The coach grades the call against MCTV's price ladder and drafts a follow-up
+# the rep sends to the prospect, so a stale ceiling here reaches the customer.
+# It sat at $1,300/75 screens after the $2,000 network takeover shipped, which
+# meant the coach could neither credit a rep for pitching the top package nor
+# quote it correctly. Read the ladder from config instead of naming it.
+def _pricing_sentence() -> str:
+    tiers = (load_config().get("pricing") or {}).get("elite_tiers") or []
+    if len(tiers) < 2:
+        return "MCTV sells flat monthly screen packages"
+    first, last = tiers[0], tiers[-1]
+    # COACH_PROMPT is a .format() template (the JSON shape below relies on
+    # doubled braces), so anything spliced in must not carry a bare brace —
+    # tier names are editable from the Settings page.
+    def _tier(t) -> str:
+        name = str(t.get("name", "")).replace("{", "{{").replace("}", "}}")
+        return "${:,.0f}/mo ({})".format(t.get("monthly_rate", 0), name.lower())
+    return f"MCTV's pricing tiers run from {_tier(first)} to {_tier(last)}"
+
+
 COACH_PROMPT = """You are a senior B2B sales coach grading a call for an MCTV
 Elite Advertising rep selling indoor digital billboard advertising in North
-Mississippi (Oxford, Starkville, Tupelo). MCTV's pricing tiers run from
-$350/mo (10 screens) to $1,300/mo (75+ screens), with industry CPMs of
+Mississippi (Oxford, Starkville, Tupelo). """ + _pricing_sentence() + """, with industry CPMs of
 $1-3 vs. $5-12 for radio. The rep should be discovering business goals
 (foot traffic, brand awareness, event promotion), addressing typical
 objections (price, attribution, ad fatigue), and ending with a clear next
