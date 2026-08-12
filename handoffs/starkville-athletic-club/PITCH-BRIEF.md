@@ -298,11 +298,19 @@ never hints that we were turned away. That detail stays out of the room entirely
 | --- | --- | --- |
 | Screens at his club | **1** | **5** |
 | Free screens around town | 10 | 10 |
-| The network | 50+ screens | 118 screens, 97 venues |
-| Network impressions | 460K / 4 weeks | 2.04M / month |
+| The network | 50+ screens | 125+ screens |
+| Network impressions | 460K / 4 weeks | 1.9M+ / month |
 | Starkville | not yet a market | 25 venues, 31 screens |
 | Lobby board | did not exist | running at the Oxford Conference Center |
 | Category exclusivity | not offered | in the contract |
+
+> **Which network numbers the deck quotes.** Slides 03 and 05 use the media kit's published
+> figures — **125+ screens, 100+ venues, 1.9M+ impressions** — so the deck matches the kit
+> Swayze and Creed email to every other prospect. The measured dashboard currently counts
+> **118 screens across 97 venues at 2.04M impressions**, which is the more conservative set and
+> the one to fall back on if anyone asks how the number is derived. Starkville's own figures
+> (25 venues, 31 screens, 491,448 impressions) are measured throughout, because the kit does
+> not break the town out.
 
 **Say the rate part out loud.** The March kit priced +10 locations (20 screens) at $400 —
 about $20 a screen. The $199 ten-screen block is about $19.90 a screen. **We have not
