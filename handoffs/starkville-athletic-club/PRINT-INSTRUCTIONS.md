@@ -83,3 +83,11 @@ Emits three artefacts from the same source:
 The print variant re-anchors `--u` to a hundredth of the target width, so the
 whole slide rescales in inches with no transform and no rounding drift. If a
 future edit changes the canvas, that one variable is the only thing to touch.
+
+**On a phone, use the PDF, not the artifact link.** The web version scales the
+whole 16:9 slide off one CSS variable, which works down to about a laptop but
+not to a 390px screen — below roughly 1000px wide, type stops shrinking with the
+box and slides 2, 10 and 13 spill past their footers. Nothing is wrong with the
+deck; it is a limit of scaling a fixed canvas that far. Laptop, tablet, the PDF
+and the printed pages are all unaffected. Fixable with a small-screen breakpoint
+if it ever matters.
