@@ -31,45 +31,53 @@ DECK = ROOT / "handoffs" / "starkville-athletic-club"
 OUT = DECK / "contracts"
 ME = "T. Creed Cannon <creed@mctvofms.com>"
 
+# The form leads. It is the page that gets a pen on it; the long-form agreements
+# behind it are backup. The $399 block-plus-exclusivity contract is deliberately
+# not here — it is not one of the five options on the form, and a fourth price
+# floating around on a tablet in front of the client is the exact confusion this
+# message exists to avoid. It is still on disk if it is wanted.
 ATTACHMENTS = [
+    (OUT / "SAC-Agreement-Payment-Form.pdf",
+     "1-SIGN-THIS-Agreement-and-Payment-Form.pdf"),
     (DECK / "STARKVILLE-Host-Pitch.pdf",
-     "1-DECK-Starkville-Athletic-Club.pdf"),
+     "2-DECK-Starkville-Athletic-Club.pdf"),
     (OUT / "SAC-1-Host-Agreement-FREE.pdf",
-     "2-AGREEMENT-Host-FREE.pdf"),
+     "3-LONGFORM-Host-FREE.pdf"),
     (OUT / "SAC-2-Advertising-199.pdf",
-     "3-AGREEMENT-Advertising-199.pdf"),
-    (OUT / "SAC-3-Block-plus-Exclusivity-399.pdf",
-     "4-AGREEMENT-Block-plus-Exclusivity-399.pdf"),
+     "4-LONGFORM-Advertising-199.pdf"),
 ]
 
 BODY = """Starkville Athletic Club - Joe Underwood - 100 Eckford Drive
-Wednesday 12 August 2026, 10:30 AM
+Wednesday 12 August 2026
 
-Attached, in the order you would use them:
+  1. AGREEMENT + PAYMENT FORM - one page, tick one box and sign. This is the
+     one that gets completed. Five options on it:
 
-  1. DECK - 15 pages. Cover, the offer, what changed since March 2025, the
-     network and the map, partners, where the ad runs, screens in the wild,
-     the lobby board, the economics, the dwell math, the traction report,
-     exclusivity, the ladder, the wider network, next steps.
+        Hosting only, no advertising ............ $0/mo    no term
+        Starkville host rate, ten-screen block .. $199/mo  6 months
+        Full Starkville market, 31 screens ...... $599/mo  12 months
+        Full Starkville + fitness exclusivity ... $700/mo  12 months
+        Golden Triangle + exclusivity + season .. $999/mo  12 months
 
-  2. HOST AGREEMENT - $0/mo. Five screens at the club, ten free around
-     Starkville, 12 months, auto-renews. Hardware, install, creative and
-     quarterly refreshes included. No minimum and no obligation to buy
-     advertising. Either party can end it on 30 days notice and we remove the
-     hardware at our cost.
+     Hosting is free on every line, including the paid ones. Payment block on
+     the same page - ACH no fee, card plus 3.5%. Prepay six and the seventh is
+     free; prepay twelve and the thirteenth and fourteenth are free.
 
-  3. ADVERTISING - $199/mo, 6 months. Ten-screen block of the longest-dwell
-     venues in town. Published rate for ten screens is $350.
+  2. DECK - 15 pages, the one we walked through.
 
-  4. BLOCK + FITNESS EXCLUSIVITY - $399/mo, 12 months. That is the $199 block
-     plus the $200 exclusivity premium on one page. It replaces number 3
-     rather than adding to it - sign 2 and 4, or 2 and 3, never all three.
-     Covered category is gyms, fitness studios, health clubs and personal
-     training. Not covered: supplement and nutrition retail, med-spa, wellness
-     clinics, physical therapy.
+  3. LONG-FORM HOST AGREEMENT - $0/mo. Five screens at the club, ten free
+     around Starkville, 12 months, auto-renews. Hardware, install, creative and
+     quarterly refreshes included. No minimum, no obligation to buy advertising.
+     Either party ends it on 30 days notice and we pull the hardware at our cost.
 
-Full territory is $599/mo for all 25 venues and 31 screens. No page drawn for
-it - say the word and I will have one.
+  4. LONG-FORM ADVERTISING - $199/mo, 6 months, ten-screen block. Published
+     rate for ten screens is $350.
+
+Exclusivity covers gyms, fitness studios, health clubs and personal training.
+Not supplement or nutrition retail, med-spa, wellness clinics or physical
+therapy - 39759 Nutrition and Revive Wellness are existing hosts and stay.
+
+Golden Triangle is 35 screens: Starkville 31, Columbus 3, West Point 1.
 
 Two things to get from Joe:
 
