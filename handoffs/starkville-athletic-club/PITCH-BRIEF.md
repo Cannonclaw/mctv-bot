@@ -219,6 +219,32 @@ Offer Joe **first refusal at $599/mo** as a founding host. Timing is good — it
 the season starts next month. This is the natural "and one more thing" at the end of the
 meeting, not something to lead with.
 
+> ### Say "football season," not "Mississippi State"
+>
+> We do not hold any Mississippi State athletics rights. This is our own seasonal package on
+> our own screens, timed to the four months the town is busiest — nothing more. Slide 13 used
+> to headline the card **"Mississippi State — $599/mo × 4"** under a *Season sponsorship*
+> label, and said "we do not have an athletics sponsor this year," which reads as though we
+> sell MSU sponsorship inventory and one slot is open. That is a claim we cannot support, in
+> writing, to a prospect. The card now reads **"Football season"** and says plainly that it is
+> our package on our screens. Say it the same way out loud. The scarcity is untouched — nobody
+> has taken it and the season starts next month — and everybody in Starkville knows what
+> football season means without us naming the university.
+>
+> The internal product name in `config/config.json` is still "Mississippi State Bulldog Season
+> Sponsorship" with the tagline "Hail State." Fine as an internal key; **it must not reach a
+> client-facing document**, and it will if somebody generates a proposal from that config.
+> Worth renaming at some point.
+>
+> **One thing to look at before printing, and it is Creed's call, not mine.** The cover
+> photograph — MCTV's own Golden Triangle media kit cover — carries the M-State logo twice on
+> the scoreboard, the MISSISSIPPI STATE wordmark on the scoreboard and in the stands, and
+> HAIL STATE in the end zone. Those are registered marks. The image is already published on
+> our own kit, so this deck does not create new exposure, and the photograph is the reason the
+> cover works. But a deck that shows those marks *and* sells a football-season package is the
+> combination a university licensing office notices. Nothing has been changed — swapping the
+> cover the night before is not a call to make on someone's behalf. Just know it is there.
+
 ---
 
 ## 5. The $199 question, answered
