@@ -16,11 +16,6 @@
   --ink:#2A2A2A; --muted:#5A5A5A; --light:#8A8A8A; --rule:#E4DFD3;
   --bar-track:#EFEAE0; --bar-a:#C7D3E8; --bar-b:#B0BFDC;
   --live:#2E8B57;
-  /* Game-day accent. Maroon and white is Starkville in September — but it is used
-     as colour only. No Mississippi State mark, logo or slogan appears anywhere in
-     this deck: MCTV sells a season package, it does not hold a licence, and an
-     implied affiliation is exactly what a university licensing office objects to. */
-  --maroon:#5D1725; --maroon-dk:#40101A; --maroon-lt:#E8CBD1; --maroon-bg:#FBF1F2;
   --u:19.2px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -203,31 +198,10 @@ table.data tr.home td.em{color:var(--navy);}
 .step .num{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.8*var(--u)); color:var(--gold-lt); line-height:1;}
 .step .tx{margin-top:calc(.5*var(--u)); font-size:calc(.95*var(--u)); line-height:1.5; color:rgba(255,255,255,.86);}
 
-/* — game day (maroon accent; colour only, no third-party marks) — */
-.maroonrule{width:calc(7*var(--u)); height:calc(.34*var(--u)); background:var(--maroon); margin:calc(1.1*var(--u)) 0 calc(1.6*var(--u));}
-.gameday{background:linear-gradient(180deg,var(--maroon) 0%,var(--maroon-dk) 100%);}
-.gameday .eyebrow{color:var(--maroon-lt);}
-.gameday h2,.gameday h3{color:#fff;}
-.gameday p.body,.gameday li.body,.gameday .lead,.gameday .small{color:rgba(255,255,255,.84);}
-.gameday .wordmark .wm1{color:#fff;}
-.gameday .wordmark .wm2,.gameday .hdr .sect,.gameday .ftr .fl,.gameday .ftr .folio{color:var(--maroon-lt);}
-.gameday .stat{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.22);
-  padding:calc(1.2*var(--u)) calc(.8*var(--u)) calc(1.05*var(--u));}
-.gameday .stat .n{color:#fff;}
-.gameday .stat .l{color:rgba(255,255,255,.72);}
-.gameday .card{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.22);}
-.gameday .label{color:var(--maroon-lt);}
-.gameday ul.dash li::before{color:var(--maroon-lt);}
-/* Where a Davis Wade photograph goes once we hold rights to one — swap the
-   .photoslot div for an <img> and delete this block. */
-.photoslot{border:1px dashed rgba(255,255,255,.34); border-radius:calc(.5*var(--u));
-  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-  padding:calc(2*var(--u)); gap:calc(.5*var(--u)); background:rgba(255,255,255,.04);}
-
 /* — misc — */
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:calc(2.4*var(--u));}
 .figcap{font-size:calc(.82*var(--u)); color:var(--light); margin-top:calc(.6*var(--u));}
-.mapbox svg{max-height:calc(22.4*var(--u)); width:auto; margin:0 auto; display:block;}
+.mapbox svg{max-height:calc(25*var(--u)); width:auto; margin:0 auto; display:block;}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:calc(.5*var(--u)) calc(1.1*var(--u)); font-size:calc(1.0*var(--u));}
 .kv dt{font-weight:600; letter-spacing:.11em; text-transform:uppercase; font-size:calc(.74*var(--u)); color:var(--light); align-self:center;}
 .kv dd{color:var(--ink);}
@@ -685,67 +659,7 @@ html,body{background:#DDD8CC; overflow-x:hidden;}
   </div>
 </section>
 
-<!-- ═══════════════ 9 · GAME DAY ═══════════════ -->
-<section class="page gameday">
-  <div class="hdr">
-    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
-    <div class="sect">Game Day</div>
-  </div>
-  <div class="pad">
-    <div class="eyebrow">Seven home Saturdays, September through November</div>
-    <div class="maroonrule" style="background:var(--maroon-lt);"></div>
-    <h2>When the town fills up,<br>half our network is the reason.</h2>
-
-    <div class="grid2" style="margin-top:calc(1.9*var(--u)); grid-template-columns:1.12fr 1fr; align-items:start;">
-      <div>
-        <p class="lead">Mississippi State plays seven home games in Starkville this season, and
-          60,000&#8239;+ people come into town for each one.</p>
-        <p class="body" style="margin-top:calc(1*var(--u));">They do not spend the day in the
-          stadium. They eat breakfast somewhere, they wait for a table, they fill the bars before
-          kickoff and after it. <b style="color:#fff;">Eight of our 25 Starkville venues are
-          restaurants and bars &mdash; and those eight carry 51% of everything this network
-          delivers in a month.</b></p>
-        <ul class="dash" style="margin-top:calc(1.1*var(--u));">
-          <li class="body">Your ad already runs there under the free host package</li>
-          <li class="body">The season package puts you on <b style="color:#fff;">all 30</b> Starkville screens</li>
-          <li class="body">No athletics sponsor signed this year &mdash; and the opener is next month</li>
-        </ul>
-      </div>
-      <div>
-        <div class="statrow" style="grid-template-columns:1fr 1fr;">
-          <div class="stat"><div class="n">7</div><div class="l">Home games</div></div>
-          <div class="stat"><div class="n">60K<span>&#8239;+</span></div><div class="l">Seats, every one</div></div>
-          <div class="stat"><div class="n">8</div><div class="l">Bar &amp; restaurant venues</div></div>
-          <div class="stat"><div class="n">51%</div><div class="l">Of network impressions</div></div>
-        </div>
-        <div class="photoslot" style="margin-top:calc(1.1*var(--u)); height:calc(6.2*var(--u));">
-          <div class="label" style="color:var(--maroon-lt);">Photo slot</div>
-          <div class="small" style="color:rgba(255,255,255,.72); max-width:calc(20*var(--u));">
-            A Davis Wade / game-day Starkville shot goes here once we are holding one we own or
-            have licensed.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:calc(1.4*var(--u)); padding:calc(1.15*var(--u)) calc(1.7*var(--u)); display:flex; align-items:center; justify-content:space-between; gap:calc(2*var(--u));">
-      <div>
-        <div class="label">Season sponsorship &middot; September through bowl season</div>
-        <h3 style="margin-top:calc(.35*var(--u)); font-size:calc(1.7*var(--u)); color:#fff;">All 30 Starkville
-          screens, four months</h3>
-      </div>
-      <div style="text-align:right; flex:none;">
-        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.8*var(--u)); color:#fff; line-height:1;">
-          $599<span style="font-family:'Work Sans',sans-serif; font-weight:500; font-size:calc(1*var(--u)); color:var(--maroon-lt);"> / mo &times; 4</span></div>
-        <div class="micro" style="color:var(--maroon-lt); margin-top:calc(.3*var(--u));">List rate is $800 a month</div>
-      </div>
-    </div>
-  </div>
-  <div class="ftr">
-    <div class="fl">Starkville Athletic Club &times; MCTV</div><div class="folio">09</div>
-  </div>
-</section>
-
-<!-- ═══════════════ 10 · THE LADDER ═══════════════ -->
+<!-- ═══════════════ 9 · THE LADDER ═══════════════ -->
 <section class="page">
   <div class="hdr">
     <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
@@ -796,20 +710,20 @@ html,body{background:#DDD8CC; overflow-x:hidden;}
       </div>
       <div class="card pad2" style="position:relative; padding-top:calc(1.9*var(--u));">
         <div class="toprule gold"></div>
-        <div class="label">If you never buy a thing</div>
-        <h3 style="margin-top:calc(.5*var(--u)); font-size:calc(1.5*var(--u));">Hosting is still free</h3>
-        <p class="body" style="margin-top:calc(.5*var(--u)); font-size:calc(.95*var(--u));">The five screens,
-          the board and the ten free screens are not a trial and not an introductory rate. They do not
-          expire, and nothing on this page is a condition of keeping them.</p>
+        <div class="label">Season sponsorship</div>
+        <h3 style="margin-top:calc(.5*var(--u)); font-size:calc(1.5*var(--u));">Mississippi State &mdash; $599/mo &times; 4</h3>
+        <p class="body" style="margin-top:calc(.5*var(--u)); font-size:calc(.95*var(--u));">All 30 Starkville
+          screens, September through bowl season. We do not have an athletics sponsor this year and the
+          season starts next month. List rate is $800 a month.</p>
       </div>
     </div>
   </div>
   <div class="ftr">
-    <div class="fl">Starkville Athletic Club &times; MCTV</div><div class="folio">10</div>
+    <div class="fl">Starkville Athletic Club &times; MCTV</div><div class="folio">09</div>
   </div>
 </section>
 
-<!-- ═══════════════ 11 · NEXT STEPS ═══════════════ -->
+<!-- ═══════════════ 10 · NEXT STEPS ═══════════════ -->
 <section class="page dark">
   <div class="hdr">
     <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
@@ -849,7 +763,7 @@ html,body{background:#DDD8CC; overflow-x:hidden;}
     </div>
   </div>
   <div class="ftr">
-    <div class="fl">MCTV Digital, Inc. &middot; MCTVofMS.com</div><div class="folio">11</div>
+    <div class="fl">MCTV Digital, Inc. &middot; MCTVofMS.com</div><div class="folio">10</div>
   </div>
 </section>
 </div>
