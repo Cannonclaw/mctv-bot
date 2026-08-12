@@ -3,11 +3,13 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Three routes, all public, all GET/HEAD:
+Four routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
     /board/events.json  the schedule the board polls (venue_events_service)
+    /mdot               the MDOT sponsorship mockup (static/mdot.html), so it
+                        can be texted as a link instead of an HTML attachment
 
 Streamlit exposes no routing API, so this reaches into the web server it
 boots and inserts the routes ahead of Streamlit's catch-all (which
@@ -47,6 +49,17 @@ RATES_FILE = STATIC_DIR / "rates.html"
 BOARD_PATH = "/board"
 BOARD_FILE = STATIC_DIR / "board.html"
 BOARD_DATA_PATH = "/board/events.json"
+
+MDOT_PATH = "/mdot"
+MDOT_FILE = STATIC_DIR / "mdot.html"
+
+# Plain HTML pages, path -> file. The JSON feed below is handled separately
+# because it is generated rather than read off disk.
+HTML_PAGES = {
+    RATES_PATH: RATES_FILE,
+    BOARD_PATH: BOARD_FILE,
+    MDOT_PATH: MDOT_FILE,
+}
 
 HTML_CACHE_CONTROL = "public, max-age=300"
 # The board polls this every minute and re-derives now/next locally in between;
@@ -105,8 +118,8 @@ def _resolve(path: str, query: str = "") -> tuple[str, bytes, str] | None:
     """
     clean = (path or "").rstrip("/") or "/"
 
-    if clean in (RATES_PATH, BOARD_PATH):
-        body = _page_bytes(RATES_FILE if clean == RATES_PATH else BOARD_FILE)
+    if clean in HTML_PAGES:
+        body = _page_bytes(HTML_PAGES[clean])
         if body is None:
             return None
         return ("text/html; charset=utf-8", body, HTML_CACHE_CONTROL)
@@ -162,6 +175,7 @@ def _install_tornado() -> None:
             (r"/board/events\.json/?", PublicPageHandler),
             (r"/board/?", PublicPageHandler),
             (r"/rates/?", PublicPageHandler),
+            (r"/mdot/?", PublicPageHandler),
         ]
         router.add_rules(rules)
         # add_rules appends; Streamlit's catch-all is already in the list, so
@@ -231,17 +245,17 @@ def _install_asgi() -> None:
 
 def install() -> None:
     """Register the public routes on whichever server Streamlit is about to boot."""
-    missing = [f.name for f in (RATES_FILE, BOARD_FILE) if not f.exists()]
+    missing = [f.name for f in HTML_PAGES.values() if not f.exists()]
     if missing:
         logging.warning("public pages: %s missing from static/", ", ".join(missing))
-        if len(missing) == 2:
+        if len(missing) == len(HTML_PAGES):
             return
 
     for stack, patch in (("Tornado", _install_tornado), ("ASGI", _install_asgi)):
         try:
             patch()
-            logging.info("public pages: /rates and /board installed on the %s server",
-                         stack)
+            logging.info("public pages: %s installed on the %s server",
+                         ", ".join(HTML_PAGES), stack)
         except ImportError:
             logging.info("public pages: %s server not present, skipping", stack)
         except Exception as exc:
