@@ -5,6 +5,19 @@ the subject line names him and the sign-off asks for a direct address.
 **Attach:** `STARKVILLE-Concept-Sheet.pdf` (one page, 339 KB)
 **Send:** early Wednesday, before leaving Jackson at 8:00 AM.
 
+> ### Confirm before sending: which phone number
+>
+> The repo disagrees with itself about Creed's number. `config/config.json` — the team
+> record the proposal and contract generators read — says **(601) 201-8202**, and that is
+> what slide 15 of the deck prints, so it is what Joe will be holding on paper.
+> `static/rates.html`, `HEARTBEAT.md` and `MEMORY.md` say **601-405-5054**.
+>
+> The sheet and this email now use **601-201-8202** so they match the deck. Handing a
+> prospect two different numbers from the same company in one meeting is the concrete
+> failure, and matching the printed leave-behind is the safer default. **If 405-5054 is the
+> live number, change it in both places before sending** — and fix `config/config.json`,
+> because every generated proposal and contract is printing the other one.
+
 ---
 
 **Subject:** For Joe Underwood — Wednesday 10:30, MCTV
@@ -27,7 +40,7 @@ See you at ten thirty.
 
 Creed Cannon
 MCTV Elite Advertising
-601-405-5054 · creed@mctvofms.com · mctvofms.com
+601-201-8202 · creed@mctvofms.com · mctvofms.com
 
 *Sent to the club's main address — if there is a better one for you directly, just reply with
 it and I will use that from here on.*

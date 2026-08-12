@@ -75,7 +75,13 @@ there. Nothing about being sent away belongs in the meeting.
 
 - **Actual hours.** Directory listings show staffed hours (Mon–Thu 8–6, Fri 8–12, closed
   weekends) alongside "24-hour key card access." Get the real answer before quoting either
-  back to him — the pitch page deliberately shows no opening or closing time for this reason.
+  back to him — the pitch page deliberately shows no opening or closing time for this reason,
+  and **slide 08 of the deck now follows the same rule.** It used to read "your desk is
+  staffed until six"; it now says "your desk is not staffed around the clock," which makes
+  the identical argument and cannot be contradicted by the man who owns the building. The
+  sample board still shows a 24-hour key card row, but that panel is captioned as a
+  placeholder. Once he confirms the real hours, say the sharper version out loud — it is a
+  better line spoken than printed.
 - **The real class schedule.** We have the class *names* right (Tribe Fit, Tribe Yoga, barre)
   but the times on the demo board are placeholders. Ask him to send the schedule; loading his
   real one is the fastest way to make the board feel like his.
@@ -482,7 +488,15 @@ details in §2, which come from public listings and are marked below. Nothing is
 | Industry CPM benchmarks | `config/config.json` → `industry_benchmarks` |
 | Exclusivity clause requirements | `generators/contract_generator.py` |
 
-**Two known data caveats.** `config/config.json` says Starkville has 30 screens while the
-dashboard measures 31 — quote the dashboard. And the dashboard was last refreshed
+**Three known data caveats.** `config/config.json` says Starkville has 30 screens while the
+dashboard measures 31 — quote the dashboard. The dashboard was last refreshed
 **2026-02-24**, so the venue list may lag the current network; re-run the numbers before
 this brief gets reused for the next Starkville prospect.
+
+And **the repo disagrees with itself about Creed's phone number.** `config/config.json`,
+`config/prompts.json` and the SEO docs say **(601) 201-8202**; `static/rates.html`,
+`HEARTBEAT.md` and `MEMORY.md` say **601-405-5054**. The deck and the concept sheet both use
+201-8202, because that is what `config.json` feeds into every generated proposal and
+contract — so a prospect who gets a document from us gets that one. **Settle it and fix
+whichever file is wrong**, because right now the rate calculator hands out one number and
+every contract hands out the other.
