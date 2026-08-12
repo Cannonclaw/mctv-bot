@@ -104,9 +104,13 @@ Starkville screen.**
 | Built Different Fitness | Oxford | 1 |
 | Rebel Body Fitness | Oxford | 1 |
 | CrossFit Tupelo | Tupelo | 1 |
+| Her Gym | Tupelo | 1 |
 
-Source: `data/network_dashboard.json`. This is verifiable — if Joe checks, it holds up.
-It is the strongest card in the deck and it should not be spent early.
+Source: `data/network_dashboard.json` for the first three; **Her Gym** appears in
+`static/rates.html` and in the published media kit's Tupelo host list but is not yet in the
+dashboard export, which is why earlier drafts missed it. Four gyms, all Oxford or Tupelo,
+none in Starkville. This is verifiable — if Joe checks, it holds up. It is the strongest
+card in the deck and it should not be spent early.
 
 ### The Starkville network he would be joining
 
@@ -198,8 +202,12 @@ competitor is another gym. Then it is in the record.
 ### Rung 4 — the Mississippi State card
 
 `config/config.json` → `sponsorship_packages` → `msstate_football` is a real, productized
-package: **$800/mo × 4 months, all 30 Starkville screens, September through bowl season.**
-It is unsold. We have no MSU athletics sponsor.
+package: **$800/mo × 4 months, September through bowl season.** It is unsold. We have no MSU
+athletics sponsor.
+
+Config writes the package as "all 30 Starkville screens." **Say 31** — that is the measured
+count and it is what the rest of the deck says; quoting 30 here and 31 three slides earlier
+is the kind of thing a careful buyer notices.
 
 Offer Joe **first refusal at $599/mo** as a founding host. Timing is good — it is August, and
 the season starts next month. This is the natural "and one more thing" at the end of the
@@ -246,8 +254,16 @@ for that territory. That is not a discount, it is repricing the market. And sinc
 the first of several Starkville deals, it becomes the number every other prospect hears
 about.
 
-Full territory should be **$599/mo** ($1.22 CPM), with **$499** as the floor if he prepays
-12 months.
+Full territory should be **$599/mo**, with **$499** as the floor if he prepays 12 months.
+
+> **Do not quote a CPM on the full territory.** $599 against the dashboard's 491,448 is
+> $1.22, but $599 against the *conservative* model's 298,158 is $2.01 — worse per thousand
+> than the $1.36 block. The two rungs are measured on different formulas, so any CPM
+> comparison between them can be picked apart. The deck therefore prints **$19.32 a screen**
+> on that card instead ($599 ÷ 31), which is exact arithmetic, needs no model, and lands on
+> the same "about $20 a screen" story slide 03 tells. Use per-screen in the room too. If Joe
+> asks for a CPM on the territory, give him the conservative $2.01 and point out he is
+> buying 3× the screens for 3× the price — the honest version survives scrutiny.
 
 ---
 
@@ -306,7 +322,11 @@ never hints that we were turned away. That detail stays out of the room entirely
 
 > **Which network numbers the deck quotes.** Slides 03 and 05 use the media kit's published
 > figures — **125+ screens, 100+ venues, 1.9M+ impressions** — so the deck matches the kit
-> Swayze and Creed email to every other prospect. The measured dashboard currently counts
+> Swayze and Creed email to every other prospect. Slide 06's three territory counts are the
+> kit's too (**Oxford & Lafayette 44, Tupelo & Lee 28, Golden Triangle 29** — page 05 of the
+> kit, which lists the venues by name under each heading). They are **venue** counts, and the
+> deck now labels them as such: three numbers that sum to 100 sitting under a line about 125+
+> screens read as a contradiction otherwise. The measured dashboard currently counts
 > **118 screens across 97 venues at 2.04M impressions**, which is the more conservative set and
 > the one to fall back on if anyone asks how the number is derived. Starkville's own figures
 > (25 venues, 31 screens, 491,448 impressions) are measured throughout, because the kit does
