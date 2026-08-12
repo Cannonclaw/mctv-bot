@@ -148,6 +148,52 @@ def write_artifact_variant(html: str) -> Path:
     return out
 
 
+# A 16:9 canvas maps to no standard paper size, so a print run of this deck is
+# normally a custom trim — which is a slow, expensive conversation at a copy
+# counter. This imposes each slide on plain US Letter landscape inside a white
+# margin: no bleed, no trim marks, no custom stock. It is a walk-up colour copy
+# job any shop can run while you wait.
+#
+# Sized in inches rather than by zoom. The canvas is exactly 100u wide, so setting
+# --u to a hundredth of the target width rescales the entire slide with no
+# transform and no rounding drift — and the margins then centre it honestly.
+# 11 - 2(0.4) = 10.2in wide; 8.5 - 2(1.38) = 5.74in tall; 10.2/5.74 = 16:9.
+PRINT_CSS = """
+@page{size:letter landscape; margin:1.38in 0.4in;}
+html,body{background:#fff;}
+.page{width:10.2in; height:5.7375in; --u:0.102in;
+      margin:0; box-shadow:none; page-break-after:always;}
+.page:last-child{page-break-after:auto;}
+"""
+
+
+def to_print_pdf(src: Path) -> None:
+    """Impose the deck on US Letter landscape for a walk-up print shop."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        sys.exit("PDF export needs Playwright: pip install playwright")
+
+    html = src.read_text().replace("</style>", PRINT_CSS + "</style>", 1)
+    staged = src.with_name("_print_stage.html")
+    staged.write_text(html)
+    pdf = src.with_name("STARKVILLE-Host-Pitch-PRINT.pdf")
+    try:
+        with sync_playwright() as p:
+            pinned = sorted(Path("/opt/pw-browsers").glob("chromium-*/chrome-linux/chrome"))
+            launch = {"executable_path": str(pinned[-1])} if pinned else {}
+            browser = p.chromium.launch(**launch)
+            page = browser.new_page(viewport={"width": 1980, "height": 1200})
+            page.goto(staged.as_uri())
+            page.wait_for_timeout(2500)
+            page.pdf(path=str(pdf), format="Letter", landscape=True,
+                     print_background=True, prefer_css_page_size=True)
+            browser.close()
+    finally:
+        staged.unlink(missing_ok=True)
+    print(f"wrote {pdf.relative_to(ROOT)} — {pdf.stat().st_size / 1024 / 1024:.2f} MB (US Letter)")
+
+
 def to_pdf(src: Path) -> None:
     """Print the deck at its native 1920x1080 canvas, one slide per page."""
     try:
@@ -175,7 +221,11 @@ def to_pdf(src: Path) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pdf", action="store_true", help="also print the deck to PDF")
+    ap.add_argument("--print-package", action="store_true",
+                    help="also impose the deck on US Letter landscape for a copy shop")
     args = ap.parse_args()
     built = build()
     if args.pdf:
         to_pdf(built)
+    if args.print_package:
+        to_print_pdf(built)
