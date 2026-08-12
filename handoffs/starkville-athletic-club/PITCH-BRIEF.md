@@ -40,17 +40,38 @@ marginal dollars on this one contract.
 | Field | Value |
 | --- | --- |
 | Business | Starkville Athletic Club |
+| Address | 100 Eckford Dr, Starkville, MS 39759 |
+| Phone | (662) 323-4455 |
+| Website | gymstarkville.com — tagline **"Try the Tribe"** |
+| **Established** | **1975** — locally owned and operated, 51 years |
 | City | Starkville, MS (Oktibbeha County) |
 | Owner / contact | Joe Underwood |
 | Category | Gym & Fitness / health club |
+| Access | Staffed Mon–Fri 8–6 (Fri to 12), **24-hour key card access for members** |
+| Classes | Tribe Fit, Tribe Yoga, barre, HIIT, personal training |
+| Rooms | Separate cardio, freestyle, weights, upper body, and legs rooms |
+| Amenities | Locker rooms with steam rooms and saunas, tanning, aqua massage, compression therapy |
 | Relationship today | None — inbound prospect |
 | Inbound date | Friday, August 7 2026 |
 | Proposed screens | 5 (host, free for life) |
 
+**Two facts to lead with.** He has run this club since **1975** — open the meeting there,
+not with our network stats. And members have **24-hour key card access** while the desk is
+only staffed until six: that is the single strongest argument for the lobby board, because
+for most of the hours his building is occupied there is nobody at the desk to answer
+anything. The board is the only thing that can.
+
 **Confirm in the room — we do not have these yet:**
 
+- **Actual hours.** Directory listings show staffed hours (Mon–Thu 8–6, Fri 8–12, closed
+  weekends) alongside "24-hour key card access." Get the real answer before quoting either
+  back to him — the pitch page deliberately shows no opening or closing time for this reason.
+- **The real class schedule.** We have the class *names* right (Tribe Fit, Tribe Yoga, barre)
+  but the times on the demo board are placeholders. Ask him to send the schedule; loading his
+  real one is the fastest way to make the board feel like his.
 - Membership count and average member visits per week
-- Square footage and how many rooms genuinely warrant a screen (drives the 5-screen number)
+- Square footage and which rooms genuinely warrant a screen. The five named rooms plus the
+  front desk support the 5-screen number — it is no longer a guess, but walk it anyway.
 - Whether he already advertises anywhere, and what it costs him
 - Whether he owns other businesses in the Golden Triangle (bundle opportunity —
   "Buy 2, Get 1 Free" is standard per `config/config.json`)
@@ -231,10 +252,11 @@ For a gym it does more than it does for a conference center:
 | What it shows | Why Joe cares |
 | --- | --- |
 | Class schedule, live | The printed sheet at the front desk is stale by Wednesday |
-| Court and studio bookings | Members stop asking the desk what time spin starts |
+| **Anything at all, after 6pm** | **Members are in on a key card with nobody at the desk. This is the one that matters.** |
+| Studio and training-room bookings | Members stop asking the desk when Tribe Fit starts |
 | Closures and holiday hours | Reaches every member who walks in, the moment he posts it |
 | Private bookings, masked | A corporate rental shows the room and time but never the name |
-| MSU game day hours | Post tip-off time and adjusted hours once, done |
+| MSU game day hours | Post adjusted hours once, done |
 
 The privacy masking is worth demonstrating in the room — `is_private` rows keep their room
 and time but render as "Private Event," and the entered title never leaves the server. Gym
@@ -247,13 +269,22 @@ it. That ordering is what makes the free host package feel like a gift rather th
 
 ## 6. Talk track
 
-**Open on the room, not the product.** Ask about the club — membership, busiest hours, what
-he is trying to grow. Let him talk. He asked for this meeting; find out what he actually
-wants before pitching anything.
+**Open on 1975.** "You have been running this since '75. We are a family business too — that
+is exactly why we would rather build the Starkville network around you than around whatever
+opens next." Two long-standing Mississippi businesses is the truest version of this pitch,
+and it costs one sentence. Then ask about the club — membership, busiest hours, what he is
+trying to grow. Let him talk. He asked for this meeting; find out what he actually wants
+before pitching anything.
 
 **Show him the board first.** Open `pitch.html` on a laptop or tablet and let it sit there
-running. It is his club's name, his class schedule, and a live clock. That is a better opening
-than any sentence about impressions.
+running. It is his club's name, his class names, his rooms, and a live clock on Starkville
+time. That is a better opening than any sentence about impressions. Say plainly that the
+times are placeholders and you want his real schedule — asking for it is a soft close.
+
+**Use the after-hours angle on the board.** "Your desk is staffed until six. Your members are
+in the building at five in the morning on a key card. Right now there is nothing at that desk
+that can tell them anything. That is what the board fixes." This is the strongest board
+argument we have and it is specific to how his club actually runs.
 
 **Then the host offer, plainly:** "We would like to put five screens in your club. It costs
 you nothing — not the hardware, not the install, not the content. We handle all of it. Your
@@ -356,11 +387,14 @@ it would set the anchor for every Starkville deal this fall. Offer the ladder in
 
 ## 10. Sources
 
-Every figure in this brief comes from a file in this repository. Nothing is estimated.
+Every figure in this brief comes from a file in this repository, except the prospect's own
+details in §2, which come from public listings and are marked below. Nothing is estimated.
 
 | Claim | Source |
 | --- | --- |
 | Starkville venues, screens, impressions, dwell, traffic | `data/network_dashboard.json` |
+| Venue coordinates behind the map on the pitch page | `data/venue_geocodes.json` |
+| Club address, phone, founding year, tagline, classes, rooms, amenities, access hours | Public web listings (gymstarkville.com, MindBody, Yelp, Starkville Chamber) — **verify in the room** |
 | No gym in Starkville; gym benchmark averages | `data/network_dashboard.json` |
 | Territory list value, per-venue rates, conservative CPM | `static/rates.html` (v2.0, $5 CPM model) |
 | Host package plays, pricing tiers, prepay terms | `config/config.json` → `pricing` |
