@@ -202,6 +202,32 @@ table.data tr.home td.em{color:var(--navy);}
 .step .num{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.8*var(--u)); color:var(--gold-lt); line-height:1;}
 .step .tx{margin-top:calc(.5*var(--u)); font-size:calc(.95*var(--u)); line-height:1.5; color:rgba(255,255,255,.86);}
 
+/* — "what we sent you last time" excerpt —
+   Canva's export and thumbnail hosts are both blocked by the session egress
+   policy, so the March 2025 kit is reproduced as typeset copy rather than a
+   screenshot. Every line inside .excerpt is verbatim from that design
+   (Canva DAGiDZtzRf8, "Starkville Athletic Club-Proposal", 2025-03-18). */
+.excerpt{background:#F3EEE3; border:1px solid #DCD3C0; border-radius:calc(.5*var(--u));
+  padding:calc(1.2*var(--u)) calc(1.5*var(--u)); position:relative; box-shadow:0 2px 0 #E8E1D2 inset;}
+.excerpt .stamp{position:absolute; top:calc(-.75*var(--u)); left:calc(1.4*var(--u));
+  background:var(--muted); color:#F3EEE3; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  font-size:calc(.66*var(--u)); padding:calc(.3*var(--u)) calc(.8*var(--u)); border-radius:calc(.2*var(--u));}
+.excerpt .xh{font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  font-size:calc(.78*var(--u)); color:#8A7A55; margin-top:calc(.5*var(--u));}
+.excerpt .xl{font-size:calc(1.02*var(--u)); color:#4A4231; line-height:1.5; margin-top:calc(.45*var(--u));}
+.excerpt .xbig{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.9*var(--u));
+  color:#4A4231; line-height:1.1; margin-top:calc(.55*var(--u));}
+.excerpt .xrule{height:1px; background:#DCD3C0; margin:calc(.8*var(--u)) 0;}
+
+/* — then / now list — */
+.tn{display:grid; grid-template-columns:1fr auto auto; gap:calc(.55*var(--u)) calc(1.1*var(--u));
+  align-items:baseline; font-size:calc(.98*var(--u));}
+.tn .k{color:var(--muted);}
+.tn .a{color:var(--light); text-align:right; white-space:nowrap;}
+.tn .b{color:var(--navy); font-weight:700; text-align:right; white-space:nowrap;}
+.tn .hd{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.7*var(--u));
+  color:var(--light); border-bottom:1px solid var(--rule); padding-bottom:calc(.35*var(--u));}
+
 /* — misc — */
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:calc(2.4*var(--u));}
 .figcap{font-size:calc(.82*var(--u)); color:var(--light); margin-top:calc(.6*var(--u));}

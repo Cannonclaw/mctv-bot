@@ -276,6 +276,31 @@ and it costs one sentence. Then ask about the club — membership, busiest hours
 trying to grow. Let him talk. He asked for this meeting; find out what he actually wants
 before pitching anything.
 
+**Then own the history, before he raises it.** Swayze sent this club a media kit in
+**March 2025** (Canva `DAGiDZtzRf8`, "Starkville Athletic Club-Proposal") and it was
+delivered. Slide 03 puts that offer on screen next to today's, because getting caught not
+knowing what we already told him is the one avoidable way to lose credibility in this room.
+
+| | March 2025 | Today |
+| --- | --- | --- |
+| Screens at his club | **1** | **5** |
+| Free screens around town | 10 | 10 |
+| The network | 50+ screens | 118 screens, 97 venues |
+| Network impressions | 460K / 4 weeks | 2.04M / month |
+| Starkville | not yet a market | 25 venues, 31 screens |
+| Lobby board | did not exist | running at the Oxford Conference Center |
+| Category exclusivity | not offered | in the contract |
+
+**Say the rate part out loud.** The March kit priced +10 locations (20 screens) at $400 —
+about $20 a screen. The $199 ten-screen block is about $19.90 a screen. **We have not
+discounted anything**, and claiming we have is the fastest way to get caught. The line is:
+*the rate held, the network quadrupled, and the free half of the offer went from one screen
+to five.* Slide 03 says exactly that.
+
+**The single best number in the deck:** Starkville alone now runs **491,448** impressions a
+month, against the **460,000** the March kit claimed for the entire fifty-odd-screen network.
+The town he is in is now bigger than the whole thing we pitched him eighteen months ago.
+
 **Show him the board first.** Open `pitch.html` on a laptop or tablet and let it sit there
 running. It is his club's name, his class names, his rooms, and a live clock on Starkville
 time. That is a better opening than any sentence about impressions. Say plainly that the
