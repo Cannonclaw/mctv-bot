@@ -205,7 +205,10 @@ table.data tr.home td.em{color:var(--navy);}
 /* — misc — */
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:calc(2.4*var(--u));}
 .figcap{font-size:calc(.82*var(--u)); color:var(--light); margin-top:calc(.6*var(--u));}
-.mapbox svg{max-height:calc(25*var(--u)); width:auto; margin:0 auto; display:block;}
+/* 22.4u, not 25u: at 25 the map plus its caption pushed the network slide's
+   content under the running footer. The page box never overflowed, so a
+   page-level check missed it — measure against .pad. */
+.mapbox svg{max-height:calc(22.4*var(--u)); width:auto; margin:0 auto; display:block;}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:calc(.5*var(--u)) calc(1.1*var(--u)); font-size:calc(1.0*var(--u));}
 .kv dt{font-weight:600; letter-spacing:.11em; text-transform:uppercase; font-size:calc(.74*var(--u)); color:var(--light); align-self:center;}
 .kv dd{color:var(--ink);}
