@@ -47,7 +47,11 @@ TARGET_SECONDS = 900
 # Sweep rows whose venue_name starts with one of these are diagnostic notes
 # from the whitelist sweep, not real screens. They are excluded from expected
 # loop math so they cannot skew a market's variance.
-DIAGNOSTIC_PREFIXES = ("CROSS-MARKET:", "ORPHAN:", "NOTE:")
+# Sweep annotation rows, not real screens. "UNKNOWN " has no colon like the
+# others but is the same thing — the 2026-07-06 Starkville sweep carries
+# "UNKNOWN cross-market license (resolve)", which otherwise routes as a stop
+# with no address and prints a label nobody can affix.
+DIAGNOSTIC_PREFIXES = ("CROSS-MARKET:", "ORPHAN:", "NOTE:", "UNKNOWN ")
 
 MARKETS = ["oxford", "starkville", "tupelo", "columbus", "west_point"]
 
