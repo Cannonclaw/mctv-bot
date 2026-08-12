@@ -52,7 +52,11 @@ FONTS = {
 # token -> (source image, target size, jpeg quality, crop box or None)
 # A crop box is applied before the resize, in source pixels.
 IMAGES = {
-    "__COVER__":      ("wild-opc.png",          (1920, 1080), 84, (430, 60, 1196, 491)),
+    # Davis Wade at sunset, lifted from page 1 of the Golden Triangle media kit.
+    # Already 16:9 at 3000x1688, so it needs no crop — and it is MCTV's own printed
+    # cover, which settles the rights question the wild-* frames could not.
+    "__COVER__":      ("davis-wade.jpg",        (1920, 1080), 86, None),
+    "__PARTNERS__":   ("partner-logos.png",     (2400, 593),  88, None),  # 4.05:1, matches source — must not crop
     "__W_CORNERS__":  ("wild-four-corners.jpg", (760, 1000),  78, None),
     "__W_OPC__":      ("wild-opc.png",          (700, 470),   78, None),
     "__W_DESK__":     ("wild-frontdesk.jpg",    (700, 470),   78, None),
