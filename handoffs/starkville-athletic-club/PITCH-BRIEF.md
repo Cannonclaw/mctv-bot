@@ -382,6 +382,19 @@ it would set the anchor for every Starkville deal this fall. Offer the ladder in
 - [ ] Add Starkville Athletic Club to `data/network_dashboard.json` and the
       `static/rates.html` venue list once installed — a gym in Starkville changes what we
       can sell to every other Starkville prospect.
+- [ ] **Photograph the install.** There is not one photograph of a Starkville screen anywhere
+      in this repository — checked across all 33 branches. The pitch page carries three Oxford
+      shots because that is all we have, and it says so out loud. Shoot this install and every
+      Starkville install after it; the next Starkville pitch should not have to borrow
+      Oxford's photos.
+      *(For reference, the only large pool of MCTV venue photography we own is the 344-frame
+      Rafters shoot — Oxford, rights cleared including patrons, indexed in
+      `handoffs/rafters-oxford/manifest.json`, files in Google Drive. Night-time bar mood,
+      so no use for a gym, but it is there.)*
+- [ ] **Populate `assets/screens/Starkville/`.** `CLAUDE.md` documents this directory as the
+      per-market photo library that auto-fills proposals, and `pages/1_Proposals.py` reads it
+      on every generation. It has never existed. Until it does, every Starkville proposal
+      generates with no venue photography at all.
 
 ---
 
@@ -394,6 +407,7 @@ details in §2, which come from public listings and are marked below. Nothing is
 | --- | --- |
 | Starkville venues, screens, impressions, dwell, traffic | `data/network_dashboard.json` |
 | Venue coordinates behind the map on the pitch page | `data/venue_geocodes.json` |
+| The three "screens in the wild" photos on the pitch page | `handoffs/hotworx-oxford/assets/img/wild-*` on branch `claude/hot-works-oxford-proposal-706i2x` — **all Oxford**, captioned as such |
 | Club address, phone, founding year, tagline, classes, rooms, amenities, access hours | Public web listings (gymstarkville.com, MindBody, Yelp, Starkville Chamber) — **verify in the room** |
 | No gym in Starkville; gym benchmark averages | `data/network_dashboard.json` |
 | Territory list value, per-venue rates, conservative CPM | `static/rates.html` (v2.0, $5 CPM model) |
