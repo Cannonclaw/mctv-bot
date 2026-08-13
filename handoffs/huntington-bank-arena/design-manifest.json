@@ -1,0 +1,264 @@
+{
+  "package": {
+    "name": "Huntington Bank Arena host media kit",
+    "prepared_for": "Claude Design",
+    "prepared_by": "MCTV Elite Advertising",
+    "date": "2026-08-13",
+    "status": "Copy final, layout built, photography missing",
+    "brief": "DESIGN-BRIEF.md",
+    "copy": "copy.md"
+  },
+  "recipient": {
+    "venue": "Huntington Bank Arena and Conference Center",
+    "formerly": [
+      "Cadence Bank Arena",
+      "BancorpSouth Arena"
+    ],
+    "market": "Tupelo, Mississippi",
+    "contact_name": "Alli Shackelford",
+    "contact_title": "Director of Marketing",
+    "contact_email": "alli@hbarena.com",
+    "contact_phone": "662-841-6573 ext. 904",
+    "rep": "Creed Cannon"
+  },
+  "canvas": {
+    "width_px": 1280,
+    "height_px": 720,
+    "aspect": "16:9",
+    "pdf_pt": [
+      960,
+      540
+    ],
+    "pdf_in": [
+      13.333,
+      7.5
+    ],
+    "margins_px": {
+      "left": 70,
+      "right": 70,
+      "top": 50
+    },
+    "statrow_bottom_px": 74,
+    "footer_bottom_px": 30
+  },
+  "palette": {
+    "navy": "#111C33",
+    "navy_deep": "#0C1526",
+    "cream": "#F7F4EC",
+    "red": "#C3312A",
+    "gold": "#C2A15C",
+    "ink": "#16223A",
+    "hba_green": "#8DC63F",
+    "rule": "red only on cream spreads, gold only on navy spreads"
+  },
+  "type": {
+    "display": "Playfair Display",
+    "text": "Inter",
+    "headline_px": 50,
+    "cover_headline_px": 76,
+    "body_px": 13.5,
+    "eyebrow_px": 10,
+    "stat_number_px": 40,
+    "embedded": "_fonts.css (base64)"
+  },
+  "pages": [
+    {
+      "page": "01",
+      "title": "Cover",
+      "tone": "navy",
+      "layout": "Full-bleed hero. Logo top-left, venue eyebrow top-right, headline lower-left, PREPARED FOR card bottom-right.",
+      "photo_slots": [
+        "cover.jpg"
+      ]
+    },
+    {
+      "page": "02",
+      "title": "What we're proposing",
+      "tone": "cream",
+      "layout": "Two-column: left copy + sample-spot screen render; right three numbered items. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "03",
+      "title": "Proof \u2014 Tupelo Regional",
+      "tone": "navy",
+      "layout": "Two-column: left copy; right pull-quote card. Anchored stat row.",
+      "photo_slots": [
+        "airport.jpg"
+      ]
+    },
+    {
+      "page": "04",
+      "title": "The network & the value",
+      "tone": "cream",
+      "layout": "Stat row (static, top), then local CPM horizontal bar comparison.",
+      "photo_slots": []
+    },
+    {
+      "page": "05",
+      "title": "The company you'd keep",
+      "tone": "cream",
+      "layout": "Three market chips, then a two-column list of 28 Tupelo/Lee Co. venues.",
+      "photo_slots": []
+    },
+    {
+      "page": "06",
+      "title": "Where your screens would go",
+      "tone": "navy",
+      "layout": "Six proposed zones, two columns of three. Anchored stat row.",
+      "photo_slots": [
+        "concourse.jpg"
+      ]
+    },
+    {
+      "page": "07",
+      "title": "What it costs you: nothing",
+      "tone": "navy",
+      "layout": "Four $0 package cards across, then a bordered summary band.",
+      "photo_slots": []
+    },
+    {
+      "page": "08",
+      "title": "Sixty / forty",
+      "tone": "cream",
+      "layout": "Two-column: left copy; right economics table + disclaimer. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "09",
+      "title": "Your calendar, on every screen we own",
+      "tone": "navy",
+      "layout": "Two-column: left copy; right the lobby event board rendered inside a screen bezel. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "10",
+      "title": "Who we are",
+      "tone": "navy",
+      "layout": "Big display headline left, body right, anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "11",
+      "title": "How this actually happens",
+      "tone": "cream",
+      "layout": "Five-step horizontal timeline.",
+      "photo_slots": []
+    },
+    {
+      "page": "12",
+      "title": "Thank you",
+      "tone": "cream",
+      "layout": "Two-column: left CTA + requirements card; right four contacts with headshots.",
+      "photo_slots": []
+    }
+  ],
+  "photo_slots": {
+    "cover.jpg": {
+      "page": "01",
+      "treatment": "full bleed under a 94%->30% navy scrim",
+      "min_px": [
+        1920,
+        1080
+      ],
+      "note": "subject must sit right of centre; left third goes near-black"
+    },
+    "airport.jpg": {
+      "page": "03",
+      "treatment": "card beside the pull-quote",
+      "note": "a Tupelo Regional screen in place"
+    },
+    "concourse.jpg": {
+      "page": "06",
+      "treatment": "card beside the zone list",
+      "note": "arena concourse, west entry lobby, or link corridor"
+    }
+  },
+  "rendered_not_placeholder": [
+    {
+      "what": "lobby event board",
+      "page": "09",
+      "source_of_truth": "static/board.html",
+      "tokens": {
+        "navy": "#0a1220",
+        "gold": "#d4a017",
+        "live": "#3fbf6a"
+      }
+    },
+    {
+      "what": "sample Arena spot",
+      "page": "02",
+      "note": "mock event promo in the Arena's own green; keep the SAMPLE caption"
+    },
+    {
+      "what": "screen bezel",
+      "page": "02, 09",
+      "note": "wall-mounted display with mount plate"
+    }
+  ],
+  "locked_copy": {
+    "revenue_split": {
+      "value": "60/40 by origination",
+      "meaning": "60% to whoever brings the advertiser",
+      "appears_on": [
+        "02",
+        "03",
+        "07",
+        "08"
+      ],
+      "note": "change one, change all"
+    },
+    "disclaimer_page_08": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
+    "hedge_page_06": "A starting map, not a final one - drawn from the outside, before we've walked it with you.",
+    "network_figures": {
+      "screens": "125+",
+      "tupelo_venues": 28,
+      "monthly_impressions": "1.9M+",
+      "avg_dwell_min": "55+",
+      "blended_cpm": "$2.63"
+    }
+  },
+  "asset_sources": {
+    "blocked": "This session runs behind an egress allowlist. Canva CDN, SharePoint, hbarena.com and general web fetch are all denied; images must be pulled by hand.",
+    "canva_cadence_arena": {
+      "design_id": "DAGnt1jROqg",
+      "title": "CADENCE BANK ARENA PROPOSAL",
+      "page_4": "six photos of MCTV screens installed in venues",
+      "page_5": "Cadence Bank Arena event creative (promoter/artist owned - unusable)"
+    },
+    "canva_tupelo_kit": {
+      "design_id": "DAHM-yFHfPQ",
+      "title": "Tupelo Territory Media Kit",
+      "pages_3_5": "Tupelo Regional Airport install shots",
+      "page_1": "Elvis statue cover"
+    },
+    "sharepoint": "CADENCE BANK ARENA PROPOSAL.pdf (20MB, print res), linked from Creed's 2025-06-03 email to shelby@cb-arena.com",
+    "arena_site": [
+      "https://www.hbarena.com/p/about/seating",
+      "https://www.hbarena.com/sitemap.aspx"
+    ],
+    "visit_tupelo": "https://www.tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/"
+  },
+  "rights": {
+    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products. No stock, nothing scraped.",
+    "arena_photography": "Acceptable in a kit addressed to the Arena. Must be removed if the deck is reused for another venue or general marketing.",
+    "event_posters": "Promoter and artist owned. Do not use."
+  },
+  "open_items": [
+    "Airport pull-quote on page 03 attributed by role, never cleared for outbound use - Creed's call",
+    "Screen count (6-8) and six zones on page 06 proposed without a walkthrough",
+    "Elliot Davis has no headshot; drop assets/team/elliot_headshot.png to fix page 12"
+  ],
+  "build": {
+    "commands": [
+      "python build_deck.py",
+      "python build_copydeck.py",
+      "python build_email.py"
+    ],
+    "outputs": [
+      "output/proposals/MCTV_Host_Media_Kit_Huntington_Bank_Arena.pdf",
+      "output/emails/Huntington_Bank_Arena_Alli_Shackelford.eml"
+    ],
+    "renderer": "headless Chromium"
+  }
+}
