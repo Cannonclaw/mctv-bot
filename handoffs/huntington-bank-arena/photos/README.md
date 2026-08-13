@@ -14,8 +14,18 @@ what ships today.
 
 ## Where the good ones already live
 
-None of these could be pulled in automatically — the build runs in a sandbox whose
-network policy blocks Canva's CDN and SharePoint. Fetch them by hand from:
+None of these could be pulled in automatically. This session runs behind an egress proxy
+with a strict allowlist: Canva's CDN, SharePoint, `hbarena.com` and general web fetching
+are all denied at the policy layer, so scraping the Arena's own site was not possible
+from here either. Fetch them by hand from:
+
+- **hbarena.com** — the Arena's own photography, and the most on-brand option for a kit
+  addressed to them. `www.hbarena.com/p/about/seating` and the site map at
+  `www.hbarena.com/sitemap.aspx` are the entry points. Using a prospect's own photos in a
+  pitch to that prospect is normal; if this deck is ever reused for another venue or for
+  general marketing, those images need to come out.
+- **Visit Tupelo** — `tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/`
+  carries venue photography intended for promotional use.
 
 - **Canva → `CADENCE BANK ARENA PROPOSAL`** (design `DAGnt1jROqg`). Page 4 has six real
   photos of MCTV screens installed in venues; page 5 has Cadence Bank Arena event

@@ -308,12 +308,12 @@ def slide_05_footprint():
 
 def slide_06_placement():
     zones = [
-        ("Main concourse &amp; concessions", "Where the crowd queues and stands. The highest-dwell wall in the building on an event night."),
-        ("Box office &amp; entry lobby", "First surface every guest passes. Wayfinding, tonight's event, upcoming on-sales."),
-        ("Conference center pre-function", "Meeting attendees between sessions &mdash; the longest dwell in the facility."),
-        ("Meeting room corridor", "Room assignments and today's schedule, rendered live off your calendar."),
-        ("Suite / club level", "Premium inventory for premium advertisers, priced accordingly."),
-        ("Group sales &amp; sponsor offices", "Where you host prospects. Put your own sponsorship inventory on screen while they're sitting in front of it."),
+        ("Main concourse &amp; concessions", "Where a full house queues and stands. The highest-dwell wall in the building on an event night."),
+        ("West entry &amp; box office lobby", "First surface every guest passes. Wayfinding, tonight's event, upcoming on-sales."),
+        ("The link corridor &amp; flex space", "The connector everyone walks between the arena and the conference center. Captive, and it works on both event nights and meeting days."),
+        ("Exhibit hall &amp; pre-function", "Trade shows, conventions and receptions. Booth wayfinding, sponsor recognition, today's schedule."),
+        ("Meeting room corridor", "Room assignments and today's agenda, rendered live off your calendar."),
+        ("Club / VIP level", "Glass-walled and visible off the concourse. Premium inventory for premium advertisers, priced accordingly."),
     ]
     items = "".join(
         f'<div class="zone"><div class="zone-i">{i:02d}</div>'
@@ -323,9 +323,10 @@ def slide_06_placement():
 <section class="slide navy">
   <div class="eyebrow gold">PROPOSED PLACEMENT</div>
   <h2 class="display">Where your screens <em>would go</em>.</h2>
-  <p class="body wide dim">A starting map, not a final one. We'd walk the building with you and
-  set the exact count and positions together &mdash; then work the install around your event
-  calendar so nothing lands on a show day.</p>
+  <p class="body wide dim">A starting map, not a final one &mdash; drawn from the outside, before
+  we've walked it with you. Your building does two different jobs, event nights and meeting days,
+  and the screens should earn on both. We'd set the exact count and positions together, then work
+  the install around your calendar so nothing lands on a show day.</p>
   <div class="zones">{items}</div>
   {statrow([("6&ndash;8", "PROPOSED SCREENS", "gold"), ("6", "ZONES"),
             ("$0", "CAPITAL COST"), ("You", "APPROVE EVERY SPOT")], "bordered")}
