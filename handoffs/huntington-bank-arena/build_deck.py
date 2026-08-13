@@ -40,6 +40,30 @@ def b64(path, mime):
 LOGO_WHITE = b64(ROOT / "assets" / "branding" / "mctv_logo_white.png", "image/png")
 FONTS = (HERE / "_fonts.css").read_text()
 
+TEAM_DIR = ROOT / "assets" / "team"
+HEADSHOTS = {n: b64(TEAM_DIR / f"{n}_headshot.png", "image/png")
+             for n in ("mary_michael", "creed", "swayze")}
+
+# Huntington Bank Arena's own green, so the sample spot reads as theirs, not ours.
+HBA_GREEN = "#8DC63F"
+
+# ── Photo slots ─────────────────────────────────────────────────────────────
+# Drop real photography into handoffs/huntington-bank-arena/photos/ named for a
+# slot below and rerun this script — each slot swaps its rendered fallback for
+# the photo. Nothing breaks if the folder is empty; that is the shipped state.
+#   cover.jpg     full-bleed cover (landscape, 1920x1080 or larger)
+#   airport.jpg   a Tupelo Regional screen in place, page 3
+#   concourse.jpg the arena concourse or lobby, page 6
+PHOTO_DIR = HERE / "photos"
+
+
+def photo(slot):
+    for ext, mime in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".png", "image/png")):
+        p = PHOTO_DIR / f"{slot}{ext}"
+        if p.exists():
+            return b64(p, mime)
+    return None
+
 # ── Content ─────────────────────────────────────────────────────────────────
 VENUE = "Huntington Bank Arena and Conference Center"
 CONTACT = "Alli Shackelford"
@@ -69,10 +93,10 @@ CPM_ROWS = [  # (label, dollars, width%, highlight)
 ]
 
 TEAM = [
-    ("Mary Michael Cannon", "CEO &amp; Founder", "mmc@mctvofms.com", "662-801-5677"),
-    ("Creed Cannon", "President &amp; Founder", "creed@mctvofms.com", "601-201-8202"),
-    ("Swayze Hollingsworth", "Director of Sales", "swayze@mctvofms.com", "662-907-0404"),
-    ("Elliot Davis", "MCTV Digital", "elliot@mctvofms.com", "601-896-4922"),
+    ("Mary Michael Cannon", "CEO &amp; Founder", "mmc@mctvofms.com", "662-801-5677", "mary_michael"),
+    ("Creed Cannon", "President &amp; Founder", "creed@mctvofms.com", "601-201-8202", "creed"),
+    ("Swayze Hollingsworth", "Director of Sales", "swayze@mctvofms.com", "662-907-0404", "swayze"),
+    ("Elliot Davis", "MCTV Digital", "elliot@mctvofms.com", "601-896-4922", None),
 ]
 
 
@@ -96,11 +120,70 @@ def numbered(idx, title, body):
             f'<div class="num-body">{body}</div></div></div>')
 
 
+def screen(inner, caption, cls=""):
+    """A wall-mounted display. Everything inside is a render, never a photo."""
+    return (f'<div class="screen {cls}"><div class="bezel"><div class="panel">{inner}</div>'
+            f'<div class="gloss"></div></div><div class="mount"></div>'
+            f'<div class="screen-cap">{caption}</div></div>')
+
+
+def sample_spot():
+    """A mock Arena spot, drawn in their green so she sees her own creative."""
+    return f'''<div class="spot">
+      <div class="spot-top"><span class="spot-mark">HUNTINGTON BANK ARENA</span>
+        <span class="spot-live">TONIGHT</span></div>
+      <div class="spot-mid">
+        <div class="spot-kicker">DOORS 6:00 &middot; SHOW 7:00</div>
+        <div class="spot-title">Gospel Fest</div>
+        <div class="spot-sub">TICKETS AT HBARENA.COM</div>
+      </div>
+      <div class="spot-rule"></div>
+      <div class="spot-foot"><span>SEPT 12 &middot; ARENA BOWL</span><span class="spot-mctv">MCTV</span></div>
+    </div>'''
+
+
+def event_board():
+    """A faithful miniature of static/board.html — the real product, not a concept."""
+    rows = [
+        ("5:30 PM", "Chamber of Commerce Reception", "Tupelo CDF", "PRE-FUNCTION", ""),
+        ("6:00 PM", "Doors Open", "Gospel Fest", "ARENA BOWL", "soon"),
+        ("7:00 PM", "Gospel Fest", "Live Nation", "ARENA BOWL", ""),
+        ("7:00 PM", "Private Event", "", "MEETING RM 3", "private"),
+    ]
+    tr = "".join(
+        f'<div class="brow {c}"><div class="btime">{t}</div>'
+        f'<div class="btitle"><div class="bn">{n}</div>'
+        f'{f"<div class=bo>{o}</div>" if o else ""}</div>'
+        f'<div class="broom">{r}</div></div>'
+        for t, n, o, r, c in rows)
+    return f'''<div class="board">
+      <div class="bhead">
+        <div><div class="bvenue">Huntington Bank Arena</div>
+          <div class="btag">TODAY AT THE ARENA</div></div>
+        <div class="bclock"><div class="btime-now">2:41<span>PM</span></div>
+          <div class="bdate">Thursday, August 13</div></div>
+      </div>
+      <div class="bnowlbl"><span class="bdot"></span>HAPPENING NOW</div>
+      <div class="bnow">
+        <div class="bnow-when">1:00 – 4:30<div class="bnow-r">BALLROOM A</div></div>
+        <div class="bnow-what"><div class="bnow-n">Lee County Schools In-Service</div>
+          <div class="bnow-o">Lee County School District</div></div>
+      </div>
+      <div class="bnextlbl">COMING UP<span class="bpage">1 / 1</span></div>
+      {tr}
+      <div class="bbrand"><b>MCTV<span>&middot;</span></b><span>HUNTINGTON BANK ARENA</span></div>
+    </div>'''
+
+
 # ── Slides ──────────────────────────────────────────────────────────────────
 def slide_01_cover():
+    hero = photo("cover")
+    art = (f'<div class="cover-photo" style="background-image:url({hero})"></div>'
+           '<div class="cover-scrim"></div>') if hero else \
+        '<div class="cover-glow"></div><div class="cover-rules"></div>'
     return f'''
 <section class="slide navy cover">
-  <div class="cover-glow"></div><div class="cover-rules"></div>
+  {art}
   <img class="cover-logo" src="{LOGO_WHITE}" alt="MCTV Elite Advertising">
   <div class="cover-tag">HUNTINGTON BANK ARENA &amp; CONFERENCE CENTER &middot; TUPELO</div>
   <div class="cover-body">
@@ -131,14 +214,15 @@ def slide_02_proposal():
       of everything that runs.</p>
       <p class="body accent">It's the same structure Tupelo Regional Airport's board
       approved in March. Those screens went live in April.</p>
+      {screen(sample_spot(), "SAMPLE ARENA SPOT &middot; BUILT BY US, APPROVED BY YOU", "sm")}
     </div>
     <div class="col-right">
       {numbered("01", "We install the screens", "Commercial-grade displays through the concourse, lobby and conference space. Hardware, mounts, media players, install labor, maintenance and replacement are all ours. No capital request, no line item in your budget.")}
-      {numbered("02", "You earn on every ad", "A 60/40 revenue share on all advertising sold onto your screens &mdash; paid monthly, with a proof-of-play and billing report behind it.")}
+      {numbered("02", "You earn on every ad", "A 60/40 split on every advertiser that runs on your screens &mdash; and the 60 follows whoever brought them in. We source it, you take 40%. You source it, you take 60%. Paid monthly, with a proof-of-play and billing report behind it.")}
       {numbered("03", "Your events run network-wide", "Your calendar promoted across all 125+ MCTV screens in Tupelo, Oxford and the Golden Triangle. At no charge, for as long as we're partners.")}
     </div>
   </div>
-  {statrow([("$0", "COST TO THE ARENA"), ("40%", "OF AD REVENUE, YOURS", "red"),
+  {statrow([("$0", "COST TO THE ARENA"), ("60/40", "WHOEVER BRINGS THE ADVERTISER", "red"),
             ("125+", "SCREENS PROMOTING YOU"), ("24/7", "SCREENS ON")])}
   {foot(2)}
 </section>'''
@@ -152,7 +236,7 @@ def slide_03_airport():
   <div class="two-col">
     <div class="col-left">
       <p class="body">In March, the Tupelo Airport Authority board reviewed and approved our
-      Venue Partner Agreement &mdash; the same 60/40 structure, content-approval process and
+      Venue Partner Agreement &mdash; the same 60/40 origination split, content-approval process and
       grandfathering language we're offering you. Legal had no changes.</p>
       <p class="body">Exceed Technologies handled the install. Five screens now run across the
       lobby, center lobby, ticket counter, baggage claim and the sterile corridor. They came
@@ -277,45 +361,51 @@ def slide_07_package():
     <span class="star">&#9733;</span><span class="pkg-foot-t">Total cost to the Arena &mdash;
     $0, for the life of the agreement.</span>
     <span class="pkg-foot-b">You provide wall space and power. We provide everything else
-    &mdash; and pay you 40% of what the screens earn.</span>
+    &mdash; and pay you up to 60% of what the screens earn.</span>
   </div>
   {foot(7)}
 </section>'''
 
 
 def slide_08_revshare():
-    rows = [("4", "$1,400", "$560", "$6,720"),
-            ("8", "$2,800", "$1,120", "$13,440"),
-            ("12", "$4,200", "$1,680", "$20,160")]
+    rows = [("4 advertisers we bring", "$1,400", "40%", "$560"),
+            ("4 advertisers you bring", "$1,400", "60%", "$840"),
+            ("Combined", "$2,800", "&mdash;", "$1,400")]
     trs = "".join(
-        f'<tr><td>{a} advertisers</td><td>{b}</td><td>{c}</td><td class="hi">{d}</td></tr>'
+        f'<tr{" class=tot" if a == "Combined" else ""}><td>{a}</td><td>{b}</td>'
+        f'<td>{c}</td><td class="hi">{d}</td></tr>'
         for a, b, c, d in rows)
     return f'''
 <section class="slide cream">
   <div class="eyebrow">THE ECONOMICS</div>
-  <h2 class="display">Sixty / forty. <em>Same as the airport.</em></h2>
+  <h2 class="display">Sixty / forty. <em>Whoever brings the advertiser.</em></h2>
   <div class="two-col">
     <div class="col-left">
-      <p class="body">MCTV sells, produces, bills and services all advertising that runs on your
-      screens. On every dollar of advertising revenue sold onto Huntington Bank Arena screens:
-      <strong>60% MCTV, 40% the Arena.</strong></p>
-      <p class="body">Paid monthly, with a report showing what ran, how often, and what it
-      billed. No minimums and no clawbacks &mdash; if a screen sits empty, it costs you nothing.</p>
+      <p class="body">Every advertiser on your screens pays a monthly rate, and that rate splits
+      <strong>60/40 in favor of whoever brought them in.</strong></p>
+      <p class="body">We go find an advertiser, you take 40% of them for doing nothing. You bring
+      one &mdash; a sponsor, a vendor, someone already renting your building &mdash; and
+      <strong>you take 60%.</strong> Your existing sponsor relationships are suddenly worth
+      more than they were.</p>
+      <p class="body">We still produce, bill and service every spot either way. Paid monthly with
+      a report of what ran and what it billed. No minimums, no clawbacks &mdash; an empty screen
+      costs you nothing.</p>
       <p class="body accent">Existing advertiser relationships are grandfathered on both sides.
       Anything the Arena has already sold stays 100% yours.</p>
     </div>
     <div class="col-right">
       <table class="econ">
-        <thead><tr><th>On your screens</th><th>Ad revenue / mo</th>
-          <th>Arena 40% / mo</th><th>Arena / yr</th></tr></thead>
+        <thead><tr><th>Who brings them</th><th>Ad revenue / mo</th>
+          <th>Arena share</th><th>Arena / mo</th></tr></thead>
         <tbody>{trs}</tbody>
       </table>
       <p class="micro">Illustrative only, at a $350/mo blended advertiser rate &mdash; not a
-      guarantee of earnings. Actual revenue share depends on advertisers sold onto Arena screens.
-      We'd model this properly against your traffic once we've walked the building.</p>
+      guarantee of earnings. The combined case above runs to $16,800 a year to the Arena. Actual
+      revenue share depends on how many advertisers run and who sources them. We'd model this
+      properly against your traffic once we've walked the building.</p>
     </div>
   </div>
-  {statrow([("40%", "OF AD REVENUE, YOURS", "red"), ("Monthly", "PAYMENT + FULL REPORT"),
+  {statrow([("60%", "ON EVERY ADVERTISER YOU BRING", "red"), ("40%", "ON EVERY ONE WE BRING"),
             ("$0", "IF A SCREEN SITS EMPTY"), ("100%", "OF YOUR EXISTING DEALS, KEPT")], "bordered")}
   {foot(8)}
 </section>'''
@@ -335,16 +425,13 @@ def slide_09_events():
       conference booking window, in front of roughly 1.9 million monthly impressions of the exact
       people you're trying to get through the doors.</p>
       <p class="body">You're currently buying that reach. As a host, you'd have it.</p>
+      <p class="body accent">And in your own lobby: an airport-style board showing what's on
+      now, what's next, and which room &mdash; live off your calendar, Central time, with
+      private bookings masked automatically. Built for the Oxford Conference Center. Yours
+      at no cost.</p>
     </div>
     <div class="col-right">
-      <div class="feature-card">
-        <div class="feature-eyebrow">ALSO INCLUDED</div>
-        <div class="feature-t">The lobby event board</div>
-        <p class="feature-b">An airport-style schedule board for your lobby: what's happening
-        now, what's next, and which room. It runs off your calendar, formats to Central time,
-        and masks private bookings as &ldquo;Private Event&rdquo; automatically. We built it for
-        the Oxford Conference Center &mdash; it's yours at no cost.</p>
-      </div>
+      {screen(event_board(), "YOUR LOBBY EVENT BOARD &middot; LIVE OFF YOUR CALENDAR")}
     </div>
   </div>
   {statrow([("125+", "SCREENS CARRYING YOUR EVENTS", "gold"), ("1.9M+", "IMPRESSIONS / MO"),
@@ -400,10 +487,17 @@ def slide_11_next():
 
 
 def slide_12_thanks():
+    def face(key, name):
+        if key:
+            return f'<div class="tm-face" style="background-image:url({HEADSHOTS[key]})"></div>'
+        initials = "".join(w[0] for w in name.split()[:2])
+        return f'<div class="tm-face tm-mono">{initials}</div>'
+
     team = "".join(
-        f'<div class="tm"><div><div class="tm-n">{n}</div><div class="tm-r">{r}</div></div>'
+        f'<div class="tm">{face(k, n)}'
+        f'<div class="tm-id"><div class="tm-n">{n}</div><div class="tm-r">{r}</div></div>'
         f'<div class="tm-c">{e}<br><span>{p}</span></div></div>'
-        for n, r, e, p in TEAM)
+        for n, r, e, p, k in TEAM)
     return f'''
 <section class="slide cream">
   <div class="eyebrow">LET'S TALK</div>
@@ -595,13 +689,104 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   margin-bottom:12px}}
 .spec-l{{font-size:11px;line-height:1.5;color:#5A6478;padding:8px 0;
   border-top:1px solid rgba(22,34,58,.08)}}
-.tm{{display:flex;justify-content:space-between;align-items:baseline;
-  padding:19px 0;border-bottom:1px solid rgba(22,34,58,.1)}}
-.tm:first-child{{padding-top:4px}}
+.tm{{display:flex;align-items:center;gap:18px;
+  padding:14px 0;border-bottom:1px solid rgba(22,34,58,.1)}}
+.tm:first-child{{padding-top:2px}}
+.tm-id{{flex:1}}
+.tm-face{{width:54px;height:54px;border-radius:50%;flex:none;
+  background-size:cover;background-position:center 22%;
+  box-shadow:0 0 0 1px rgba(22,34,58,.12)}}
+.tm-mono{{display:flex;align-items:center;justify-content:center;background:#E7E1D2;
+  font-family:'Playfair Display',serif;font-size:17px;color:#8A8270}}
 .tm-n{{font-family:'Playfair Display',serif;font-size:20px}}
-.tm-r{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{RED};margin-top:6px}}
+.tm-r{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{RED};margin-top:5px}}
 .tm-c{{font-size:10px;line-height:1.7;color:#7A8496;text-align:right}}
 .tm-c span{{color:#96A0B2}}
+
+/* ── Display mockups ─────────────────────────────────────────────────────
+   Everything inside .screen is drawn in CSS. No photograph of the Arena is
+   implied anywhere in this deck — see the photo() slots to add real ones. */
+.screen{{margin-top:6px}}
+.bezel{{position:relative;background:linear-gradient(160deg,#2B3038,#15181D 60%);
+  padding:9px 9px 13px;border-radius:5px;
+  box-shadow:0 18px 34px rgba(0,0,0,.34),0 1px 0 rgba(255,255,255,.13) inset}}
+.panel{{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0a1220}}
+.gloss{{position:absolute;inset:9px 9px 13px;pointer-events:none;border-radius:2px;
+  background:linear-gradient(103deg,rgba(255,255,255,.10) 0%,
+    rgba(255,255,255,.03) 22%,rgba(255,255,255,0) 48%)}}
+.mount{{width:74px;height:9px;margin:0 auto;border-radius:0 0 4px 4px;
+  background:linear-gradient(#22262C,#15181D)}}
+.screen-cap{{margin-top:13px;font-size:7.4px;letter-spacing:.2em;font-weight:600;
+  color:#7A869C;text-align:center}}
+.cream .screen-cap{{color:#96A0B2}}
+.screen.sm{{max-width:252px;margin-top:14px}}
+.screen.sm .bezel{{padding:6px 6px 9px}} .screen.sm .mount{{width:52px;height:7px}}
+.screen.sm .screen-cap{{margin-top:9px;font-size:6.4px;letter-spacing:.16em}}
+
+/* sample Arena spot */
+.spot{{position:absolute;inset:0;background:
+  radial-gradient(120% 100% at 84% 8%,#1D2A16 0%,#0E1408 58%,#080B05 100%);
+  padding:6.4% 7%;display:flex;flex-direction:column;justify-content:space-between}}
+.spot-top{{display:flex;justify-content:space-between;align-items:center}}
+.spot-mark{{font-size:6.2px;letter-spacing:.24em;font-weight:700;color:{HBA_GREEN}}}
+.spot-live{{font-size:5.6px;letter-spacing:.2em;font-weight:700;color:#0C1206;
+  background:{HBA_GREEN};padding:3px 7px;border-radius:2px}}
+.spot-kicker{{font-size:6.4px;letter-spacing:.22em;font-weight:600;color:#9FB08C}}
+.spot-title{{font-family:'Playfair Display',serif;font-size:31px;color:#fff;
+  line-height:1;margin:7px 0 8px;letter-spacing:-.015em}}
+.spot-sub{{font-size:6.6px;letter-spacing:.2em;font-weight:600;color:{HBA_GREEN}}}
+.spot-rule{{height:1px;background:linear-gradient(90deg,{HBA_GREEN},rgba(141,198,63,0))}}
+.spot-foot{{display:flex;justify-content:space-between;align-items:center;
+  font-size:5.8px;letter-spacing:.2em;font-weight:600;color:#7E8C6E;margin-top:7px}}
+.spot-mctv{{color:#fff;letter-spacing:.3em;font-weight:700}}
+
+/* lobby event board — mirrors static/board.html */
+.board{{position:absolute;inset:0;padding:3.4% 3.6%;color:#fff;font-size:10px;
+  background:radial-gradient(120% 90% at 12% 0%,#101c2e 0%,#0a1220 62%);
+  display:flex;flex-direction:column}}
+.bhead{{display:flex;justify-content:space-between;align-items:flex-start;
+  padding-bottom:2.4%;border-bottom:1px solid rgba(255,255,255,.10)}}
+.bvenue{{font-size:12.5px;font-weight:700;letter-spacing:-.01em}}
+.btag{{font-size:6px;font-weight:700;letter-spacing:.2em;color:#d4a017;margin-top:3px}}
+.bclock{{text-align:right}}
+.btime-now{{font-size:16px;font-weight:700;line-height:1}}
+.btime-now span{{font-size:7.5px;font-weight:700;color:#8fa2b8;margin-left:3px}}
+.bdate{{font-size:6.2px;font-weight:600;color:#8fa2b8;margin-top:4px}}
+.bnowlbl{{display:flex;align-items:center;gap:5px;font-size:6px;font-weight:700;
+  letter-spacing:.2em;color:#d4a017;margin:2.4% 0 1.2%}}
+.bdot{{width:5px;height:5px;border-radius:50%;background:#3fbf6a;flex:none}}
+.bnow{{display:flex;gap:4%;padding:2.4% 3.4%;border-radius:2px;
+  background:linear-gradient(100deg,rgba(212,160,23,.16) 0%,rgba(212,160,23,.05) 60%);
+  border-left:2px solid #d4a017}}
+.bnow-when{{font-size:11px;font-weight:700;min-width:82px}}
+.bnow-r{{font-size:6px;font-weight:700;color:#d4a017;margin-top:3px;letter-spacing:.1em}}
+.bnow-n{{font-size:11.5px;font-weight:700}}
+.bnow-o{{font-size:6.4px;font-weight:600;color:#8fa2b8;margin-top:3px}}
+.bnextlbl{{display:flex;justify-content:space-between;font-size:6px;font-weight:700;
+  letter-spacing:.2em;color:#8fa2b8;margin:2.4% 0 1.1%}}
+.bpage{{color:#5e7189;letter-spacing:.12em}}
+.brow{{display:flex;align-items:center;gap:3.4%;padding:1.5% 3.4%;margin-bottom:0.8%;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);border-radius:2px}}
+.btime{{font-size:8.4px;font-weight:700;min-width:52px}}
+.btitle{{flex:1}}
+.bn{{font-size:8.6px;font-weight:700}}
+.bo{{font-size:6px;font-weight:600;color:#8fa2b8;margin-top:2px}}
+.broom{{font-size:6.6px;font-weight:800;color:#d4a017;text-align:right;letter-spacing:.08em}}
+.brow.soon{{border-color:rgba(212,160,23,.45);background:rgba(212,160,23,.07)}}
+.brow.private .bn{{color:#8fa2b8;font-style:italic;font-weight:600}}
+.bbrand{{margin-top:auto;padding-top:2.4%;display:flex;justify-content:space-between;
+  font-size:5.6px;font-weight:600;color:#5e7189;letter-spacing:.14em}}
+.bbrand b{{color:#fff;font-weight:800}} .bbrand b span{{color:#d4a017}}
+
+/* cover photography (only when photos/cover.* is present) */
+.cover-photo{{position:absolute;inset:0;background-size:cover;background-position:center}}
+.cover-scrim{{position:absolute;inset:0;background:
+  linear-gradient(96deg,rgba(10,17,32,.94) 0%,rgba(10,17,32,.80) 38%,rgba(10,17,32,.30) 100%)}}
+.photo-card{{position:relative;overflow:hidden}}
+.photo-card img{{width:100%;display:block}}
+.photo-cap{{position:absolute;left:0;right:0;bottom:0;padding:11px 16px;
+  background:linear-gradient(rgba(10,17,32,0),rgba(10,17,32,.88));
+  font-size:7.4px;letter-spacing:.2em;font-weight:600;color:#E7E3D8}}
 '''
 
 HTML = f'''<!DOCTYPE html>

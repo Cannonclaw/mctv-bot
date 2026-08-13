@@ -68,17 +68,41 @@ licensed or self-shot image of the concourse before this goes to print.
   `static/board.html`), running for the Oxford Conference Center. Genuinely differentiating for a
   conference center and costs us nothing to extend.
 
+## The revenue share
+
+**60/40, and the 60 follows whoever brings the advertiser** (confirmed by Creed, 2026-08-13).
+MCTV sources an advertiser → Arena takes 40%. The Arena sources one → Arena takes 60%. MCTV
+produces, bills and services every spot either way. This is the deck's strongest page, because it
+turns the Arena's existing sponsor relationships into something worth more than they were.
+
+Page 8 carries the math, page 2's numbered item 02 and stat row carry the summary, and page 7's
+footer says "up to 60%". Those are the only four places the split appears.
+
 ## Open items before sending
 
-1. **Confirm the 60/40 direction.** Written as 60% MCTV / 40% Arena, matching how the airport deal
-   reads. If the airport split runs the other way, page 8 and the page 2 stat row both need
-   flipping — they are the only two places the number appears.
-2. **The airport pull-quote on page 3** is Dylan Meador's, from his 2026-04-23 go-live email,
+1. **The airport pull-quote on page 3** is Dylan Meador's, from his 2026-04-23 go-live email,
    attributed by role rather than by name. He never cleared it for outbound use. Keep it, soften
    it, or drop it — Creed's call.
-3. **Screen count (6–8) and the six zones on page 6** are proposed from the outside. They should
+2. **Screen count (6–8) and the six zones on page 6** are proposed from the outside. They should
    survive a walkthrough, but nothing in the building has been surveyed.
-4. **Revenue table on page 8** is illustrative at a $350/mo blended rate and labeled as such.
+3. **Revenue table on page 8** is illustrative at a $350/mo blended rate and labeled as such.
+
+## Imagery
+
+Everything visual in the deck is either ours or drawn:
+
+- **Team headshots** on page 12, from `assets/team/`. Elliot has no headshot on file and falls
+  back to a monogram.
+- **The lobby event board** on page 9 is a faithful CSS render of `static/board.html` — real
+  product, real behaviour, including a private booking masked to "Private Event".
+- **The sample Arena spot** on page 2 is a CSS render in Huntington Bank Arena's own green, so
+  she sees her creative rather than ours. Clearly captioned as a sample.
+- **No photographs of the Arena appear anywhere**, and none are implied.
+
+Real photography drops into `photos/` — see that folder's README for the slots and for exactly
+where the good Cadence Bank Arena and airport shots live in Canva and SharePoint. They could not
+be fetched automatically: this build runs in a sandbox whose network policy blocks Canva's CDN
+and SharePoint, so the images have to be downloaded by hand and dropped in.
 
 ## Next step
 

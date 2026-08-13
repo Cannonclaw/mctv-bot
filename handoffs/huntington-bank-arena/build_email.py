@@ -30,15 +30,19 @@ SIG_LINES = ["T. Creed Cannon", "Managing Partner", "MCTV Digital, Inc",
              "601-201-8202", "www.mctvofms.com"]
 
 BULLETS = [
+    ("The 60/40 split follows whoever brings the advertiser. Anyone we go out and sell earns "
+     "the Arena 40% for doing nothing at all. Anyone you bring — a current sponsor, a vendor, "
+     "someone already renting the building — earns the Arena 60%. Page 8 lays out the math."),
     ("The structure is the same one the Tupelo Airport Authority board approved in March. "
      "Their screens went live in April and run across the lobby, ticket counter, baggage claim "
      "and the sterile corridor. Happy to put you in touch with Dylan over there if you'd like "
      "an unfiltered opinion."),
-    ("Page 6 is a starting map for screen placement, not a final one. We'd want to walk the "
-     "building with you and set the count and the positions together."),
     ("Page 9 covers the piece I think matters most for you — your event calendar running "
      "across all 125+ of our screens in Tupelo, Oxford and the Golden Triangle, at no charge. "
-     "That is reach you would otherwise be buying."),
+     "That page also shows the lobby event board we would build for you, which is the same "
+     "one running at the Oxford Conference Center."),
+    ("Page 6 is a starting map for screen placement, not a final one. We'd want to walk the "
+     "building with you and set the count and the positions together."),
     ("The revenue figures on page 8 are illustrative. Once we have walked the facility we will "
      "model it properly against your actual traffic."),
 ]
@@ -48,8 +52,8 @@ OPENING = [
      "hear where you are wanting to take it."),
     ("As promised, I have attached a host media kit put together specifically for the Arena and "
      "Conference Center. It walks through what we discussed: we install and own the screens, we "
-     "sell and service the advertising that runs on them, and the Arena takes a share of "
-     "everything sold — with no capital cost to you at any point."),
+     "produce and service the advertising that runs on them, and every advertiser splits 60/40 "
+     "in favor of whoever brought them in — with no capital cost to you at any point."),
     "A few things worth flagging as you look through it:",
 ]
 
