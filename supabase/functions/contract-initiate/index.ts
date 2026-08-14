@@ -77,8 +77,9 @@ Deno.serve(async (req) => {
       crypto.randomUUID().replace(/-/g, '').slice(0, 4).toUpperCase();
     const chicagoToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(now);
 
-    // 1) Record of truth
-    const { error: crErr } = await supabase.from('contract_requests').insert({
+    // 1) Record of truth. The row's uuid is what activity_log.entity_id wants
+    // (see step 6), so take it on the way in.
+    const { data: crRow, error: crErr } = await supabase.from('contract_requests').insert({
       ref,
       quote_ref: str(b.quote_ref, 60) || null,
       business_name, contact_name, contact_email, contact_phone,
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
       agreement_version: str(b.agreement_version, 40) || null,
       quote_link: str(b.quote_link, 2000) || null,
       client_ip: ip, user_agent: ua
-    });
+    }).select('id').single();
     if (crErr) throw crErr;
 
     // 2) Legacy quote_submissions inbox (best-effort)
@@ -146,11 +147,16 @@ Deno.serve(async (req) => {
       source: 'self_serve', source_id: ref
     });
 
-    // 6) Activity log — record a failed lead write so a silent best-effort miss
-    // shows up somewhere instead of only in the function logs.
+    // 6) Activity log. entity_id is a uuid column, so it takes the row's id —
+    // passing the text ref failed the insert outright, which was invisible
+    // because this write is best-effort too. The ref stays in details, which is
+    // where anyone looking one up would read it anyway.
+    //
+    // A failed lead write is recorded here as well, so a silent best-effort
+    // miss shows up somewhere other than the function logs.
     await supabase.from('activity_log').insert({
       action: 'Self-serve agreement request received',
-      entity_type: 'contract_request', entity_id: ref,
+      entity_type: 'contract_request', entity_id: crRow?.id ?? null,
       details: {
         ref, business_name, monthly_total, screens, term_months,
         prepay: !!b.prepay, start_date, signed_name, lead_id,

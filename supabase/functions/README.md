@@ -16,9 +16,9 @@ what makes a change here live; merging the PR only version-controls it.
 | `contract-initiate` | `static/rates.html` — Accept → sign → submit | `contract_requests` (truth), `quote_submissions`, `leads`, `pipeline_opportunities`, `tasks`, `activity_log` |
 | `quote-submit` | `static/rates.html` — Decline | `quote_submissions` |
 
-Only `contract-initiate` is checked in so far; it was pulled from the live
-deployment, so the copy here matches production apart from the change in the
-commit that added it.
+Only `contract-initiate` is checked in so far. It was pulled from the live
+deployment and this copy matches what is deployed — verify with
+`get_edge_function` / the dashboard if in doubt, and redeploy after editing.
 
 ## Things that bite
 
@@ -28,6 +28,10 @@ commit that added it.
   writes a skipped field. A `null` fails the insert, and because that write is
   best-effort the failure is silent: the signer lands in `contract_requests`
   and never reaches the leads inbox.
+- **`activity_log.entity_id` is a `uuid`, not the ref.** It takes the
+  `contract_requests` row id; the human-readable `SSA-…` ref goes in `details`.
+  Passing the ref there fails the insert on a type error — silently, same
+  best-effort reason.
 - **Only the `contract_requests` insert throws.** Everything after it is
   best-effort by design, so the client still sees a confirmation when a
   downstream write fails. Check `activity_log.details` for `lead_insert_error`.
