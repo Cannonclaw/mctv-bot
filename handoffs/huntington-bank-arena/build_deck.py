@@ -101,8 +101,9 @@ TEAM = [
 
 
 # ── Component helpers ───────────────────────────────────────────────────────
-def foot(n, note="MCTV DIGITAL, INC &middot; THE INDOOR BILLBOARD COMPANY"):
-    return f'<div class="foot"><span>{note}</span><span class="pg">{n:02d}</span></div>'
+def foot(n=None, note="MCTV DIGITAL, INC &middot; THE INDOOR BILLBOARD COMPANY"):
+    """Page number is stamped at assembly, so slides can be reordered freely."""
+    return f'<div class="foot"><span>{note}</span><span class="pg">__PG__</span></div>'
 
 
 def stat(num, label, tone=""):
@@ -139,6 +140,40 @@ def sample_spot():
       </div>
       <div class="spot-rule"></div>
       <div class="spot-foot"><span>SEPT 12 &middot; ARENA BOWL</span><span class="spot-mctv">MCTV</span></div>
+    </div>'''
+
+
+def feed_weather():
+    days = [("THU", "94&deg;", "72"), ("FRI", "91&deg;", "70"),
+            ("SAT", "88&deg;", "69"), ("SUN", "90&deg;", "71")]
+    cols = "".join(f'<div class="wx-d"><div class="wx-dn">{d}</div>'
+                   f'<div class="wx-hi">{hi}</div><div class="wx-lo">{lo}&deg;</div></div>'
+                   for d, hi, lo in days)
+    return f'''<div class="feed wx">
+      <div class="feed-top"><span class="feed-lbl">LOCAL WEATHER</span><span>TUPELO, MS</span></div>
+      <div class="wx-now"><div class="wx-temp">94&deg;</div>
+        <div><div class="wx-cond">Partly Cloudy</div><div class="wx-meta">Feels like 101&deg; &middot; Humidity 64%</div></div></div>
+      <div class="wx-week">{cols}</div>
+    </div>'''
+
+
+def feed_news():
+    return f'''<div class="feed news">
+      <div class="feed-top"><span class="feed-lbl">LOCAL &amp; WORLD NEWS</span><span>UPDATED 2:40 PM</span></div>
+      <div class="nw-lead">Lee County breaks ground on new industrial park</div>
+      <div class="nw-rows">
+        <div class="nw-r"><span>MS</span>Highway 45 resurfacing begins Monday</div>
+        <div class="nw-r"><span>SPORTS</span>Rebels open camp with 14 returning starters</div>
+        <div class="nw-r"><span>NAT</span>Markets close higher for a third session</div>
+      </div>
+    </div>'''
+
+
+def feed_trivia():
+    return f'''<div class="feed triv">
+      <div class="feed-top"><span class="feed-lbl">FUN FACT</span><span>DID YOU KNOW?</span></div>
+      <div class="tv-q">Tupelo built the first city-owned<br>power system in the nation<br>to buy TVA electricity.</div>
+      <div class="tv-a">1934 &middot; Tupelo, Mississippi</div>
     </div>'''
 
 
@@ -190,6 +225,8 @@ def slide_01_cover():
     <h1 class="display cover-h1">Upgrade the arena.<br><em>We'll cover it.</em></h1>
     <div class="cover-sub">THE INDOOR BILLBOARD COMPANY &middot; NORTH MISSISSIPPI</div>
   </div>
+  <div class="cobrand"><span class="cobrand-bar"></span>
+    <span class="cobrand-t">A VENUE PARTNERSHIP PROPOSED FOR HUNTINGTON BANK ARENA</span></div>
   <div class="prepared">
     <div class="prepared-label">PREPARED FOR</div>
     <div class="prepared-name">{CONTACT}</div>
@@ -368,6 +405,51 @@ def slide_07_package():
 </section>'''
 
 
+def slide_07_feed():
+    """What actually runs in the loop — content sold the airport, and it sells venues."""
+    cells = [
+        (feed_weather(), "LOCAL WEATHER"),
+        (feed_news(), "LOCAL &amp; WORLD NEWS"),
+        (feed_trivia(), "TRIVIA &amp; FUN FACTS"),
+        (sample_spot(), "YOUR EVENT SPOT"),
+    ]
+    grid = "".join(
+        f'<div class="fcell">{screen(inner, cap, "xs")}</div>' for inner, cap in cells)
+    return f'''
+<section class="slide navy">
+  <div class="eyebrow gold">WHAT'S ON THE SCREEN</div>
+  <h2 class="display">Not a wall of <em>ads</em>.</h2>
+  <p class="body wide dim">A 15-minute loop, refreshed continuously. Advertising is interleaved
+  with content people actually want &mdash; which is why they keep looking up, and why the
+  advertising works. Your Arena spots sit inside the same rotation.</p>
+  <div class="fgrid">{grid}</div>
+  {statrow([("15", "MINUTE LOOP", "gold"), ("4&times;", "PLAYS PER HOUR"),
+            ("1,500+", "PLAYS PER SCREEN / MO"), ("55+", "MIN AVG DWELL")], "bordered")}
+  {foot()}
+</section>'''
+
+
+def slide_13_team():
+    """Real headshots. The people who sign the agreement answer the phone."""
+    cards = "".join(
+        f'<div class="tcard"><div class="tface" style="background-image:url({HEADSHOTS[k]})"></div>'
+        f'<div class="tname">{n}</div><div class="trole">{r}</div>'
+        f'<div class="tcontact">{e}<br>{p}</div></div>'
+        for n, r, e, p, k in TEAM if k)
+    return f'''
+<section class="slide cream">
+  <div class="eyebrow">WHO YOU'D BE WORKING WITH</div>
+  <h2 class="display">Owner-operated, <em>and local</em>.</h2>
+  <p class="body wide">We are not a franchise and not a rep firm. The people who sign your
+  agreement are the same people who answer the phone when a screen needs attention, and the
+  same people who will walk your building with you.</p>
+  <div class="tcards">{cards}</div>
+  {statrow([("125+", "SCREENS WE OWN AND RUN", "red"), ("28", "TUPELO / LEE CO. VENUES"),
+            ("100%", "CREATIVE BUILT IN-HOUSE"), ("24/7", "SUPPORT, FROM US")], "bordered")}
+  {foot()}
+</section>'''
+
+
 def slide_08_revshare():
     rows = [("4 advertisers we bring", "$1,400", "40%", "$560"),
             ("4 advertisers you bring", "$1,400", "60%", "$840"),
@@ -522,16 +604,27 @@ def slide_12_thanks():
 
 
 SLIDES = [slide_01_cover(), slide_02_proposal(), slide_03_airport(), slide_04_network(),
-          slide_05_footprint(), slide_06_placement(), slide_07_package(), slide_08_revshare(),
-          slide_09_events(), slide_10_whoweare(), slide_11_next(), slide_12_thanks()]
+          slide_05_footprint(), slide_06_placement(), slide_07_feed(), slide_07_package(),
+          slide_08_revshare(), slide_09_events(), slide_10_whoweare(), slide_13_team(),
+          slide_11_next(), slide_12_thanks()]
+
+
+def numbered_slides(slides):
+    """Stamp sequential page numbers so slides can be reordered without renumbering."""
+    out = []
+    for i, s in enumerate(slides, 1):
+        out.append(s.replace("__PG__", f"{i:02d}"))
+    return "".join(out)
 
 CSS = f'''
 *{{margin:0;padding:0;box-sizing:border-box}}
-@page{{size:1280px 720px;margin:0}}
+/* Chamber flip-book format: 11 x 6.5 in landscape, spiral bound.
+   1280px wide keeps the type scale; 756px = 1280 * 6.5/11. */
+@page{{size:11in 6.5in;margin:0}}
 html,body{{background:#5a5a5a}}
 body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
-.slide{{width:1280px;height:720px;position:relative;overflow:hidden;
-  page-break-after:always;break-after:page;padding:50px 70px 0}}
+.slide{{width:1280px;height:756px;position:relative;overflow:hidden;
+  page-break-after:always;break-after:page;padding:52px 70px 0}}
 .slide:last-child{{page-break-after:auto}}
 .cream{{background:{CREAM};color:{INK}}}
 .navy{{background:{NAVY};color:#E7E3D8}}
@@ -779,6 +872,51 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   font-size:5.6px;font-weight:600;color:#5e7189;letter-spacing:.14em}}
 .bbrand b{{color:#fff;font-weight:800}} .bbrand b span{{color:#d4a017}}
 
+/* 07 the feed grid */
+.fgrid{{display:flex;gap:18px;margin-top:38px}}
+.fcell{{flex:1}}
+.screen.xs .bezel{{padding:5px 5px 7px}} .screen.xs .mount{{width:40px;height:5px}}
+.screen.xs .screen-cap{{margin-top:8px;font-size:6.2px;letter-spacing:.16em}}
+.feed{{position:absolute;inset:0;padding:7% 7.5%;display:flex;flex-direction:column;
+  color:#fff;background:radial-gradient(120% 100% at 15% 0%,#16233c 0%,#0a1220 65%)}}
+.feed-top{{display:flex;justify-content:space-between;align-items:center;
+  font-size:5.4px;letter-spacing:.2em;font-weight:600;color:#5e7189;margin-bottom:9%}}
+.feed-lbl{{color:{GOLD}}}
+.wx-now{{display:flex;align-items:center;gap:9%}}
+.wx-temp{{font-family:'Playfair Display',serif;font-size:38px;line-height:.9}}
+.wx-cond{{font-size:9px;font-weight:600}}
+.wx-meta{{font-size:5.8px;color:#8fa2b8;margin-top:3px;font-weight:500}}
+.wx-week{{display:flex;gap:4%;margin-top:auto;padding-top:6%;
+  border-top:1px solid rgba(255,255,255,.10)}}
+.wx-d{{flex:1;text-align:center}}
+.wx-dn{{font-size:5.2px;letter-spacing:.16em;font-weight:700;color:#8fa2b8}}
+.wx-hi{{font-size:10px;font-weight:700;margin-top:4px}}
+.wx-lo{{font-size:6px;color:#5e7189;font-weight:600}}
+.nw-lead{{font-family:'Playfair Display',serif;font-size:15px;line-height:1.2;
+  padding-bottom:6%;border-bottom:1px solid rgba(255,255,255,.10)}}
+.nw-rows{{margin-top:6%}}
+.nw-r{{font-size:6.6px;font-weight:500;color:#c8d0dd;padding:3.4% 0;display:flex;gap:8px}}
+.nw-r span{{color:{GOLD};font-weight:700;font-size:5.2px;letter-spacing:.14em;
+  min-width:34px;padding-top:1px}}
+.tv-q{{font-family:'Playfair Display',serif;font-size:13px;line-height:1.42;
+  font-style:italic;color:#F0EDE4}}
+.tv-a{{margin-top:auto;font-size:5.6px;letter-spacing:.18em;font-weight:700;color:{GOLD}}}
+
+/* 13 team cards */
+.tcards{{display:flex;gap:34px;margin-top:52px}}
+.tcard{{flex:1;text-align:center}}
+.tface{{width:176px;height:176px;border-radius:50%;margin:0 auto 20px;
+  background-size:cover;background-position:center 20%;
+  box-shadow:0 0 0 1px rgba(22,34,58,.12),0 10px 26px rgba(22,34,58,.14)}}
+.tname{{font-family:'Playfair Display',serif;font-size:22px}}
+.trole{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{RED};margin-top:8px}}
+.tcontact{{font-size:10px;line-height:1.75;color:#7A8496;margin-top:12px}}
+
+/* their branding — a co-brand rule on the cover, in the Arena's own green */
+.cobrand{{position:absolute;left:70px;bottom:130px;display:flex;align-items:center;gap:18px}}
+.cobrand-bar{{width:34px;height:2px;background:{HBA_GREEN}}}
+.cobrand-t{{font-size:8px;letter-spacing:.26em;font-weight:600;color:{HBA_GREEN}}}
+
 /* cover photography (only when photos/cover.* is present) */
 .cover-photo{{position:absolute;inset:0;background-size:cover;background-position:center}}
 .cover-scrim{{position:absolute;inset:0;background:
@@ -794,7 +932,7 @@ HTML = f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <title>MCTV Host Media Kit &mdash; {VENUE}</title>
 <style>{FONTS}</style><style>{CSS}</style></head>
-<body>{"".join(SLIDES)}</body></html>'''
+<body>{numbered_slides(SLIDES)}</body></html>'''
 
 
 def main():

@@ -9,7 +9,7 @@
 
 ## 1. The ask
 
-A 12-page host media kit exists and is sendable today. It was built in code
+A 14-page host media kit exists and is sendable today. It was built in code
 (`build_deck.py` → `deck.html` → PDF) because the sales meeting happened this morning and
 Alli expects something before end of day.
 
@@ -57,7 +57,7 @@ house style. Match it — this kit should sit in a stack with the others and loo
 | Red | `#C3312A` | Eyebrows, italic accent, prices — **light spreads only** |
 | Gold | `#C2A15C` | Eyebrows, italic accent — **dark spreads only** |
 | Ink | `#16223A` | Body text on cream |
-| HBA green | `#8DC63F` | *Only* inside the sample Arena spot. Their brand, not ours. |
+| HBA green | `#8DC63F` | The Arena's own green. Sample spot + the cover co-brand rule only. |
 
 The red/gold split is load-bearing: red never appears on a navy page, gold never on cream.
 
@@ -81,8 +81,10 @@ advertiser.*" Keep that rhythm if anything is reworded.
 
 ### Grid
 
-- Page 1280 × 720 px (16:9). PDF exports at 960 × 540 pt = 13.333 × 7.5 in.
-- Margins 70px left/right, 50px top.
+- Page 1280 × 756 px. PDF exports at 792 × 468 pt = **11 × 6.5 in landscape** — the
+  Chamber flip-book format, spiral/wire-o bound. 1280px wide preserves the type scale;
+  756 = 1280 × 6.5/11.
+- Margins 70px left/right, 52px top.
 - Two-column body: 42% / remainder, 62px gutter.
 - Stat rows anchor to `bottom: 74px`; footer to `bottom: 30px`. **The stat row is what
   stops these pages looking top-heavy** — it was the single biggest fix in the first pass.
@@ -128,14 +130,17 @@ unusable. Best outcome is asking Alli for a few facility shots on the next touch
 
 Three things in this deck are drawn in CSS, deliberately. They are not placeholders.
 
-1. **The lobby event board (page 09)** — a faithful miniature of `static/board.html`, the
+1. **The lobby event board (page 10)** — a faithful miniature of `static/board.html`, the
    real shipped product, down to the gold NOW card, the live dot, and a private booking
    masked to *"Private Event"*. It is the single most differentiating page for a conference
    center. If it gets rebuilt in another tool, it must keep matching the real board; check
    `static/board.html` for the tokens (`--navy:#0a1220`, `--gold:#d4a017`, `--live:#3fbf6a`).
-2. **The sample Arena spot (pages 02)** — a mock event promo in *their* green, so Alli sees
+2. **The sample Arena spot (pages 02 and 07)** — a mock event promo in *their* green, so Alli sees
    her own creative rather than ours. Captioned as a sample. Keep the caption.
-3. **The screen bezel** housing both — a wall-mounted display with mount plate and a soft
+3. **The content feed screens (page 07)** — weather, news and trivia panels drawn in CSS.
+   They show the real content mix that makes the loop watchable; that argument is why the
+   airport signed.
+4. **The screen bezel** housing all of it — a wall-mounted display with mount plate and a soft
    gloss sweep.
 
 **No photograph of the Arena's interior appears anywhere in the deck, and none is implied.**
@@ -153,9 +158,9 @@ Full text in `copy.md`, generated from the deck so it cannot drift.
 
 - **The 60/40 split, and its direction.** 60% goes to whoever *brings* the advertiser, not
   to a fixed party. This was corrected once already. It appears in exactly four places:
-  page 08 (headline, body, table, stat row), page 02 (item 02 and stat row), page 07
+  page 09 (headline, body, table, stat row), page 02 (item 02 and stat row), page 08
   (footer line, "up to 60%"), page 03 (the airport reference). Change one, change all.
-- **The page 08 disclaimer.** "Illustrative only, at a $350/mo blended advertiser rate — not
+- **The page 09 disclaimer.** "Illustrative only, at a $350/mo blended advertiser rate — not
   a guarantee of earnings." It stays, at its current prominence, on any redesign.
 - **The page 06 hedge.** "A starting map, not a final one — drawn from the outside, before
   we've walked it with you." Nothing in that building has been surveyed.
@@ -175,10 +180,11 @@ director cost more than the specificity gains. Named spaces only.
 
 1. **Photography pass** — three slots filled, or a written call that a given slot is better
    left as the fallback.
-2. **Print spec**, if this is going spiral-bound like the recent kits: 13.333 × 7.5 in trim,
-   0.125 in bleed, and a binding-edge safe margin on the left of every page. The current
+2. **Print spec.** Trim is already 11 × 6.5 in to match the Chamber flip book. Still needs
+   0.125 in bleed added and a binding-edge safe margin proofed on the left of every page. The
    layout runs a 70px (0.73 in) left margin, which is probably enough, but nothing has been
-   proofed against a real coil punch.
+   proofed against a real coil punch. Stock: 100 lb / 270 gsm silk or matte cover — not gloss,
+   which flares the navy pages under room light.
 3. **A Canva version**, if the team wants to hand-edit it later. The HTML is the source of
    truth today, which is fast for us and useless for Swayze on a phone. Worth a conversation
    rather than assuming.

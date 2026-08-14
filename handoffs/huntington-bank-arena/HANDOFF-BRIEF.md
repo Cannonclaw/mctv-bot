@@ -1,5 +1,7 @@
 # Huntington Bank Arena & Conference Center — Host Media Kit
 
+**Format:** 14-page flip book, 11 × 6.5 in landscape, spiral bound — same as the Chamber package.
+
 **Prospect:** Huntington Bank Arena and Conference Center, Tupelo (formerly Cadence Bank Arena)
 **Contact:** Alli Shackelford, Director of Marketing — alli@hbarena.com — 662-841-6573 ext. 904
 **Mailing:** P.O. Box 7288, Tupelo, MS 38802
@@ -12,7 +14,7 @@ Tupelo Regional Airport deal.
 
 | File | What it is |
 |---|---|
-| `build_deck.py` | Generates the 12-page host media kit. Edit content here, rebuild. |
+| `build_deck.py` | Generates the 14-page host media kit. Edit content here, rebuild. |
 | `deck.html` | Generated deck — open in any browser. Fonts embedded, no network needed. |
 | `build_email.py` | Assembles the outreach email as a reviewable `.eml` with the deck attached. |
 | `_fonts.css` | Playfair Display + Inter, base64-embedded. Build input; keeps the deck offline-safe. |
@@ -34,6 +36,7 @@ cream (`#F7F4EC`) and navy (`#111C33`) spreads, Playfair Display headlines with 
 or gold (`#C2A15C`) italic clause, Inter small-caps eyebrows, hairline-anchored stat rows,
 numbered footers. Same system as the Tupelo Territory Media Kit (Canva `DAHM-yFHfPQ`).
 
+Format follows the Chamber flip book: 11 x 6.5 in landscape, spiral bound, image-rich.
 Typographic cover rather than a photo cover — we hold no rights to arena photography. Swap in a
 licensed or self-shot image of the concourse before this goes to print.
 
@@ -41,18 +44,20 @@ licensed or self-shot image of the concourse before this goes to print.
 
 | # | Page | Job |
 |---|---|---|
-| 01 | Upgrade the arena. We'll cover it. | Cover, prepared-for Alli |
-| 02 | What we're proposing | The deal in three moves |
+| 01 | Upgrade the arena. We'll cover it. | Cover, co-branded in their green, prepared-for Alli |
+| 02 | What we're proposing | The deal in three moves + a sample Arena spot on screen |
 | 03 | We just did this at Tupelo Regional | Proof — same market, same structure, board-approved |
 | 04 | The network & the value | Network stats + local CPM comparison |
 | 05 | The company you'd keep | 28 Tupelo/Lee Co. host venues |
 | 06 | Where your screens would go | Six proposed zones — explicitly a starting map |
-| 07 | What it costs you: nothing | The free host package, four $0 cards |
-| 08 | Sixty / forty | Revenue share economics + grandfathering |
-| 09 | Your calendar, on every screen we own | Network-wide event promotion + lobby event board |
-| 10 | Who we are | Company page |
-| 11 | How this actually happens | Five-step path to live, ~30 days |
-| 12 | Thank you | Team contacts + what we need from them |
+| 07 | Not a wall of ads | The real loop: weather, news, trivia, and her event spot |
+| 08 | What it costs you: nothing | The free host package, four $0 cards |
+| 09 | Sixty / forty | Revenue share economics + grandfathering |
+| 10 | Your calendar, on every screen we own | Network-wide promotion + the lobby event board |
+| 11 | Who we are | Company page |
+| 12 | Owner-operated, and local | The team, with real headshots |
+| 13 | How this actually happens | Five-step path to live, ~30 days |
+| 14 | Thank you | Contacts + what we need from them |
 
 ## Facts used, and where they came from
 
@@ -75,7 +80,7 @@ MCTV sources an advertiser → Arena takes 40%. The Arena sources one → Arena 
 produces, bills and services every spot either way. This is the deck's strongest page, because it
 turns the Arena's existing sponsor relationships into something worth more than they were.
 
-Page 8 carries the math, page 2's numbered item 02 and stat row carry the summary, and page 7's
+Page 9 carries the math, page 2's numbered item 02 and stat row carry the summary, and page 8's
 footer says "up to 60%". Those are the only four places the split appears.
 
 ## Open items before sending
@@ -85,17 +90,17 @@ footer says "up to 60%". Those are the only four places the split appears.
    it, or drop it — Creed's call.
 2. **Screen count (6–8) and the six zones on page 6** are proposed from the outside. They should
    survive a walkthrough, but nothing in the building has been surveyed.
-3. **Revenue table on page 8** is illustrative at a $350/mo blended rate and labeled as such.
+3. **Revenue table on page 9** is illustrative at a $350/mo blended rate and labeled as such.
 
 ## Imagery
 
 Everything visual in the deck is either ours or drawn:
 
-- **Team headshots** on page 12, from `assets/team/`. Elliot has no headshot on file and falls
-  back to a monogram.
-- **The lobby event board** on page 9 is a faithful CSS render of `static/board.html` — real
+- **Team headshots** on page 12 and page 14, from `assets/team/`. Elliot has no headshot on file
+  and falls back to a monogram on the contacts page.
+- **The lobby event board** on page 10 is a faithful CSS render of `static/board.html` — real
   product, real behaviour, including a private booking masked to "Private Event".
-- **The sample Arena spot** on page 2 is a CSS render in Huntington Bank Arena's own green, so
+- **The sample Arena spot** on pages 2 and 7 is a CSS render in Huntington Bank Arena's own green, so
   she sees her creative rather than ours. Clearly captioned as a sample.
 - **No photographs of the Arena appear anywhere**, and none are implied.
 

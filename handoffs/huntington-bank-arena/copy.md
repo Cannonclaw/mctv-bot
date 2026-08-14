@@ -10,6 +10,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Upgrade the arena.
 - We'll cover it.
 - THE INDOOR BILLBOARD COMPANY · NORTH MISSISSIPPI
+- A VENUE PARTNERSHIP PROPOSED FOR HUNTINGTON BANK ARENA
 - PREPARED FOR
 - Alli Shackelford
 - Director of Marketing · Huntington Bank Arena and Conference Center
@@ -182,6 +183,65 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 
 ## Page 07 — What it costs you: nothing  ·  _navy spread_
 
+- WHAT'S ON THE SCREEN
+- Not a wall of ads .
+- A 15-minute loop, refreshed continuously. Advertising is interleaved with content people actually want — which is why they keep looking up, and why the advertising works. Your Arena spots sit inside the same rotation.
+- LOCAL WEATHER
+- TUPELO, MS
+- 94°
+- Partly Cloudy
+- Feels like 101° · Humidity 64%
+- THU
+- 94°
+- 72°
+- FRI
+- 91°
+- 70°
+- SAT
+- 88°
+- 69°
+- SUN
+- 90°
+- 71°
+- LOCAL WEATHER
+- LOCAL & WORLD NEWS
+- UPDATED 2:40 PM
+- Lee County breaks ground on new industrial park
+- MS
+- Highway 45 resurfacing begins Monday
+- SPORTS
+- Rebels open camp with 14 returning starters
+- NAT
+- Markets close higher for a third session
+- LOCAL & WORLD NEWS
+- FUN FACT
+- DID YOU KNOW?
+- Tupelo built the first city-owned
+- power system in the nation
+- to buy TVA electricity.
+- 1934 · Tupelo, Mississippi
+- TRIVIA & FUN FACTS
+- HUNTINGTON BANK ARENA
+- TONIGHT
+- DOORS 6:00 · SHOW 7:00
+- Gospel Fest
+- TICKETS AT HBARENA.COM
+- SEPT 12 · ARENA BOWL
+- MCTV
+- YOUR EVENT SPOT
+- 15
+- MINUTE LOOP
+- 4×
+- PLAYS PER HOUR
+- 1,500+
+- PLAYS PER SCREEN / MO
+- 55+
+- MIN AVG DWELL
+- MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
+- 07
+
+## Page 08 — Sixty / forty  ·  _navy spread_
+
 - YOUR HOST PACKAGE
 - What it costs you: nothing .
 - INSTALLED & MAINTAINED
@@ -212,9 +272,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Total cost to the Arena — $0, for the life of the agreement.
 - You provide wall space and power. We provide everything else — and pay you up to 60% of what the screens earn.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 07
+- 08
 
-## Page 08 — Sixty / forty  ·  _cream spread_
+## Page 09 — Your calendar, on every screen we own  ·  _cream spread_
 
 - THE ECONOMICS
 - Sixty / forty. Whoever brings the advertiser.
@@ -248,9 +308,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 100%
 - OF YOUR EXISTING DEALS, KEPT
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 08
+- 09
 
-## Page 09 — Your calendar, on every screen we own  ·  _navy spread_
+## Page 10 — Who we are  ·  _navy spread_
 
 - THE OTHER HALF OF THE DEAL
 - Your calendar, on every screen we own .
@@ -294,9 +354,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 15
 - MINUTE LOOP
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 09
+- 10
 
-## Page 10 — Who we are  ·  _navy spread_
+## Page 11 — How this actually happens  ·  _navy spread_
 
 - WHO WE ARE
 - The fastest-growing
@@ -315,9 +375,37 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 3
 - GROWTH MARKETS
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 10
+- 11
 
-## Page 11 — How this actually happens  ·  _cream spread_
+## Page 12 — Thank you  ·  _cream spread_
+
+- WHO YOU'D BE WORKING WITH
+- Owner-operated, and local .
+- We are not a franchise and not a rep firm. The people who sign your agreement are the same people who answer the phone when a screen needs attention, and the same people who will walk your building with you.
+- Mary Michael Cannon
+- CEO & Founder
+- mmc@mctvofms.com
+- 662-801-5677
+- Creed Cannon
+- President & Founder
+- creed@mctvofms.com
+- 601-201-8202
+- Swayze Hollingsworth
+- Director of Sales
+- swayze@mctvofms.com
+- 662-907-0404
+- 125+
+- SCREENS WE OWN AND RUN
+- 28
+- TUPELO / LEE CO. VENUES
+- 100%
+- CREATIVE BUILT IN-HOUSE
+- 24/7
+- SUPPORT, FROM US
+- MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
+- 12
+
+## Page 13 — Page 13  ·  _cream spread_
 
 - NEXT STEPS
 - How this actually happens .
@@ -338,9 +426,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Live — and earning
 - Screens run 24/7. Your first revenue-share report follows the first month of billing.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 11
+- 13
 
-## Page 12 — Thank you  ·  _cream spread_
+## Page 14 — Page 14  ·  _cream spread_
 
 - LET'S TALK
 - Thank you

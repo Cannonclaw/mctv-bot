@@ -4,7 +4,7 @@ Host partnership pitch for **Huntington Bank Arena and Conference Center**, Tupe
 (formerly Cadence Bank Arena), addressed to Alli Shackelford, Director of Marketing.
 Met in person 2026-08-13.
 
-**12 pages · free screens · 60/40 revenue split following whoever brings the advertiser**
+**14 pages · 11 × 6.5 in spiral-bound flip book · free screens · 60/40 revenue split following whoever brings the advertiser**
 
 ## Start here
 
