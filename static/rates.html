@@ -395,7 +395,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.5</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.6</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -814,14 +814,23 @@ function recalc(){
 
 function esc(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+function closeComparison(){
+  const ov = document.getElementById('cmpOverlay');
+  if(ov) ov.remove();
+}
+
 function showComparison(){
   const container = document.createElement('div');
+  // Both close buttons used to walk up from themselves to the white card and
+  // remove THAT — leaving this full-screen z-index:9999 backdrop behind. The
+  // page went dark and nothing was tappable, Accept included. Close by id.
+  container.id = 'cmpOverlay';
   container.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px';
   container.innerHTML = `
     <div style="background:white;border-radius:14px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <h2 style="margin:0;color:#0a1220;font-size:18px">Compare Options</h2>
-        <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
+        <button onclick="closeComparison()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px">
@@ -835,7 +844,7 @@ function showComparison(){
       </div>
       <div id="cmp-tip" style="display:none;margin-top:14px;background:#fdf8e8;border:1px solid #e8d4a0;border-radius:10px;padding:12px;font-size:13.5px;line-height:1.5;color:#4a3f28"></div>
       <div style="margin-top:16px;text-align:right">
-        <button class="btn secondary" onclick="this.closest('div').parentElement.remove()" style="min-width:auto">Close</button>
+        <button class="btn secondary" onclick="closeComparison()" style="min-width:auto">Close</button>
       </div>
     </div>`;
   document.body.appendChild(container);
