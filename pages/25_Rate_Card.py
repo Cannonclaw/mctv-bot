@@ -74,7 +74,7 @@ st.markdown("## \U0001F4B5 Rate Card")
 # cap/discount only exist after the Phase-1 flip (scripts/023 section 2) runs —
 # describing them earlier would contradict the uncapped rates shown below
 _cap_caption = (
-    f"capped ${params.get('venue_cap_4wk')}/venue · "
+    f"capped \\${params.get('venue_cap_4wk')}/venue · "
     f"{params.get('volume_discount_pct', 20)}% volume discount at "
     f"{params.get('volume_discount_screens', 10)}+ screens (custom builds). "
     if params.get("venue_cap_4wk") else ""
@@ -83,8 +83,11 @@ st.caption(
     "OOH-style impression pricing, computed **live**: NTV360 traffic × "
     "exposures (dwell ÷ the venue's *actual* loop from the latest sweep) "
     "× screen coverage. "
-    f"CPM **${params.get('cpm', 6)}** · exposure cap {params.get('exposure_cap', 6)}. "
-    f"4-wk rate = max(${params.get('floor_4wk', 25)} floor, impr×CPM), "
+    # Escape the dollar signs: Streamlit renders captions as markdown and pairs
+    # '$' up as LaTeX, so these two swallowed the CPM value, the exposure cap
+    # and the floor into a math render.
+    f"CPM **\\${params.get('cpm', 6)}** · exposure cap {params.get('exposure_cap', 6)}. "
+    f"4-wk rate = max(\\${params.get('floor_4wk', 25)} floor, impr×CPM), "
     + _cap_caption +
     "Knobs live in `rate_model_params`; venue inputs in `venue_rate_inputs`."
 )
@@ -796,7 +799,7 @@ else:
     _email_intro = ("Here's your prepared MCTV Elite Advertising quote. Review "
                     "the screens and pricing, and you can accept and sign right "
                     "on the page:")
-    _sms_body = f"Your MCTV quote is ready — review & sign here: {card_link}"
+    _sms_body = f"Your MCTV quote is ready - review & sign here: {card_link}"
 
 _email_body = (
     f"Hi {_first_name},\n\n"
@@ -855,6 +858,154 @@ st.caption(
     "(three packages, tops out at \\$800, no venue search) until the "
     "`sync/rates-page-aug2026` branch is merged."
 )
+
+# ── The week after you send it ───────────────────────────────────────────────
+# Getting the quote out the door was solved above; what happens next was not.
+# A quote link creates no lead, no deal and no task (deliberately — an
+# unsigned enquiry is not a deal and would poison the forecast), so nothing in
+# this app ever brings that client back up, and the Pipeline page's automated
+# "Post-Proposal" sequence never sees them either: it runs off
+# `pipeline_opportunities`, and its templates are generic — no quote link, no
+# number. These three are quote-aware: same card link, same figure the client
+# already saw, and every claim in them is a term the client can read on the
+# agreement itself (free creative, first invoice only after they approve it,
+# six-month minimum then 30 days' notice, prepay bonus months).
+# NO EXPIRY DEADLINE, ON PURPOSE: the card recomputes its 30-day validity from
+# the moment it is opened, so it always reads 30 days out — a "your quote
+# expires Friday" nudge would be contradicted by the page it links to.
+with st.expander("\U0001F4EE They haven't replied yet — follow-up messages"):
+    st.caption(
+        "Three messages to send in order, already carrying **this** client's "
+        "quote-card link. Copy one, or use the buttons to open it in your own "
+        "mail or messaging app."
+    )
+
+    # Same rule as the send buttons above: a package price is flat and known
+    # here so the follow-up can carry it; a custom build is priced on the card
+    # by the locked engine, and this page is pre-flip, so it gets no figure.
+    _fu_what = (
+        f"That's {quote_pkg['screens']} screens across our network for "
+        f"${quote_pkg['monthly']:,}/month, and you can accept and sign right "
+        "on the page." if quote_pkg else
+        "Everything's on the page — the screens, the reach and the price — "
+        "and you can accept and sign right there."
+    )
+    _fu_prepay = (
+        f"\n\nOne thing worth knowing: paying the {ql_months}-month term up "
+        f"front adds {bonus_months} free month"
+        f"{'s' if bonus_months > 1 else ''} on the end — {total_months} "
+        f"months for the price of {ql_months}." if bonus_months else ""
+    )
+
+    _followups = [
+        {
+            "when": "Day 2",
+            "title": "Did it land?",
+            "subject": (f"Re: Your MCTV quote — ${quote_pkg['monthly']:,}/mo"
+                        if quote_pkg else "Re: Your MCTV advertising quote"),
+            "body": (
+                f"Hi {_first_name},\n\n"
+                "Just making sure this came through — here's your quote "
+                "again:\n\n"
+                f"{card_link}\n\n"
+                f"{_fu_what}\n\n"
+                "If something else would fit better, tell me what to change — "
+                "the screens and the term are both easy to move.\n\n"
+                "— MCTV Elite Advertising"
+            ),
+            "sms": (f"Hi {_first_name} - just checking my MCTV quote came "
+                    f"through: {card_link} Happy to change the screens or "
+                    "the term."),
+        },
+        {
+            "when": "Day 5",
+            "title": "The three questions everyone asks",
+            "subject": "The three questions I get asked most",
+            "body": (
+                f"Hi {_first_name},\n\n"
+                "No rush on the quote — but these are the three things almost "
+                "everyone asks me before they sign, so here they are up "
+                "front:\n\n"
+                "1. Who makes the ad? We do, at no extra cost. Send us your "
+                "logo and photos, we design it, and nothing airs until you "
+                "approve it.\n"
+                "2. When am I billed? Not at signing. The first invoice goes "
+                "out after you approve the creative.\n"
+                "3. Am I locked in? Six months is the minimum. After that "
+                "either of us can stop with 30 days' written notice, and a "
+                "12-month term locks your rate.\n\n"
+                "All three are in the plain-English terms on the agreement "
+                "itself:\n\n"
+                f"{card_link}\n\n"
+                "— MCTV Elite Advertising"
+            ),
+            "sms": (f"Hi {_first_name} - three quick answers: we design the "
+                    "ad free, you're not invoiced until you approve it, and "
+                    f"6 months is the minimum. Quote: {card_link}"),
+        },
+        {
+            "when": "Day 10",
+            "title": "Hold you a start date?",
+            "subject": "Should I hold you a start date?",
+            "body": (
+                f"Hi {_first_name},\n\n"
+                "Last note from me — I'd just like to know whether to hold a "
+                "start date for you.\n\n"
+                "Sign this week and your campaign starts the 1st of next "
+                "month: we countersign — typically within a business day — "
+                "design your ad, and it goes live once you've approved "
+                f"it.{_fu_prepay}\n\n"
+                f"{card_link}\n\n"
+                "And if the timing simply isn't right, say so and I'll check "
+                "back later in the year — no hard feelings.\n\n"
+                "— MCTV Elite Advertising"
+            ),
+            "sms": (f"Hi {_first_name} - should I hold you a start date? "
+                    "Sign this week and you're live the 1st of next month: "
+                    f"{card_link}"),
+        },
+    ]
+
+    for _i, _fu in enumerate(_followups):
+        st.markdown(f"**{_fu['when']} — {_fu['title']}**")
+        # st.text, not markdown: a subject line can carry "$500/mo" and
+        # Streamlit pairs dollar signs up as LaTeX.
+        st.text(f"Subject: {_fu['subject']}")
+        st.code(_fu["body"])
+        _fl, _fr = st.columns(2)
+        with _fl:
+            if ql_email.strip():
+                st.link_button(
+                    "\U0001F4E7 Email this one",
+                    "mailto:" + ql_email.strip()
+                    + "?subject=" + urllib.parse.quote(_fu["subject"])
+                    + "&body=" + urllib.parse.quote(_fu["body"]),
+                    width="stretch",
+                )
+            else:
+                st.button("\U0001F4E7 Email this one", key=f"fu_email_{_i}",
+                          disabled=True, width="stretch",
+                          help="Add the contact email above to enable one-tap email.")
+        with _fr:
+            if _sms_num:
+                st.link_button(
+                    "\U0001F4AC Text this one",
+                    "sms:" + _sms_num + "?&body="
+                    + urllib.parse.quote(_fu["sms"]),
+                    width="stretch",
+                )
+            else:
+                st.button("\U0001F4AC Text this one", key=f"fu_sms_{_i}",
+                          disabled=True, width="stretch",
+                          help="Add the contact phone above to enable one-tap text.")
+
+    st.caption(
+        "None of these says the quote expires — the card recalculates its "
+        "30-day validity every time it is opened, so it always reads 30 days "
+        "out and a deadline would contradict the page you sent them. The "
+        "Pipeline page's automated **Post-Proposal** sequence is deal-based "
+        "and generic; these three carry the actual link and the actual number."
+    )
 
 st.divider()
 
