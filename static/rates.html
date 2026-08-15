@@ -395,7 +395,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.6</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.7</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -440,7 +440,8 @@ const CFG = {
   quoteValidDays: 30,
   submitUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/quote-submit",
   contractUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/contract-initiate",
-  agreementVersion: "SSA-2026-07"
+  agreementVersion: "SSA-2026-07",
+  submitTimeoutMs: 20000
 };
 
 // Packages (easy to edit monthly prices)
@@ -1170,10 +1171,16 @@ async function submitAgreement(q){
   };
 
   let ok = false, ref = qref, reason = '';
+  // fetch has no timeout of its own, and a phone on strained venue WiFi can hold
+  // a request open for minutes. That left the button dead on "Submitting…" with
+  // no error and no way back — give up at 20s and fall into the retry path,
+  // which still offers the email fallback.
+  const ctl = new AbortController();
+  const bail = setTimeout(() => ctl.abort(), CFG.submitTimeoutMs);
   try{
     const r = await fetch(CFG.contractUrl, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload), signal: ctl.signal
     });
     const j = await r.json().catch(() => ({}));
     ok = r.ok && j.ok;
@@ -1181,7 +1188,12 @@ async function submitAgreement(q){
     // Say what actually went wrong. A throttle or a rejected field is
     // fixable by the client standing there; "couldn't reach our server" is not.
     if(!ok) reason = j.error || `Our server answered ${r.status}.`;
-  }catch(e){ ok = false; reason = "Couldn't reach our server."; }
+  }catch(e){
+    ok = false;
+    reason = e && e.name === 'AbortError'
+      ? 'Our server took too long to answer.'
+      : "Couldn't reach our server.";
+  }finally{ clearTimeout(bail); }
 
   if(ok){
     submitted = true;                      // latch: recalc() must not re-arm Accept
