@@ -154,3 +154,52 @@ CPM_BENCHMARK_TEXT = (
     "Outdoor/Billboards $3\u2013$8  |  Cable TV $15\u2013$30  |  "
     "Digital display $5\u2013$15  |  Social media $6\u2013$12"
 )
+
+
+# \u2500\u2500 Good / Better / Best tier comparison \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# Used by the contract document (generators/contract_generator.py), the client
+# portal's package picker (pages/portal_contract.py) and the rep-side preview
+# (pages/9_Contracts.py). They MUST agree: the document stars one column and
+# the portal pre-selects one radio, and a client who sees two different
+# recommendations on the same deal has been given a reason to hesitate.
+
+TIER_COMPARISON_MAX = 3
+
+
+def _tier_screens(option) -> float:
+    """Screen count of a tier option, coerced. Unreadable values sort first.
+
+    Never raises: these options come back out of a JSONB column and are read
+    on the client portal, where a TypeError is a blank page mid-signature.
+    """
+    try:
+        return float(option.get("screens") or 0)
+    except (AttributeError, TypeError, ValueError):
+        return 0.0
+
+
+def order_tier_options(tier_options: list) -> list:
+    """Return tier options as a Good -> Better -> Best ladder.
+
+    Sorted by screen count ascending, because the comparison reads
+    left-to-right and MCTV's ladder is monotonic (more screens, lower cost
+    per screen). Stored order is the rep's click order, which is arbitrary.
+    Sorting is idempotent, so an already-ordered list is unchanged.
+    """
+    if not tier_options or not isinstance(tier_options, list):
+        return []
+    return sorted(tier_options, key=_tier_screens)
+
+
+def recommended_tier_index(count: int) -> int:
+    """Index of the tier to recommend within an ordered ladder.
+
+    The middle rung, which is what Good/Better/Best anchors on; the
+    lower-middle when the count is even. Returns 0 for 2 options and 1 for 3
+    \u2014 the two counts the Contracts page allows \u2014 so capped comparisons keep
+    their existing behaviour, while a 4- or 5-option contract stored before
+    the cap no longer stars the second-cheapest package.
+    """
+    if count <= 0:
+        return 0
+    return (count - 1) // 2

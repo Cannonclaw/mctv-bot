@@ -27,7 +27,10 @@ from docx.oxml.ns import qn
 logger = logging.getLogger(__name__)
 
 from services.docx_service import DocxService
-from services.config_service import get_tier_impressions, calculate_cpm
+from services.config_service import (
+    get_tier_impressions, calculate_cpm,
+    order_tier_options, recommended_tier_index,
+)
 
 
 # ── Config ──────────────────────────────────────────────────────────────────
@@ -1169,6 +1172,11 @@ class ContractGenerator:
         from docx.shared import Inches, RGBColor
         from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+        # Good -> Better -> Best, left to right. Stored order is whatever
+        # order the rep clicked the tiers in; the client portal orders the
+        # same list the same way, so the paper and the picker agree.
+        tier_options = order_tier_options(tier_options)
+
         self.docx_service.add_body_text(
             doc,
             f"We have prepared {len(tier_options)} package options for "
@@ -1181,8 +1189,8 @@ class ContractGenerator:
         hours_per_day = network.get("hours_per_day", 12)
         days_per_month = network.get("days_per_month", 30)
 
-        # Recommended = middle tier (index 1 for 3 tiers, 0 for 2)
-        rec_idx = 1 if len(tier_options) > 2 else 0
+        # Recommended = the middle rung of the ladder (index 1 for 3, 0 for 2)
+        rec_idx = recommended_tier_index(len(tier_options))
 
         # Build comparison rows
         row_labels = [

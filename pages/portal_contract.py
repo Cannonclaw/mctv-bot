@@ -20,6 +20,7 @@ from services.contract_service import (
     get_contracts_for_client, record_contract_view,
     sign_contract, get_contract_download_url, update_contract,
 )
+from services.config_service import order_tier_options, recommended_tier_index
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
 st.set_page_config(
@@ -350,6 +351,10 @@ for contract in contracts:
             "for you. Please select the one that best fits your needs before signing."
         )
 
+        # Same ladder order and same recommended rung as the contract
+        # document the client is reading alongside this page.
+        tier_opts = order_tier_options(tier_opts)
+
         tier_labels = []
         for i, opt in enumerate(tier_opts):
             name = opt.get("name", f"Option {i + 1}")
@@ -360,7 +365,7 @@ for contract in contracts:
         tier_choice = st.radio(
             "Choose your package:",
             tier_labels,
-            index=1 if len(tier_labels) > 2 else 0,
+            index=recommended_tier_index(len(tier_labels)),
             key=f"tier_select_{cid}",
         )
 

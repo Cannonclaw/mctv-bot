@@ -26,6 +26,9 @@ from services.contract_service import (
     get_contract_download_url, get_expiring_contracts, renew_contract,
     _days_remaining,
 )
+from services.config_service import (
+    TIER_COMPARISON_MAX, order_tier_options, recommended_tier_index,
+)
 from services.portal_service import get_all_clients, get_client
 
 st.set_page_config(page_title="Contracts - MCTV Bot", page_icon="\U0001F4DD", layout="wide")
@@ -49,6 +52,26 @@ def load_config():
 config = load_config()
 TIERS = config.get("pricing", {}).get("elite_tiers", [])
 MARKETS = list(config.get("markets", {}).keys())
+
+
+def _ordered_tier_options(names: list) -> list:
+    """Build the Good/Better/Best payload for the selected tier names.
+
+    Returns the exact shape stored on the contract, ordered as the client
+    will see it — the multiselect hands back the rep's click order, and a
+    comparison table whose columns run 40 / 10 / 125+ is not a ladder.
+    """
+    options = []
+    for tn in names:
+        t = next((t for t in TIERS if t.get("name") == tn), None)
+        if t:
+            options.append({
+                "name": t.get("name", ""),
+                "screens": t.get("screens", 10),
+                "rate": float(t.get("monthly_rate", 350)),
+            })
+    return order_tier_options(options)
+
 
 # ── Supabase gate ───────────────────────────────────────────────────────────
 
@@ -693,10 +716,27 @@ with tab_create:
             if include_tier_options:
                 tier_name_list = [t.get("name", "") for t in TIERS]
                 selected_tier_names = st.multiselect(
-                    "Select tiers to include (2-3)",
+                    f"Select tiers to include (2-{TIER_COMPARISON_MAX})",
                     tier_name_list,
-                    default=tier_name_list[:3] if len(tier_name_list) >= 3 else tier_name_list,
+                    default=tier_name_list[:TIER_COMPARISON_MAX],
+                    max_selections=TIER_COMPARISON_MAX,
+                    help="The comparison table gets one column per tier — more "
+                         "than three will not fit across the page.",
                 )
+                # Show the rep the ladder the client will actually see: the
+                # document and the portal both order by screens and star the
+                # middle rung, whatever order these were clicked in.
+                _preview = _ordered_tier_options(selected_tier_names)
+                if len(_preview) >= 2:
+                    _rec = recommended_tier_index(len(_preview))
+                    st.caption(
+                        "Client sees: "
+                        + "  →  ".join(
+                            f"**{t['name']} \\${t['rate']:,.0f}/mo**"
+                            + (" ★ recommended" if i == _rec else "")
+                            for i, t in enumerate(_preview)
+                        )
+                    )
 
         # Tier / package selection
         st.markdown("**Package Details**")
@@ -803,15 +843,7 @@ with tab_create:
                 # Build tier_options list for multi-tier contracts
                 tier_options_data = None
                 if include_tier_options and selected_tier_names:
-                    tier_options_data = []
-                    for tn in selected_tier_names:
-                        t = next((t for t in TIERS if t.get("name") == tn), None)
-                        if t:
-                            tier_options_data.append({
-                                "name": t.get("name", ""),
-                                "screens": t.get("screens", 10),
-                                "rate": float(t.get("monthly_rate", 350)),
-                            })
+                    tier_options_data = _ordered_tier_options(selected_tier_names)
 
                 with st.spinner("Creating contract..."):
                     try:
