@@ -382,7 +382,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.2</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.3</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -642,11 +642,19 @@ function toggleTerr(t){ selTerr.has(t) ? selTerr.delete(t) : selTerr.add(t); ren
 
 function renderMarkets(){
   const order = ['oxford','tupelo','starkville','special'];
-  $('marketList').innerHTML = order.map(mk => {
+  // Every pick re-renders this whole list, so carry the accordion's open state
+  // across — otherwise the market you are working in snaps shut on each tick and
+  // building a multi-venue package turns into reopen, tap, reopen, tap.
+  const list = $('marketList');
+  const repaint = !!list.querySelector('details.market');
+  const wasOpen = new Set([...list.querySelectorAll('details.market')].filter(d => d.open).map(d => d.dataset.mk));
+  list.innerHTML = order.map(mk => {
     const rows = VENUES.map((v,i)=>({v,i})).filter(x => x.v[0] === mk);
     if(!rows.length) return '';
     const nSel = rows.filter(x => selVenues.has(x.i)).length;
-    return `<details class="market" ${mk==='oxford'?'open':''}>
+    // First paint opens Oxford, plus any market a prefilled ?v= link picked into.
+    const open = repaint ? wasOpen.has(mk) : (mk === 'oxford' || nSel > 0);
+    return `<details class="market" data-mk="${mk}" ${open ? 'open' : ''}>
       <summary>${MARKETS[mk].label}
         <span class="mcount">${nSel ? nSel+' selected · ' : ''}${rows.length} locations
           <button style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer" onclick="event.preventDefault();selectAll('${mk}')">all</button>
@@ -1195,6 +1203,9 @@ function applyParams(){
     // while the quote below is fully built. The client then taps the package
     // they were quoted to confirm it, pickPkg toggles the already-set key back
     // off, and the quote they came to sign disappears.
+    // Emptying the list first makes renderMarkets treat this as a first paint,
+    // so a ?v= link opens the markets it picked into rather than only Oxford.
+    $('marketList').innerHTML = '';
     renderPackages();
     renderMarkets();
     $('tabPkg').classList.toggle('active', mode==='pkg');
