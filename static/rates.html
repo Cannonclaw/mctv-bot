@@ -395,7 +395,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.4</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.5</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -622,6 +622,11 @@ let selPkg = null;
 let selTerr = new Set();
 let selVenues = new Set();
 let termMonths = 6;
+// Latched once the client has a signed agreement on record. recalc() runs on
+// every keystroke and every pick, and it used to re-arm Accept unconditionally,
+// so touching anything after submitting handed the client a second binding
+// agreement for the same quote.
+let submitted = false;
 
 const $ = id => document.getElementById(id);
 const fmt$ = n => '$' + n.toLocaleString('en-US');
@@ -788,8 +793,11 @@ function recalc(){
   $('stPlays').textContent = fmtN(q.plays);
   $('stCPM').textContent = '$' + q.cpm.toFixed(2);
 
+  // Once submitted this element holds the client's receipt — leave it alone.
   const bn = $('bonusNote');
-  if(q.bonusMonths){
+  if(submitted){
+    // nothing: the receipt stays put
+  } else if(q.bonusMonths){
     // display:block, not '' — .bonusnote is display:none in the stylesheet, so
     // clearing the inline style hides it instead of showing it. That silently
     // swallowed the prepay line, the decline confirmation and the post-submit
@@ -798,8 +806,8 @@ function recalc(){
     bn.textContent = `✓ Prepay bonus: Pay ${fmt$(q.termTotal)} upfront for ${q.totalMonths} months (effective ${fmt$(Math.round(q.termTotal/q.totalMonths))}/mo).`;
   } else bn.style.display = 'none';
 
-  $('btnAccept').disabled = false;
-  $('btnDecline').disabled = false;
+  $('btnAccept').disabled = submitted;
+  $('btnDecline').disabled = submitted;
 
   $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value ? ', ' + esc($('contactPhone').value) : ''})`;
 }
@@ -1035,7 +1043,10 @@ function closeAgreement(){
 
 function openAgreement(q){
   const sel = (mode === 'pkg')
-    ? `${PACKAGES.find(p => p.key === selPkg).name} Network Package${selTerr.size ? ' — ' + [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')).join(', ') : ''}`
+    // Say so when no territory was picked. The quote table above shows
+    // "Territories: To be selected", but the modal used to drop the line
+    // entirely — so the one screen the client actually signs on hid the gap.
+    ? `${PACKAGES.find(p => p.key === selPkg).name} Network Package — ${selTerr.size ? [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')).join(', ') : 'territories to be confirmed with your rep'}`
     : `${selVenues.size} hand-picked location${selVenues.size>1?'s':''} (${q.screens} screens)`;
   const row = (l, v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:13.5px"><span style="color:#5a6a7a">${l}</span><b style="text-align:right">${v}</b></div>`;
   const ov = document.createElement('div');
@@ -1134,7 +1145,11 @@ async function submitAgreement(q){
   if(!auth){ return showErr('Please check the authorization box.'); }
   err.style.display = 'none';
   const btn = document.getElementById('agSubmit');
+  if(btn.disabled) return;                 // already in flight
   btn.disabled = true; btn.textContent = 'Submitting…';
+  // Nothing else in the modal is safe to touch while a signature is on the wire.
+  const others = [...document.querySelectorAll('#agOverlay button')].filter(b => b !== btn);
+  others.forEach(b => { b.disabled = true; });
 
   const payload = {
     ...basePayload(q, 'accept'),
@@ -1160,6 +1175,7 @@ async function submitAgreement(q){
   }catch(e){ ok = false; reason = "Couldn't reach our server."; }
 
   if(ok){
+    submitted = true;                      // latch: recalc() must not re-arm Accept
     $('btnAccept').disabled = true;
     $('btnDecline').disabled = true;
     const bn = $('bonusNote');
@@ -1184,6 +1200,7 @@ async function submitAgreement(q){
       </div>`;
   } else {
     btn.disabled = false; btn.textContent = '✒ Sign & Submit Agreement Request';
+    others.forEach(b => { b.disabled = false; });
     err.style.display = 'block';
     err.innerHTML = `${esc(reason)} Your signature was NOT recorded. Please try again, or <a href="mailto:${encodeURIComponent(CFG.repEmail)}?subject=${encodeURIComponent('ACCEPTED — MCTV Quote ' + qref)}&body=${encodeURIComponent(quoteText(q,'accept') + '\n\nSigned: ' + sig + '\nStart date: ' + start)}" style="color:#b91c1c">email us your acceptance</a> and we'll take it from there.`;
   }
