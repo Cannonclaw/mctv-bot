@@ -223,7 +223,12 @@
     background:#fff;border-radius:14px;width:100%;max-width:640px;max-height:100%;
     display:flex;flex-direction:column;overflow:hidden;
   }
-  .ag-head{flex:none;padding:18px 22px 8px}
+  /* flex:0 1 auto, not none. A landscape phone with the keyboard up leaves about
+     140px of visible height, and if the header refuses to give up its space the
+     box clips the action row off the bottom instead — the same silent dead tap
+     this whole change exists to kill, reached through orientation. The title is
+     worth less than the button, so the header shrinks first, then the body. */
+  .ag-head{flex:0 1 auto;overflow:hidden;padding:18px 22px 8px}
   .ag-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 22px 14px}
   .ag-actions{
     flex:none;background:#fff;border-top:1px solid var(--line);
@@ -232,9 +237,19 @@
   }
   .ag-actions .btn{flex:1 1 auto}
   .ag-actions #agSubmit{flex:2 1 auto}
-  .ag-err{flex:1 1 100%;display:none;color:var(--red);font-size:13px;font-weight:600}
+  /* Capped: the error sits in the pinned row, so an unbounded one would push the
+     button back out of the box on a short screen. */
+  .ag-err{flex:1 1 100%;display:none;color:var(--red);font-size:13px;font-weight:600;max-height:4.5em;overflow-y:auto}
   /* Full-width on phones so the submit label doesn't cram */
   @media(max-width:640px){.ag-actions .btn{flex:1 1 100%;min-width:0}}
+  /* Landscape phone — the layout viewport itself is short, so buy back every
+     pixel of chrome for the content and the button. */
+  @media(max-height:520px){
+    .ag-overlay{padding:6px}
+    .ag-head{padding:10px 16px 4px}
+    .ag-body{padding:0 16px 8px}
+    .ag-actions{padding:8px 16px calc(8px + env(safe-area-inset-bottom))}
+  }
 
   /* PRINT */
   .printonly{display:none}
@@ -367,7 +382,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.1</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.2</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -1175,6 +1190,13 @@ function applyParams(){
   if(P.get('email')) $('contactEmail').value = P.get('email').slice(0,160);
   if(P.get('phone')) $('contactPhone').value = P.get('phone').slice(0,40);
   if(touched){
+    // Re-render the pickers. Init paints them before this runs, so without this
+    // a prefilled link shows every package card and venue checkbox UNSELECTED
+    // while the quote below is fully built. The client then taps the package
+    // they were quoted to confirm it, pickPkg toggles the already-set key back
+    // off, and the quote they came to sign disappears.
+    renderPackages();
+    renderMarkets();
     $('tabPkg').classList.toggle('active', mode==='pkg');
     $('tabCustom').classList.toggle('active', mode==='custom');
     $('pkgPane').style.display = mode==='pkg' ? '' : 'none';
