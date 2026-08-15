@@ -22,10 +22,7 @@ Deno.serve(async (req) => {
     if (raw.length > 60000) return json({ error: 'payload too large' }, 413);
     const b = JSON.parse(raw);
 
-    // Honeypot: report success, write nothing
-    if (typeof b.company_website === 'string' && b.company_website.trim() !== '') {
-      return json({ ok: true, ref: 'SSA-RECEIVED' });
-    }
+    const honeypot = typeof b.company_website === 'string' && b.company_website.trim() !== '';
 
     const business_name = str(b.business_name, 200);
     const contact_name = str(b.contact_name, 200);
@@ -79,8 +76,18 @@ Deno.serve(async (req) => {
 
     // 1) Record of truth. The row's uuid is what activity_log.entity_id wants
     // (see step 6), so take it on the way in.
+    //
+    // A tripped honeypot lands here as status='spam' rather than being dropped.
+    // It used to return {ok:true} and write nothing, which is fine for a bot and
+    // catastrophic for a false positive: the hidden field is autofill-eligible on
+    // some browsers, and a client who signed would see "You're on the board!"
+    // while nothing existed anywhere. Keeping the row costs us a spam row and
+    // makes a real signature impossible to lose. Spam stops here — no lead, no
+    // pipeline deal, no task for Creed.
     const { data: crRow, error: crErr } = await supabase.from('contract_requests').insert({
       ref,
+      status: honeypot ? 'spam' : 'new',
+      notes: honeypot ? 'Honeypot field was filled — verify before working this.' : null,
       quote_ref: str(b.quote_ref, 60) || null,
       business_name, contact_name, contact_email, contact_phone,
       mode, term_months, prepay: !!b.prepay,
@@ -91,6 +98,19 @@ Deno.serve(async (req) => {
       client_ip: ip, user_agent: ua
     }).select('id').single();
     if (crErr) throw crErr;
+
+    // Spam is captured, not worked. Everything downstream of here puts a human
+    // on it, so stop — and answer exactly as a clean submission does, since
+    // telling a bot it was caught only teaches it to avoid the trap.
+    if (honeypot) {
+      await supabase.from('activity_log').insert({
+        action: 'Self-serve agreement request held as spam (honeypot)',
+        entity_type: 'contract_request', entity_id: crRow?.id ?? null,
+        details: { ref, business_name, contact_email, monthly_total, screens },
+        ip_address: ip
+      });
+      return json({ ok: true, ref });
+    }
 
     // 2) Legacy quote_submissions inbox (best-effort)
     await supabase.from('quote_submissions').insert({

@@ -237,6 +237,19 @@
   }
   .ag-actions .btn{flex:1 1 auto}
   .ag-actions #agSubmit{flex:2 1 auto}
+  /* Honeypot. It inherited input[type=text]{width:100%;padding:10px 12px}, and
+     border-box means padding sets the floor, so the inline width:1px/height:1px
+     still rendered a 26x22 field named company_website — big enough for Chrome
+     to treat as a company field and autofill. A filled honeypot makes the server
+     drop the submission, so an autofill here silently destroys a signed
+     agreement. Zero the padding so it is genuinely 1x1, and readonly on top:
+     browsers do not autofill readonly inputs, while a bot setting .value still
+     trips the trap. */
+  .ag-hp{
+    position:absolute!important;left:-9999px!important;top:auto!important;
+    width:1px!important;height:1px!important;padding:0!important;border:0!important;
+    opacity:0!important;
+  }
   /* Capped: the error sits in the pinned row, so an unbounded one would push the
      button back out of the box on a short screen. */
   .ag-err{flex:1 1 100%;display:none;color:var(--red);font-size:13px;font-weight:600;max-height:4.5em;overflow-y:auto}
@@ -382,7 +395,7 @@
   <!-- Bump the build stamp with any change that has to be confirmed in the field.
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
-  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.3</span></div>
+  <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.4</span></div>
   <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
@@ -777,7 +790,11 @@ function recalc(){
 
   const bn = $('bonusNote');
   if(q.bonusMonths){
-    bn.style.display = '';
+    // display:block, not '' — .bonusnote is display:none in the stylesheet, so
+    // clearing the inline style hides it instead of showing it. That silently
+    // swallowed the prepay line, the decline confirmation and the post-submit
+    // receipt, all of which write to this same element.
+    bn.style.display = 'block';
     bn.textContent = `✓ Prepay bonus: Pay ${fmt$(q.termTotal)} upfront for ${q.totalMonths} months (effective ${fmt$(Math.round(q.termTotal/q.totalMonths))}/mo).`;
   } else bn.style.display = 'none';
 
@@ -965,12 +982,17 @@ async function sendDecision(decision){
     }catch(e){ logged = false; }
   }
   const bn = $('bonusNote');
-  bn.style.display = '';
+  bn.style.display = 'block';
   bn.style.color = 'var(--mut)';
+  // `logged` was computed and then thrown away — this said "recorded" whether or
+  // not the server ever heard about it. The email is the real fallback, so say
+  // which one actually happened.
   bn.innerHTML = `
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:8px">
-      <div style="font-size:15px;font-weight:700;margin-bottom:4px">Response recorded</div>
-      <div style="font-size:13px;color:#5a6a7a">An email is opening. Feel free to add any feedback before sending.</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">${logged ? 'Response recorded' : 'Sending your response by email'}</div>
+      <div style="font-size:13px;color:#5a6a7a">${logged
+        ? 'An email is opening. Feel free to add any feedback before sending.'
+        : "We couldn't reach our server, so your response is going by email instead. Please send the message that just opened."}</div>
     </div>`;
   const subj = `DECLINED — MCTV Quote ${qref} — ${biz}`;
   window.location.href = `mailto:${encodeURIComponent(CFG.repEmail)}?cc=${encodeURIComponent(email)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(quoteText(q, 'decline'))}`;
@@ -1056,7 +1078,7 @@ function openAgreement(q){
         </ol>
         <div style="margin-top:6px;color:#5a6a7a">MCTV Digital, Inc. d/b/a MCTV Elite Advertising · ${CFG.repName} · ${CFG.repPhone}</div>
       </details>
-      <input type="text" id="agWebsite" name="company_website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;height:1px;width:1px;opacity:0" aria-hidden="true">
+      <input type="text" id="agWebsite" name="company_website" class="ag-hp" readonly autocomplete="off" tabindex="-1" aria-hidden="true">
       <label style="display:block;font-size:12.5px;font-weight:600;color:#5a6a7a;margin:10px 0 4px">Sign by typing your full name</label>
       <input type="text" id="agSig" placeholder="Your full legal name" style="width:100%;padding:11px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:'Segoe Script','Brush Script MT',cursive">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#3d4a5a;margin:10px 0 14px;line-height:1.45">
@@ -1141,7 +1163,7 @@ async function submitAgreement(q){
     $('btnAccept').disabled = true;
     $('btnDecline').disabled = true;
     const bn = $('bonusNote');
-    bn.style.display = '';
+    bn.style.display = 'block';
     bn.style.color = 'var(--green)';
     bn.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;margin-top:8px;font-size:13.5px">✓ Agreement request <b>${ref}</b> submitted ${new Date().toLocaleString()} — signed ${esc(sig)}.</div>`;
     document.getElementById('agBox').innerHTML = `

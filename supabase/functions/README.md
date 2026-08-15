@@ -35,9 +35,14 @@ deployment and this copy matches what is deployed — verify with
 - **Only the `contract_requests` insert throws.** Everything after it is
   best-effort by design, so the client still sees a confirmation when a
   downstream write fails. Check `activity_log.details` for `lead_insert_error`.
-- **The honeypot returns `{ok:true}` and writes nothing.** A submission that
-  reports success but leaves no `contract_requests` row means the hidden
-  `company_website` field was filled — by a bot, or by a browser autofilling it.
+- **A tripped honeypot is stored, not dropped.** The hidden `company_website`
+  field lands the row as `status='spam'` with a note, and the function stops
+  before leads/pipeline/tasks. It used to return `{ok:true}` and write nothing,
+  which loses a real signature outright if a browser autofills the field — the
+  client sees "You're on the board!" and no record exists anywhere. Check
+  `contract_requests` for `status='spam'` before assuming a client never
+  submitted. The response is deliberately identical to a clean one, so a bot
+  learns nothing.
 - **Throttle is 5/hr per email and 8/hr per IP.** A room full of people on one
   venue WiFi shares an IP, so the 9th signer at an event gets a 429. The
   calculator now shows the server's actual message, so that reads as
