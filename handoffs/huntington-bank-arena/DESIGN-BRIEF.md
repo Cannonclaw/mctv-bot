@@ -206,6 +206,7 @@ same family — same palette, same headline rhythm, same anchored stat rows.
 | `build_email.py` | The outreach email as a reviewable `.eml` |
 | `deck.html` | Built deck, fonts embedded — opens in any browser |
 | `photos/README.md` | Slot specs and source locations |
+| `team/` | Hi-res headshots (520–580px), cropped from the 1050px team cards. The build prefers these over the 400px `assets/team/` crops. |
 | `_fonts.css` | Playfair Display + Inter, base64 |
 
 Rebuild: `python build_deck.py && python build_copydeck.py && python build_email.py`.
@@ -220,6 +221,3 @@ Outputs land in `output/` (gitignored).
    page 03 needs a new right-hand element.
 2. **Screen count (6–8) and the six zones on page 06** are proposed from outside the
    building. A walkthrough will change them.
-3. **Elliot Davis has no headshot on file** and falls back to a monogram on page 12. The
-   other three are real. If a headshot turns up, drop it at
-   `assets/team/elliot_headshot.png` and it is picked up automatically.

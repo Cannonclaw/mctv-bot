@@ -40,9 +40,18 @@ def b64(path, mime):
 LOGO_WHITE = b64(ROOT / "assets" / "branding" / "mctv_logo_white.png", "image/png")
 FONTS = (HERE / "_fonts.css").read_text()
 
+# Hi-res headshots cropped from the 1050px team cards (team/ next to this file)
+# beat the shared 400px assets/team crops noticeably in print — prefer them.
 TEAM_DIR = ROOT / "assets" / "team"
-HEADSHOTS = {n: b64(TEAM_DIR / f"{n}_headshot.png", "image/png")
-             for n in ("mary_michael", "creed", "swayze")}
+HD_DIR = HERE / "team"
+
+
+def headshot(n):
+    p = HD_DIR / f"{n}_headshot.png"
+    return b64(p if p.exists() else TEAM_DIR / f"{n}_headshot.png", "image/png")
+
+
+HEADSHOTS = {n: headshot(n) for n in ("mary_michael", "creed", "swayze")}
 
 # Huntington Bank Arena's own green, so the sample spot reads as theirs, not ours.
 HBA_GREEN = "#8DC63F"
@@ -96,7 +105,6 @@ TEAM = [
     ("Mary Michael Cannon", "CEO &amp; Founder", "mmc@mctvofms.com", "662-801-5677", "mary_michael"),
     ("Creed Cannon", "President &amp; Founder", "creed@mctvofms.com", "601-201-8202", "creed"),
     ("Swayze Hollingsworth", "Director of Sales", "swayze@mctvofms.com", "662-907-0404", "swayze"),
-    ("Elliot Davis", "MCTV Digital", "elliot@mctvofms.com", "601-896-4922", None),
 ]
 
 
@@ -565,19 +573,15 @@ def slide_11_next():
   <p class="body wide">Start to finish, comparable venues have gone from first walkthrough to
   live screens in about thirty days. Nothing below asks the Arena for a dollar.</p>
   <div class="steps">{items}</div>
+  {statrow([("~30", "DAYS, WALKTHROUGH TO LIVE", "red"), ("1", "HOUR WE ASK OF YOU"),
+            ("$0", "ASKED OF THE ARENA"), ("5", "STEPS, START TO FINISH")], "bordered")}
   {foot(11)}
 </section>'''
 
 
 def slide_12_thanks():
-    def face(key, name):
-        if key:
-            return f'<div class="tm-face" style="background-image:url({HEADSHOTS[key]})"></div>'
-        initials = "".join(w[0] for w in name.split()[:2])
-        return f'<div class="tm-face tm-mono">{initials}</div>'
-
     team = "".join(
-        f'<div class="tm">{face(k, n)}'
+        f'<div class="tm"><div class="tm-face" style="background-image:url({HEADSHOTS[k]})"></div>'
         f'<div class="tm-id"><div class="tm-n">{n}</div><div class="tm-r">{r}</div></div>'
         f'<div class="tm-c">{e}<br><span>{p}</span></div></div>'
         for n, r, e, p, k in TEAM)
@@ -599,7 +603,7 @@ def slide_12_thanks():
     </div>
     <div class="col-right">{team}</div>
   </div>
-  <div class="foot"><span>MCTV DIGITAL, INC &middot; WWW.MCTVOFMS.COM</span><span class="pg">12</span></div>
+  <div class="foot"><span>MCTV DIGITAL, INC &middot; WWW.MCTVOFMS.COM</span><span class="pg">__PG__</span></div>
 </section>'''
 
 
@@ -783,18 +787,16 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   margin-bottom:12px}}
 .spec-l{{font-size:11px;line-height:1.5;color:#5A6478;padding:8px 0;
   border-top:1px solid rgba(22,34,58,.08)}}
-.tm{{display:flex;align-items:center;gap:18px;
-  padding:14px 0;border-bottom:1px solid rgba(22,34,58,.1)}}
-.tm:first-child{{padding-top:2px}}
+.tm{{display:flex;align-items:center;gap:22px;
+  padding:24px 0;border-bottom:1px solid rgba(22,34,58,.1)}}
+.tm:first-child{{padding-top:6px}}
 .tm-id{{flex:1}}
-.tm-face{{width:54px;height:54px;border-radius:50%;flex:none;
+.tm-face{{width:76px;height:76px;border-radius:50%;flex:none;
   background-size:cover;background-position:center 22%;
   box-shadow:0 0 0 1px rgba(22,34,58,.12)}}
-.tm-mono{{display:flex;align-items:center;justify-content:center;background:#E7E1D2;
-  font-family:'Playfair Display',serif;font-size:17px;color:#8A8270}}
-.tm-n{{font-family:'Playfair Display',serif;font-size:20px}}
-.tm-r{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{RED};margin-top:5px}}
-.tm-c{{font-size:10px;line-height:1.7;color:#7A8496;text-align:right}}
+.tm-n{{font-family:'Playfair Display',serif;font-size:23px}}
+.tm-r{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{RED};margin-top:6px}}
+.tm-c{{font-size:10.5px;line-height:1.75;color:#7A8496;text-align:right}}
 .tm-c span{{color:#96A0B2}}
 
 /* ── Display mockups ─────────────────────────────────────────────────────
@@ -872,8 +874,8 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   font-size:5.6px;font-weight:600;color:#5e7189;letter-spacing:.14em}}
 .bbrand b{{color:#fff;font-weight:800}} .bbrand b span{{color:#d4a017}}
 
-/* 07 the feed grid */
-.fgrid{{display:flex;gap:18px;margin-top:38px}}
+/* 07 the feed grid — centered in the band between intro and stat row */
+.fgrid{{display:flex;gap:26px;margin-top:84px}}
 .fcell{{flex:1}}
 .screen.xs .bezel{{padding:5px 5px 7px}} .screen.xs .mount{{width:40px;height:5px}}
 .screen.xs .screen-cap{{margin-top:8px;font-size:6.2px;letter-spacing:.16em}}

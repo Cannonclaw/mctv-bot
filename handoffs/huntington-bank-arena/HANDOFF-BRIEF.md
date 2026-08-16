@@ -96,8 +96,8 @@ footer says "up to 60%". Those are the only four places the split appears.
 
 Everything visual in the deck is either ours or drawn:
 
-- **Team headshots** on page 12 and page 14, from `assets/team/`. Elliot has no headshot on file
-  and falls back to a monogram on the contacts page.
+- **Team headshots** on page 12 and page 14 — hi-res crops from the 1050px team cards, kept in
+  `team/` beside this file (the 400px `assets/team/` crops went soft in print).
 - **The lobby event board** on page 10 is a faithful CSS render of `static/board.html` — real
   product, real behaviour, including a private booking masked to "Private Event".
 - **The sample Arena spot** on pages 2 and 7 is a CSS render in Huntington Bank Arena's own green, so

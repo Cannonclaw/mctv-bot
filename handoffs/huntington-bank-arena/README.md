@@ -60,6 +60,7 @@ Rendering is headless Chromium, already present in this environment. `deck.html`
 | `build_email.py` | The outreach email |
 | `deck.html` | Built deck, fonts embedded |
 | `photos/` | Photo slots — drop files, rebuild |
+| `team/` | Hi-res team headshots, cropped from the team cards |
 | `_fonts.css` | Playfair Display + Inter, base64 |
 
 ## Before it goes out

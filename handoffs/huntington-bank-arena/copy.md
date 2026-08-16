@@ -181,7 +181,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 06
 
-## Page 07 — What it costs you: nothing  ·  _navy spread_
+## Page 07 — Not a wall of ads  ·  _navy spread_
 
 - WHAT'S ON THE SCREEN
 - Not a wall of ads .
@@ -240,7 +240,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 07
 
-## Page 08 — Sixty / forty  ·  _navy spread_
+## Page 08 — What it costs you: nothing  ·  _navy spread_
 
 - YOUR HOST PACKAGE
 - What it costs you: nothing .
@@ -274,7 +274,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 08
 
-## Page 09 — Your calendar, on every screen we own  ·  _cream spread_
+## Page 09 — Sixty / forty  ·  _cream spread_
 
 - THE ECONOMICS
 - Sixty / forty. Whoever brings the advertiser.
@@ -310,7 +310,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 09
 
-## Page 10 — Who we are  ·  _navy spread_
+## Page 10 — Your calendar, on every screen we own  ·  _navy spread_
 
 - THE OTHER HALF OF THE DEAL
 - Your calendar, on every screen we own .
@@ -356,7 +356,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 10
 
-## Page 11 — How this actually happens  ·  _navy spread_
+## Page 11 — Who we are  ·  _navy spread_
 
 - WHO WE ARE
 - The fastest-growing
@@ -377,7 +377,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 11
 
-## Page 12 — Thank you  ·  _cream spread_
+## Page 12 — Owner-operated, and local  ·  _cream spread_
 
 - WHO YOU'D BE WORKING WITH
 - Owner-operated, and local .
@@ -405,7 +405,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 12
 
-## Page 13 — Page 13  ·  _cream spread_
+## Page 13 — How this actually happens  ·  _cream spread_
 
 - NEXT STEPS
 - How this actually happens .
@@ -425,10 +425,18 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 05
 - Live — and earning
 - Screens run 24/7. Your first revenue-share report follows the first month of billing.
+- ~30
+- DAYS, WALKTHROUGH TO LIVE
+- 1
+- HOUR WE ASK OF YOU
+- $0
+- ASKED OF THE ARENA
+- 5
+- STEPS, START TO FINISH
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 13
 
-## Page 14 — Page 14  ·  _cream spread_
+## Page 14 — Thank you  ·  _cream spread_
 
 - LET'S TALK
 - Thank you
@@ -451,10 +459,5 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Director of Sales
 - swayze@mctvofms.com
 - 662-907-0404
-- ED
-- Elliot Davis
-- MCTV Digital
-- elliot@mctvofms.com
-- 601-896-4922
 - MCTV DIGITAL, INC · WWW.MCTVOFMS.COM
-- 12
+- 14

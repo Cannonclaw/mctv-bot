@@ -166,7 +166,7 @@
       "page": "14",
       "title": "Thank you",
       "tone": "cream",
-      "layout": "Two-column: left CTA + requirements card; right four contacts with headshots.",
+      "layout": "Two-column: left CTA + requirements card; right three contacts with headshots.",
       "photo_slots": []
     }
   ],
@@ -194,7 +194,7 @@
   "rendered_not_placeholder": [
     {
       "what": "lobby event board",
-      "page": "09",
+      "page": "10",
       "source_of_truth": "static/board.html",
       "tokens": {
         "navy": "#0a1220",
@@ -204,12 +204,12 @@
     },
     {
       "what": "sample Arena spot",
-      "page": "02",
+      "page": "02, 07",
       "note": "mock event promo in the Arena's own green; keep the SAMPLE caption"
     },
     {
       "what": "screen bezel",
-      "page": "02, 09",
+      "page": "02, 07, 10",
       "note": "wall-mounted display with mount plate"
     },
     {
@@ -225,12 +225,12 @@
       "appears_on": [
         "02",
         "03",
-        "07",
-        "08"
+        "08",
+        "09"
       ],
       "note": "change one, change all"
     },
-    "disclaimer_page_08": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
+    "disclaimer_page_09": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
     "hedge_page_06": "A starting map, not a final one - drawn from the outside, before we've walked it with you.",
     "network_figures": {
       "screens": "125+",
@@ -268,8 +268,7 @@
   },
   "open_items": [
     "Airport pull-quote on page 03 attributed by role, never cleared for outbound use - Creed's call",
-    "Screen count (6-8) and six zones on page 06 proposed without a walkthrough",
-    "Elliot Davis has no headshot; drop assets/team/elliot_headshot.png to fix page 12"
+    "Screen count (6-8) and six zones on page 06 proposed without a walkthrough"
   ],
   "build": {
     "commands": [
