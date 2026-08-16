@@ -22,16 +22,16 @@ Depending on why you're in this folder:
 Sendable today. Copy is final and approved, all 12 pages are laid out, and the outreach
 email is drafted with the deck attached.
 
-**What's missing is photography.** Three slots are cut and sized (`photos/`), each with a
-designed fallback so nothing breaks while they're empty — that's the shipped state. Filling
-them is design's job and is the main open work. None could be fetched automatically: this
-build runs behind an egress allowlist that denies Canva's CDN, SharePoint, `hbarena.com`
-and general web fetching, so the source images have to be pulled by hand. `DESIGN-BRIEF.md`
-§4 says exactly which Canva design and page each one is on.
+**Photography is the main open work.** The cover now carries the arena's exterior (supplied
+by Creed) as a corner fade; the `airport.jpg` and `concourse.jpg` slots are still cut and
+sized (`photos/`), each with a designed fallback so nothing breaks while empty. None of the
+remaining sources could be fetched automatically: this build runs behind an egress allowlist
+that denies Canva's CDN, SharePoint, `hbarena.com` and general web fetching, so they have to
+be pulled by hand. `DESIGN-BRIEF.md` §4 says exactly which Canva design and page each one is on.
 
-Everything currently visible is ours — MCTV logo, the team's real headshots, and CSS renders
-of our own screens and lobby event board. No stock, nothing scraped, and no photograph of
-the Arena implied anywhere.
+Everything else visible is ours — MCTV logo, the team's real headshots, and CSS renders
+of our own screens and lobby event board. No stock, nothing scraped, and no interior
+photograph of the Arena implied anywhere.
 
 ## Build
 

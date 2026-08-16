@@ -37,8 +37,9 @@ or gold (`#C2A15C`) italic clause, Inter small-caps eyebrows, hairline-anchored 
 numbered footers. Same system as the Tupelo Territory Media Kit (Canva `DAHM-yFHfPQ`).
 
 Format follows the Chamber flip book: 11 x 6.5 in landscape, spiral bound, image-rich.
-Typographic cover rather than a photo cover — we hold no rights to arena photography. Swap in a
-licensed or self-shot image of the concourse before this goes to print.
+The cover carries the arena's front elevation (Huntington Bank Arena sign visible) as a
+corner fade — supplied by Creed, 2026-08-16. It's a small source; a full-resolution
+`photos/cover.jpg` upgrades the cover to full bleed automatically.
 
 ## Page plan
 
@@ -102,7 +103,8 @@ Everything visual in the deck is either ours or drawn:
   product, real behaviour, including a private booking masked to "Private Event".
 - **The sample Arena spot** on pages 2 and 7 is a CSS render in Huntington Bank Arena's own green, so
   she sees her creative rather than ours. Clearly captioned as a sample.
-- **No photographs of the Arena appear anywhere**, and none are implied.
+- **One photograph of the Arena appears: the exterior on the cover**, supplied by Creed
+  (2026-08-16). No interior photograph appears or is implied anywhere.
 
 Real photography drops into `photos/` — see that folder's README for the slots and for exactly
 where the good Cadence Bank Arena and airport shots live in Canva and SharePoint. They could not

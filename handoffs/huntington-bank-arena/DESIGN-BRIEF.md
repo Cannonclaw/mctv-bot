@@ -100,6 +100,7 @@ missing photo degrades gracefully rather than breaking.
 | Slot | Page | Spec |
 | --- | --- | --- |
 | `cover.jpg` | 01, full bleed | Landscape, ≥1920×1080. A navy scrim runs left→right at 94% → 30% opacity, so **the subject must sit right of centre** and the left third must survive being nearly black. Arena exterior at dusk, or a full concourse. |
+| `exterior.jpg` | 01, corner fade | **Filled** — the front elevation with the Huntington Bank Arena sign, supplied by Creed (2026-08-16). 330px source, so it runs near-native in a top-right radial fade rather than full bleed. A real `cover.jpg` supersedes it. |
 | `airport.jpg` | 03, beside the quote | A Tupelo Regional screen in place. Landscape. Proves the claim on that page. |
 | `concourse.jpg` | 06, beside the zones | Arena concourse, west entry lobby, or the link corridor. Landscape. |
 
@@ -117,9 +118,10 @@ fetching. Every route was tried. They have to be pulled by hand.
 | hbarena.com | The Arena's own photography. Entry points: `/p/about/seating`, `/sitemap.aspx`. |
 | Visit Tupelo | `tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/` |
 
-**Rights.** Everything in the deck today is ours: MCTV logo, the team's own headshots, and
-CSS renders of our own products. Nothing is stock, nothing is scraped. The Arena's own
-photos are fine in a kit addressed to the Arena — that is ordinary practice — but they come
+**Rights.** In the deck today: MCTV logo, the team's own headshots, CSS renders of our own
+products, and one photo of the Arena's exterior supplied by Creed. Nothing is stock, nothing
+is scraped. The Arena's own photos are fine in a kit addressed to the Arena — that is
+ordinary practice — but they (the exterior included) come
 out if this deck is ever reused for another venue or for general marketing. Event posters
 on page 5 of the Cadence deck belong to promoters and artists, not the Arena; treat those as
 unusable. Best outcome is asking Alli for a few facility shots on the next touch.

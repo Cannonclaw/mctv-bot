@@ -7,6 +7,7 @@ what ships today.
 | File | Where it lands | Wants |
 |---|---|---|
 | `cover.jpg` | Page 1, full bleed behind the headline | Landscape, 1920×1080 or larger. Arena exterior at dusk, or the concourse with people in it. A navy scrim is laid over the left two-thirds, so keep the subject right-of-centre. |
+| `exterior.jpg` | Page 1, top-right corner fade — used only when `cover.jpg` is absent | **Filled.** The arena's front elevation with the Huntington Bank Arena sign, supplied by Creed (IMG_6251, 2026-08-16). Small source (330px square, upscaled to 660), which is why it runs near-native in a corner fade instead of full bleed. A `cover.jpg` at real resolution supersedes it. |
 | `airport.jpg` | Page 3, beside the Tupelo Regional quote | A terminal screen in place. Landscape. |
 | `concourse.jpg` | Page 6, beside the proposed zones | The arena concourse, lobby, or conference pre-function. Landscape. |
 
@@ -40,7 +41,9 @@ for a few is a reasonable second touch.
 
 ## Rights
 
-Everything currently in the deck is ours: the MCTV logo, the team's headshots, and CSS
-renders of our own screens and event board. Nothing is stock and nothing is scraped.
-Keep it that way — the deck gets printed, so anything dropped in here should be a photo
-MCTV took or one the Arena has given us permission to use.
+In the deck today: the MCTV logo, the team's headshots, CSS renders of our own screens
+and event board, and one photograph of the Arena's exterior supplied by Creed. Nothing
+is stock and nothing is scraped. Keep it that way — the deck gets printed, so anything
+dropped in here should be a photo MCTV took or one the Arena has given us permission to
+use. As with any Arena imagery, the exterior shot comes out if this deck is ever reused
+for another venue.

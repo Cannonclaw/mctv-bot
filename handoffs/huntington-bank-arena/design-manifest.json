@@ -4,7 +4,7 @@
     "prepared_for": "Claude Design",
     "prepared_by": "MCTV Elite Advertising",
     "date": "2026-08-13",
-    "status": "Copy final, 14-page Chamber flip-book format built, photography missing",
+    "status": "Copy final, 14-page Chamber flip-book format built; cover exterior in place, interior photography still missing",
     "brief": "DESIGN-BRIEF.md",
     "copy": "copy.md",
     "format": "Chamber flip book \u2014 11 x 6.5 in landscape, spiral / wire-o bound"
@@ -69,9 +69,10 @@
       "page": "01",
       "title": "Cover",
       "tone": "navy",
-      "layout": "Full-bleed hero. Logo top-left, venue eyebrow top-right, headline lower-left, PREPARED FOR card bottom-right.",
+      "layout": "Full-bleed hero. Logo top-left, venue eyebrow top-right, headline lower-left, PREPARED FOR card bottom-right. With exterior.jpg (and no cover.jpg) the photo runs as a top-right corner fade and the venue eyebrow moves under the logo.",
       "photo_slots": [
-        "cover.jpg"
+        "cover.jpg",
+        "exterior.jpg"
       ]
     },
     {
@@ -180,6 +181,13 @@
       ],
       "note": "subject must sit right of centre; left third goes near-black"
     },
+    "exterior.jpg": {
+      "page": "01",
+      "treatment": "top-right corner, radial fade into the navy, navy tint gradient",
+      "status": "filled",
+      "source": "supplied by Creed, IMG_6251, 2026-08-16; 330px square upscaled to 660",
+      "note": "used only when cover.jpg is absent; a real cover.jpg supersedes it"
+    },
     "airport.jpg": {
       "page": "03",
       "treatment": "card beside the pull-quote",
@@ -262,7 +270,7 @@
     "visit_tupelo": "https://www.tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/"
   },
   "rights": {
-    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products. No stock, nothing scraped.",
+    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, and one Arena exterior photo supplied by Creed. No stock, nothing scraped.",
     "arena_photography": "Acceptable in a kit addressed to the Arena. Must be removed if the deck is reused for another venue or general marketing.",
     "event_posters": "Promoter and artist owned. Do not use."
   },

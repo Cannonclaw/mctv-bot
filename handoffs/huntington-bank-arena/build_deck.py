@@ -61,6 +61,9 @@ HBA_GREEN = "#8DC63F"
 # slot below and rerun this script — each slot swaps its rendered fallback for
 # the photo. Nothing breaks if the folder is empty; that is the shipped state.
 #   cover.jpg     full-bleed cover (landscape, 1920x1080 or larger)
+#   exterior.jpg  the arena exterior — cover corner treatment when no cover.jpg
+#                 (from Creed's IMG_6251, 2026-08-16; small source, so it runs
+#                 near-native in a corner fade rather than full bleed)
 #   airport.jpg   a Tupelo Regional screen in place, page 3
 #   concourse.jpg the arena concourse or lobby, page 6
 PHOTO_DIR = HERE / "photos"
@@ -221,11 +224,22 @@ def event_board():
 # ── Slides ──────────────────────────────────────────────────────────────────
 def slide_01_cover():
     hero = photo("cover")
-    art = (f'<div class="cover-photo" style="background-image:url({hero})"></div>'
-           '<div class="cover-scrim"></div>') if hero else \
-        '<div class="cover-glow"></div><div class="cover-rules"></div>'
+    corner = photo("exterior")
+    cls = ""
+    if hero:
+        art = (f'<div class="cover-photo" style="background-image:url({hero})"></div>'
+               '<div class="cover-scrim"></div>')
+    elif corner:
+        # Their building, top-right, fading into the navy field. The venue tag
+        # moves under the logo so it never sits on the photo's bright sky.
+        cls = " has-corner"
+        art = ('<div class="cover-glow"></div><div class="cover-rules"></div>'
+               f'<div class="cover-corner" style="background-image:url({corner})"></div>'
+               '<div class="cover-corner-tint"></div>')
+    else:
+        art = '<div class="cover-glow"></div><div class="cover-rules"></div>'
     return f'''
-<section class="slide navy cover">
+<section class="slide navy cover{cls}">
   {art}
   <img class="cover-logo" src="{LOGO_WHITE}" alt="MCTV Elite Advertising">
   <div class="cover-tag">HUNTINGTON BANK ARENA &amp; CONFERENCE CENTER &middot; TUPELO</div>
@@ -921,6 +935,15 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
 
 /* cover photography (only when photos/cover.* is present) */
 .cover-photo{{position:absolute;inset:0;background-size:cover;background-position:center}}
+/* corner treatment (photos/exterior.*) — small source, run near-native and faded in */
+.cover-corner,.cover-corner-tint{{position:absolute;top:0;right:0;width:780px;height:640px;
+  -webkit-mask-image:radial-gradient(120% 125% at 100% 0%,#000 52%,transparent 84%);
+  mask-image:radial-gradient(120% 125% at 100% 0%,#000 52%,transparent 84%)}}
+.cover-corner{{background-size:cover;background-position:center 68%;
+  filter:brightness(.88) saturate(.92)}}
+.cover-corner-tint{{background:
+  linear-gradient(215deg,rgba(12,21,38,.05) 0%,rgba(12,21,38,.30) 55%,rgba(12,21,38,.62) 100%)}}
+.has-corner .cover-tag{{right:auto;left:70px;top:120px;text-align:left}}
 .cover-scrim{{position:absolute;inset:0;background:
   linear-gradient(96deg,rgba(10,17,32,.94) 0%,rgba(10,17,32,.80) 38%,rgba(10,17,32,.30) 100%)}}
 .photo-card{{position:relative;overflow:hidden}}
