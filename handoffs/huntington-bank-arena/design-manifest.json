@@ -111,8 +111,10 @@
       "page": "06",
       "title": "The company you'd keep",
       "tone": "cream",
-      "layout": "Three market chips, then a two-column list of 28 Tupelo/Lee Co. venues.",
-      "photo_slots": []
+      "layout": "Three market chips, a two-column list of 28 Tupelo/Lee Co. venues, and a tall photo card of the loop running in a host venue.",
+      "photo_slots": [
+        "venue_keeping_local.jpg"
+      ]
     },
     {
       "page": "07",
@@ -155,8 +157,12 @@
       "page": "12",
       "title": "Who we are",
       "tone": "navy",
-      "layout": "Big display headline left, body right, anchored stat row.",
-      "photo_slots": []
+      "layout": "Big display headline left, body right, then a three-photo band of real host-venue installs. Anchored stat row.",
+      "photo_slots": [
+        "venue_mctv_store.jpg",
+        "venue_opc.jpg",
+        "venue_restaurant.jpg"
+      ]
     },
     {
       "page": "13",
@@ -230,6 +236,35 @@
       "page": "library",
       "status": "filled, not placed",
       "source": "supplied by Creed 2026-08-16, 2000x2000; rotunda with the screen dark"
+    },
+    "venue_keeping_local.jpg": {
+      "page": "06",
+      "treatment": "tall card beside the venue list",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
+    },
+    "venue_mctv_store.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 1200x900"
+    },
+    "venue_opc.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 1199x611"
+    },
+    "venue_restaurant.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
+    },
+    "venue_window_ad.jpg": {
+      "page": "library",
+      "status": "filled, not placed",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
     }
   },
   "rendered_not_placeholder": [
@@ -303,7 +338,7 @@
     "visit_tupelo": "https://www.tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/"
   },
   "rights": {
-    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, one Arena exterior photo supplied by Creed, and MCTV's own airport install photography. No stock, nothing scraped.",
+    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, one Arena exterior photo supplied by Creed, MCTV's own airport install photography, and MCTV's own host-venue install photography. No stock, nothing scraped.",
     "arena_photography": "Acceptable in a kit addressed to the Arena. Must be removed if the deck is reused for another venue or general marketing.",
     "event_posters": "Promoter and artist owned. Do not use."
   },

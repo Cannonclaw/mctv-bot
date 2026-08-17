@@ -108,6 +108,9 @@ Everything visual in the deck is either ours or drawn:
 - **Page 4 is real photography** — the Tupelo Regional gate rotunda with an MCTV screen live
   (supplied by Creed, 2026-08-16), plus a live advertiser spot and the ticket-counter screen
   extracted from the Tupelo Territory Media Kit through the Canva connector.
+- **Pages 6 and 12 carry real host-venue photography** — the loop running in a local shop
+  beside the venue list, and a three-photo band (retail venue with the MCTV wall sign, Oxford
+  Park Commission, a neighborhood restaurant) extracted from the Cadence Bank Arena deck.
 - **One photograph of the Arena appears: the exterior on the cover**, supplied by Creed
   (2026-08-16). No interior photograph of the Arena appears or is implied anywhere.
 

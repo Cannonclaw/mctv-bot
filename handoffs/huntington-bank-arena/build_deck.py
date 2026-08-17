@@ -70,6 +70,11 @@ HBA_GREEN = "#8DC63F"
 #   airport_spot.jpg     live advertiser spot on a terminal screen (Tupelo kit)
 #   airport_counter.jpg  ticket-counter screen (Tupelo kit)
 #   airport_waiting.jpg  waiting-room screen (Tupelo kit) — library, not placed
+#   venue_keeping_local.jpg  the loop in a local shop (Cadence deck) — venues page
+#   venue_mctv_store.jpg     retail host venue, MCTV sign (Cadence deck) — who-we-are
+#   venue_opc.jpg            Oxford Park Commission wall + screen — who-we-are
+#   venue_restaurant.jpg     neighborhood restaurant screen — who-we-are
+#   venue_window_ad.jpg      live ad in a store window — library, not placed
 #   concourse.jpg        the arena concourse or lobby, placement page
 PHOTO_DIR = HERE / "photos"
 
@@ -379,6 +384,10 @@ def slide_05_footprint():
     cols = "".join(
         '<ul class="venue-col">' + "".join(f"<li>{v}</li>" for v in col) + "</ul>"
         for col in (TUPELO_VENUES[:half], TUPELO_VENUES[half:]))
+    shop = photo("venue_keeping_local")
+    side = (f'<div class="vphoto"><div class="pcard tall" style="background-image:url({shop});'
+            f'background-position:center 30%"></div>'
+            f'<div class="pcap">THE LOOP, RUNNING IN A HOST VENUE</div></div>') if shop else ""
     return f'''
 <section class="slide cream">
   <div class="eyebrow">HOST NETWORK &middot; TUPELO / LEE COUNTY</div>
@@ -391,7 +400,7 @@ def slide_05_footprint():
     <div class="chip"><div class="chip-num">44</div><div class="chip-label">OXFORD / LAFAYETTE</div></div>
     <div class="chip"><div class="chip-num">29</div><div class="chip-label">GOLDEN TRIANGLE</div></div>
   </div>
-  <div class="venue-cols">{cols}</div>
+  <div class="vrow"><div class="venue-cols">{cols}</div>{side}</div>
   {foot(5)}
 </section>'''
 
@@ -577,6 +586,16 @@ def slide_09_events():
 
 
 def slide_10_whoweare():
+    band_cards = [(photo("venue_mctv_store"), "A RETAIL HOST VENUE &middot; OXFORD", "center 30%"),
+                  (photo("venue_opc"), "OXFORD PARK COMMISSION", "center"),
+                  (photo("venue_restaurant"), "A NEIGHBORHOOD RESTAURANT", "right 32%")]
+    band = ""
+    if all(img for img, _, _ in band_cards):
+        cells = "".join(
+            f'<div class="pcol"><div class="pcard band" style="background-image:url({img});'
+            f'background-position:{pos}"></div><div class="pcap">{cap}</div></div>'
+            for img, cap, pos in band_cards)
+        band = f'<div class="pgrid tight">{cells}</div>'
     return f'''
 <section class="slide navy">
   <div class="eyebrow gold">WHO WE ARE</div>
@@ -593,6 +612,7 @@ def slide_10_whoweare():
       skipped, blocked, or scrolled past.</p>
     </div>
   </div>
+  {band}
   {statrow([("125+", "DIGITAL SCREENS"), ("28", "TUPELO / LEE CO. VENUES", "gold"),
             ("1.9M+", "IMPRESSIONS / MO"), ("3", "GROWTH MARKETS")], "bordered")}
   {foot(10)}
@@ -980,13 +1000,22 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   linear-gradient(96deg,rgba(10,17,32,.94) 0%,rgba(10,17,32,.80) 38%,rgba(10,17,32,.30) 100%)}}
 .photo-card{{position:relative;overflow:hidden}}
 .photo-card img{{width:100%;display:block}}
-/* the "seen in the wild" photo page */
+/* the "seen in the wild" photo page + photo bands elsewhere */
 .pgrid{{display:flex;gap:22px;margin-top:36px}}
+.pgrid.tight{{margin-top:8px}}
 .pcol{{flex:1}} .pcol.wide{{flex:1.7}}
 .pcol .pcard{{height:296px;background-size:cover;border-radius:3px;
   box-shadow:0 14px 30px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10)}}
+.pcol .pcard.band{{height:172px}}
 .pcap{{margin-top:13px;font-size:7.4px;letter-spacing:.2em;font-weight:600;
   color:#7A869C;text-align:center}}
+/* venues page: list + one tall photo */
+.vrow{{display:flex;gap:44px}}
+.vrow .venue-cols{{flex:1}}
+.vphoto{{width:352px}}
+.vphoto .pcard{{height:330px;background-size:cover;border-radius:3px;
+  box-shadow:0 12px 26px rgba(22,34,58,.18),0 0 0 1px rgba(22,34,58,.10)}}
+.cream .pcap{{color:#96A0B2}}
 .photo-cap{{position:absolute;left:0;right:0;bottom:0;padding:11px 16px;
   background:linear-gradient(rgba(10,17,32,0),rgba(10,17,32,.88));
   font-size:7.4px;letter-spacing:.2em;font-weight:600;color:#E7E3D8}}

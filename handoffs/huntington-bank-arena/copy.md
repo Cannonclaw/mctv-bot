@@ -161,6 +161,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Little Magnolia Gifts & Apparel
 - Aaron Wash Beard Co
 - Skate Zone in Tupelo
+- THE LOOP, RUNNING IN A HOST VENUE
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 06
 
@@ -383,6 +384,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Our mission is to help local businesses reach their audience. Every month, thousands of North Mississippians see our screens — and remember them.
 - We are owner-operated and local. The people who sign your agreement are the people who answer the phone when a screen needs attention.
 - Join the businesses prioritizing hyper-local advertising that can't be skipped, blocked, or scrolled past.
+- A RETAIL HOST VENUE · OXFORD
+- OXFORD PARK COMMISSION
+- A NEIGHBORHOOD RESTAURANT
 - 125+
 - DIGITAL SCREENS
 - 28

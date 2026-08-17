@@ -13,6 +13,11 @@ what ships today.
 | `airport_counter.jpg` | Page 4 | **Filled.** The ticket-counter screen, 996×1200, same extraction. |
 | `airport_waiting.jpg` | Library | Waiting-room screen, 1200×881, same extraction. Not placed. |
 | `airport_gate_alt.jpg` | Library | The rotunda with the screen dark, 2000×2000. Not placed. |
+| `venue_keeping_local.jpg` | Page 6 | **Filled.** The loop in a local shop, 900×1200, extracted from the Cadence deck via the Canva connector. |
+| `venue_mctv_store.jpg` | Page 12 | **Filled.** Retail host venue with the MCTV wall sign, 1200×900, same extraction. |
+| `venue_opc.jpg` | Page 12 | **Filled.** Oxford Park Commission wall + MCTV screen, 1199×611, same extraction. |
+| `venue_restaurant.jpg` | Page 12 | **Filled.** Neighborhood restaurant screen, 900×1200, same extraction. |
+| `venue_window_ad.jpg` | Library | A live ad in a store window, 900×1200, same extraction. Not placed. |
 | `concourse.jpg` | Page 7, beside the proposed zones | The arena concourse, lobby, or conference pre-function. Landscape. |
 
 `.jpg`, `.jpeg` and `.png` all work; the slot name is what matters.
