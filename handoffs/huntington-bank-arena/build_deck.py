@@ -298,6 +298,12 @@ def slide_02_proposal():
 
 
 def slide_03_airport():
+    waiting = photo("airport_waiting")
+    photo_card = (f'<div class="pcard side" style="background-image:url({waiting});'
+                  f'background-position:center 40%"></div>'
+                  f'<div class="pcap left">THE WAITING ROOM SCREEN &middot; TUPELO REGIONAL</div>'
+                  ) if waiting else ""
+    quote_cls = " sm" if waiting else ""
     return f'''
 <section class="slide navy">
   <div class="eyebrow gold">PROOF &middot; SAME MARKET, SAME STRUCTURE</div>
@@ -315,7 +321,8 @@ def slide_03_airport():
       the Arena.</p>
     </div>
     <div class="col-right">
-      <div class="quote-card">
+      {photo_card}
+      <div class="quote-card{quote_cls}">
         <div class="quote-mark">&ldquo;</div>
         <p class="quote">The overall setup looks great and makes a noticeable difference in the
         terminal. It gives the space a more modern and updated feel and ties everything together
@@ -338,7 +345,8 @@ def slide_03b_wild():
         return ""
     cards = [(hero, "GATE ROTUNDA &middot; MCTV SCREEN LIVE", "center", "wide"),
              (photo("airport_spot"), "A LIVE ADVERTISER SPOT", "center", ""),
-             (photo("airport_counter"), "TICKET COUNTER", "center 30%", "")]
+             (photo("airport_counter"), "TICKET COUNTER", "center 30%", ""),
+             (photo("airport_gate_alt"), "WALKING INTO THE GATE AREA", "center 55%", "")]
     cols = "".join(
         f'<div class="pcol {cls}"><div class="pcard" style="background-image:url({img});'
         f'background-position:{pos}"></div><div class="pcap">{cap}</div></div>'
@@ -362,6 +370,10 @@ def slide_04_network():
         f'<div class="bar-row{" hi" if hi else ""}"><div class="bar-label">{label}</div>'
         f'<div class="bar-track"><div class="bar" style="width:{w}%"><span>{amt}</span></div></div></div>'
         for label, amt, w, hi in CPM_ROWS)
+    ad = photo("venue_window_ad")
+    side = (f'<div class="cpm-photo"><div class="pcard tall" style="background-image:url({ad});'
+            f'background-position:center 38%"></div>'
+            f'<div class="pcap">A LOCAL ADVERTISER, LIVE IN A STOREFRONT</div></div>') if ad else ""
     return f'''
 <section class="slide cream">
   <div class="eyebrow">ELITE ADVERTISING</div>
@@ -374,7 +386,7 @@ def slide_04_network():
     average; campaigns price as low as $1.64 CPM at scale. Comparison figures are typical U.S.
     local CPM ranges by channel.</p>
   </div>
-  <div class="bars">{bars}</div>
+  <div class="cpmrow"><div class="bars">{bars}</div>{side}</div>
   {foot(4)}
 </section>'''
 
@@ -771,6 +783,19 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   color:#F0EDE4;font-style:italic;margin:14px 0 22px}}
 .quote-attr{{font-size:8px;letter-spacing:.2em;font-weight:600;color:{GOLD};line-height:1.9}}
 .quote-attr span{{color:#5C6880;font-weight:500}}
+/* compact quote when the photo card sits above it */
+.quote-card.sm{{padding:18px 26px 16px;margin-top:16px}}
+.quote-card.sm .quote-mark{{font-size:36px}}
+.quote-card.sm .quote{{font-size:15px;line-height:1.52;margin:8px 0 12px}}
+.pcard.side{{height:212px;background-size:cover;border-radius:3px;
+  box-shadow:0 14px 30px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10)}}
+.pcap.left{{text-align:left;margin-top:11px}}
+/* 05 CPM chart + live-ad photo */
+.cpmrow{{display:flex;gap:40px;margin-top:26px}}
+.cpmrow .bars{{flex:1;margin-top:0}}
+.cpm-photo{{width:286px}}
+.cpm-photo .pcard{{height:236px;background-size:cover;border-radius:3px;
+  box-shadow:0 12px 26px rgba(22,34,58,.18),0 0 0 1px rgba(22,34,58,.10)}}
 
 /* 04 bars */
 .cpm-head{{display:flex;justify-content:space-between;align-items:flex-end;

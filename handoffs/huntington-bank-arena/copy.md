@@ -59,6 +59,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - In March, the Tupelo Airport Authority board reviewed and approved our Venue Partner Agreement — the same 60/40 origination split, content-approval process and grandfathering language we're offering you. Legal had no changes.
 - Exceed Technologies handled the install. Five screens now run across the lobby, center lobby, ticket counter, baggage claim and the sterile corridor. They came online cleanly, sit on the terminal's UPS and generator backing, and run 24/7.
 - MCTV carries general liability with the Authority named as an additional insured, primary and non-contributory, with notice of cancellation. We'd do the same for the Arena.
+- THE WAITING ROOM SCREEN · TUPELO REGIONAL
 - “
 - The overall setup looks great and makes a noticeable difference in the terminal. It gives the space a more modern and updated feel and ties everything together well across the different areas.
 - IT DIRECTOR & MARKETING COORDINATOR
@@ -82,6 +83,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - GATE ROTUNDA · MCTV SCREEN LIVE
 - A LIVE ADVERTISER SPOT
 - TICKET COUNTER
+- WALKING INTO THE GATE AREA
 - APR '26
 - LIVE SINCE
 - 5
@@ -119,6 +121,7 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - $6
 - MCTV Indoor Network
 - $2.63
+- A LOCAL ADVERTISER, LIVE IN A STOREFRONT
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 05
 

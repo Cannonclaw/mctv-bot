@@ -86,26 +86,31 @@
       "page": "03",
       "title": "Proof \u2014 Tupelo Regional",
       "tone": "navy",
-      "layout": "Two-column: left copy; right pull-quote card. Anchored stat row.",
-      "photo_slots": []
+      "layout": "Two-column: left copy; right waiting-room photo card over a compact pull-quote card. Anchored stat row.",
+      "photo_slots": [
+        "airport_waiting.jpg"
+      ]
     },
     {
       "page": "04",
       "title": "Already live, across town",
       "tone": "navy",
-      "layout": "Three real photo cards of the airport install (rotunda hero, live advertiser spot, ticket counter). Renders only when photos/airport.jpg exists. Anchored stat row.",
+      "layout": "Four real photo cards of the airport install (rotunda hero, live advertiser spot, ticket counter, gate area). Renders only when photos/airport.jpg exists. Anchored stat row.",
       "photo_slots": [
         "airport.jpg",
         "airport_spot.jpg",
-        "airport_counter.jpg"
+        "airport_counter.jpg",
+        "airport_gate_alt.jpg"
       ]
     },
     {
       "page": "05",
       "title": "The network & the value",
       "tone": "cream",
-      "layout": "Stat row (static, top), then local CPM horizontal bar comparison.",
-      "photo_slots": []
+      "layout": "Stat row (static, top), local CPM bar comparison, and a photo card of a live local ad in a storefront.",
+      "photo_slots": [
+        "venue_window_ad.jpg"
+      ]
     },
     {
       "page": "06",
@@ -228,14 +233,16 @@
       "source": "Tupelo Territory Media Kit asset MAHM-xTdTRA, same extraction, 996x1200"
     },
     "airport_waiting.jpg": {
-      "page": "library",
+      "page": "03",
       "status": "filled, not placed",
-      "source": "Tupelo Territory Media Kit asset MAHM-8T_m6Y, same extraction, 1200x881"
+      "source": "Tupelo Territory Media Kit asset MAHM-8T_m6Y, same extraction, 1200x881",
+      "treatment": "photo card above the compact quote"
     },
     "airport_gate_alt.jpg": {
-      "page": "library",
-      "status": "filled, not placed",
-      "source": "supplied by Creed 2026-08-16, 2000x2000; rotunda with the screen dark"
+      "page": "04",
+      "status": "filled",
+      "source": "supplied by Creed 2026-08-16, 2000x2000; rotunda with the screen dark",
+      "treatment": "photo card"
     },
     "venue_keeping_local.jpg": {
       "page": "06",
@@ -262,9 +269,10 @@
       "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
     },
     "venue_window_ad.jpg": {
-      "page": "library",
-      "status": "filled, not placed",
-      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
+      "page": "05",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200",
+      "treatment": "tall card beside the CPM chart"
     }
   },
   "rendered_not_placeholder": [

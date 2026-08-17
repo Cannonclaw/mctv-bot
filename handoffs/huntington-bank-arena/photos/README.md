@@ -11,13 +11,13 @@ what ships today.
 | `airport.jpg` | Page 4, hero card | **Filled.** The Tupelo Regional gate rotunda, MCTV screen live (2000×2000, supplied by Creed 2026-08-16). Page 4 only renders when this file exists. |
 | `airport_spot.jpg` | Page 4 | **Filled.** A live advertiser spot on a terminal screen — stitched at 1200×861 from the Tupelo Territory Media Kit via the Canva connector. |
 | `airport_counter.jpg` | Page 4 | **Filled.** The ticket-counter screen, 996×1200, same extraction. |
-| `airport_waiting.jpg` | Library | Waiting-room screen, 1200×881, same extraction. Not placed. |
-| `airport_gate_alt.jpg` | Library | The rotunda with the screen dark, 2000×2000. Not placed. |
+| `airport_waiting.jpg` | Page 3, above the quote | **Filled.** Waiting-room screen, 1200×881, same extraction. |
+| `airport_gate_alt.jpg` | Page 4 | **Filled.** The rotunda gate area, 2000×2000. |
 | `venue_keeping_local.jpg` | Page 6 | **Filled.** The loop in a local shop, 900×1200, extracted from the Cadence deck via the Canva connector. |
 | `venue_mctv_store.jpg` | Page 12 | **Filled.** Retail host venue with the MCTV wall sign, 1200×900, same extraction. |
 | `venue_opc.jpg` | Page 12 | **Filled.** Oxford Park Commission wall + MCTV screen, 1199×611, same extraction. |
 | `venue_restaurant.jpg` | Page 12 | **Filled.** Neighborhood restaurant screen, 900×1200, same extraction. |
-| `venue_window_ad.jpg` | Library | A live ad in a store window, 900×1200, same extraction. Not placed. |
+| `venue_window_ad.jpg` | Page 5, beside the CPM chart | **Filled.** A live ad in a store window, 900×1200, same extraction. |
 | `concourse.jpg` | Page 7, beside the proposed zones | The arena concourse, lobby, or conference pre-function. Landscape. |
 
 `.jpg`, `.jpeg` and `.png` all work; the slot name is what matters.
