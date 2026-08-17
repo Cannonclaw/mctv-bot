@@ -378,8 +378,6 @@ def slide_04_network():
 <section class="slide cream">
   <div class="eyebrow">ELITE ADVERTISING</div>
   <h2 class="display">The network &amp; the value.</h2>
-  {statrow([("125+", "DIGITAL SCREENS"), ("28", "TUPELO / LEE CO.", "red"),
-            ("1.9M+", "IMPRESSIONS / MO"), ("55+", "MIN AVG DWELL"), ("3", "GROWTH MARKETS")], "top")}
   <div class="cpm-head">
     <h3 class="display sm">Local CPM comparison.</h3>
     <p class="micro">CPM = cost per thousand impressions. The MCTV figure is the network blended
@@ -387,6 +385,8 @@ def slide_04_network():
     local CPM ranges by channel.</p>
   </div>
   <div class="cpmrow"><div class="bars">{bars}</div>{side}</div>
+  {statrow([("125+", "DIGITAL SCREENS"), ("28", "TUPELO / LEE CO.", "red"),
+            ("1.9M+", "IMPRESSIONS / MO"), ("55+", "MIN AVG DWELL"), ("3", "GROWTH MARKETS")], "bordered")}
   {foot(4)}
 </section>'''
 
@@ -794,7 +794,7 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
 .cpmrow{{display:flex;gap:40px;margin-top:26px}}
 .cpmrow .bars{{flex:1;margin-top:0}}
 .cpm-photo{{width:286px}}
-.cpm-photo .pcard{{height:236px;background-size:cover;border-radius:3px;
+.cpm-photo .pcard{{height:284px;background-size:cover;border-radius:3px;
   box-shadow:0 12px 26px rgba(22,34,58,.18),0 0 0 1px rgba(22,34,58,.10)}}
 
 /* 04 bars */
@@ -802,11 +802,11 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   margin-top:40px;gap:70px}}
 .cpm-head .micro{{max-width:400px;text-align:right}}
 .bars{{margin-top:26px}}
-.bar-row{{display:flex;align-items:center;gap:20px;margin-bottom:13px}}
-.bar-label{{width:180px;text-align:right;font-size:10.5px;font-weight:500;color:#5A6478}}
+.bar-row{{display:flex;align-items:center;gap:20px;margin-bottom:17px}}
+.bar-label{{width:180px;text-align:right;font-size:11px;font-weight:500;color:#5A6478}}
 .bar-row.hi .bar-label{{color:{RED};font-weight:600}}
 .bar-track{{flex:1}}
-.bar{{height:27px;background:#E4DDCB;display:flex;align-items:center;padding-left:12px}}
+.bar{{height:34px;background:#E4DDCB;display:flex;align-items:center;padding-left:12px}}
 .bar span{{font-size:9.5px;font-weight:600;color:#6B6250;letter-spacing:.04em}}
 .bar-row.hi .bar{{background:{NAVY};min-width:96px}}
 .bar-row.hi .bar span{{color:{GOLD}}}
