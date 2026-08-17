@@ -3,19 +3,21 @@
 **Prepared for:** Claude Design
 **Prepared by:** MCTV Elite Advertising
 **Date:** 2026-08-13
-**Status:** Copy final, layout built, photography missing — ready for design
+**Status:** Copy final, layout built; cover exterior + airport photography in place, arena interior photography still missing
 
 ---
 
 ## 1. The ask
 
-A 14-page host media kit exists and is sendable today. It was built in code
+A 15-page host media kit exists and is sendable today. It was built in code
 (`build_deck.py` → `deck.html` → PDF) because the sales meeting happened this morning and
 Alli expects something before end of day.
 
-**What design owns: the photography pass.** Every page currently uses a typographic or
-CSS-rendered fallback where a photograph belongs. The kit reads well — it does not yet
-*look* like the room it is describing. Three photo slots are cut, sized and waiting.
+**What design owns: the photography pass.** The cover carries the arena exterior and
+page 04 carries real airport install photography; what's still missing is the room the
+kit is actually describing — the arena's own interior. The `concourse.jpg` slot is cut,
+sized and waiting, and a full-resolution `cover.jpg` would upgrade the cover from the
+corner fade to full bleed.
 
 Secondary: if the kit is going to be printed and spiral-bound like the recent decks, it
 needs a print-spec pass (bleed, margins, binding edge). See §7.
@@ -101,14 +103,21 @@ missing photo degrades gracefully rather than breaking.
 | --- | --- | --- |
 | `cover.jpg` | 01, full bleed | Landscape, ≥1920×1080. A navy scrim runs left→right at 94% → 30% opacity, so **the subject must sit right of centre** and the left third must survive being nearly black. Arena exterior at dusk, or a full concourse. |
 | `exterior.jpg` | 01, corner fade | **Filled** — the front elevation with the Huntington Bank Arena sign, supplied by Creed (2026-08-16). 330px source, so it runs near-native in a top-right radial fade rather than full bleed. A real `cover.jpg` supersedes it. |
-| `airport.jpg` | 03, beside the quote | A Tupelo Regional screen in place. Landscape. Proves the claim on that page. |
-| `concourse.jpg` | 06, beside the zones | Arena concourse, west entry lobby, or the link corridor. Landscape. |
+| `airport.jpg` | 04, hero card | **Filled** — the Tupelo Regional gate rotunda with an MCTV screen live, 2000×2000, supplied by Creed 2026-08-16. Page 04 only renders when this file exists. |
+| `airport_spot.jpg` | 04 | **Filled** — a live advertiser spot on a terminal screen, 1200×861, extracted from the Tupelo Territory Media Kit via the Canva connector (tile-render stitch). |
+| `airport_counter.jpg` | 04 | **Filled** — the ticket-counter screen, 996×1200, same extraction. |
+| `airport_waiting.jpg` | library | Waiting-room screen, 1200×881, same extraction. Not placed; available. |
+| `airport_gate_alt.jpg` | library | The rotunda with the screen dark, 2000×2000. Not placed; available. |
+| `concourse.jpg` | 07, beside the zones | Arena concourse, west entry lobby, or the link corridor. Landscape. |
 
 ### Where the source images are
 
-**None could be fetched automatically.** This build runs behind an egress proxy with a
-strict allowlist that denies Canva's CDN, SharePoint, `hbarena.com`, and general web
-fetching. Every route was tried. They have to be pulled by hand.
+This build runs behind an egress proxy with a strict allowlist that denies Canva's CDN,
+SharePoint, `hbarena.com`, and general web fetching — direct downloads all fail. The
+airport shots above were recovered anyway, through the Canva connector: each photo was
+placed full-bleed across four quadrant pages of a scratch design copy and the connector's
+600px page renders were stitched back together (`~1200px` results). Anything below that
+still isn't in `photos/` has to be pulled by hand.
 
 | Source | What's there |
 | --- | --- |
@@ -132,14 +141,14 @@ unusable. Best outcome is asking Alli for a few facility shots on the next touch
 
 Three things in this deck are drawn in CSS, deliberately. They are not placeholders.
 
-1. **The lobby event board (page 10)** — a faithful miniature of `static/board.html`, the
+1. **The lobby event board (page 11)** — a faithful miniature of `static/board.html`, the
    real shipped product, down to the gold NOW card, the live dot, and a private booking
    masked to *"Private Event"*. It is the single most differentiating page for a conference
    center. If it gets rebuilt in another tool, it must keep matching the real board; check
    `static/board.html` for the tokens (`--navy:#0a1220`, `--gold:#d4a017`, `--live:#3fbf6a`).
-2. **The sample Arena spot (pages 02 and 07)** — a mock event promo in *their* green, so Alli sees
+2. **The sample Arena spot (pages 02 and 08)** — a mock event promo in *their* green, so Alli sees
    her own creative rather than ours. Captioned as a sample. Keep the caption.
-3. **The content feed screens (page 07)** — weather, news and trivia panels drawn in CSS.
+3. **The content feed screens (page 08)** — weather, news and trivia panels drawn in CSS.
    They show the real content mix that makes the loop watchable; that argument is why the
    airport signed.
 4. **The screen bezel** housing all of it — a wall-mounted display with mount plate and a soft
@@ -160,17 +169,17 @@ Full text in `copy.md`, generated from the deck so it cannot drift.
 
 - **The 60/40 split, and its direction.** 60% goes to whoever *brings* the advertiser, not
   to a fixed party. This was corrected once already. It appears in exactly four places:
-  page 09 (headline, body, table, stat row), page 02 (item 02 and stat row), page 08
+  page 10 (headline, body, table, stat row), page 02 (item 02 and stat row), page 09
   (footer line, "up to 60%"), page 03 (the airport reference). Change one, change all.
-- **The page 09 disclaimer.** "Illustrative only, at a $350/mo blended advertiser rate — not
+- **The page 10 disclaimer.** "Illustrative only, at a $350/mo blended advertiser rate — not
   a guarantee of earnings." It stays, at its current prominence, on any redesign.
-- **The page 06 hedge.** "A starting map, not a final one — drawn from the outside, before
+- **The page 07 hedge.** "A starting map, not a final one — drawn from the outside, before
   we've walked it with you." Nothing in that building has been surveyed.
 - **Network figures:** 125+ screens, 28 Tupelo/Lee Co. venues, 1.9M+ monthly impressions,
   55+ min dwell, $2.63 blended CPM.
 
 **Free to adjust for fit:** headline line breaks, stat-label wording, the venue list on
-page 05, zone descriptions on page 06.
+page 06, zone descriptions on page 07.
 
 **Deliberately absent:** the building's square footages. Figures are available second-hand
 but the venue has been renamed twice and stale numbers quoted back to their own marketing
@@ -221,5 +230,5 @@ Outputs land in `output/` (gitignored).
 1. **The airport pull-quote on page 03** is Dylan Meador's, from his go-live email,
    attributed by role not name. Never cleared for outbound use. Creed's call; if it goes,
    page 03 needs a new right-hand element.
-2. **Screen count (6–8) and the six zones on page 06** are proposed from outside the
+2. **Screen count (6–8) and the six zones on page 07** are proposed from outside the
    building. A walkthrough will change them.

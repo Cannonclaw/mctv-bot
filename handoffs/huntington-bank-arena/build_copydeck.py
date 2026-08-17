@@ -18,10 +18,11 @@ DECK = HERE / "deck.html"
 OUT = HERE / "copy.md"
 
 TITLES = [
-    "Cover", "What we're proposing", "Proof — Tupelo Regional", "The network & the value",
-    "The company you'd keep", "Where your screens would go", "Not a wall of ads",
-    "What it costs you: nothing", "Sixty / forty", "Your calendar, on every screen we own",
-    "Who we are", "Owner-operated, and local", "How this actually happens", "Thank you",
+    "Cover", "What we're proposing", "Proof — Tupelo Regional", "Seen in the wild",
+    "The network & the value", "The company you'd keep", "Where your screens would go",
+    "Not a wall of ads", "What it costs you: nothing", "Sixty / forty",
+    "Your calendar, on every screen we own", "Who we are", "Owner-operated, and local",
+    "How this actually happens", "Thank you",
 ]
 
 BLOCK_END = re.compile(r"</(p|div|h1|h2|h3|li|td|th|tr|section|table|ul|a|span)>")

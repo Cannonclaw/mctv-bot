@@ -4,7 +4,7 @@ Host partnership pitch for **Huntington Bank Arena and Conference Center**, Tupe
 (formerly Cadence Bank Arena), addressed to Alli Shackelford, Director of Marketing.
 Met in person 2026-08-13.
 
-**14 pages · 11 × 6.5 in spiral-bound flip book · free screens · 60/40 revenue split following whoever brings the advertiser**
+**15 pages · 11 × 6.5 in spiral-bound flip book · free screens · 60/40 revenue split following whoever brings the advertiser**
 
 ## Start here
 
@@ -22,12 +22,11 @@ Depending on why you're in this folder:
 Sendable today. Copy is final and approved, all 12 pages are laid out, and the outreach
 email is drafted with the deck attached.
 
-**Photography is the main open work.** The cover now carries the arena's exterior (supplied
-by Creed) as a corner fade; the `airport.jpg` and `concourse.jpg` slots are still cut and
-sized (`photos/`), each with a designed fallback so nothing breaks while empty. None of the
-remaining sources could be fetched automatically: this build runs behind an egress allowlist
-that denies Canva's CDN, SharePoint, `hbarena.com` and general web fetching, so they have to
-be pulled by hand. `DESIGN-BRIEF.md` §4 says exactly which Canva design and page each one is on.
+**Photography is mostly in.** The cover carries the arena's exterior (supplied by Creed) as
+a corner fade, and page 4 is real airport install photography — the gate rotunda with an
+MCTV screen live, a live advertiser spot, and the ticket counter. What's still open is the
+arena's own interior: the `concourse.jpg` slot and a full-resolution `cover.jpg`
+(`photos/README.md` has the slot specs and sources).
 
 Everything else visible is ours — MCTV logo, the team's real headshots, and CSS renders
 of our own screens and lobby event board. No stock, nothing scraped, and no interior
@@ -68,5 +67,5 @@ Rendering is headless Chromium, already present in this environment. `deck.html`
 Three things need a human call, all detailed in `HANDOFF-BRIEF.md`:
 
 1. The airport pull-quote on page 3 was never cleared for outbound use.
-2. Screen count and zones on page 6 are proposed without a walkthrough.
-3. The page 8 revenue table is illustrative, and labeled as such on the page.
+2. Screen count and zones on page 7 are proposed without a walkthrough.
+3. The page 10 revenue table is illustrative, and labeled as such on the page.

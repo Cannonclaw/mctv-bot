@@ -64,8 +64,13 @@ HBA_GREEN = "#8DC63F"
 #   exterior.jpg  the arena exterior — cover corner treatment when no cover.jpg
 #                 (from Creed's IMG_6251, 2026-08-16; small source, so it runs
 #                 near-native in a corner fade rather than full bleed)
-#   airport.jpg   a Tupelo Regional screen in place, page 3
-#   concourse.jpg the arena concourse or lobby, page 6
+#   airport.jpg          gate rotunda, MCTV screen live (Creed, 2026-08-16) — the
+#                        "seen in the wild" page hero; that page only renders
+#                        when this file exists
+#   airport_spot.jpg     live advertiser spot on a terminal screen (Tupelo kit)
+#   airport_counter.jpg  ticket-counter screen (Tupelo kit)
+#   airport_waiting.jpg  waiting-room screen (Tupelo kit) — library, not placed
+#   concourse.jpg        the arena concourse or lobby, placement page
 PHOTO_DIR = HERE / "photos"
 
 
@@ -318,6 +323,32 @@ def slide_03_airport():
   {statrow([("5", "TERMINAL SCREENS", "gold"), ("~30", "DAYS TO LIVE"),
             ("$0", "AIRPORT CAPITAL"), ("0", "CHANGES FROM LEGAL")], "bordered")}
   {foot(3)}
+</section>'''
+
+
+def slide_03b_wild():
+    """Real photography of the airport install. Renders only when the photos exist."""
+    hero = photo("airport")
+    if not hero:
+        return ""
+    cards = [(hero, "GATE ROTUNDA &middot; MCTV SCREEN LIVE", "center", "wide"),
+             (photo("airport_spot"), "A LIVE ADVERTISER SPOT", "center", ""),
+             (photo("airport_counter"), "TICKET COUNTER", "center 30%", "")]
+    cols = "".join(
+        f'<div class="pcol {cls}"><div class="pcard" style="background-image:url({img});'
+        f'background-position:{pos}"></div><div class="pcap">{cap}</div></div>'
+        for img, cap, pos, cls in cards if img)
+    return f'''
+<section class="slide navy">
+  <div class="eyebrow gold">SEE IT IN ACTION &middot; TUPELO REGIONAL AIRPORT</div>
+  <h2 class="display">Already live, <em>across town</em>.</h2>
+  <p class="body wide dim">These are our screens in the Tupelo Regional terminal &mdash; the gate
+  rotunda, a live advertiser spot in rotation, and the ticket counter. Installed at no cost to
+  the airport, running 24/7. The arena would get the same install, at the same price: nothing.</p>
+  <div class="pgrid">{cols}</div>
+  {statrow([("APR '26", "LIVE SINCE", "gold"), ("5", "SCREENS ACROSS THE TERMINAL"),
+            ("24/7", "ON UPS + GENERATOR BACKING")], "bordered")}
+  {foot()}
 </section>'''
 
 
@@ -621,10 +652,11 @@ def slide_12_thanks():
 </section>'''
 
 
-SLIDES = [slide_01_cover(), slide_02_proposal(), slide_03_airport(), slide_04_network(),
-          slide_05_footprint(), slide_06_placement(), slide_07_feed(), slide_07_package(),
-          slide_08_revshare(), slide_09_events(), slide_10_whoweare(), slide_13_team(),
-          slide_11_next(), slide_12_thanks()]
+SLIDES = [s for s in [
+    slide_01_cover(), slide_02_proposal(), slide_03_airport(), slide_03b_wild(),
+    slide_04_network(), slide_05_footprint(), slide_06_placement(), slide_07_feed(),
+    slide_07_package(), slide_08_revshare(), slide_09_events(), slide_10_whoweare(),
+    slide_13_team(), slide_11_next(), slide_12_thanks()] if s]
 
 
 def numbered_slides(slides):
@@ -948,6 +980,13 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
   linear-gradient(96deg,rgba(10,17,32,.94) 0%,rgba(10,17,32,.80) 38%,rgba(10,17,32,.30) 100%)}}
 .photo-card{{position:relative;overflow:hidden}}
 .photo-card img{{width:100%;display:block}}
+/* the "seen in the wild" photo page */
+.pgrid{{display:flex;gap:22px;margin-top:36px}}
+.pcol{{flex:1}} .pcol.wide{{flex:1.7}}
+.pcol .pcard{{height:296px;background-size:cover;border-radius:3px;
+  box-shadow:0 14px 30px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10)}}
+.pcap{{margin-top:13px;font-size:7.4px;letter-spacing:.2em;font-weight:600;
+  color:#7A869C;text-align:center}}
 .photo-cap{{position:absolute;left:0;right:0;bottom:0;padding:11px 16px;
   background:linear-gradient(rgba(10,17,32,0),rgba(10,17,32,.88));
   font-size:7.4px;letter-spacing:.2em;font-weight:600;color:#E7E3D8}}

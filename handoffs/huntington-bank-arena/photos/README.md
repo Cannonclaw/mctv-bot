@@ -8,17 +8,22 @@ what ships today.
 |---|---|---|
 | `cover.jpg` | Page 1, full bleed behind the headline | Landscape, 1920×1080 or larger. Arena exterior at dusk, or the concourse with people in it. A navy scrim is laid over the left two-thirds, so keep the subject right-of-centre. |
 | `exterior.jpg` | Page 1, top-right corner fade — used only when `cover.jpg` is absent | **Filled.** The arena's front elevation with the Huntington Bank Arena sign, supplied by Creed (IMG_6251, 2026-08-16). Small source (330px square, upscaled to 660), which is why it runs near-native in a corner fade instead of full bleed. A `cover.jpg` at real resolution supersedes it. |
-| `airport.jpg` | Page 3, beside the Tupelo Regional quote | A terminal screen in place. Landscape. |
-| `concourse.jpg` | Page 6, beside the proposed zones | The arena concourse, lobby, or conference pre-function. Landscape. |
+| `airport.jpg` | Page 4, hero card | **Filled.** The Tupelo Regional gate rotunda, MCTV screen live (2000×2000, supplied by Creed 2026-08-16). Page 4 only renders when this file exists. |
+| `airport_spot.jpg` | Page 4 | **Filled.** A live advertiser spot on a terminal screen — stitched at 1200×861 from the Tupelo Territory Media Kit via the Canva connector. |
+| `airport_counter.jpg` | Page 4 | **Filled.** The ticket-counter screen, 996×1200, same extraction. |
+| `airport_waiting.jpg` | Library | Waiting-room screen, 1200×881, same extraction. Not placed. |
+| `airport_gate_alt.jpg` | Library | The rotunda with the screen dark, 2000×2000. Not placed. |
+| `concourse.jpg` | Page 7, beside the proposed zones | The arena concourse, lobby, or conference pre-function. Landscape. |
 
 `.jpg`, `.jpeg` and `.png` all work; the slot name is what matters.
 
 ## Where the good ones already live
 
-None of these could be pulled in automatically. This session runs behind an egress proxy
-with a strict allowlist: Canva's CDN, SharePoint, `hbarena.com` and general web fetching
-are all denied at the policy layer, so scraping the Arena's own site was not possible
-from here either. Fetch them by hand from:
+Direct downloads are blocked by the egress allowlist (Canva CDN, SharePoint, `hbarena.com`
+all denied). The airport shots were recovered through the Canva connector anyway — each
+photo placed full-bleed across four quadrant pages of a scratch design copy, the
+connector's 600px page renders stitched back together. Anything below not yet in this
+folder still has to be fetched by hand:
 
 - **hbarena.com** — the Arena's own photography, and the most on-brand option for a kit
   addressed to them. `www.hbarena.com/p/about/seating` and the site map at

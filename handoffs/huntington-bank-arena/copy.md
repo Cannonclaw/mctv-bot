@@ -74,7 +74,24 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
 - 03
 
-## Page 04 — The network & the value  ·  _cream spread_
+## Page 04 — Seen in the wild  ·  _navy spread_
+
+- SEE IT IN ACTION · TUPELO REGIONAL AIRPORT
+- Already live, across town .
+- These are our screens in the Tupelo Regional terminal — the gate rotunda, a live advertiser spot in rotation, and the ticket counter. Installed at no cost to the airport, running 24/7. The arena would get the same install, at the same price: nothing.
+- GATE ROTUNDA · MCTV SCREEN LIVE
+- A LIVE ADVERTISER SPOT
+- TICKET COUNTER
+- APR '26
+- LIVE SINCE
+- 5
+- SCREENS ACROSS THE TERMINAL
+- 24/7
+- ON UPS + GENERATOR BACKING
+- MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
+- 04
+
+## Page 05 — The network & the value  ·  _cream spread_
 
 - ELITE ADVERTISING
 - The network & the value.
@@ -103,9 +120,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - MCTV Indoor Network
 - $2.63
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 04
+- 05
 
-## Page 05 — The company you'd keep  ·  _cream spread_
+## Page 06 — The company you'd keep  ·  _cream spread_
 
 - HOST NETWORK · TUPELO / LEE COUNTY
 - The company you'd keep .
@@ -145,9 +162,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Aaron Wash Beard Co
 - Skate Zone in Tupelo
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 05
+- 06
 
-## Page 06 — Where your screens would go  ·  _navy spread_
+## Page 07 — Where your screens would go  ·  _navy spread_
 
 - PROPOSED PLACEMENT
 - Where your screens would go .
@@ -179,9 +196,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - You
 - APPROVE EVERY SPOT
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 06
+- 07
 
-## Page 07 — Not a wall of ads  ·  _navy spread_
+## Page 08 — Not a wall of ads  ·  _navy spread_
 
 - WHAT'S ON THE SCREEN
 - Not a wall of ads .
@@ -238,9 +255,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 55+
 - MIN AVG DWELL
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 07
+- 08
 
-## Page 08 — What it costs you: nothing  ·  _navy spread_
+## Page 09 — What it costs you: nothing  ·  _navy spread_
 
 - YOUR HOST PACKAGE
 - What it costs you: nothing .
@@ -272,9 +289,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - Total cost to the Arena — $0, for the life of the agreement.
 - You provide wall space and power. We provide everything else — and pay you up to 60% of what the screens earn.
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 08
+- 09
 
-## Page 09 — Sixty / forty  ·  _cream spread_
+## Page 10 — Sixty / forty  ·  _cream spread_
 
 - THE ECONOMICS
 - Sixty / forty. Whoever brings the advertiser.
@@ -308,9 +325,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 100%
 - OF YOUR EXISTING DEALS, KEPT
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 09
+- 10
 
-## Page 10 — Your calendar, on every screen we own  ·  _navy spread_
+## Page 11 — Your calendar, on every screen we own  ·  _navy spread_
 
 - THE OTHER HALF OF THE DEAL
 - Your calendar, on every screen we own .
@@ -354,9 +371,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 15
 - MINUTE LOOP
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 10
+- 11
 
-## Page 11 — Who we are  ·  _navy spread_
+## Page 12 — Who we are  ·  _navy spread_
 
 - WHO WE ARE
 - The fastest-growing
@@ -375,9 +392,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 3
 - GROWTH MARKETS
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 11
+- 12
 
-## Page 12 — Owner-operated, and local  ·  _cream spread_
+## Page 13 — Owner-operated, and local  ·  _cream spread_
 
 - WHO YOU'D BE WORKING WITH
 - Owner-operated, and local .
@@ -403,9 +420,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 24/7
 - SUPPORT, FROM US
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 12
+- 13
 
-## Page 13 — How this actually happens  ·  _cream spread_
+## Page 14 — How this actually happens  ·  _cream spread_
 
 - NEXT STEPS
 - How this actually happens .
@@ -434,9 +451,9 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - 5
 - STEPS, START TO FINISH
 - MCTV DIGITAL, INC · THE INDOOR BILLBOARD COMPANY
-- 13
+- 14
 
-## Page 14 — Thank you  ·  _cream spread_
+## Page 15 — Thank you  ·  _cream spread_
 
 - LET'S TALK
 - Thank you
@@ -460,4 +477,4 @@ wording may not, except where `DESIGN-BRIEF.md` explicitly allows it.
 - swayze@mctvofms.com
 - 662-907-0404
 - MCTV DIGITAL, INC · WWW.MCTVOFMS.COM
-- 14
+- 15

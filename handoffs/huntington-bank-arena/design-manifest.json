@@ -4,7 +4,7 @@
     "prepared_for": "Claude Design",
     "prepared_by": "MCTV Elite Advertising",
     "date": "2026-08-13",
-    "status": "Copy final, 14-page Chamber flip-book format built; cover exterior in place, interior photography still missing",
+    "status": "Copy final, 15-page Chamber flip-book format built; cover exterior + airport photography in place, arena interior photography missing",
     "brief": "DESIGN-BRIEF.md",
     "copy": "copy.md",
     "format": "Chamber flip book \u2014 11 x 6.5 in landscape, spiral / wire-o bound"
@@ -87,26 +87,35 @@
       "title": "Proof \u2014 Tupelo Regional",
       "tone": "navy",
       "layout": "Two-column: left copy; right pull-quote card. Anchored stat row.",
-      "photo_slots": [
-        "airport.jpg"
-      ]
+      "photo_slots": []
     },
     {
       "page": "04",
+      "title": "Already live, across town",
+      "tone": "navy",
+      "layout": "Three real photo cards of the airport install (rotunda hero, live advertiser spot, ticket counter). Renders only when photos/airport.jpg exists. Anchored stat row.",
+      "photo_slots": [
+        "airport.jpg",
+        "airport_spot.jpg",
+        "airport_counter.jpg"
+      ]
+    },
+    {
+      "page": "05",
       "title": "The network & the value",
       "tone": "cream",
       "layout": "Stat row (static, top), then local CPM horizontal bar comparison.",
       "photo_slots": []
     },
     {
-      "page": "05",
+      "page": "06",
       "title": "The company you'd keep",
       "tone": "cream",
       "layout": "Three market chips, then a two-column list of 28 Tupelo/Lee Co. venues.",
       "photo_slots": []
     },
     {
-      "page": "06",
+      "page": "07",
       "title": "Where your screens would go",
       "tone": "navy",
       "layout": "Six proposed zones, two columns of three. Anchored stat row.",
@@ -115,56 +124,56 @@
       ]
     },
     {
-      "page": "07",
+      "page": "08",
       "title": "Not a wall of ads",
       "tone": "navy",
       "layout": "Four screens in a row showing the real loop \u2014 weather, news, trivia, and her event spot. Anchored stat row.",
       "photo_slots": []
     },
     {
-      "page": "08",
+      "page": "09",
       "title": "What it costs you: nothing",
       "tone": "navy",
       "layout": "Four $0 package cards across, then a bordered summary band.",
       "photo_slots": []
     },
     {
-      "page": "09",
+      "page": "10",
       "title": "Sixty / forty",
       "tone": "cream",
       "layout": "Two-column: left copy; right economics table + disclaimer. Anchored stat row.",
       "photo_slots": []
     },
     {
-      "page": "10",
+      "page": "11",
       "title": "Your calendar, on every screen we own",
       "tone": "navy",
       "layout": "Two-column: left copy; right the lobby event board rendered inside a screen bezel. Anchored stat row.",
       "photo_slots": []
     },
     {
-      "page": "11",
+      "page": "12",
       "title": "Who we are",
       "tone": "navy",
       "layout": "Big display headline left, body right, anchored stat row.",
       "photo_slots": []
     },
     {
-      "page": "12",
+      "page": "13",
       "title": "Owner-operated, and local",
       "tone": "cream",
       "layout": "Three large circular headshots with name, role and contact. Anchored stat row.",
       "photo_slots": []
     },
     {
-      "page": "13",
+      "page": "14",
       "title": "How this actually happens",
       "tone": "cream",
       "layout": "Five-step horizontal timeline.",
       "photo_slots": []
     },
     {
-      "page": "14",
+      "page": "15",
       "title": "Thank you",
       "tone": "cream",
       "layout": "Two-column: left CTA + requirements card; right three contacts with headshots.",
@@ -189,20 +198,44 @@
       "note": "used only when cover.jpg is absent; a real cover.jpg supersedes it"
     },
     "airport.jpg": {
-      "page": "03",
-      "treatment": "card beside the pull-quote",
-      "note": "a Tupelo Regional screen in place"
+      "page": "04",
+      "treatment": "hero photo card",
+      "status": "filled",
+      "source": "supplied by Creed 2026-08-16, 2000x2000; gate rotunda with MCTV screen live",
+      "note": "page 04 renders only when this file exists"
     },
     "concourse.jpg": {
-      "page": "06",
+      "page": "07",
       "treatment": "card beside the zone list",
       "note": "arena concourse, west entry lobby, or link corridor"
+    },
+    "airport_spot.jpg": {
+      "page": "04",
+      "treatment": "photo card",
+      "status": "filled",
+      "source": "Tupelo Territory Media Kit asset MAHM-7FmA8U, extracted via Canva connector tile-render stitch, 1200x861"
+    },
+    "airport_counter.jpg": {
+      "page": "04",
+      "treatment": "photo card",
+      "status": "filled",
+      "source": "Tupelo Territory Media Kit asset MAHM-xTdTRA, same extraction, 996x1200"
+    },
+    "airport_waiting.jpg": {
+      "page": "library",
+      "status": "filled, not placed",
+      "source": "Tupelo Territory Media Kit asset MAHM-8T_m6Y, same extraction, 1200x881"
+    },
+    "airport_gate_alt.jpg": {
+      "page": "library",
+      "status": "filled, not placed",
+      "source": "supplied by Creed 2026-08-16, 2000x2000; rotunda with the screen dark"
     }
   },
   "rendered_not_placeholder": [
     {
       "what": "lobby event board",
-      "page": "10",
+      "page": "11",
       "source_of_truth": "static/board.html",
       "tokens": {
         "navy": "#0a1220",
@@ -212,17 +245,17 @@
     },
     {
       "what": "sample Arena spot",
-      "page": "02, 07",
+      "page": "02, 08",
       "note": "mock event promo in the Arena's own green; keep the SAMPLE caption"
     },
     {
       "what": "screen bezel",
-      "page": "02, 07, 10",
+      "page": "02, 08, 11",
       "note": "wall-mounted display with mount plate"
     },
     {
       "what": "content feed screens",
-      "page": "07",
+      "page": "08",
       "note": "weather, news and trivia panels drawn in CSS \u2014 the real content mix, not stock UI"
     }
   ],
@@ -233,20 +266,20 @@
       "appears_on": [
         "02",
         "03",
-        "08",
-        "09"
+        "09",
+        "10"
       ],
       "note": "change one, change all"
     },
-    "disclaimer_page_09": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
-    "hedge_page_06": "A starting map, not a final one - drawn from the outside, before we've walked it with you.",
     "network_figures": {
       "screens": "125+",
       "tupelo_venues": 28,
       "monthly_impressions": "1.9M+",
       "avg_dwell_min": "55+",
       "blended_cpm": "$2.63"
-    }
+    },
+    "disclaimer_page_10": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
+    "hedge_page_07": "A starting map, not a final one - drawn from the outside, before we've walked it with you."
   },
   "asset_sources": {
     "blocked": "This session runs behind an egress allowlist. Canva CDN, SharePoint, hbarena.com and general web fetch are all denied; images must be pulled by hand.",
@@ -270,7 +303,7 @@
     "visit_tupelo": "https://www.tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/"
   },
   "rights": {
-    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, and one Arena exterior photo supplied by Creed. No stock, nothing scraped.",
+    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, one Arena exterior photo supplied by Creed, and MCTV's own airport install photography. No stock, nothing scraped.",
     "arena_photography": "Acceptable in a kit addressed to the Arena. Must be removed if the deck is reused for another venue or general marketing.",
     "event_posters": "Promoter and artist owned. Do not use."
   },
