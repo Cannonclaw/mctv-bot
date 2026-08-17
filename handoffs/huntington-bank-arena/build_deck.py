@@ -105,13 +105,15 @@ TUPELO_VENUES = [
     "Aaron Wash Beard Co", "Skate Zone in Tupelo",
 ]
 
-CPM_ROWS = [  # (label, dollars, width%, highlight)
-    ("Magazine", "$65", 100, False),
-    ("Television", "$35", 54, False),
-    ("Radio", "$27", 42, False),
-    ("Social Media", "$19.51", 30, False),
-    ("Outdoor Billboards", "$6", 10, False),
-    ("MCTV Indoor Network", "$2.63", 5, True),
+# Bar widths are true to scale ($65 = 100%), so the $2.63 bar really is a
+# sliver — that IS the chart's argument. Short bars carry their label outside.
+CPM_ROWS = [  # (label, dollars, width%, highlight, label_outside)
+    ("Magazine", "$65", 100, False, False),
+    ("Television", "$35", 53.8, False, False),
+    ("Radio", "$27", 41.5, False, False),
+    ("Social Media", "$19.51", 30, False, False),
+    ("Outdoor Billboards", "$6", 9.2, False, True),
+    ("MCTV Indoor Network", "$2.63", 4, True, True),
 ]
 
 TEAM = [
@@ -368,8 +370,10 @@ def slide_03b_wild():
 def slide_04_network():
     bars = "".join(
         f'<div class="bar-row{" hi" if hi else ""}"><div class="bar-label">{label}</div>'
-        f'<div class="bar-track"><div class="bar" style="width:{w}%"><span>{amt}</span></div></div></div>'
-        for label, amt, w, hi in CPM_ROWS)
+        + (f'<div class="bar-track"><div class="bar" style="width:{w}%"></div>'
+           f'<span class="bar-out">{amt}</span></div></div>' if out else
+           f'<div class="bar-track"><div class="bar" style="width:{w}%"><span>{amt}</span></div></div></div>')
+        for label, amt, w, hi, out in CPM_ROWS)
     ad = photo("venue_window_ad")
     side = (f'<div class="cpm-photo"><div class="pcard tall" style="background-image:url({ad});'
             f'background-position:center 38%"></div>'
@@ -805,11 +809,12 @@ body{{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}}
 .bar-row{{display:flex;align-items:center;gap:20px;margin-bottom:17px}}
 .bar-label{{width:180px;text-align:right;font-size:11px;font-weight:500;color:#5A6478}}
 .bar-row.hi .bar-label{{color:{RED};font-weight:600}}
-.bar-track{{flex:1}}
-.bar{{height:34px;background:#E4DDCB;display:flex;align-items:center;padding-left:12px}}
+.bar-track{{flex:1;display:flex;align-items:center;gap:11px}}
+.bar{{height:34px;background:#E4DDCB;display:flex;align-items:center;padding-left:12px;flex:none}}
 .bar span{{font-size:9.5px;font-weight:600;color:#6B6250;letter-spacing:.04em}}
-.bar-row.hi .bar{{background:{NAVY};min-width:96px}}
-.bar-row.hi .bar span{{color:{GOLD}}}
+.bar-out{{font-size:10px;font-weight:600;color:#6B6250;letter-spacing:.04em}}
+.bar-row.hi .bar{{background:{NAVY};padding-left:0}}
+.bar-row.hi .bar-out{{color:{RED};font-size:12px;font-weight:700}}
 
 /* 05 venues */
 .chip-row{{display:flex;gap:16px;margin:28px 0 26px}}
