@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
-from services.auth import require_portal_auth, get_portal_user
+from services.auth import require_portal_auth, get_portal_user, get_client_ip
 from services.contract_service import (
     get_contracts_for_client, record_contract_view,
     sign_contract, get_contract_download_url, update_contract,
 )
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
+from services.partner_access import render_partner_banner, assert_writable, is_demo_session
 
 st.set_page_config(
     page_title="My Contract - MCTV Client Portal",
@@ -48,6 +49,7 @@ require_portal_auth()
 user = get_portal_user()
 render_portal_sidebar(user)
 client = load_portal_client(user)
+render_partner_banner(user)
 
 client_id = client.get("id", "")
 
@@ -366,6 +368,7 @@ for contract in contracts:
 
         if st.button("Confirm Package Selection", key=f"confirm_tier_{cid}",
                       type="primary", use_container_width=True):
+            assert_writable("change a package selection")
             # Extract the selected tier name
             idx = tier_labels.index(tier_choice)
             selected_opt = tier_opts[idx]
@@ -467,17 +470,10 @@ for contract in contracts:
                     st.rerun()
 
             if do_sign:
+                assert_writable("sign a contract")
                 with st.spinner("Recording your signature..."):
                     try:
-                        # Capture client IP from request headers
-                        client_ip = ""
-                        try:
-                            headers = st.context.headers
-                            client_ip = (headers.get("X-Forwarded-For", "").split(",")[0].strip()
-                                         or headers.get("X-Real-Ip", "")
-                                         or headers.get("Remote-Addr", ""))
-                        except Exception:
-                            pass
+                        client_ip = get_client_ip()
 
                         result = sign_contract(
                             contract_id=cid,

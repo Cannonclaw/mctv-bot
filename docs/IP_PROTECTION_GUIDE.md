@@ -9,6 +9,19 @@
 - [x] **Terms of Service** — portal page at `/portal_terms` covering IP, data, e-signatures, SMS, privacy
 - [x] **Copyright footer** — visible on portal login and main app sidebar
 - [x] **.gitignore** — TRADE_SECRETS.md excluded from repo
+- [x] **Contract clauses** — confidentiality, proprietary materials,
+      non-circumvention, and non-solicitation appended to all 6 contract types
+      (`generators/contract_generator.py`). Previously all 53 clauses had none.
+- [x] **Document provenance** — generated DOCX/PDF now carry ownership in their
+      own metadata (author, category, copyright in comments) and a footer on the
+      cover page. Previously the author was literally "python-docx".
+- [x] **Partner evaluation access** — read-only sandbox tenant, time-boxed
+      access, portal audit logging, per-viewer watermarking, and click-through
+      terms with a stored acceptance record. See `PARTNER_ACCESS_RUNBOOK.md`.
+
+**Note:** `TRADE_SECRETS.md` is gitignored and is *not present in the current
+working tree*. It needs rebuilding — it is the artifact that evidences
+"reasonable measures" under the DTSA.
 
 ---
 

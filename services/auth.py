@@ -36,13 +36,129 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=False)
 
 
 # ── Login Rate Limiting ────────────────────────────────────────────────────
+# Attempts are recorded server-side in portal_login_attempts (migration 024) so
+# the limit survives a new tab or a cleared cookie jar. The session_state
+# counters are kept as a second layer and as the fallback when the DB is
+# unreachable — a database hiccup must not lock everyone out of the app.
 _LOGIN_MAX_ATTEMPTS = 5
 _LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
 
 
-def _check_rate_limit(key: str) -> bool:
+def get_client_ip() -> str:
+    """Best-effort client IP from the proxy headers Render sets.
+
+    Shared by the auth paths and the portal audit log so every record is
+    attributable. Returns "" when headers are unavailable.
+    """
+    try:
+        headers = getattr(st.context, "headers", {}) or {}
+        return (
+            headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            or headers.get("X-Real-Ip", "")
+            or headers.get("Remote-Addr", "")
+            or ""
+        )
+    except Exception:
+        return ""
+
+
+# Credential checks are limited by *consecutive failures* — a correct password
+# clears the streak. Send actions (magic link, password reset) are limited by
+# *total volume*, since every send is a real outbound email whether or not the
+# address was valid.
+_VOLUME_LIMITED_KINDS = ("magic_link", "reset")
+
+
+def log_portal_event(action: str, entity_type: str = "", entity_id: str = "",
+                     details: dict | None = None):
+    """Write a portal audit record for the current session.
+
+    Fills in the acting user, their client, and the originating IP from session
+    state so call sites only supply the action. Never raises — an audit write
+    failing must not break the page the user is on.
+    """
+    try:
+        from services.portal_service import log_activity
+
+        log_activity(
+            client_id=st.session_state.get("_portal_client_id", "") or "",
+            action=action,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            user_id=st.session_state.get("portal_user_id", "") or "",
+            details=details,
+            ip_address=get_client_ip(),
+        )
+    except Exception as e:
+        print(f"[auth] Audit log write failed (non-blocking): {e}")
+
+
+def _db_attempt_count(key: str, kind: str) -> int | None:
+    """Count attempts for ``key`` inside the lockout window.
+
+    For volume-limited kinds this counts every attempt; otherwise it counts the
+    current run of failures. Returns None if the attempt log is unavailable, so
+    callers fall back to the in-session counter rather than failing closed.
+    """
+    try:
+        from services.supabase_client import query_table
+
+        rows = query_table(
+            "portal_login_attempts",
+            select="succeeded,created_at",
+            filters={"attempt_key": key.strip().lower(), "kind": kind},
+            order="-created_at",
+            limit=_LOGIN_MAX_ATTEMPTS,
+        )
+    except Exception as e:
+        print(f"[auth] Rate-limit lookup unavailable: {e}")
+        return None
+
+    if rows is None:
+        return None
+
+    from datetime import datetime as _dt
+
+    count_all = kind in _VOLUME_LIMITED_KINDS
+    cutoff = time.time() - _LOGIN_LOCKOUT_SECONDS
+    count = 0
+    for row in rows:
+        # For credential checks, a success inside the window clears the streak.
+        if not count_all and row.get("succeeded"):
+            break
+        try:
+            when = _dt.fromisoformat(
+                str(row.get("created_at", "")).replace("Z", "+00:00")
+            ).timestamp()
+        except Exception:
+            continue
+        if when >= cutoff:
+            count += 1
+
+    return count
+
+
+def _record_attempt(key: str, kind: str, succeeded: bool):
+    """Append an auth attempt to the server-side log. Never raises."""
+    try:
+        from services.supabase_client import insert_row
+
+        insert_row("portal_login_attempts", {
+            "attempt_key": key.strip().lower(),
+            "kind": kind,
+            "succeeded": succeeded,
+            "ip_address": get_client_ip(),
+        })
+    except Exception as e:
+        print(f"[auth] Could not record login attempt: {e}")
+
+
+def _check_rate_limit(key: str, kind: str = "password") -> bool:
     """Return True if the login attempt is allowed, False if locked out."""
-    attempts = st.session_state.get(f"_login_attempts_{key}", 0)
+    db_attempts = _db_attempt_count(key, kind)
+    if db_attempts is not None and db_attempts >= _LOGIN_MAX_ATTEMPTS:
+        return False
+
     lockout_until = st.session_state.get(f"_login_lockout_{key}", 0)
 
     if lockout_until and time.time() < lockout_until:
@@ -55,7 +171,7 @@ def _check_rate_limit(key: str) -> bool:
     return True
 
 
-def _record_failed_login(key: str):
+def _record_failed_login(key: str, kind: str = "password"):
     """Record a failed login attempt and lock out if threshold reached."""
     attempts = st.session_state.get(f"_login_attempts_{key}", 0) + 1
     st.session_state[f"_login_attempts_{key}"] = attempts
@@ -63,11 +179,14 @@ def _record_failed_login(key: str):
     if attempts >= _LOGIN_MAX_ATTEMPTS:
         st.session_state[f"_login_lockout_{key}"] = time.time() + _LOGIN_LOCKOUT_SECONDS
 
+    _record_attempt(key, kind, succeeded=False)
 
-def _reset_login_attempts(key: str):
+
+def _reset_login_attempts(key: str, kind: str = "password"):
     """Reset login attempt counter after successful login."""
     st.session_state.pop(f"_login_attempts_{key}", None)
     st.session_state.pop(f"_login_lockout_{key}", None)
+    _record_attempt(key, kind, succeeded=True)
 
 
 # ── Portal Access Control ───────────────────────────────────────────────────
@@ -77,21 +196,22 @@ def _reset_login_attempts(key: str):
 def _get_allowed_portal_emails() -> set:
     """Return the set of emails allowed to access the portal.
 
-    Base set comes from the PORTAL_ALLOWED_EMAILS env var (comma-separated)
-    if set, otherwise the MCTV team. On top of that, every client that has
-    been invited to the portal (i.e. has a portal_user_id) is allowed —
+    The MCTV team is always allowed. PORTAL_ALLOWED_EMAILS (comma-separated)
+    *adds* to that set — it does not replace it, or setting the env var would
+    silently lock the team out of their own portal. On top of that, every client
+    that has been invited to the portal (i.e. has a portal_user_id) is allowed —
     otherwise a created advertiser/host account can never log in even though
     its Supabase Auth user exists and its temp password was emailed.
     """
+    emails = {
+        "creed@mctvofms.com",
+        "mmc@mctvofms.com",
+        "swayze@mctvofms.com",
+    }
+
     env_val = os.environ.get("PORTAL_ALLOWED_EMAILS", "")
     if env_val.strip():
-        emails = {e.strip().lower() for e in env_val.split(",") if e.strip()}
-    else:
-        emails = {
-            "creed@mctvofms.com",
-            "mmc@mctvofms.com",
-            "swayze@mctvofms.com",
-        }
+        emails |= {e.strip().lower() for e in env_val.split(",") if e.strip()}
 
     # Add every client that has an active portal account.
     try:
@@ -122,19 +242,21 @@ def render_team_login_form():
     password = st.text_input("Password", type="password", key="login_password")
 
     if st.button("Log In", type="primary", width='stretch'):
-        if not _check_rate_limit("team"):
+        # Shared password, so the limit is keyed by source IP.
+        rate_key = f"team:{get_client_ip() or 'unknown'}"
+        if not _check_rate_limit(rate_key, kind="team"):
             st.error("Too many failed attempts. Please wait 5 minutes before trying again.")
         else:
             correct = os.environ.get("APP_PASSWORD")
             if not correct:
                 st.error("Team login is not configured. Contact an administrator.")
             elif password == correct:
-                _reset_login_attempts("team")
+                _reset_login_attempts(rate_key, kind="team")
                 st.session_state["authenticated"] = True
                 st.session_state["auth_mode"] = "team"
                 st.rerun()
             else:
-                _record_failed_login("team")
+                _record_failed_login(rate_key, kind="team")
                 st.error("Incorrect password. Please try again.")
 
     st.caption("Contact Creed if you need access.")
@@ -189,9 +311,67 @@ def check_portal_auth() -> bool:
             and st.session_state.get("portal_user_id")):
         return False
 
+    # A revoked or expired grant must end a *live* session, not just block the
+    # next login. Checked here because every portal page reaches this function.
+    if _portal_access_expired():
+        portal_logout()
+        return False
+
     # Attempt token refresh if we have a refresh token
     _try_refresh_token()
     return True
+
+
+_ACCESS_CHECK_INTERVAL = 60  # seconds — this runs on every Streamlit rerun
+
+
+def _portal_access_expired() -> bool:
+    """True if this account's portal_access_expires_at has passed.
+
+    Result is cached for ``_ACCESS_CHECK_INTERVAL`` so a DB round trip doesn't
+    happen on every rerun. Fails open on lookup errors — an outage should not
+    log real clients out.
+    """
+    from datetime import datetime as _dt
+
+    last_check = st.session_state.get("_access_check_at", 0)
+    if time.time() - last_check < _ACCESS_CHECK_INTERVAL:
+        return bool(st.session_state.get("_access_expired", False))
+
+    st.session_state["_access_check_at"] = time.time()
+
+    user_id = st.session_state.get("portal_user_id", "")
+    if not user_id:
+        return False
+
+    try:
+        from services.supabase_client import query_table
+
+        rows = query_table(
+            "clients",
+            select="portal_access_expires_at",
+            filters={"portal_user_id": user_id},
+        ) or []
+    except Exception as e:
+        print(f"[auth] Access-expiry lookup failed (non-blocking): {e}")
+        st.session_state["_access_expired"] = False
+        return False
+
+    expired = False
+    for row in rows:
+        raw = row.get("portal_access_expires_at")
+        if not raw:
+            continue
+        try:
+            when = _dt.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if when.timestamp() <= time.time():
+            expired = True
+            break
+
+    st.session_state["_access_expired"] = expired
+    return expired
 
 
 def _try_refresh_token():
@@ -253,20 +433,29 @@ def portal_login(email: str, password: str) -> dict | None:
         return None
 
     _set_portal_session(result)
+    log_portal_event("portal_login", details={"method": "password"})
     return result
 
 
 def send_portal_magic_link(email: str) -> bool:
     """Send a magic link email to the given portal user.
 
-    Checks the allowlist before sending. Returns True if the email was sent.
+    Checks the allowlist and the send rate limit before sending.
+    Returns True if the email was sent.
     """
     allowed = _get_allowed_portal_emails()
     if email.strip().lower() not in allowed:
         return False
 
+    # Without this, the send endpoint is an unmetered outbound email trigger.
+    if not _check_rate_limit(email, kind="magic_link"):
+        return False
+
     from services.supabase_client import send_magic_link
-    return send_magic_link(email)
+
+    sent = send_magic_link(email)
+    _record_attempt(email, "magic_link", succeeded=sent)
+    return sent
 
 
 def portal_magic_link_callback(token_hash: str, otp_type: str = "magiclink") -> dict | None:
@@ -297,12 +486,17 @@ def portal_magic_link_callback(token_hash: str, otp_type: str = "magiclink") -> 
         return None
 
     _set_portal_session(result)
+    log_portal_event("portal_login", details={"method": otp_type})
     return result
 
 
 def portal_logout():
     """Clear portal session state and sign out of Supabase."""
     from services.supabase_client import sign_out
+    from services.partner_access import clear_access
+
+    # Log before the session keys are cleared — afterwards there is no identity.
+    log_portal_event("portal_logout")
 
     token = st.session_state.get("portal_access_token", "")
     if token:
@@ -313,6 +507,10 @@ def portal_logout():
         if key.startswith("portal_"):
             del st.session_state[key]
 
+    clear_access()
+    st.session_state.pop("_portal_client_id", None)
+    st.session_state.pop("_access_check_at", None)
+    st.session_state.pop("_access_expired", None)
     st.session_state["auth_mode"] = None
     st.session_state.pop("login_mode", None)
 
@@ -349,15 +547,31 @@ def is_portal_host() -> bool:
     return get_portal_role() == "host"
 
 
-def require_portal_auth():
-    """Redirect to landing page if not authenticated.
+def is_portal_partner() -> bool:
+    """Check if current portal user holds read-only partner evaluation access."""
+    return get_portal_role() == "partner"
 
-    Call this at the top of portal pages. If not authenticated,
-    displays a message and stops page rendering.
+
+def require_portal_auth(allowed_roles: tuple[str, ...] | None = None):
+    """Stop the page unless a portal user is authenticated.
+
+    Call this at the top of portal pages. If not authenticated, displays a
+    message and stops page rendering.
+
+    Args:
+        allowed_roles: Optional tuple of roles permitted on this page. When
+            given, a logged-in user whose role is not listed is stopped. Use it
+            to keep read-only partner accounts off pages that only make sense
+            for a real client.
     """
     if not check_portal_auth():
         st.warning("Please log in to access the client portal.")
         st.page_link("app.py", label="Go to Login", icon="\U0001F512")
+        st.stop()
+
+    if allowed_roles and get_portal_role() not in allowed_roles:
+        st.warning("This page isn't available for your account.")
+        st.page_link("pages/portal_dashboard.py", label="Back to Dashboard", icon="\U0001F3E0")
         st.stop()
 
 
@@ -424,9 +638,12 @@ def render_portal_login_form(context_title: str = "Client Portal",
                 allowed = _get_allowed_portal_emails()
                 if reset_email.strip().lower() not in allowed:
                     st.error("Could not send reset link. Please check your email address.")
+                elif not _check_rate_limit(reset_email, kind="reset"):
+                    st.error("Too many reset requests. Please wait a few minutes and try again.")
                 else:
                     with st.spinner("Sending reset link..."):
                         success = reset_password(reset_email)
+                        _record_attempt(reset_email, "reset", succeeded=success)
                         if success:
                             st.success("Password reset link sent! Check your email.")
                         else:
@@ -466,19 +683,21 @@ def render_portal_login_form(context_title: str = "Client Portal",
                                  key="portal_login_password")
 
         if st.button("Log In", type="primary", width='stretch'):
-            if not _check_rate_limit("portal"):
-                st.error("Too many failed attempts. Please wait 5 minutes before trying again.")
-            elif not email or not password:
+            # Keyed by email so one attacker can't lock out the whole portal.
+            rate_key = (email or "").strip().lower() or "portal"
+            if not email or not password:
                 st.error("Please enter both email and password.")
+            elif not _check_rate_limit(rate_key, kind="password"):
+                st.error("Too many failed attempts. Please wait 5 minutes before trying again.")
             else:
                 with st.spinner("Signing in..."):
                     result = portal_login(email, password)
                     if result:
-                        _reset_login_attempts("portal")
+                        _reset_login_attempts(rate_key, kind="password")
                         st.success(f"Welcome, {result.get('full_name', 'there')}!")
                         st.switch_page("pages/portal_dashboard.py")
                     else:
-                        _record_failed_login("portal")
+                        _record_failed_login(rate_key, kind="password")
                         st.error("Invalid email or password. Please try again.")
 
     if st.button("Forgot Password?", width='stretch'):
