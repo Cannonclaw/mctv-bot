@@ -1,0 +1,723 @@
+{
+  "meta": {
+    "title": "Strategic Market Maps — Memphis/DeSoto Expansion + Tupelo Densification",
+    "audience": "internal",
+    "generated_for": "MCTV Elite Advertising",
+    "iteration": 6,
+    "updated": "2026-08-05",
+    "schematic_notice": "Corridor diagrams are schematic, not to scale. Node positions show relative placement on the road network, not survey coordinates.",
+    "phase_targets": {
+      "1": {
+        "cumulative": 40,
+        "tier_unlocked": 40,
+        "label": "Phase 1 — Olive Branch + Hernando"
+      },
+      "2": {
+        "cumulative": 75,
+        "tier_unlocked": 75,
+        "label": "Phase 2 — + Southaven"
+      },
+      "3": {
+        "cumulative": 90,
+        "tier_unlocked": 75,
+        "label": "Phase 3 — + Horn Lake / Walls / Nesbit"
+      }
+    }
+  },
+  "county_overview": {
+    "viewBox": "0 0 900 500",
+    "roads": [
+      {
+        "name": "MEMPHIS / STATE LINE",
+        "kind": "border",
+        "points": "40,55 860,55"
+      },
+      {
+        "name": "I-55 / I-69",
+        "kind": "interstate",
+        "points": "250,55 250,470"
+      },
+      {
+        "name": "Hwy 51",
+        "kind": "highway",
+        "points": "320,55 320,470"
+      },
+      {
+        "name": "Goodman Rd (MS-302)",
+        "kind": "arterial",
+        "points": "60,165 840,150"
+      },
+      {
+        "name": "I-269",
+        "kind": "interstate",
+        "points": "250,400 420,330 600,230 760,180"
+      },
+      {
+        "name": "I-22 / US-78",
+        "kind": "interstate",
+        "points": "300,95 560,150 860,290"
+      }
+    ],
+    "cities": [
+      {
+        "name": "Southaven",
+        "x": 250,
+        "y": 106,
+        "screens": 35,
+        "phase": 2,
+        "pop": "58,551"
+      },
+      {
+        "name": "Olive Branch",
+        "x": 690,
+        "y": 133,
+        "screens": 24,
+        "phase": 1,
+        "pop": "47,819"
+      },
+      {
+        "name": "Horn Lake",
+        "x": 140,
+        "y": 190,
+        "screens": 12,
+        "phase": 3,
+        "pop": "26,738"
+      },
+      {
+        "name": "Walls",
+        "x": 65,
+        "y": 250,
+        "screens": 3,
+        "phase": 3,
+        "pop": "1,437"
+      },
+      {
+        "name": "Nesbit",
+        "x": 250,
+        "y": 265,
+        "screens": 0,
+        "phase": 3,
+        "pop": "~6.7–9.5K"
+      },
+      {
+        "name": "Hernando",
+        "x": 250,
+        "y": 385,
+        "screens": 16,
+        "phase": 1,
+        "pop": "19,165"
+      },
+      {
+        "name": "Byhalia (Marshall Co.)",
+        "x": 830,
+        "y": 275,
+        "screens": 0,
+        "phase": 0,
+        "pop": "1,417"
+      }
+    ]
+  },
+  "markets": [
+    {
+      "id": "olive-branch",
+      "name": "Olive Branch",
+      "phase": 1,
+      "rank": "Phase 1 flagship",
+      "population": "47,819",
+      "stat": "Mississippi's #1 boomtown",
+      "target": 24,
+      "why": "Highest-income slice of the highest-income county in Mississippi, fastest economic momentum, adjacent to the Marshall County job boom — and the likeliest to be uncontested, since a small operator building DeSoto almost certainly started in Southaven.",
+      "viewBox": "0 0 800 420",
+      "roads": [
+        {
+          "name": "Goodman Rd (MS-302)",
+          "kind": "arterial",
+          "points": "40,170 760,170"
+        },
+        {
+          "name": "Craft Rd",
+          "kind": "highway",
+          "points": "250,40 250,390"
+        },
+        {
+          "name": "I-22 / US-78",
+          "kind": "interstate",
+          "points": "40,335 760,245"
+        },
+        {
+          "name": "Hwy 305",
+          "kind": "highway",
+          "points": "560,40 560,390"
+        },
+        {
+          "name": "Hwy 178",
+          "kind": "highway",
+          "points": "360,95 760,95"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "Goodman @ Pleasant Hill",
+          "x": 560,
+          "y": 170,
+          "screens": 9,
+          "phase": 1,
+          "geography": "MS-302, businesses both sides, Target + shopping centers",
+          "anchors": [
+            "Target",
+            "Goodman Rd shopping centers"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Health & Fitness",
+            "Medical & Dental",
+            "Barbershop/Salon"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "The primary retail spine of Olive Branch and northern DeSoto County. Anchor node — build here first. [Incumbent: Incumbent has ~3 pins in Olive Branch. A toehold against our 24-screen target, not a network.]"
+        },
+        {
+          "name": "Craft Rd / I-22 corridor",
+          "x": 250,
+          "y": 300,
+          "screens": 5,
+          "phase": 1,
+          "geography": "Craft Road exit off I-22, mixed-use + industrial-adjacent",
+          "anchors": [
+            "Craft Rd exit",
+            "Craft/Goodman frontage"
+          ],
+          "categories": [
+            "Gas/Grocery",
+            "Bar/Restaurant",
+            "Auto Shop",
+            "Professional Services"
+          ],
+          "competitive_status": "clear — observed",
+          "note": "Catches the Marshall County commuter flow — Jabil, Amazon, Baxter. This is how we monetize 3,300 jobs that don't get spent in Byhalia. [Incumbent: No incumbent pins read on this corridor.]"
+        },
+        {
+          "name": "Old Towne Main Street",
+          "x": 415,
+          "y": 112,
+          "screens": 6,
+          "phase": 1,
+          "geography": "Between Hwy 305, Hwy 178, and Goodman Rd",
+          "anchors": [
+            "Old Towne Main Street district"
+          ],
+          "categories": [
+            "Retail & Boutique",
+            "Bar/Restaurant",
+            "Barbershop/Salon",
+            "Non-Profit/Community"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "Walkable historic district — gifts, collectibles, antiques, local restaurants. The Oxford Square analog. Our single most proven venue environment. [Incumbent: Within the Olive Branch cluster where the incumbent has ~3 pins.]"
+        },
+        {
+          "name": "The Cascades",
+          "x": 130,
+          "y": 170,
+          "screens": 4,
+          "phase": 1,
+          "geography": "New mixed-use — restaurant parcels, 100 townhomes, 58 cottage lots, 70-acre park",
+          "anchors": [
+            "The Cascades development"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Professional Services"
+          ],
+          "competitive_status": "clear — not yet open",
+          "note": "Under construction. Sign hosts BEFORE tenants open — first-mover on a brand-new development is the cheapest inventory we will ever buy."
+        }
+      ]
+    },
+    {
+      "id": "hernando",
+      "name": "Hernando",
+      "phase": 1,
+      "rank": "Phase 1 co-launch",
+      "population": "19,165",
+      "stat": "+10.96% since 2020 — fastest-growing in the county",
+      "target": 16,
+      "why": "Small enough to own outright in one build. Owning a county seat's entire square is a far better sales story than being 15% of Southaven — and it gives the rep a finished reference market to show Olive Branch and Southaven prospects.",
+      "viewBox": "0 0 800 420",
+      "roads": [
+        {
+          "name": "Hwy 51",
+          "kind": "highway",
+          "points": "200,40 200,390"
+        },
+        {
+          "name": "E Commerce St",
+          "kind": "arterial",
+          "points": "80,200 720,200"
+        },
+        {
+          "name": "McIngvale Rd",
+          "kind": "highway",
+          "points": "520,40 520,390"
+        },
+        {
+          "name": "I-55",
+          "kind": "interstate",
+          "points": "630,40 630,390"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "Courthouse Square / Commerce St",
+          "x": 200,
+          "y": 200,
+          "screens": 8,
+          "phase": 1,
+          "geography": "Historic downtown, courthouse square",
+          "anchors": [
+            "Hernando Courthouse Square",
+            "Hernando Farmers Market"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Barbershop/Salon",
+            "Professional Services",
+            "Non-Profit/Community"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "Boutiques, retailers and restaurants ringing a walkable square, plus the Hernando Farmers Market every Saturday May–October with live music. Oxford's playbook on a smaller stage. [Incumbent: Incumbent has ~3-4 pins in Hernando, clustered near I-55. Square itself may still be open.]"
+        },
+        {
+          "name": "McIngvale Rd / I-55",
+          "x": 555,
+          "y": 200,
+          "screens": 5,
+          "phase": 1,
+          "geography": "Off I-55, south of E Commerce St",
+          "anchors": [
+            "68,865 sq ft shopping center",
+            "McIngvale Square (27,000 sq ft, in development)"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Gas/Grocery",
+            "Medical & Dental"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "McIngvale Square is adding retail/restaurant/office/residential on 4 acres, explicitly to pull high-end dining east toward the interstate. Another get-in-early node. [Incumbent: The Hernando pins sit near the I-55 interchange.]"
+        },
+        {
+          "name": "Hwy 51 corridor",
+          "x": 200,
+          "y": 325,
+          "screens": 3,
+          "phase": 1,
+          "geography": "North–south through town",
+          "anchors": [
+            "Hwy 51 service strip"
+          ],
+          "categories": [
+            "Auto Shop",
+            "Gas/Grocery",
+            "Health & Fitness"
+          ],
+          "competitive_status": "unknown",
+          "note": "Fill-in. Service businesses and auto."
+        }
+      ]
+    },
+    {
+      "id": "southaven",
+      "name": "Southaven",
+      "phase": 2,
+      "rank": "Phase 2 — richest inventory, most contested",
+      "population": "58,551",
+      "stat": "Largest city in DeSoto County",
+      "target": 35,
+      "why": "Go here second, with Olive Branch and Hernando already live. Walking into Southaven with two finished networks and a real traction report beats walking in with a pitch deck.",
+      "viewBox": "0 0 800 420",
+      "roads": [
+        {
+          "name": "I-55 / I-69",
+          "kind": "interstate",
+          "points": "210,40 210,390"
+        },
+        {
+          "name": "Church Rd",
+          "kind": "arterial",
+          "points": "60,95 760,95"
+        },
+        {
+          "name": "Goodman Rd (MS-302)",
+          "kind": "arterial",
+          "points": "60,185 760,185"
+        },
+        {
+          "name": "Airways Blvd",
+          "kind": "highway",
+          "points": "110,40 110,390"
+        },
+        {
+          "name": "Tchulahoma Rd",
+          "kind": "highway",
+          "points": "360,40 360,390"
+        },
+        {
+          "name": "Getwell Rd",
+          "kind": "highway",
+          "points": "530,40 530,390"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "Silo Square",
+          "x": 445,
+          "y": 275,
+          "screens": 11,
+          "phase": 2,
+          "geography": "S of Goodman Rd, W of Getwell, E of Tchulahoma",
+          "anchors": [
+            "Silo Square (~29 businesses)",
+            "South Point Grocery",
+            "Lucky Dog Music Hall"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Liquor/Wine/Beer",
+            "Retail & Boutique",
+            "Barbershop/Salon",
+            "Gas/Grocery"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "$200M purpose-built walkable town square. The single best venue cluster in the entire county. [Incumbent: Southaven is the incumbent's densest cluster, ~12-14 pins across Southaven/Horn Lake.]"
+        },
+        {
+          "name": "Goodman Rd spine",
+          "x": 280,
+          "y": 185,
+          "screens": 10,
+          "phase": 2,
+          "geography": "Primary retail corridor, seconds off I-55",
+          "anchors": [
+            "Goodman Rd national tenants",
+            "Southaven Towne Center"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Health & Fitness",
+            "Auto Shop",
+            "Medical & Dental"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "The city's main commercial artery — and the deepest bench of independent service businesses. Most likely where the incumbent started. [Incumbent: Confirmed: the Southaven/Horn Lake pins run along the Goodman Road corridor exactly as assumed.]"
+        },
+        {
+          "name": "Snowden District",
+          "x": 640,
+          "y": 230,
+          "screens": 7,
+          "phase": 2,
+          "geography": "Getwell corridor — amphitheater, ballpark, retail",
+          "anchors": [
+            "Snowden Grove Park",
+            "BankPlus Amphitheater",
+            "Shoppes at Snowden Grove (Kroger)"
+          ],
+          "categories": [
+            "Family Rec & Entertainment",
+            "Bar/Restaurant",
+            "Gas/Grocery",
+            "Retail & Boutique"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "Sleeper node. Snowden Grove is a youth baseball complex — tournament weekends park hundreds of families for hours between games. Highest captive dwell time in the county. [Incumbent: Inside the Southaven cluster.]"
+        },
+        {
+          "name": "Tanger Outlets / Airways @ Church",
+          "x": 110,
+          "y": 95,
+          "screens": 4,
+          "phase": 2,
+          "geography": "I-55/I-69 at Church Rd, 5205 Airways Blvd",
+          "anchors": [
+            "Tanger Outlets (70 stores, 330K sq ft)"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Travel & Tourism",
+            "Gas/Grocery",
+            "Barbershop/Salon"
+          ],
+          "competitive_status": "unknown",
+          "note": "Huge draw pulling shoppers from Tennessee, but outlet tenants are national chains that buy media at corporate. Target the surrounding service businesses, not the outlet tenants. [Incumbent: Western Southaven; pin density thins out here.]"
+        },
+        {
+          "name": "Landers Center",
+          "x": 250,
+          "y": 130,
+          "screens": 3,
+          "phase": 2,
+          "geography": "4560 Venture Dr",
+          "anchors": [
+            "Landers Center (10,000-seat arena)",
+            "Memphis Hustle (NBA G-League)"
+          ],
+          "categories": [
+            "Family Rec & Entertainment",
+            "Bar/Restaurant",
+            "Travel & Tourism"
+          ],
+          "competitive_status": "unknown",
+          "note": "Event-driven. Worth as much as a marquee host logo on the sales deck as for raw impressions."
+        }
+      ]
+    },
+    {
+      "id": "horn-lake",
+      "name": "Horn Lake / Walls / Nesbit",
+      "phase": 3,
+      "rank": "Phase 3 fill-in",
+      "population": "26,738 / 1,437 / ~6.7–9.5K",
+      "stat": "Flat growth (-0.01%/yr) — real households, no momentum",
+      "target": 15,
+      "why": "Add once a rep is already driving the county weekly — marginal servicing cost is near zero at that point, and these screens push the county network past 75 with sell-through headroom above the top tier.",
+      "viewBox": "0 0 800 420",
+      "roads": [
+        {
+          "name": "I-55 / I-69",
+          "kind": "interstate",
+          "points": "590,40 590,390"
+        },
+        {
+          "name": "Goodman Rd W",
+          "kind": "arterial",
+          "points": "60,180 700,180"
+        },
+        {
+          "name": "Church Rd",
+          "kind": "arterial",
+          "points": "60,290 700,290"
+        },
+        {
+          "name": "Tulane Rd",
+          "kind": "highway",
+          "points": "300,40 300,390"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "Goodman Rd West",
+          "x": 300,
+          "y": 180,
+          "screens": 5,
+          "phase": 3,
+          "geography": "MS-302 west of I-55",
+          "anchors": [
+            "Goodman Rd W retail strip"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Auto Shop",
+            "Gas/Grocery"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "The Horn Lake stretch of the county's main artery. [Incumbent: Horn Lake sits inside the incumbent's densest cluster.]"
+        },
+        {
+          "name": "Church Road",
+          "x": 440,
+          "y": 290,
+          "screens": 4,
+          "phase": 3,
+          "geography": "East–west, south of Goodman",
+          "anchors": [
+            "Church Rd commercial"
+          ],
+          "categories": [
+            "Health & Fitness",
+            "Medical & Dental",
+            "Barbershop/Salon"
+          ],
+          "competitive_status": "unknown",
+          "note": "Neighborhood service businesses."
+        },
+        {
+          "name": "Tulane Road",
+          "x": 300,
+          "y": 350,
+          "screens": 3,
+          "phase": 3,
+          "geography": "North–south through Horn Lake",
+          "anchors": [
+            "Tulane Rd corridor"
+          ],
+          "categories": [
+            "Auto Shop",
+            "Gas/Grocery",
+            "Bar/Restaurant"
+          ],
+          "competitive_status": "unknown",
+          "note": "Fill-in."
+        },
+        {
+          "name": "Walls / Nesbit",
+          "x": 110,
+          "y": 110,
+          "screens": 3,
+          "phase": 3,
+          "geography": "Far west (Walls) and mid-county unincorporated (Nesbit)",
+          "anchors": [
+            "Walls",
+            "Nesbit"
+          ],
+          "categories": [
+            "Gas/Grocery",
+            "Bar/Restaurant",
+            "Auto Shop"
+          ],
+          "competitive_status": "contested — observed",
+          "note": "Rounding errors on their own, but free to service once the rep is already in the county. [Incumbent: One incumbent pin at Walls.]"
+        }
+      ]
+    },
+    {
+      "id": "tupelo",
+      "name": "Tupelo — densification",
+      "phase": 0,
+      "rank": "Parallel track — no territory grant required",
+      "population": "38,091",
+      "stat": "25 screens today = 1 per 1,524 vs Oxford's 1 per 362",
+      "target": 50,
+      "existing": 25,
+      "why": "A larger city than Oxford with one-third the screens. Needs no permission from anyone — hosts already know the brand and the traction reports already exist. 25 existing + 50 new = 75, which unlocks the $1,300 top tier for a Tupelo-only buy.",
+      "viewBox": "0 0 800 420",
+      "roads": [
+        {
+          "name": "N Gloster St",
+          "kind": "arterial",
+          "points": "330,40 330,390"
+        },
+        {
+          "name": "Main St",
+          "kind": "arterial",
+          "points": "60,255 760,255"
+        },
+        {
+          "name": "Hwy 45 Bypass",
+          "kind": "interstate",
+          "points": "650,40 650,390"
+        },
+        {
+          "name": "W Main / Veterans Blvd",
+          "kind": "highway",
+          "points": "60,335 520,335"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "NMMC medical district",
+          "x": 245,
+          "y": 175,
+          "screens": 15,
+          "phase": 0,
+          "geography": "North Mississippi Medical Center campus + surrounding medical office buildings",
+          "anchors": [
+            "NMMC (640 beds)",
+            "Medical office buildings"
+          ],
+          "categories": [
+            "Medical & Dental",
+            "Professional Services",
+            "Bar/Restaurant",
+            "Gas/Grocery"
+          ],
+          "competitive_status": "n/a — existing MCTV market",
+          "note": "The best untapped node in the whole network. Largest non-metro hospital in America, serving 730,000 people across 24 counties in MS, AL and TN. Wall-to-wall waiting rooms — our highest dwell-time category — with a REGIONAL catchment, not a local one."
+        },
+        {
+          "name": "Barnes Crossing District",
+          "x": 490,
+          "y": 85,
+          "screens": 12,
+          "phase": 0,
+          "geography": "Super-regional mall + surrounding strip centers, 1.5M+ sq ft retail",
+          "anchors": [
+            "Mall at Barnes Crossing",
+            "Barnes Crossing strip centers"
+          ],
+          "categories": [
+            "Retail & Boutique",
+            "Bar/Restaurant",
+            "Health & Fitness",
+            "Barbershop/Salon"
+          ],
+          "competitive_status": "n/a — existing MCTV market",
+          "note": "Largest retail concentration in Northeast Mississippi. Strip-center independents are the target, not mall anchors."
+        },
+        {
+          "name": "North Gloster St",
+          "x": 330,
+          "y": 145,
+          "screens": 10,
+          "phase": 0,
+          "geography": "Primary retail corridor",
+          "anchors": [
+            "N Gloster retail strip"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Auto Shop",
+            "Retail & Boutique",
+            "Medical & Dental"
+          ],
+          "competitive_status": "n/a — existing MCTV market",
+          "note": "Steady daily traffic. Our own Tupelo marketing already names this corridor — the story is written, the screens just aren't there."
+        },
+        {
+          "name": "Downtown Main / Fairpark",
+          "x": 195,
+          "y": 255,
+          "screens": 8,
+          "phase": 0,
+          "geography": "Civic and dining core",
+          "anchors": [
+            "Fairpark District",
+            "Downtown Main Street"
+          ],
+          "categories": [
+            "Bar/Restaurant",
+            "Retail & Boutique",
+            "Non-Profit/Community",
+            "Professional Services"
+          ],
+          "competitive_status": "n/a — existing MCTV market",
+          "note": "The walkable node. Oxford playbook again."
+        },
+        {
+          "name": "Hwy 45 / W Main service corridors",
+          "x": 145,
+          "y": 335,
+          "screens": 5,
+          "phase": 0,
+          "geography": "West Main and Hwy 45 service strips",
+          "anchors": [
+            "W Main service businesses"
+          ],
+          "categories": [
+            "Auto Shop",
+            "Health & Fitness",
+            "Gas/Grocery"
+          ],
+          "competitive_status": "n/a — existing MCTV market",
+          "note": "Fill-in."
+        }
+      ]
+    }
+  ]
+}
