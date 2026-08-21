@@ -38,6 +38,7 @@ NAV_SECTIONS = [
         ("pages/15_Prospector.py",     "Prospector",           "\U0001F3AF"),  # 🎯
         ("pages/4_Leads.py",           "Leads",                "\U0001F4CB"),  # 📋
         ("pages/20_HostPipeline.py",   "Host Pipeline",        "\U0001F3E2"),  # 🏢
+        ("pages/26_HostTerritory.py",  "Host Territory",       "\U0001F5FA\uFE0F"),  # 🗺️
     ]),
     ("Client Work", [
         ("pages/8_Clients.py",         "Clients",              "\U0001F465"),  # 👥
