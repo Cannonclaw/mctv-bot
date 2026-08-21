@@ -20,7 +20,9 @@ from services.contract_service import (
     get_contracts_for_client, record_contract_view,
     sign_contract, get_contract_download_url, update_contract,
 )
-from services.config_service import order_tier_options, recommended_tier_index
+from services.config_service import (
+    order_tier_options, recommended_tier_index, tier_number,
+)
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
 
 st.set_page_config(
@@ -335,10 +337,12 @@ for contract in contracts:
             logger.warning("Failed to record contract view for %s: %s", cid, e)
 
     # ── TIER SELECTION (multi-option contracts) ─────────────────────
-    tier_opts = contract.get("tier_options")
+    # Ordered + cleaned up front (order_tier_options drops non-dict junk),
+    # so the picker gate counts the options the client can actually see.
+    tier_opts = order_tier_options(contract.get("tier_options"))
     chosen_tier = contract.get("selected_tier", "")
     needs_tier_selection = (
-        tier_opts and isinstance(tier_opts, list) and len(tier_opts) >= 2
+        len(tier_opts) >= 2
         and not chosen_tier
         and cstatus in ("sent", "viewed")
     )
@@ -352,15 +356,18 @@ for contract in contracts:
         )
 
         # Same ladder order and same recommended rung as the contract
-        # document the client is reading alongside this page.
-        tier_opts = order_tier_options(tier_opts)
-
+        # document the client is reading alongside this page. tier_number()
+        # never raises on a malformed option, and a rate the option doesn't
+        # carry is left off the label rather than shown as $0.
         tier_labels = []
         for i, opt in enumerate(tier_opts):
-            name = opt.get("name", f"Option {i + 1}")
-            scr = opt.get("screens", 0)
-            rt = float(opt.get("rate", 0))
-            tier_labels.append(f"{name} — {scr} Screens — ${rt:,.0f}/mo")
+            name = opt.get("name") or f"Option {i + 1}"
+            scr = int(tier_number(opt, "screens") or 0)
+            rt = tier_number(opt, "rate")
+            label = f"{name} — {scr} Screens"
+            if rt is not None:
+                label += f" — ${rt:,.0f}/mo"
+            tier_labels.append(label)
 
         tier_choice = st.radio(
             "Choose your package:",
@@ -374,15 +381,20 @@ for contract in contracts:
             # Extract the selected tier name
             idx = tier_labels.index(tier_choice)
             selected_opt = tier_opts[idx]
-            sel_name = selected_opt.get("name", "")
-            sel_screens = selected_opt.get("screens", 0)
-            sel_rate = float(selected_opt.get("rate", 0))
-            update_contract(cid, {
+            sel_name = selected_opt.get("name") or f"Option {idx + 1}"
+            sel_screens = tier_number(selected_opt, "screens")
+            sel_rate = tier_number(selected_opt, "rate")
+            update = {
                 "selected_tier": sel_name,
                 "tier_name": sel_name,
-                "screen_count": sel_screens,
-                "monthly_rate": sel_rate,
-            })
+            }
+            # A figure the option doesn't carry is omitted, never written
+            # as 0/null — the contract's existing values survive instead.
+            if sel_screens is not None:
+                update["screen_count"] = int(sel_screens)
+            if sel_rate is not None:
+                update["monthly_rate"] = sel_rate
+            update_contract(cid, update)
             st.success(f"Package **{sel_name}** selected! You can now sign below.")
             st.rerun()
 

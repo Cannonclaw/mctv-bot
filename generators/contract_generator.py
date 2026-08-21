@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 from services.docx_service import DocxService
 from services.config_service import (
     get_tier_impressions, calculate_cpm,
-    order_tier_options, recommended_tier_index,
+    order_tier_options, recommended_tier_index, tier_number,
 )
 
 
@@ -1213,7 +1213,7 @@ class ContractGenerator:
             cell = header_row.cells[i + 1]
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            label = tier.get("name", f"Option {i + 1}")
+            label = tier.get("name") or f"Option {i + 1}"
             if i == rec_idx:
                 label += "\n★ RECOMMENDED"
             run = p.add_run(label)
@@ -1245,18 +1245,22 @@ class ContractGenerator:
                 p = cell.paragraphs[0]
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-                screens = tier.get("screens", 10)
-                rate = float(tier.get("rate", 350))
-                daily = rate / 30
+                # tier_number() never raises on a malformed stored option; a
+                # rate the option doesn't carry renders as "—", never as an
+                # invented figure on a document the client signs.
+                screens = int(tier_number(tier, "screens") or 0)
+                rate = tier_number(tier, "rate")
                 plays = screens * plays_per_hour * hours_per_day * days_per_month
                 impressions = get_tier_impressions(self.config, screens)
-                cpm = calculate_cpm(rate, impressions)
+                cpm = calculate_cpm(rate, impressions) if rate is not None else 0.0
 
                 values = {
-                    "Package": tier.get("name", ""),
+                    "Package": tier.get("name") or f"Option {i + 1}",
                     "Screens": str(screens),
-                    "Monthly Rate": f"${rate:,.0f}",
-                    "Daily Investment": f"${daily:.2f}",
+                    "Monthly Rate": f"${rate:,.0f}" if rate is not None else "—",
+                    "Daily Investment": (
+                        f"${rate / 30:.2f}" if rate is not None else "—"
+                    ),
                     "Monthly Ad Plays": f"{plays:,}",
                     "CPM": f"${cpm:.2f}" if cpm > 0 else "N/A",
                 }

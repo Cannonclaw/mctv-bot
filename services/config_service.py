@@ -166,16 +166,35 @@ CPM_BENCHMARK_TEXT = (
 TIER_COMPARISON_MAX = 3
 
 
-def _tier_screens(option) -> float:
-    """Screen count of a tier option, coerced. Unreadable values sort first.
+def tier_number(option, key: str):
+    """Numeric field of a tier option, or None when the option doesn't carry it.
 
     Never raises: these options come back out of a JSONB column and are read
     on the client portal, where a TypeError is a blank page mid-signature.
+    Returns None (not a default) for null/blank/non-numeric values -- a figure
+    the row doesn't actually carry must never be displayed or written back as
+    if it did. Callers decide what "missing" means on their surface.
     """
+    if not isinstance(option, dict):
+        return None
+    v = option.get(key)
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, str):
+        v = v.strip()
+        if not v:
+            return None
     try:
-        return float(option.get("screens") or 0)
-    except (AttributeError, TypeError, ValueError):
-        return 0.0
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return None if f != f else f  # NaN guard: NaN != NaN
+
+
+def _tier_screens(option) -> float:
+    """Screen count of a tier option as a sort key. Unreadable values sort first."""
+    v = tier_number(option, "screens")
+    return 0.0 if v is None else v
 
 
 def order_tier_options(tier_options: list) -> list:
@@ -185,10 +204,14 @@ def order_tier_options(tier_options: list) -> list:
     left-to-right and MCTV's ladder is monotonic (more screens, lower cost
     per screen). Stored order is the rep's click order, which is arbitrary.
     Sorting is idempotent, so an already-ordered list is unchanged.
+    Non-dict entries are dropped: every consumer immediately calls .get()
+    on each option, and a stray string in the JSONB would crash all three
+    surfaces at once.
     """
     if not tier_options or not isinstance(tier_options, list):
         return []
-    return sorted(tier_options, key=_tier_screens)
+    return sorted((o for o in tier_options if isinstance(o, dict)),
+                  key=_tier_screens)
 
 
 def recommended_tier_index(count: int) -> int:
