@@ -159,6 +159,12 @@
       "screens": 1,
       "status": "expanding",
       "description": "MCTV is growing into West Point with initial screen placements."
+    },
+    "Memphis Metro": {
+      "screens": 0,
+      "status": "target",
+      "state": "TN",
+      "description": "MCTV's first territory outside Mississippi. Screen placement is being mapped zone by zone across Germantown, Collierville, East Memphis, Bartlett/Cordova, Midtown, Downtown, and the University area."
     }
   },
   "pricing": {
