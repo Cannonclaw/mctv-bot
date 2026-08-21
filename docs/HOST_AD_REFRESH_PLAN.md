@@ -1,5 +1,6 @@
 # Host Venue Ad Refresh — Operating Plan
 
+**Scope:** 100 host venues · **Duration:** 12 weeks (one quarter)
 **Owner:** Swayze (production queue) · Creed & MMC (upsell calls)
 **Goal:** every host venue running a current spot, on a repeating cycle, with an
 upsell conversation attached to each refresh.
@@ -40,7 +41,10 @@ You cannot plan against a number you do not have. Before any design work:
 | **B** | Solid single-screen host, engaged | Template + their existing brand assets, 15-min call |
 | **C** | Low-engagement, unresponsive, or seasonal | Template + web-scraped assets, emailed with a one-click approve |
 
-Expect roughly 20% A, 50% B, 30% C. That split is what makes this finishable.
+Across 100 venues, plan on roughly **20 A · 50 B · 30 C**. That split is what
+makes this finishable: only 20 venues get real creative time, and the 30 C-tier
+venues are close to push-button. Do not let the A list grow past 20 — every
+venue promoted to A costs you most of a day.
 
 ---
 
@@ -74,14 +78,25 @@ so production starts from a filled form, not a blank page.
 | **Thu** | **Upsell calls** on last week's approved batch | 2–3 hrs |
 | **Fri** | Publish approved spots, update `loop_items`, log activity | 1 hr |
 
-That is ~8 hours a week of focused work. At 10/week you clear 80 venues in
-**8 weeks**, plus a 2-week buffer for stragglers = one quarter, done.
+That is ~8 hours a week of focused work. At 10/week you clear 100 venues in
+**10 weeks**, plus 2 weeks of buffer for stragglers and reshoots = **12 weeks,
+one quarter, done.**
 
-Batch by market so travel and context stay cheap:
-Weeks 1–4 Oxford (75 screens) → Weeks 5–6 Starkville → Weeks 7–8 Tupelo →
-Week 9 Columbus + West Point → Week 10 catch-up.
+Batch by market so travel and context stay cheap. Venue counts below are
+proportional to screen counts — replace them with real numbers after Week 0:
 
----
+| Weeks | Market | Venues (est.) |
+|---|---|---|
+| 1–6 | Oxford (75 screens) | ~55 |
+| 7–8 | Starkville (30 screens) | ~22 |
+| 9–10 | Tupelo (25 screens) | ~19 |
+| 10 | Columbus + West Point | ~3 (fold into the Tupelo trip) |
+| 11–12 | Buffer — stragglers, reshoots, unresponsive C-tier | — |
+
+Oxford is six straight weeks and it is the hard part. If the rhythm is going to
+break, it breaks in week 4. Two ways to protect it: run Oxford as three 2-week
+blocks with a named milestone at each, and put the buffer weeks on the calendar
+now so slipping a week does not feel like failing.
 
 ## 5. The upsell, attached to every delivery
 
@@ -101,7 +116,9 @@ The refresh call has a fixed shape. It is not a pitch, it is a review:
    `20_HostPipeline.py` so `FOLLOW_UP_SLA` schedules the follow-up for you.
 
 Rule of thumb: expect 1 in 5 to take something. Ten venues a week → ~2
-conversions a week → that alone justifies the whole program.
+conversions a week → **~20 conversions across the quarter.** Even at half that
+rate, and even if most land on the cheapest option, the program pays for the
+production time several times over.
 
 ---
 
@@ -115,27 +132,36 @@ Do not build a new tool. Use what is there:
   not get updated the same day, the reconcile reports rot within a month.
 - **Upsell status** → host pipeline deals, `deal_type='host'`, one deal per
   venue, stage-moved on every call.
-- **Weekly number that matters** → venues refreshed this week / 10, and upsell
-  conversations held / 10. Two numbers. Post them Friday.
+- **Weekly number that matters** → venues refreshed this week / 10, upsell
+  conversations held / 10, and **cumulative / 100**. Three numbers. Post them
+  Friday. The running total against 100 is the one that keeps the panic down —
+  it turns an open-ended pile into a bar that visibly fills.
 
 ---
 
 ## 7. Make it a cycle, not a project
 
-Set the refresh interval at **12 months**, staggered. Once the first pass is
-done, roughly 7 venues come due per week forever — which is *less* than the
-push rate, so the rhythm carries itself. Add a `last_creative_refresh` date to
-the venue record and let the SLA logic surface what is due, same as follow-ups.
+Set the refresh interval at **12 months**, staggered. Because the first pass
+runs at 10/week, the venues come due in that same order a year later — which
+means only **~2 venues per week** come due, forever. That is a fifth of the push
+rate. Maintenance is roughly a two-hour Monday, and the spare capacity absorbs
+new hosts as you sign them.
+
+Add a `last_creative_refresh` date to the venue record and let the SLA logic
+surface what is due, same as pipeline follow-ups. Once that exists, nobody has
+to remember any of this.
 
 The panic is because it looks like one giant undefined pile. After Week 0 it is
-a list of 80 rows, 10 get crossed off a week, and the thing ends on a date you
-can point at on a calendar.
+a list of 100 rows, 10 get crossed off every Friday, and it ends on a date you
+can circle on a calendar.
 
 ---
 
 ## 8. What to do tomorrow
 
-1. Pull the venue list and tier it (half a day).
-2. Pick the 10 Oxford venues for Week 1 — the 10 easiest, not the 10 most
+1. Pull the 100-venue list and tier it A/B/C (half a day). Cap A at 20.
+2. Put the 12 weeks on the calendar now, buffer weeks included, with the Oxford
+   milestones at weeks 2, 4, and 6.
+3. Pick the 10 Oxford venues for Week 1 — the 10 *easiest*, not the 10 most
    important. Momentum first.
-3. Build the Business Promo template only. The other two can wait a week.
+4. Build the Business Promo template only. The other two can wait a week.
