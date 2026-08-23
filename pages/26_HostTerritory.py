@@ -73,17 +73,41 @@ with tab_map:
         "zone 1 until it has a sellable block of screens, then move down."
     )
 
+    STATUS_BADGE = {
+        "granted": ("GRANTED", "#2E8B57"),
+        "granted-transition": ("GRANTED — INCUMBENT TRANSITION", "#C5A55A"),
+        "verify-grant": ("VERIFY GRANT MAP", "#E89E3C"),
+        "partner": ("PARTNER ZONE — NO DIRECT OUTREACH", "#722F37"),
+        "future": ("FUTURE ASK", "#888888"),
+    }
     for zone_name, info in list_zones(territory):
+        badge, badge_color = STATUS_BADGE.get(
+            info.get("status", "granted"), ("", "#888888"))
         with st.expander(
             f"**{info['priority']}. {zone_name}** — {info['profile']}",
             expanded=info["priority"] <= 2,
         ):
+            if badge:
+                st.markdown(
+                    f"<span style='background:{badge_color};color:white;"
+                    f"padding:2px 10px;border-radius:10px;font-size:0.75rem;"
+                    f"font-weight:700'>{badge}</span>",
+                    unsafe_allow_html=True,
+                )
+            demo = info.get("demographics") or {}
+            if demo:
+                st.caption(
+                    f"{demo.get('population', '')}  ·  {demo.get('income', '')}"
+                )
+                if demo.get("note"):
+                    st.caption(demo["note"])
             st.markdown(f"**Why here:** {info['why_first']}")
             st.markdown(f"**Anchors:** {', '.join(info.get('anchors', []))}")
-            st.markdown(
-                "**Best host categories:** "
-                + ", ".join(info.get("target_categories", []))
-            )
+            if info.get("target_categories"):
+                st.markdown(
+                    "**Best host categories:** "
+                    + ", ".join(info.get("target_categories", []))
+                )
 
 
 # ── Tab 2: the rubric ────────────────────────────────────────────────────────
@@ -132,7 +156,10 @@ with tab_score:
 # ── Tab 3: build and score a candidate list ──────────────────────────────────
 
 with tab_find:
-    zone_names = [z for z, _ in list_zones(territory)]
+    # Only buildable zones get prospecting — partner and future zones are
+    # off-limits for host outreach by design.
+    zone_names = [z for z, info in list_zones(territory)
+                  if info.get("status", "granted") not in ("partner", "future")]
     c1, c2, c3 = st.columns(3)
     zone = c1.selectbox("Zone", zone_names, key="terr_zone")
     zone_info = get_zone(territory, zone)

@@ -7,11 +7,15 @@ New-territory expansion starts with one question: which venues do we want a
 screen in, and in what order do we knock on their doors? This module answers
 it in two halves.
 
-**The map** — ``TERRITORIES`` breaks a metro into named zones (a corridor, a
-downtown core, a suburb) with the anchors and venue density that make a zone
-worth working. Zones are ordered by ``priority``: zone 1 gets walked first,
-because a cluster of screens in one corridor sells far better than the same
-screen count scattered across a metro.
+**The map** — ``TERRITORIES`` breaks the expansion footprint into named zones
+with the anchors, demographics, and venue density that make a zone worth
+working. Zones are ordered by ``priority`` (zone 1 gets walked first — a
+cluster of screens in one corridor sells far better than the same count
+scattered), and each carries a ``status``: ``granted`` (build now),
+``granted-transition`` (ours per the Aug 2026 NTV360 amendment, but the
+incumbent operator has screens to transition first), ``verify-grant`` (check
+the amendment map), ``partner`` (the incumbent's turf — access via the
+partnership, never direct outreach), or ``future`` (not granted; a later ask).
 
 **The score** — ``score_candidate()`` rates a single venue 0-100 on the six
 things that actually decide whether a host screen earns its keep. Dwell time
@@ -31,110 +35,216 @@ from __future__ import annotations
 # able to work one zone in a day without crossing the metro twice.
 
 TERRITORIES = {
-    "Memphis Metro": {
-        "state": "TN",
-        "status": "target",
+    "Mid-South Expansion": {
+        "state": "MS/TN",
+        "status": "granted",
         "description": (
-            "First MCTV territory outside Mississippi. Adjacent to the Oxford "
-            "market, so installs and service runs share a drive."
+            "The territory added by the NTV360 franchise amendment signed "
+            "Aug 20-21, 2026 (replaces Attachment 1 in its entirety), plus the "
+            "adjacent partner and future zones it borders. Granted: Senatobia, "
+            "part of Batesville + all of Sardis Lake, and the Bartlett / "
+            "Lakeland / Germantown TN suburbs. DeSoto County remains the "
+            "incumbent operator's; Memphis proper is a future ask."
         ),
         "zones": {
-            "Germantown": {
+            "Batesville / Sardis Lake": {
                 "priority": 1,
-                "anchors": ["Germantown Pkwy", "Poplar Ave corridor", "Saddle Creek"],
-                "profile": "Highest household income in the metro, dense retail and medical.",
+                "status": "granted",
+                "anchors": ["Hwy 6 / I-55 junction", "Sardis Lake Marina & Blackjack Rd",
+                            "John W. Kyle State Park", "Batesville Square", "Batesville Civic Center"],
+                "profile": "Panola County retail hub (~33K county trade area) plus the most "
+                           "developed of the four North MS Corps lakes.",
                 "why_first": (
-                    "Best advertiser dollars per screen in the territory. Suburban "
-                    "venues have single owner-operators, so a host agreement takes "
-                    "one conversation instead of a corporate review."
+                    "25 minutes down Hwy 6 from Oxford — installs and service runs "
+                    "piggyback on existing routes, and no indoor network operates in "
+                    "the county. Two plays: the year-round Batesville hub (square, "
+                    "medical, Hwy 6 retail), and the seasonal lake economy, where a "
+                    "handful of choke-point venues (marina, Dam Store, state park "
+                    "corridor) capture nearly every visitor. Sign lake venues over "
+                    "winter so screens are live for February tournament season."
                 ),
+                "demographics": {
+                    "population": "Batesville ~7.4K city / Panola Co ~32.8K; Sardis town 1.7K",
+                    "income": "MHI $51.7K city / $45.9K county — thinner ad budgets; sell hub traffic",
+                    "note": "Employment growing against flat population: GE Aerospace +100 jobs, "
+                            "Yancey +250; four Corps lakes draw ~3.2M visitors/yr regionally. "
+                            "Amendment grants PART of Batesville — confirm exact boundary.",
+                },
                 "target_categories": [
-                    "Medical & Dental", "Health & Fitness", "Barbershop/Salon",
-                    "Auto Shop", "Bar/Restaurant",
+                    "Bar/Restaurant", "Medical & Dental", "Travel & Tourism",
+                    "Gas/Grocery", "Auto Shop", "Barbershop/Salon",
+                ],
+            },
+            "Senatobia": {
+                "priority": 2,
+                "status": "granted",
+                "anchors": ["NWCC main campus (record 8,250 enrollment)", "Heindl Center (1,203 seats)",
+                            "Main St / courthouse square", "I-55 exits"],
+                "profile": "Mini college town 30 min south of Memphis; the NWCC anchor market.",
+                "why_first": (
+                    "The NWCC relationship (2 years, deck presented June 2026) is the "
+                    "single highest-leverage signature on the board: one contract seeds "
+                    "screens across Senatobia, the Heindl Center, the Southaven DeSoto "
+                    "Center, and the Oxford tech center — and gives every later "
+                    "institutional pitch its reference. Campus first, then the square "
+                    "cluster off the campus credibility."
+                ),
+                "demographics": {
+                    "population": "City ~8.3K / Tate Co ~28.6K; NWCC enrollment 8,250 (+26.5% in 4 yrs)",
+                    "income": "MHI $54K city / $64K county",
+                    "note": "Growth is institutional (NWCC, ABB) rather than residential. "
+                            "Confirm whether the grant is Senatobia proper or all of Tate County.",
+                },
+                "target_categories": [
+                    "Education", "Bar/Restaurant", "Medical & Dental",
+                    "Barbershop/Salon", "Health & Fitness",
+                ],
+            },
+            "Germantown": {
+                "priority": 3,
+                "status": "granted-transition",
+                "anchors": ["Poplar Ave corridor", "Methodist Germantown / Campbell Clinic",
+                            "Saddle Creek", "Forest Hill Irene retail"],
+                "profile": "The richest audience in the Mid-South: ~41K people at ~$150K MHI.",
+                "why_first": (
+                    "Highest advertiser budgets per capita of any market on the map, and "
+                    "strict local sign ordinances suppress outdoor billboards — indoor "
+                    "screens are the only DOOH game in town. GATE: the incumbent "
+                    "operator has existing screens here; build only after N-Compass has "
+                    "communicated the territory change and a transition path (buy, wind "
+                    "down, or partner-service) is agreed."
+                ),
+                "demographics": {
+                    "population": "~41.3K (2020 census)",
+                    "income": "MHI ~$149.9K — 3rd highest in TN",
+                    "note": "Incumbent (Desoto Local) screens present per her location map — "
+                            "transition required before host outreach.",
+                },
+                "target_categories": [
+                    "Medical & Dental", "Professional Services", "Bar/Restaurant",
+                    "Health & Fitness", "Barbershop/Salon",
+                ],
+            },
+            "Bartlett": {
+                "priority": 4,
+                "status": "granted-transition",
+                "anchors": ["Stage Rd corridor (~44.7K AADT)", "Bartlett Station / old town",
+                            "Wolfchase fringe"],
+                "profile": "Mature family suburb of ~57K at ~$101K MHI; deep local-business bench.",
+                "why_first": (
+                    "Volume flank of the TN cluster: dense locally-owned restaurants, "
+                    "dental offices, and service businesses along Stage Rd. Same "
+                    "incumbent-transition gate as Germantown; build the Bartlett and "
+                    "Lakeland clusters on the same service day."
+                ),
+                "demographics": {
+                    "population": "~57.7K (2020 census)",
+                    "income": "MHI ~$100.7K",
+                    "note": "Incumbent screens present per her location map.",
+                },
+                "target_categories": [
+                    "Bar/Restaurant", "Medical & Dental", "Auto Shop",
+                    "Health & Fitness", "Family Rec & Entertainment",
+                ],
+            },
+            "Lakeland": {
+                "priority": 5,
+                "status": "granted-transition",
+                "anchors": ["The Lake District", "US-64 corridor"],
+                "profile": "Fastest-growing, most affluent NE suburb: ~14.5K at ~$116K+ MHI.",
+                "why_first": (
+                    "Small but surging (+110% since 2000) with almost no existing indoor "
+                    "inventory. The Lake District is a single-landlord, multi-venue "
+                    "anchor conversation. Rides along with Bartlett on install and "
+                    "service days."
+                ),
+                "demographics": {
+                    "population": "~14.5K",
+                    "income": "MHI ~$116K+ (avg ~$140K), ~80% homeownership",
+                    "note": "Incumbent screens present per her location map.",
+                },
+                "target_categories": [
+                    "Bar/Restaurant", "Retail & Boutique", "Health & Fitness",
+                    "Medical & Dental",
                 ],
             },
             "Collierville": {
-                "priority": 2,
-                "anchors": ["Town Square", "Poplar Ave", "Carriage Crossing"],
-                "profile": "Affluent, tight small-business community around a walkable square.",
-                "why_first": (
-                    "A square-shaped downtown is the cheapest cluster we can build "
-                    "— a dozen venues inside a few blocks, and hosts talk to "
-                    "each other, so referrals do the second half of the work."
-                ),
-                "target_categories": [
-                    "Bar/Restaurant", "Retail & Boutique", "Barbershop/Salon",
-                    "Medical & Dental", "Professional Services",
-                ],
-            },
-            "East Memphis": {
-                "priority": 3,
-                "anchors": ["Poplar Ave", "Ridgeway", "Sanderlin", "Park Ave"],
-                "profile": "Office and medical density, strong daytime population.",
-                "why_first": (
-                    "Where the metro's advertisers actually sit. Screens here are "
-                    "as much a sales demo for prospective advertisers as they are "
-                    "inventory."
-                ),
-                "target_categories": [
-                    "Medical & Dental", "Professional Services", "Health & Fitness",
-                    "Bar/Restaurant", "Barbershop/Salon",
-                ],
-            },
-            "Bartlett / Cordova": {
-                "priority": 4,
-                "anchors": ["Stage Rd", "Germantown Pkwy north", "Wolfchase"],
-                "profile": "Family suburbs, high service-business count, heavy weekend traffic.",
-                "why_first": (
-                    "Volume territory. Lower per-screen advertiser value than "
-                    "Germantown, but the venue count is deep and turnover is low."
-                ),
-                "target_categories": [
-                    "Auto Shop", "Family Rec & Entertainment", "Health & Fitness",
-                    "Gas/Grocery", "Barbershop/Salon",
-                ],
-            },
-            "Midtown": {
-                "priority": 5,
-                "anchors": ["Overton Square", "Cooper-Young", "Union Ave", "Madison Ave"],
-                "profile": "Independent bars, restaurants, and boutiques; young walkable crowd.",
-                "why_first": (
-                    "The most receptive hosts in the metro and the best photos for "
-                    "a media kit, but smaller advertiser budgets. Work it after a "
-                    "paying cluster exists east."
-                ),
-                "target_categories": [
-                    "Bar/Restaurant", "Barbershop/Salon", "Retail & Boutique",
-                    "Liquor/Wine/Beer", "Health & Fitness",
-                ],
-            },
-            "Downtown Memphis": {
                 "priority": 6,
-                "anchors": ["Main St Mall", "South Main", "Beale St", "Medical District"],
-                "profile": "Tourism, hotels, hospitals, and event traffic.",
+                "status": "verify-grant",
+                "anchors": ["Town Square", "W Poplar corridor", "Carriage Crossing",
+                            "Baptist Collierville"],
+                "profile": "~51K at ~$139K MHI — #1 income among TN cities over 50K.",
                 "why_first": (
-                    "Highest raw traffic, hardest sell. Hotels and hospitals route "
-                    "screen decisions through corporate or facilities, so treat "
-                    "this as a long-cycle zone — not first-90-days work."
+                    "The natural sixth zone if the Attachment 1 map covers it — a "
+                    "walkable historic square (the Oxford playbook) plus the metro's "
+                    "second-richest audience. NOT confirmed in the grant: check the "
+                    "amendment map before any outreach."
                 ),
+                "demographics": {
+                    "population": "~51.3K (2020 census)",
+                    "income": "MHI ~$138.6K, poverty 3.2%",
+                    "note": "Grant status unconfirmed — verify against Attachment 1.",
+                },
                 "target_categories": [
-                    "Travel & Tourism", "Bar/Restaurant", "Medical & Dental",
-                    "Non-Profit/Community", "Retail & Boutique",
+                    "Bar/Restaurant", "Retail & Boutique", "Medical & Dental",
+                    "Professional Services",
                 ],
             },
-            "University / Highland": {
+            "DeSoto County (partner zone)": {
                 "priority": 7,
-                "anchors": ["Highland Strip", "University of Memphis", "Central Ave"],
-                "profile": "College-town strip — the closest thing here to the Oxford playbook.",
+                "status": "partner",
+                "anchors": ["Olive Branch / Goodman Rd", "Hernando square", "Southaven / Silo Square",
+                            "NWCC DeSoto Center", "Snowden Grove"],
+                "profile": "MS's fastest-growing county (~199K) — the incumbent operator's home turf.",
                 "why_first": (
-                    "We already know how to sell a college strip. The catch is "
-                    "that a commuter campus does not fill venues the way Ole Miss "
-                    "fills the Square, so expect thinner dwell."
+                    "NOT ours to build: DeSoto County stays with the incumbent N-Compass "
+                    "operator (Desoto Local, ~35 screens). Access runs through the "
+                    "partnership — cross-sell our advertisers onto her screens and hers "
+                    "onto ours, and service the NWCC DeSoto Center jointly. No MCTV host "
+                    "outreach inside this county."
                 ),
-                "target_categories": [
-                    "Bar/Restaurant", "Barbershop/Salon", "Health & Fitness",
-                    "Education", "Retail & Boutique",
-                ],
+                "demographics": {
+                    "population": "County ~199K; Olive Branch ~42-43K, Southaven ~56K, Hernando ~18.5K",
+                    "income": "OB ~$90K / Southaven ~$70K (est.) / Hernando ~$77K",
+                    "note": "Fastest-growing county in Mississippi, 25 straight years of growth.",
+                },
+                "target_categories": [],
+            },
+            "East Memphis (future)": {
+                "priority": 8,
+                "status": "future",
+                "anchors": ["Poplar corridor offices", "Mendenhall / Brookhaven Circle",
+                            "OrthoSouth / medical groups"],
+                "profile": "The advertiser capital of the Mid-South — corridor zips at $86-124K MHI.",
+                "why_first": (
+                    "Not in the grant. The prize is advertiser budgets more than host "
+                    "count: regional ad decisions are made here. Return to N-Compass "
+                    "with expansion performance as the proof for a Memphis-proper ask."
+                ),
+                "demographics": {
+                    "population": "Memphis ~606-611K (declining); corridor is the stable affluent quadrant",
+                    "income": "Corridor zips $86K-$124K vs $52K citywide",
+                    "note": "Future ask — no rights today.",
+                },
+                "target_categories": [],
+            },
+            "Memphis core (future)": {
+                "priority": 9,
+                "status": "future",
+                "anchors": ["Overton Square / Cooper-Young", "Crosstown Concourse",
+                            "Downtown / Beale", "U of M Highland strip"],
+                "profile": "10x audience, first named indoor competitor (Social Indoor).",
+                "why_first": (
+                    "Not in the grant, and the only market with a direct free-screen "
+                    "competitor. If granted later: beachhead via single-landlord "
+                    "anchors (Crosstown, JCC), never scattered singles."
+                ),
+                "demographics": {
+                    "population": "Shelby Co ~910K; Midtown 38104 ~22.6K",
+                    "income": "City MHI ~$52K; $23.7B capital investment landed in 2025",
+                    "note": "Future ask — no rights today. Social Indoor active in the DMA.",
+                },
+                "target_categories": [],
             },
         },
     },
