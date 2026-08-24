@@ -132,8 +132,8 @@ pkg[1].metric("Monthly investment", f"${effective_rate:,.0f}")
 pkg[2].metric("CPM", f"${cpm:,.2f}")
 
 st.caption(
-    "CPM = cost per 1,000 impressions. Industry comparison: Radio $5-12 · Cable TV $15-30 · "
-    "Print $10-30 · Outdoor $3-8 · Digital display $5-15. MCTV typically lands $1-3."
+    "CPM = cost per 1,000 impressions. Industry comparison: Radio \\$5-12 · Cable TV \\$15-30 · "
+    "Print \\$10-30 · Outdoor \\$3-8 · Digital display \\$5-15. MCTV typically lands \\$1-3."
 )
 
 st.divider()

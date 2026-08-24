@@ -329,8 +329,8 @@ with tab_list:
                                     st.success(f"Payment recorded. Invoice {inv_num} is now PAID IN FULL.")
                                 else:
                                     st.success(
-                                        f"Payment of ${partial_amount:,.2f} recorded. "
-                                        f"Remaining balance: ${new_bal:,.2f}"
+                                        f"Payment of \\${partial_amount:,.2f} recorded. "
+                                        f"Remaining balance: \\${new_bal:,.2f}"
                                     )
                                 del st.session_state[f"show_partial_{iid}"]
                                 st.rerun()

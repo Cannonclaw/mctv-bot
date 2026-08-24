@@ -242,8 +242,8 @@ m3.metric("Cities Reached", len(result.cities))
 m4.metric("Suggested Rate", f"${result.recommendation.effective_rate:,.0f}/mo")
 
 st.markdown(
-    f"That works out to a CPM of **${result.recommendation.cpm:,.2f}** — "
-    f"compare to radio ($5-12), cable ($15-30), and digital display ($5-15)."
+    f"That works out to a CPM of **\\${result.recommendation.cpm:,.2f}** — "
+    f"compare to radio (\\$5-12), cable (\\$15-30), and digital display (\\$5-15)."
 )
 
 # Demographic blend in friendly form

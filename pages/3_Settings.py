@@ -389,8 +389,8 @@ with tab_admin:
 
     action_items = [
         ("Register copyright at copyright.gov ($65)", "https://eco.copyright.gov/", "Copyright registration required to file lawsuits + unlocks statutory damages up to $150K"),
-        ("File trademark for 'MCTV Elite Advertising' ($250-$350)", "https://www.uspto.gov/trademarks/apply", "Search first at tmsearch.uspto.gov, then file in Class 035 (Advertising)"),
-        ("1-hour IP attorney consult ($200-$400)", None, "Validate copyright strategy, review ToS, get Mississippi-specific advice"),
+        ("File trademark for 'MCTV Elite Advertising' (\\$250-\\$350)", "https://www.uspto.gov/trademarks/apply", "Search first at tmsearch.uspto.gov, then file in Class 035 (Advertising)"),
+        ("1-hour IP attorney consult (\\$200-\\$400)", None, "Validate copyright strategy, review ToS, get Mississippi-specific advice"),
         ("Sign up for Twilio SMS", "https://twilio.com/try-twilio", "Get Account SID, Auth Token, and phone number for SMS messaging"),
         ("Register A2P 10DLC in Twilio", None, "Required to send business texts to US numbers at scale (1-2 weeks for approval)"),
         ("Set up bot.mctvofms.com subdomain", None, "CNAME record pointing to Render for custom domain"),
