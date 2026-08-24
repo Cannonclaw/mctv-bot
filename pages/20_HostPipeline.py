@@ -23,6 +23,7 @@ from services.auth import check_password
 from services.supabase_client import (
     delete_row, insert_row, query_table, update_row,
 )
+from services.pipeline_service import HOST_REFRESH_SLA, get_hosts_needing_refresh
 from services.config_service import load_config, get_team_first_names
 
 st.set_page_config(
@@ -85,13 +86,16 @@ def _by_stage(stage: str) -> list:
     return [o for o in opps if o.get("stage") == stage]
 
 
-m1, m2, m3, m4 = st.columns(4)
+refresh_due = get_hosts_needing_refresh(opps=opps)
+
+m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Total in pipeline", len(opps))
 m2.metric("Live (signed hosts)", len(_by_stage("live")))
 m3.metric("In progress", sum(len(_by_stage(s)) for s in
                               ("identified", "first_visit", "pitched",
                                "agreement_sent", "install_scheduled")))
 m4.metric("Lost", len(_by_stage("lost")))
+m5.metric("Due for refresh", len(refresh_due))
 
 st.divider()
 
@@ -170,6 +174,31 @@ for i, (stage_key, stage_label) in enumerate(HOST_STAGES):
 st.divider()
 
 
+# ── Creative refresh due ─────────────────────────────────────────────────────
+
+st.markdown("### Creative Refresh Due")
+st.caption(
+    f"Live venues past the {HOST_REFRESH_SLA['live']['days']}-day creative "
+    "cadence. Set the date on the venue below once new creative is published."
+)
+if not refresh_due:
+    st.success("Every live venue is inside the refresh cadence.")
+else:
+    for o in refresh_due:
+        st.markdown(
+            f"<div style='background:#f7f7f7; border-radius:6px; "
+            f"padding:0.4rem 0.6rem; margin:0.3rem 0; font-size:0.85rem;'>"
+            f"<b>{o.get('business_name', '')}</b> "
+            f"<span style='color:#888;'>· {o.get('city', '')} · "
+            f"{o.get('assigned_rep', '')}</span><br>"
+            f"<span style='color:#722F37;'>{o.get('_refresh_reason', '')}</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+st.divider()
+
+
 # ── Detail editor ────────────────────────────────────────────────────────────
 
 st.markdown("### Manage a Venue")
@@ -201,7 +230,7 @@ new_prob = dc3.number_input("Win probability (%)",
                               value=int(opp.get("probability", 10) or 10),
                               step=5)
 
-dc4, dc5 = st.columns(2)
+dc4, dc5, dc6 = st.columns(3)
 next_action = dc4.text_input("Next action", value=opp.get("next_action") or "")
 nad = opp.get("next_action_date") or date.today().isoformat()
 try:
@@ -210,20 +239,37 @@ except (ValueError, TypeError):
     nad_default = date.today()
 next_action_date = dc5.date_input("Next action date", value=nad_default)
 
+lcr = (opp.get("last_creative_refresh") or "")[:10]
+try:
+    lcr_default = date.fromisoformat(lcr) if lcr else None
+except (ValueError, TypeError):
+    lcr_default = None
+last_creative_refresh = dc6.date_input(
+    "Last creative refresh",
+    value=lcr_default,
+    help="Leave blank if this venue has never had a creative refresh.",
+)
+
 new_notes_edit = st.text_area("Notes", value=opp.get("notes") or "", height=120)
 
 save_cols = st.columns([1, 1, 4])
 if save_cols[0].button("Save changes", type="primary", width="stretch"):
-    update_row("pipeline_opportunities", selected_id, {
+    saved = update_row("pipeline_opportunities", selected_id, {
         "stage": new_stage,
         "assigned_rep": new_rep_sel,
         "probability": new_prob,
         "next_action": next_action or None,
         "next_action_date": next_action_date.isoformat(),
         "notes": new_notes_edit or None,
+        "last_creative_refresh": (last_creative_refresh.isoformat()
+                                  if last_creative_refresh else None),
     })
-    st.success("Saved.")
-    st.rerun()
+    if saved:
+        st.success("Saved.")
+        st.rerun()
+    else:
+        st.error("Could not save. Check Supabase configuration — "
+                 "migration 026 must be applied.")
 
 if save_cols[1].button("Delete venue", width="stretch"):
     if st.session_state.get(f"confirm_del_host_{selected_id}"):

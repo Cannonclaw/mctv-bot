@@ -147,9 +147,13 @@ means only **~2 venues per week** come due, forever. That is a fifth of the push
 rate. Maintenance is roughly a two-hour Monday, and the spare capacity absorbs
 new hosts as you sign them.
 
-Add a `last_creative_refresh` date to the venue record and let the SLA logic
-surface what is due, same as pipeline follow-ups. Once that exists, nobody has
-to remember any of this.
+This is built. Migration 026 adds `last_creative_refresh` (a DATE) to the host
+deal, and `get_hosts_needing_refresh()` in `services/pipeline_service.py`
+surfaces what is due on the `HOST_REFRESH_SLA` cadence — 365 days, live venues
+only. It shows up as the "Due for refresh" metric and the "Creative Refresh
+Due" list on `pages/20_HostPipeline.py`. Set the date by hand on the venue
+record every Friday when the new spot goes up. Nobody has to remember any of
+this.
 
 The panic is because it looks like one giant undefined pile. After Week 0 it is
 a list of 100 rows, 10 get crossed off every Friday, and it ends on a date you

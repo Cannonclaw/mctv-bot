@@ -57,6 +57,16 @@ FOLLOW_UP_SLA = {
 }
 
 
+# ── Host creative refresh SLA ────────────────────────────────────────────────
+# How often a signed host venue's on-screen creative gets remade. Keyed by
+# host stage so it fails closed: only stages listed here can ever be "due",
+# and a venue we have not signed yet has no creative to refresh.
+# 12 months, staggered, ~100 venues (docs/HOST_AD_REFRESH_PLAN.md).
+HOST_REFRESH_SLA = {
+    "live": {"days": 365, "action": "Refresh the venue's creative"},
+}
+
+
 # ── Supabase REST helpers ─────────────────────────────────────────────────────
 
 def _sb_config():
@@ -596,6 +606,64 @@ def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
 
     needs_action.sort(key=lambda o: -float(o.get("monthly_value", 0) or 0))
     return needs_action
+
+
+def get_hosts_needing_refresh(opps: list[dict] | None = None) -> list[dict]:
+    """Get host venues whose on-screen creative is due to be remade.
+
+    Only stages listed in HOST_REFRESH_SLA are considered — a venue that is
+    not live yet has no creative to refresh, and a lost one never will.
+
+    Flags, in priority order:
+      1. Never refreshed (no `last_creative_refresh` on the record)
+      2. Refreshed longer ago than the stage's cadence
+
+    Rows are annotated with `_refresh_reason` — a different key from
+    get_deals_needing_action's `_action_reason`, so both can annotate the
+    same shared list on one rerun without clobbering each other.
+
+    Args:
+        opps: Pre-fetched host deals, to avoid a redundant Supabase
+            round-trip (the Host Pipeline page fetches once per rerun).
+            Defaults to get_all_opportunities(deal_type="host").
+
+    Returns:
+        List of host deals, never-refreshed first then oldest refresh first.
+    """
+    if opps is None:
+        opps = get_all_opportunities(deal_type="host")
+    today = date.today()
+    needs_refresh = []
+
+    for opp in opps:
+        sla = HOST_REFRESH_SLA.get(opp.get("stage"))
+        if not sla:
+            continue
+
+        refreshed = (opp.get("last_creative_refresh") or "")[:10]
+        reason = None
+
+        if not refreshed:
+            reason = f"Never refreshed — {sla['action'].lower()}"
+        else:
+            # Parse before comparing: a lexical string compare would let an
+            # unreadable value ("not-a-date") sort as fresh and silently drop
+            # the venue off the list this function exists to produce.
+            try:
+                age = (today - date.fromisoformat(refreshed)).days
+            except ValueError:
+                reason = "Refresh date unreadable — set it again"
+            else:
+                if age >= sla["days"]:
+                    reason = (f"Last refreshed {age} day(s) ago — host "
+                              f"creative is remade every {sla['days']} day(s)")
+
+        if reason:
+            opp["_refresh_reason"] = reason
+            needs_refresh.append(opp)
+
+    needs_refresh.sort(key=lambda o: (o.get("last_creative_refresh") or ""))
+    return needs_refresh
 
 
 def get_all_activity(days: int = 30, limit: int = 1000) -> list[dict]:
