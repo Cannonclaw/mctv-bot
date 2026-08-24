@@ -48,6 +48,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    # Fail loudly on missing config: without this, a missing credential
+    # reads as an empty result set and the run exits 0 looking healthy.
+    from services.env_preflight import require_env, SUPABASE_ANY_KEY  # noqa: E402
+    require_env("SUPABASE_URL", SUPABASE_ANY_KEY, "SMTP_HOST", "SMTP_USER")
+
     from services.supabase_client import query_table, update_row
     from services.portal_service import get_client
     from services.config_service import (
