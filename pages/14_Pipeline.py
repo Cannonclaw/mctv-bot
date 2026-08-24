@@ -519,6 +519,10 @@ with tab_forecast:
         cols = st.columns(len(forecast))
         for col, fc in zip(cols, forecast):
             with col:
+                # The bare `$` below are intentional and must NOT be escaped to \$:
+                # this whole string is one CommonMark HTML block (opens with <div>, no
+                # blank line), so inline markdown - and therefore LaTeX - never parses
+                # inside it. A \$ here would print a literal backslash on the card.
                 st.markdown(
                     f'<div class="forecast-card">'
                     f'<h3>${fc["expected_mrr"]:,.0f}/mo</h3>'
