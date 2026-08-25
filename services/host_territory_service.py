@@ -300,6 +300,90 @@ GRADES = [
     (0,  "D", "Only if you're already there", "#888888"),
 ]
 
+# Door-by-door drive routes for the zones a rep can work today. Each loop is
+# one van morning or afternoon, stops in driving order. Only granted zones get
+# loops — transition zones are outreach-frozen until the incumbent hand-off,
+# so publishing a walk order for them would invite exactly the knock we've
+# promised not to make. Addresses are from desk research: verify at the door.
+WALK_LOOPS = {
+    "Batesville / Sardis Lake": [
+        {
+            "name": "Loop A — Hwy 6 / US-51 commercial (one morning)",
+            "note": "Off the Hwy 6 exit, working toward the Square. End at the "
+                    "Panola Partnership — an ally intro, not a host pitch.",
+            "stops": [
+                ("Batesville Tire & Muffler", "296 Hwy 6 W",
+                 "Highest-dwell door in town; scored 75B"),
+                ("Baptist Urgent Care", "Hwy 6 E, next to Café Olé",
+                 "Corporate approval path — start early, closes slow"),
+                ("Café Olé", "Hwy 6 E",
+                 "Sit-down lunch + dinner dwell; shares the urgent-care lot"),
+                ("Jack's", "Hwy 6",
+                 "Franchise — find the operator, not the counter"),
+                ("Batesville Dentistry", "310 US-51 S",
+                 "81B, TVs already on the wall — first-close candidate"),
+                ("GoPerformance Fitness", "Batesville",
+                 "71C; member dwell 45-75 min"),
+                ("P's Barbershop", "near the Square", "69C"),
+                ("Kem's Restaurant", "near the Square",
+                 "Breakfast 6-10am + dinner with full bar — two dayparts"),
+                ("Panola Partnership", "150-A Public Square, (662) 563-3126",
+                 "Chamber ally; recruiting the Covenant Crossing development"),
+            ],
+        },
+        {
+            "name": "Loop B — Sardis town & lake choke points (one afternoon)",
+            "note": "Town first, then the water. Lake doors are seasonal — "
+                    "live by Feb 1 for tournament season, sold as a seasonal "
+                    "package rather than year-round waiting-room rates.",
+            "stops": [
+                ("TriBecca Allie Café", "216 S Main St, Sardis",
+                 "69C; the town's sit-down anchor"),
+                ("The Lake Store", "34443 Blackjack Rd",
+                 "62C; every boat trailer passes it"),
+                ("Sardis Lake Marina / Rafters On The Water",
+                 "30117 Blackjack Rd (Lower Lake)",
+                 "72B; ship's store + restaurant — the lake's living room"),
+                ("The Pier Seafood & Steaks", "at the spillway",
+                 "68C; tournament-weekend dinner spot"),
+                ("The Dam Store", "25472 MS-315",
+                 "59C; the Hwy 315 choke point"),
+            ],
+        },
+    ],
+    "Senatobia": [
+        {
+            "name": "Senatobia day — Hwy 51 corridor + downtown (one day)",
+            "note": "Anchor first: the NWCC visit rides the existing two-year "
+                    "college pursuit, not a cold door.",
+            "stops": [
+                ("NWCC Senatobia campus", "4975 Hwy 51 N",
+                 "The anchor — student union, Heindl Center lobby, athletics"),
+                ("Senatobia Dental Care", "5204 Hwy 51 N", "Scored 77B"),
+                ("RedMed Urgent Clinic", "105-A Quality Ln",
+                 "Walk-in clinic, 20-45 min captive; regional chain"),
+                ("ATC Fitness", "152 Norfleet Dr",
+                 "Chain sits in Bartlett + Lakeland too — one HQ yes travels; "
+                 "their Bartlett club runs Rockbot, pitch revenue share not a swap"),
+                ("Senatobia Family Dentistry", "102 N Robinson St", "74B"),
+                ("Kemet Coffee", "306 E Main St",
+                 "Sit-and-stay coffeehouse; laptop dwell"),
+                ("Coleman's Bar-B-Q", "312 E Main St", "63C"),
+                ("Krispy Krunchy / Circle K", "510 E Main St",
+                 "Corporate site — low odds, but traffic makes it worth one ask"),
+                ("Woodchucks Restaurant & Bar", "304 W Main St",
+                 "Axe-throwing + bar; long group dwell, NWCC crowd"),
+                ("Broken Cup Cafe", "203 Center St", "66C"),
+                ("Hot Mess Salon", "131 N Center St", "64C"),
+                ("Fitness 2000", "126 N Front St", "Trainer-led, loyal repeat"),
+                ("Pure Power Fitness", "126 Northwest Plz",
+                 "24-hr gym + classes"),
+                ("MBA Barbershop", "103A McKie St", "70C"),
+            ],
+        },
+    ],
+}
+
 
 def list_territories() -> list[str]:
     return list(TERRITORIES.keys())
@@ -317,6 +401,12 @@ def list_zones(territory: str) -> list[tuple[str, dict]]:
 
 def get_zone(territory: str, zone: str) -> dict:
     return get_territory(territory).get("zones", {}).get(zone, {})
+
+
+def walk_loops(zone: str) -> list[dict]:
+    """Drive routes for a zone, in driving order. Empty for zones without one
+    (transition/partner/future zones deliberately have none)."""
+    return WALK_LOOPS.get(zone, [])
 
 
 def category_baseline(category: str) -> dict:

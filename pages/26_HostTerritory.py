@@ -31,7 +31,7 @@ from services.pipeline_service import create_opportunity, get_all_opportunities
 from services.host_territory_service import (
     FACTORS, CATEGORY_BASELINES, GRADES,
     get_territory, get_zone, list_territories, list_zones,
-    rank_candidates, research_prompt, to_host_pipeline_row,
+    rank_candidates, research_prompt, to_host_pipeline_row, walk_loops,
 )
 
 st.set_page_config(
@@ -107,6 +107,26 @@ with tab_map:
                 st.markdown(
                     "**Best host categories:** "
                     + ", ".join(info.get("target_categories", []))
+                )
+
+            # Walk loops — door-by-door drive routes with a tick-off
+            # checklist for a van day. Checkbox state lives in the session
+            # only; the pipeline stays the book of record for real outcomes.
+            for loop in walk_loops(zone_name):
+                st.markdown(f"**{loop['name']}**")
+                st.caption(loop["note"])
+                done = 0
+                for i, (stop, addr, note) in enumerate(loop["stops"]):
+                    key = f"walk::{zone_name}::{loop['name']}::{i}"
+                    label = f"{stop} — {addr}"
+                    if note:
+                        label += f"  \n:gray[{note}]"
+                    if st.checkbox(label, key=key):
+                        done += 1
+                st.caption(
+                    f"{done}/{len(loop['stops'])} doors walked. Log outcomes "
+                    "as deals on the Host Pipeline page — this checklist "
+                    "resets when the session ends."
                 )
 
 
