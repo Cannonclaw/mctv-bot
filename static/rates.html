@@ -3,23 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Build your own MCTV indoor billboard quote in about a minute. Five flat monthly rates from $350 for 10 screens up to $2,000 for the whole 125+ screen network across Oxford, Tupelo and Starkville.">
+<link rel="canonical" href="https://mctvofms.com/rate-quote/">
 <title>MCTV Elite Advertising — Rate Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap">
 <style>
   :root{
-    --navy:#0a1220;
-    --navy2:#121f33;
-    --gold:#d4a017;
-    --gold-light:#e8b923;
-    --ink:#1a2533;
-    --mut:#5a6a7a;
-    --line:#e2e8f0;
-    --bg:#f7f8fa;
+    --navy:#00377e;
+    --navy2:#002a5e;
+    --gold:#c9a227;
+    --gold-light:#e7ce8a;
+    --ink:#2a2a2a;
+    --mut:#5a5a5a;
+    --line:#e4dfd3;
+    --bg:#faf6ef;
     --card:#ffffff;
     --green:#15803d;
     --red:#b91c1c;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px}
+  body{font-family:'Work Sans','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px}
+    .logo,.pagetitle,h1,h2,h3{font-family:'Playfair Display',Georgia,serif}
   .wrap{max-width:1080px;margin:0 auto;padding:12px 16px 40px}
 
   /* HEADER */
@@ -272,10 +278,10 @@
     .noprint,.card.noprint,button,.tabs,.chips,details,.prepay,.termopt,input{display:none!important}
     .printonly{display:block!important}
     .wrap{max-width:100%;padding:0}
-    header.hero{background:#0a1220!important;border-radius:0;padding:16px 18px;margin-bottom:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    #summary .card{border:2px solid #0a1220;padding:14px}
+    header.hero{background:#00377e!important;border-radius:0;padding:16px 18px;margin-bottom:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #summary .card{border:2px solid #00377e;padding:14px}
     .statrow{grid-template-columns:repeat(4,1fr)}
-    footer.contact{background:#0a1220!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    footer.contact{background:#00377e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 </style>
 </head>
@@ -396,7 +402,7 @@
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
   <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.7</span></div>
-  <div><b>Creed Cannon</b> · 601-405-5054 · creed@mctvofms.com · mctvofms.com</div>
+  <div><b>Creed Cannon</b> · 601-201-8202 · creed@mctvofms.com · mctvofms.com</div>
 </footer>
 
 <div class="mobilebar noprint" id="mobileBar">
@@ -435,7 +441,7 @@ const CFG = {
   playsPerScreenMo: 1440,
   repName: "Creed Cannon",
   repEmail: "creed@mctvofms.com",
-  repPhone: "601-405-5054",
+  repPhone: "601-201-8202",
   website: "www.mctvofms.com",
   quoteValidDays: 30,
   submitUrl: "https://dtapevlfnekzepbtlabj.supabase.co/functions/v1/quote-submit",
@@ -448,7 +454,9 @@ const CFG = {
 const PACKAGES = [
   { key: "p10", name: "10 Screens", screens: 10, monthly: 350, plays: "≈15,000 ad plays/mo" },
   { key: "p20", name: "20 Screens", screens: 20, monthly: 500, plays: "≈30,000 ad plays/mo" },
-  { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" }
+  { key: "p40", name: "40 Screens", screens: 40, monthly: 800, plays: "≈60,000 ad plays/mo" },
+  { key: "p75", name: "75 Screens", screens: 75, monthly: 1300, plays: "≈110,000 ad plays/mo", popular: true },
+  { key: "p125", name: "125+ Screens", screens: 125, monthly: 2000, plays: "≈180,000+ ad plays/mo" }
 ];
 
 // Venue types (for rate calculation)
@@ -644,7 +652,7 @@ $('qvalid').textContent = 'through ' + validUntil.toLocaleDateString('en-US',{mo
 function renderPackages(){
   $('pkgGrid').innerHTML = PACKAGES.map((p,i)=>`
     <div class="pkg ${selPkg===p.key?'sel':''}" onclick="pickPkg('${p.key}')">
-      ${i===1 ? '<div class="popular">MOST POPULAR</div>' : ''}
+      ${p.popular ? '<div class="popular">MOST POPULAR</div>' : ''}
       <div class="pname">${p.name}</div>
       <div class="pprice">${fmt$(p.monthly)}<small>/mo</small></div>
       <div class="pplays">${p.plays}</div>
@@ -830,15 +838,15 @@ function showComparison(){
   container.innerHTML = `
     <div style="background:white;border-radius:14px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <h2 style="margin:0;color:#0a1220;font-size:18px">Compare Options</h2>
-        <button onclick="closeComparison()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
+        <h2 style="margin:0;color:#00377e;font-size:18px">Compare Options</h2>
+        <button onclick="closeComparison()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a5a5a">×</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px">
+        <div style="border:1px solid #e4dfd3;border-radius:10px;padding:14px">
           <h3 style="margin:0 0 10px;font-size:15px">📦 Network Package</h3>
           <div id="cmp-pkg"></div>
         </div>
-        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px">
+        <div style="border:1px solid #e4dfd3;border-radius:10px;padding:14px">
           <h3 style="margin:0 0 10px;font-size:15px">📍 Custom Venues</h3>
           <div id="cmp-custom"></div>
         </div>
@@ -855,8 +863,8 @@ function showComparison(){
     const p = PACKAGES.find(x => x.key === selPkg);
     pkgEl.innerHTML = `<div style="font-size:17px;font-weight:700">${p.name}</div>
       <div style="font-size:24px;font-weight:800;margin:6px 0">${fmt$(p.monthly)}/mo</div>
-      <div style="color:#5a6a7a;font-size:13px">Territories: ${[...selTerr].map(t=>MARKETS[t].label).join(', ') || 'Any'}</div>`;
-  } else pkgEl.innerHTML = `<div style="color:#5a6a7a;font-style:italic">No package selected</div>`;
+      <div style="color:#5a5a5a;font-size:13px">Territories: ${[...selTerr].map(t=>MARKETS[t].label).join(', ') || 'Any'}</div>`;
+  } else pkgEl.innerHTML = `<div style="color:#5a5a5a;font-style:italic">No package selected</div>`;
 
   const custEl = container.querySelector('#cmp-custom');
   let custFinal = null, custScr = 0;
@@ -874,14 +882,14 @@ function showComparison(){
       fin = tot - disc;
     }
     custFinal = fin; custScr = scr;
-    let footer = `<div style="border-top:1px solid #e2e8f0;margin-top:8px;padding-top:8px">`;
+    let footer = `<div style="border-top:1px solid #e4dfd3;margin-top:8px;padding-top:8px">`;
     if (disc) {
-      footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#5a6a7a"><span>List total</span><span>${fmt$(tot)}/mo</span></div>`;
+      footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#5a5a5a"><span>List total</span><span>${fmt$(tot)}/mo</span></div>`;
       footer += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#15803d;font-weight:700"><span>Volume discount (${CFG.volumeDiscountPct}% — ${CFG.volumeDiscountScreens}+ screens)</span><span>−${fmt$(disc)}</span></div>`;
     }
     footer += `<div style="display:flex;justify-content:space-between;font-weight:800;margin-top:4px"><span>Total</span><span>${fmt$(fin)}/mo · ${scr} screens</span></div></div>`;
     custEl.innerHTML = html + footer;
-  } else custEl.innerHTML = `<div style="color:#5a6a7a;font-style:italic">No custom venues selected</div>`;
+  } else custEl.innerHTML = `<div style="color:#5a5a5a;font-style:italic">No custom venues selected</div>`;
 
   const tipEl = container.querySelector('#cmp-tip');
   if (custFinal != null) {
@@ -1006,9 +1014,9 @@ async function sendDecision(decision){
   // not the server ever heard about it. The email is the real fallback, so say
   // which one actually happened.
   bn.innerHTML = `
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:8px">
+    <div style="background:#f8fafc;border:1px solid #e4dfd3;border-radius:10px;padding:14px;margin-top:8px">
       <div style="font-size:15px;font-weight:700;margin-bottom:4px">${logged ? 'Response recorded' : 'Sending your response by email'}</div>
-      <div style="font-size:13px;color:#5a6a7a">${logged
+      <div style="font-size:13px;color:#5a5a5a">${logged
         ? 'An email is opening. Feel free to add any feedback before sending.'
         : "We couldn't reach our server, so your response is going by email instead. Please send the message that just opened."}</div>
     </div>`;
@@ -1058,7 +1066,7 @@ function openAgreement(q){
     // entirely — so the one screen the client actually signs on hid the gap.
     ? `${PACKAGES.find(p => p.key === selPkg).name} Network Package — ${selTerr.size ? [...selTerr].map(t=>MARKETS[t].label.replace(' Territory','').replace(' / Golden Triangle','')).join(', ') : 'territories to be confirmed with your rep'}`
     : `${selVenues.size} hand-picked location${selVenues.size>1?'s':''} (${q.screens} screens)`;
-  const row = (l, v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:13.5px"><span style="color:#5a6a7a">${l}</span><b style="text-align:right">${v}</b></div>`;
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #e4dfd3;font-size:13.5px"><span style="color:#5a5a5a">${l}</span><b style="text-align:right">${v}</b></div>`;
   const ov = document.createElement('div');
   ov.id = 'agOverlay';
   ov.className = 'ag-overlay';
@@ -1066,13 +1074,13 @@ function openAgreement(q){
     <div class="ag-box" id="agBox">
       <div class="ag-head">
        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <h2 style="margin:0;color:#0a1220;font-size:18px">Advertising Agreement Request</h2>
-        <button onclick="closeAgreement()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a6a7a">×</button>
+        <h2 style="margin:0;color:#00377e;font-size:18px">Advertising Agreement Request</h2>
+        <button onclick="closeAgreement()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#5a5a5a">×</button>
        </div>
-       <div style="font-size:12.5px;color:#5a6a7a">Quote ${qref} · MCTV Elite Advertising</div>
+       <div style="font-size:12.5px;color:#5a5a5a">Quote ${qref} · MCTV Elite Advertising</div>
       </div>
       <div class="ag-body">
-      <div style="font-size:12.5px;font-weight:700;color:#0a1220;margin:8px 0 6px">Your details</div>
+      <div style="font-size:12.5px;font-weight:700;color:#00377e;margin:8px 0 6px">Your details</div>
       <div class="grid2" style="margin-bottom:12px">
         <div><label class="f">Business name *</label><input type="text" id="agBiz" placeholder="Business name"></div>
         <div><label class="f">Contact name *</label><input type="text" id="agName" placeholder="First &amp; last name"></div>
@@ -1084,11 +1092,11 @@ function openAgreement(q){
       ${row('Term', termMonths + ' months' + (q.bonusMonths ? ` + ${q.bonusMonths} FREE (prepay)` : ''))}
       ${row('Est. impressions / 4 wks', fmtN(Math.round(q.impr)))}
       <div style="display:flex;align-items:center;gap:10px;margin:12px 0 4px">
-        <label style="font-size:13px;font-weight:600;color:#5a6a7a;flex:none">Requested start date</label>
-        <input type="date" id="agStart" value="${firstOfNextMonth()}" min="${new Date().toISOString().slice(0,10)}" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+        <label style="font-size:13px;font-weight:600;color:#5a5a5a;flex:none">Requested start date</label>
+        <input type="date" id="agStart" value="${firstOfNextMonth()}" min="${new Date().toISOString().slice(0,10)}" style="padding:8px 10px;border:1px solid #e4dfd3;border-radius:8px;font-size:14px">
       </div>
-      <details open style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12.5px;line-height:1.55;color:#3d4a5a">
-        <summary style="cursor:pointer;font-weight:700;color:#0a1220;font-size:13px">Terms (plain English — 30-second read)</summary>
+      <details open style="background:#f8fafc;border:1px solid #e4dfd3;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12.5px;line-height:1.55;color:#3d4a5a">
+        <summary style="cursor:pointer;font-weight:700;color:#00377e;font-size:13px">Terms (plain English — 30-second read)</summary>
         <ol style="margin:8px 0 2px 16px">
           <li>MCTV runs your ad on the selected screens for the term above, billed monthly at the monthly total shown.</li>
           <li>6-month minimum term. After the minimum, either side may cancel with 30 days' written notice. 12-month terms lock your quoted rate.</li>
@@ -1097,13 +1105,13 @@ function openAgreement(q){
           <li>First invoice is sent after you approve your creative; payment is due at the start of each monthly cycle.</li>
           <li>This request becomes a binding agreement when countersigned by MCTV — we countersign and send your copy, typically within 1 business day.</li>
         </ol>
-        <div style="margin-top:6px;color:#5a6a7a">MCTV Digital, Inc. d/b/a MCTV Elite Advertising · ${CFG.repName} · ${CFG.repPhone}</div>
+        <div style="margin-top:6px;color:#5a5a5a">MCTV Digital, Inc. d/b/a MCTV Elite Advertising · ${CFG.repName} · ${CFG.repPhone}</div>
       </details>
       <input type="text" id="agWebsite" name="company_website" class="ag-hp" readonly autocomplete="off" tabindex="-1" aria-hidden="true">
-      <label style="display:block;font-size:12.5px;font-weight:600;color:#5a6a7a;margin:10px 0 4px">Sign by typing your full name</label>
-      <input type="text" id="agSig" placeholder="Your full legal name" style="width:100%;padding:11px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:'Segoe Script','Brush Script MT',cursive">
+      <label style="display:block;font-size:12.5px;font-weight:600;color:#5a5a5a;margin:10px 0 4px">Sign by typing your full name</label>
+      <input type="text" id="agSig" placeholder="Your full legal name" style="width:100%;padding:11px 12px;border:1px solid #e4dfd3;border-radius:8px;font-size:16px;font-family:'Segoe Script','Brush Script MT',cursive">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#3d4a5a;margin:10px 0 14px;line-height:1.45">
-        <input type="checkbox" id="agAuth" style="width:16px;height:16px;margin-top:1px;accent-color:#d4a017;flex:none">
+        <input type="checkbox" id="agAuth" style="width:16px;height:16px;margin-top:1px;accent-color:#c9a227;flex:none">
         I'm authorized to enter this agreement on behalf of my business, and the details above are correct.
       </label>
       </div>
@@ -1206,7 +1214,7 @@ async function submitAgreement(q){
     document.getElementById('agBox').innerHTML = `
       <div class="ag-body" style="text-align:center;padding:22px">
         <div style="font-size:42px;line-height:1">🤝</div>
-        <h2 style="color:#0a1220;font-size:20px;margin:10px 0 4px">You're on the board!</h2>
+        <h2 style="color:#00377e;font-size:20px;margin:10px 0 4px">You're on the board!</h2>
         <div style="font-size:14px;color:#3d4a5a;line-height:1.6;max-width:440px;margin:0 auto">
           Agreement request <b>${ref}</b> is in. Here's what happens next:<br><br>
           <b>1.</b> ${CFG.repName} countersigns &amp; emails your copy (typically within 1 business day)<br>
