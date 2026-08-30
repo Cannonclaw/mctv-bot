@@ -183,7 +183,7 @@ def countersign_email(q: dict) -> tuple[str, str]:
         # already read (calculator CFG repName/repPhone/repEmail).
         "Creed Cannon",
         "MCTV Elite Advertising (MCTV Digital, Inc.)",
-        "601-405-5054 | creed@mctvofms.com",
+        "601-201-8202 | creed@mctvofms.com",
     ]
     subject = f"Countersigned - your MCTV agreement {ref}".strip()
     return subject, "\n".join(lines)
