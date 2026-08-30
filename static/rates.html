@@ -213,9 +213,10 @@
 
   /* QUOTE-CARD MODE (?print=1 on a quote link — clean client-facing card, no builder) */
   body.quotecard #step1,body.quotecard #step2,body.quotecard #step3,
-  body.quotecard #compareCard,body.quotecard #howRates,body.quotecard .mobilebar{display:none!important}
+  body.quotecard #compareCard,body.quotecard #howRates{display:none!important}
   body.quotecard .printonly{display:block}
-  body.quotecard.has-mobilebar{padding-bottom:0}
+  /* card mode keeps the sticky bar (it carries the Accept & Sign CTA), so the
+     <=640px body.has-mobilebar padding above must stand — do not zero it here */
 
   /* AGREEMENT MODAL
      Sized to the VISIBLE viewport, not the layout one. iOS resolves vh — and
@@ -417,7 +418,7 @@
     <div class="mb-amt" id="mbAmt">$0/mo</div>
     <div class="mb-sub" id="mbSub"></div>
   </div>
-  <button onclick="document.getElementById('summary').scrollIntoView({behavior:'smooth'})">Review quote ↓</button>
+  <button id="mbBtn">Review quote ↓</button>
 </div>
 
 </div>
@@ -780,15 +781,28 @@ function recalc(){
     $('bonusNote').style.display='none';
     $('btnAccept').disabled = true;
     $('btnDecline').disabled = true;
-    $('mobileBar').classList.remove('on');
-    document.body.classList.remove('has-mobilebar');
+    hideMobileBar();
     return;
   }
 
+  // Phones are the primary surface for a texted quote link. In card mode the builder
+  // is hidden and Accept sits ~1,000px down, so the bar carries the signing CTA there
+  // instead of "review the quote" — card mode used to have no persistent action at all.
+  const cardMode = document.body.classList.contains('quotecard');
   $('mbAmt').textContent = fmt$(q.monthly) + '/mo';
-  $('mbSub').textContent = q.screens + ' screens' + (q.discount ? ' · volume discount applied' : '');
-  $('mobileBar').classList.add('on');
-  document.body.classList.add('has-mobilebar');
+  $('mbSub').textContent = cardMode
+    ? q.screens + ' screens · ' + termMonths + '-month term'
+    : q.screens + ' screens' + (q.discount ? ' · volume discount applied' : '');
+  const mbBtn = $('mbBtn');
+  mbBtn.textContent = cardMode ? '✓ Accept & Sign' : 'Review quote ↓';
+  mbBtn.onclick = cardMode
+    ? () => sendDecision('accept')
+    : () => $('summary').scrollIntoView({behavior:'smooth'});
+  if(submitted){ hideMobileBar(); }   // same latch that keeps Accept disabled
+  else {
+    $('mobileBar').classList.add('on');
+    document.body.classList.add('has-mobilebar');
+  }
   
   let html = '<table class="breakdown"><tr><th>Item</th><th>Details</th><th>Screens</th><th>Per 4 Wks</th></tr>';
   q.lines.forEach(l => {
@@ -1004,6 +1018,7 @@ async function sendDecision(decision){
   // Decline path — record + optional feedback email
   $('btnAccept').disabled = true;
   $('btnDecline').disabled = true;
+  hideMobileBar();
   let logged = false;
   if(CFG.submitUrl){
     try{
@@ -1214,6 +1229,7 @@ async function submitAgreement(q){
     submitted = true;                      // latch: recalc() must not re-arm Accept
     $('btnAccept').disabled = true;
     $('btnDecline').disabled = true;
+    hideMobileBar();
     const bn = $('bonusNote');
     bn.style.display = 'block';
     bn.style.color = 'var(--green)';
@@ -1293,6 +1309,11 @@ function applyParams(){
   }
 }
 
+function hideMobileBar(){
+  $('mobileBar').classList.remove('on');
+  document.body.classList.remove('has-mobilebar');
+}
+
 // Quote-card mode: a ?print=1 quote link renders as a clean client-facing quote card
 const DEFAULT_PAGESUB = document.querySelector('.pagesub').textContent;
 function enterCardMode(){
@@ -1311,6 +1332,7 @@ function exitCardMode(){
   document.body.classList.remove('quotecard');
   document.querySelector('.pagesub').textContent = DEFAULT_PAGESUB;
   const b = document.getElementById('cardModeBar'); if(b) b.remove();
+  recalc();   // repoints the sticky bar's button back at "Review quote ↓"
   history.replaceState(null, '', location.pathname + location.search.replace(/[?&]print=1/,'').replace(/^&/,'?'));
   $('step2').scrollIntoView({behavior:'smooth'});
 }
