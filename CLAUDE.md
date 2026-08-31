@@ -38,7 +38,8 @@ pages/                          # 13 internal + 8 portal pages
   14_Pipeline.py                # Sales pipeline (stages, deals, enrichment, nurture,
                                 #   forecast, follow-up SLA, rep scoreboard)
   15_Prospector.py              # Outbound prospector (AI prospect lists, batch add)
-  20_HostPipeline.py            # Host venue pipeline (deal_type='host', own stages)
+  20_HostPipeline.py            # Host venue pipeline (deal_type='host', own
+                                #   stages, creative-refresh due list)
   21_RepDashboard.py            # Per-rep MRR, commission accrual, payout ledger
   24_Loop_Inventory.py          # Screen inventory (what plays where) + loop length
                                 #   per screen, reconciliation, dark content
@@ -158,6 +159,14 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
 - **Follow-up SLA** (`FOLLOW_UP_SLA` in pipeline_service): every stage entry
   auto-schedules the next action (e.g. proposal_sent → follow up in 2 days).
   `get_deals_needing_action()` flags overdue, unscheduled, and SLA-stale deals.
+- **Host creative refresh** (migration 026): `last_creative_refresh` DATE on
+  host deals. `HOST_REFRESH_SLA` keys the 365-day cadence on stage `live`
+  only — an unsigned venue has no creative to refresh — and
+  `get_hosts_needing_refresh()` returns due venues annotated with
+  `_refresh_reason` (NULL reads as "Never refreshed", not a huge overdue
+  count). Separate from `get_deals_needing_action()`, which skips `won`/`lost`
+  and knows nothing about host stages. Surfaced on `20_HostPipeline.py` — set
+  the date by hand once new creative is published.
 - **Rep attribution**: shared team login means no per-user auth — the "Working as"
   selector on the Pipeline page stamps `performed_by` on all activity, feeding
   `get_rep_scoreboard()` (touches, $/touch, MRR won, overdue counts per rep).
@@ -311,7 +320,8 @@ applied by hand in the Supabase SQL editor):
 - `sms_messages` — SMS history
 - `sms_opt_ins` — SMS consent tracking
 - `pipeline_opportunities` — sales + host pipeline deals (stages, monthly_value,
-  follow-up dates, enrichment columns; see migration 008 + 013 + 023)
+  follow-up dates, enrichment columns, host creative-refresh date; see
+  migration 008 + 013 + 023 + 026)
 - `pipeline_activity` — per-deal activity log (stage moves, calls, notes,
   `performed_by` rep attribution)
 - `screen_loops` — per-license measured loop length + item count, one row per

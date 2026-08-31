@@ -6,9 +6,11 @@ output/
 data/leads/*
 data/logos/*
 data/venue_events/*
+data/pipeline/*
 !data/leads/.gitkeep
 !data/logos/.gitkeep
 !data/venue_events/.gitkeep
+!data/pipeline/.gitkeep
 config/qb_tokens.json
 .claude/
 TRADE_SECRETS.md
