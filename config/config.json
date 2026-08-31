@@ -159,6 +159,12 @@
       "screens": 1,
       "status": "expanding",
       "description": "MCTV is growing into West Point with initial screen placements."
+    },
+    "Mid-South Expansion": {
+      "screens": 0,
+      "status": "target",
+      "state": "MS/TN",
+      "description": "Territory added by the August 2026 franchise amendment: Senatobia, part of Batesville plus all of Sardis Lake, and the Bartlett, Lakeland, and Germantown Tennessee suburbs. Flip status to 'expanding' when ready to announce in proposals and media kits."
     }
   },
   "pricing": {
