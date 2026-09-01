@@ -3,13 +3,15 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Four routes, all public, all GET/HEAD:
+Five routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
     /board/events.json  the schedule the board polls (venue_events_service)
     /mdot               the MDOT sponsorship mockup (static/mdot.html), so it
                         can be texted as a link instead of an HTML attachment
+    /mslive             the Mississippi LIVE Weather partnership one-pager
+                        (static/mslive.html), same reason as /mdot
 
 Streamlit exposes no routing API, so this reaches into the web server it
 boots and inserts the routes ahead of Streamlit's catch-all (which
@@ -53,12 +55,16 @@ BOARD_DATA_PATH = "/board/events.json"
 MDOT_PATH = "/mdot"
 MDOT_FILE = STATIC_DIR / "mdot.html"
 
+MSLIVE_PATH = "/mslive"
+MSLIVE_FILE = STATIC_DIR / "mslive.html"
+
 # Plain HTML pages, path -> file. The JSON feed below is handled separately
 # because it is generated rather than read off disk.
 HTML_PAGES = {
     RATES_PATH: RATES_FILE,
     BOARD_PATH: BOARD_FILE,
     MDOT_PATH: MDOT_FILE,
+    MSLIVE_PATH: MSLIVE_FILE,
 }
 
 HTML_CACHE_CONTROL = "public, max-age=300"
@@ -176,6 +182,7 @@ def _install_tornado() -> None:
             (r"/board/?", PublicPageHandler),
             (r"/rates/?", PublicPageHandler),
             (r"/mdot/?", PublicPageHandler),
+            (r"/mslive/?", PublicPageHandler),
         ]
         router.add_rules(rules)
         # add_rules appends; Streamlit's catch-all is already in the list, so

@@ -115,6 +115,14 @@ assets/
 static/                         # Public pages served outside Streamlit
   rates.html                    # Self-serve rate calculator (GET /rates)
   board.html                    # Venue lobby feed board (GET /board)
+  mdot.html                     # MDOT traffic sponsorship mockup (GET /mdot)
+  mslive.html                   # Mississippi LIVE Weather partnership one-pager (GET /mslive)
+
+handoffs/                       # Pitch packages and design handoffs (internal briefs
+                                #   sit next to the public page they support)
+  mdot-traffic-partnership/     # PITCH-BRIEF.md for the /mdot mockup
+  mslive-weather-partnership/   # PITCH-BRIEF.md for the /mslive one-pager
+  rafters-oxford/               # Photo packet handoff for design
 
 scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)
@@ -245,6 +253,24 @@ the lobby: what is happening now, what is next, which room.
   unknown slug still renders, titled off the slug.
 - `python scripts/seed_venue_events.py` fills the local file with a sample day;
   migration 025 seeds the same thing server-side (`created_by = 'sample'`).
+
+### Pitch Pages (public, texted as links)
+Concept pages for a specific prospect live in `static/` and are served by
+`server_routes.py` alongside `/rates` and `/board`, so a rep can text a link
+instead of an HTML attachment. Each one has an internal-only
+`handoffs/<slug>/PITCH-BRIEF.md` next to it (contact, what is agreed, what to
+say, what not to say). The page is safe to forward; the brief is not.
+
+- `GET /mdot` — MDOT road-conditions sponsorship mockup (`static/mdot.html`).
+- `GET /mslive` — Mississippi LIVE Weather (Matt Laubhan) partnership
+  one-pager (`static/mslive.html`): the plain-English version of the two-page
+  50/50 agreement — what each side gets, what a sponsor buys, how it goes live.
+  Facts on it must match the agreement; the brief carries the guardrails
+  (never "on the network" until Matt approves the board, never a Baron price,
+  reach is modeled and shown as ranges).
+- Adding one: drop the HTML in `static/`, add a `<NAME>_PATH`/`_FILE` pair and
+  an `HTML_PAGES` entry plus a Tornado rule in `server_routes.py`, extend
+  `scripts/route_check.py`, and run it (`python scripts/route_check.py`).
 
 ### Contract System
 5 contract types, each with dedicated clause sets:
