@@ -176,18 +176,31 @@ came from a partial paste and was wrong.)
 Verkada cameras are cloud-managed and do not hand out an RTSP address in the normal setup, so do not
 ask for one; ask for the share link or the API.
 
-**Status, Sep 1 (evening):** Creed spoke to Dylan by phone. **The airport is sending MCTV its own
-Verkada share link.** The email draft below was written before that call and is no longer needed;
-it is still in Outlook Drafts and can be discarded. Questions 2 to 5 below are still worth asking
-when the link arrives, in one reply.
+**Status, Sep 1, 3:33 PM CT: the link is in hand.** Creed spoke to Dylan by phone; Dylan then
+emailed the embed ("KTUP Tower Camera Embed Code", cc Brandon):
+
+- `https://vauth.command.verkada.com/__v/tupeloair/embed/html/4c12eb18-fde6-49a4-912d-e675e9bacdc3/`
+- Configured on the Verkada side and **whitelisted for http://mctvofms.com/**. "If you end up using a
+  different URL, subdomain, or another site for it, just let me know and I can add that."
+- **Does not expire.** Width and height in his snippet are defaults; size it however we need.
+- "If you run into any issues getting it to load, let me know and I can check the whitelist."
+
+**What the whitelist means.** Verkada serves the picture only to pages on mctvofms.com. So the
+tower-cam board lives at mctvofms.com (next to `mslive-weather.html`), the demo player loads it from
+there, and the n-compass playlist item points there too. The board file refuses to load the camera
+from any other host and says why on a chip (`?force=1` overrides for a test). The `/mslive/looks`
+page stays drawn on purpose: it is on onrender.com and is public. Ask Dylan to add `https://` and
+`www.` forms of the domain so a redirect never breaks it (in the reply below).
+
+The pre-call email draft is superseded; it is still in Outlook Drafts and can be discarded.
 
 **When the link lands: the board is already built.** `towercam-board.html` in this folder is the
 1920×1080 tower-cam board for the player: the camera full-bleed, Matt's Baron "Right Now" and
 "7-Day" widgets in cards left and right, his logo in the header, the airport credit and the sponsor
 slot in the footer, MCTV bug bottom-right. To use it:
 
-1. Open the file, paste the Verkada link into `CAM_URL` near the bottom (or open it as
-   `towercam-board.html?cam=<link>`), and drop it on the office demo player next to the Baron board.
+1. The link is already in `CAM_URL`. Upload the file to mctvofms.com as `mslive-towercam.html`
+   and point the office demo player at that URL (a local file will show the stand-in sky, by design).
 2. `?sponsor=Watkins%20Roofing` fills the sponsor slot. Until a link is set, a drawn sky stands in
    and a small chip says so; the drawn sky also sits behind the camera frame permanently, so a
    camera outage shows sky, not black.

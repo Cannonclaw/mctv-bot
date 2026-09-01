@@ -11,12 +11,16 @@
     The tower-cam board. One 1920x1080 page for the player.
 
     The picture is the Tupelo Regional Airport tower cam, a Verkada cloud camera,
-    framed through a share link the airport issues to MCTV. Set it ONE of two ways:
-      1. paste it into CAM_URL below, or
-      2. open the page as  towercam-board.html?cam=<the link>
-    Until a link is set, a drawn sky and runway stand in and a small chip says so.
-    The same drawn scene sits behind the camera frame at all times, so if the
-    camera page ever fails to load the wall shows sky, not black.
+    framed through the share link the airport issued to MCTV on Sep 1, 2026
+    (Dylan Meador). It does not expire. It is WHITELISTED TO mctvofms.com: Verkada
+    only serves it when the page framing it is on that domain. So this board must
+    be hosted at mctvofms.com (next to mslive-weather.html) and the player must
+    load it from there. Opened from a local file or any other host, the board
+    shows the drawn sky and a chip saying why; add ?force=1 to try the camera
+    anyway. Another domain needs Dylan to add it on the Verkada side first.
+
+    The drawn scene sits behind the camera frame at all times, so if the camera
+    page ever fails to load the wall shows sky, not black.
 
     Optional: ?sponsor=Your%20Business  fills the sponsor slot.
   */
@@ -111,17 +115,23 @@
 
 <script>
 (function () {
-  // ── 1. The camera link. Paste the airport's Verkada share link between the quotes,
-  //       or open the page with ?cam=<link>. Leave empty and the drawn sky stands in.
-  var CAM_URL = "";
+  // ── 1. The camera link: the airport's Verkada share for MCTV (issued Sep 1, 2026,
+  //       whitelisted to mctvofms.com, no expiry). ?cam=<link> overrides it.
+  var CAM_URL = "https://vauth.command.verkada.com/__v/tupeloair/embed/html/4c12eb18-fde6-49a4-912d-e675e9bacdc3/";
+  var WHITELISTED_HOSTS = ["mctvofms.com", "www.mctvofms.com"];
 
   var q = new URLSearchParams(location.search);
   var cam = (q.get("cam") || CAM_URL || "").trim();
   var camEl = document.getElementById("cam");
   var chip = document.getElementById("chip");
   var ok = /^https:\/\/[a-z0-9.-]*verkada\.com\//i.test(cam);
-  if (ok) { camEl.src = cam; camEl.hidden = false; }
-  else { chip.hidden = false; }
+  var hostOk = WHITELISTED_HOSTS.indexOf(location.hostname) > -1 || q.get("force") === "1";
+  if (ok && hostOk) { camEl.src = cam; camEl.hidden = false; }
+  else {
+    chip.textContent = !ok ? "CAMERA LINK NOT SET \u00b7 drawn sky standing in"
+      : "CAMERA IS WHITELISTED TO mctvofms.com \u00b7 open this board from there (or add ?force=1)";
+    chip.hidden = false;
+  }
 
   var sponsor = (q.get("sponsor") || "").trim();
   if (sponsor) document.getElementById("sponsor").textContent = sponsor.slice(0, 40);
