@@ -168,13 +168,24 @@ sells, he has spent nothing and his brand rode 125+ screens across North Mississ
 
 **Text to Matt:**
 
-> {{TEXT_TO_MATT}}
+> Matt, Creed here. I put the weather deal on one page you can read on your phone in two minutes: https://mctv-bot.onrender.com/mslive. Your name stays yours, nothing airs without your OK, and one phone call pulls it. If it reads right, a reply or a photo of the signed page is all I need. Would love it up for the Oxford home opener on the 12th.
 
 **Email (third touch, agreement PDF re-attached):**
 
-> Subject: {{EMAIL_SUBJECT}}
+> Subject: Mississippi LIVE Weather on MCTV: the one-page version
 >
-> {{EMAIL_BODY}}
+> Matt,
+> 
+> Good seeing you at the studio last month. The two-page agreement is in your inbox, so I boiled it down to one page you can read on your phone: https://mctv-bot.onrender.com/mslive
+> 
+> It says what the agreement says, plainer. Your name stays yours. You approve every sponsor and the look of the board before any public screen shows it. One phone call pulls anything, same day. Sponsors are sold on our paper, and half of what we actually collect is yours. If nothing sells, you have spent nothing and your brand still ran on 125-plus screens.
+> 
+> The board is built and sitting on our office demo screen, waiting on your eyes. Hear from you by Thursday and we can have it up before Saturday's opener. Either way, before the Oxford home opener on the 12th.
+> 
+> A reply or a photo of the signed page is all I need.
+> 
+> Creed
+> 601-201-8202
 
 ## Files
 
