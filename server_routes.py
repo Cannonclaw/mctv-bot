@@ -3,7 +3,7 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Six routes, all public, all GET/HEAD:
+Seven routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
@@ -14,6 +14,9 @@ Six routes, all public, all GET/HEAD:
                         (static/mslive.html), same reason as /mdot
     /mslive/looks       five alternate looks for the co-branded weather board
                         (static/mslive-looks.html)
+    /mslive/towercam    the Tupelo tower-cam weather board for the player
+                        (static/mslive-towercam.html); the airport's camera is
+                        domain-whitelisted, so it must be served from here
 
 Streamlit exposes no routing API, so this reaches into the web server it
 boots and inserts the routes ahead of Streamlit's catch-all (which
@@ -63,6 +66,9 @@ MSLIVE_FILE = STATIC_DIR / "mslive.html"
 MSLIVE_LOOKS_PATH = "/mslive/looks"
 MSLIVE_LOOKS_FILE = STATIC_DIR / "mslive-looks.html"
 
+MSLIVE_TOWERCAM_PATH = "/mslive/towercam"
+MSLIVE_TOWERCAM_FILE = STATIC_DIR / "mslive-towercam.html"
+
 # Plain HTML pages, path -> file. The JSON feed below is handled separately
 # because it is generated rather than read off disk.
 HTML_PAGES = {
@@ -71,6 +77,7 @@ HTML_PAGES = {
     MDOT_PATH: MDOT_FILE,
     MSLIVE_PATH: MSLIVE_FILE,
     MSLIVE_LOOKS_PATH: MSLIVE_LOOKS_FILE,
+    MSLIVE_TOWERCAM_PATH: MSLIVE_TOWERCAM_FILE,
 }
 
 HTML_CACHE_CONTROL = "public, max-age=300"
@@ -189,6 +196,7 @@ def _install_tornado() -> None:
             (r"/rates/?", PublicPageHandler),
             (r"/mdot/?", PublicPageHandler),
             (r"/mslive/looks/?", PublicPageHandler),
+            (r"/mslive/towercam/?", PublicPageHandler),
             (r"/mslive/?", PublicPageHandler),
         ]
         router.add_rules(rules)

@@ -12,12 +12,13 @@
 
     The picture is the Tupelo Regional Airport tower cam, a Verkada cloud camera,
     framed through the share link the airport issued to MCTV on Sep 1, 2026
-    (Dylan Meador). It does not expire. It is WHITELISTED TO mctvofms.com: Verkada
-    only serves it when the page framing it is on that domain. So this board must
-    be hosted at mctvofms.com (next to mslive-weather.html) and the player must
-    load it from there. Opened from a local file or any other host, the board
-    shows the drawn sky and a chip saying why; add ?force=1 to try the camera
-    anyway. Another domain needs Dylan to add it on the Verkada side first.
+    (Dylan Meador). It does not expire. It is WHITELISTED BY DOMAIN on the Verkada
+    side: Verkada only serves it when the page framing it is on a domain the
+    airport has approved (mctvofms.com, and bot.mctvofms.com once Dylan adds it).
+    This board is served by the app at /mslive/towercam, so the player loads
+    https://bot.mctvofms.com/mslive/towercam. Opened from a local file or an
+    unapproved host, the board shows the drawn sky and a chip saying why; add
+    ?force=1 to try the camera anyway. A new domain needs Dylan first.
 
     The drawn scene sits behind the camera frame at all times, so if the camera
     page ever fails to load the wall shows sky, not black.
@@ -118,7 +119,7 @@
   // ── 1. The camera link: the airport's Verkada share for MCTV (issued Sep 1, 2026,
   //       whitelisted to mctvofms.com, no expiry). ?cam=<link> overrides it.
   var CAM_URL = "https://vauth.command.verkada.com/__v/tupeloair/embed/html/4c12eb18-fde6-49a4-912d-e675e9bacdc3/";
-  var WHITELISTED_HOSTS = ["mctvofms.com", "www.mctvofms.com"];
+  var WHITELISTED_HOSTS = ["mctvofms.com", "www.mctvofms.com", "bot.mctvofms.com", "mctv-bot.onrender.com"];
 
   var q = new URLSearchParams(location.search);
   var cam = (q.get("cam") || CAM_URL || "").trim();
@@ -129,7 +130,7 @@
   if (ok && hostOk) { camEl.src = cam; camEl.hidden = false; }
   else {
     chip.textContent = !ok ? "CAMERA LINK NOT SET \u00b7 drawn sky standing in"
-      : "CAMERA IS WHITELISTED TO mctvofms.com \u00b7 open this board from there (or add ?force=1)";
+      : "CAMERA IS WHITELISTED BY DOMAIN \u00b7 open this board at bot.mctvofms.com/mslive/towercam (or add ?force=1)";
     chip.hidden = false;
   }
 

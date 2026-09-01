@@ -118,6 +118,7 @@ static/                         # Public pages served outside Streamlit
   mdot.html                     # MDOT traffic sponsorship mockup (GET /mdot)
   mslive.html                   # Mississippi LIVE Weather partnership one-pager (GET /mslive)
   mslive-looks.html             # Five alternate looks for the weather board (GET /mslive/looks)
+  mslive-towercam.html          # Tupelo tower-cam weather board for the player (GET /mslive/towercam)
 
 handoffs/                       # Pitch packages and design handoffs (internal briefs
                                 #   sit next to the public page they support)
@@ -273,6 +274,12 @@ say, what not to say). The page is safe to forward; the brief is not.
   radar, clean, gameday) in one 16:9 frame with a look picker
   (`static/mslive-looks.html`). Sample readings; the tower-cam frame is drawn,
   not airport footage.
+- `GET /mslive/towercam` — the Tupelo tower-cam weather board itself, 1920×1080
+  for the player (`static/mslive-towercam.html`): the airport's Verkada camera
+  full-bleed behind Matt's Baron widgets. The camera share is whitelisted by
+  domain on the airport's side, so the player must load this URL from
+  bot.mctvofms.com; from any other host the board shows a drawn sky and says
+  why. The board is a demo-screen page until Matt and the airport approve it.
 - Adding one: drop the HTML in `static/`, add a `<NAME>_PATH`/`_FILE` pair and
   an `HTML_PAGES` entry plus a Tornado rule in `server_routes.py`, extend
   `scripts/route_check.py`, and run it (`python scripts/route_check.py`).
