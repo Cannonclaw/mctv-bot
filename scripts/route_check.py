@@ -3,7 +3,7 @@
 # or modification of this file is strictly prohibited.
 """Check that the public pages still route on the installed Streamlit.
 
-/rates, /board, /mdot and /mslive are not Streamlit pages. server_routes.install()
+/rates, /board, /mdot, /mslive and /mslive/looks are not Streamlit pages. server_routes.install()
 reaches into the private innards of whichever web server Streamlit is about to
 boot and inserts them ahead of its catch-all. requirements.txt pins only
 `streamlit>=1.40.0`, so any rebuild can resolve a newer Streamlit, and a
@@ -107,7 +107,8 @@ async def main() -> None:
     # Each marker is text that only that page carries; the doctypes differ in
     # case between board.html and mdot.html, so the pair doubles as a swap check.
     for path, marker in (("/board", b"<!DOCTYPE html"), ("/mdot", b"<!doctype html"),
-                         ("/mslive", b"Mississippi LIVE Weather")):
+                         ("/mslive", b"mslive one-pager v1"),
+                         ("/mslive/looks", b"mslive looks v1")):
         status, _, body = await fetch(app, path)
         check(f"{path} routes", status == 200 and APP_SHELL not in body and marker in body,
               f"bytes={len(body)}")

@@ -117,6 +117,7 @@ static/                         # Public pages served outside Streamlit
   board.html                    # Venue lobby feed board (GET /board)
   mdot.html                     # MDOT traffic sponsorship mockup (GET /mdot)
   mslive.html                   # Mississippi LIVE Weather partnership one-pager (GET /mslive)
+  mslive-looks.html             # Five alternate looks for the weather board (GET /mslive/looks)
 
 handoffs/                       # Pitch packages and design handoffs (internal briefs
                                 #   sit next to the public page they support)
@@ -268,6 +269,10 @@ say, what not to say). The page is safe to forward; the brief is not.
   Facts on it must match the agreement; the brief carries the guardrails
   (never "on the network" until Matt approves the board, never a Baron price,
   reach is modeled and shown as ranges).
+- `GET /mslive/looks` — five looks for the same board (broadcast, tower cam,
+  radar, clean, gameday) in one 16:9 frame with a look picker
+  (`static/mslive-looks.html`). Sample readings; the tower-cam frame is drawn,
+  not airport footage.
 - Adding one: drop the HTML in `static/`, add a `<NAME>_PATH`/`_FILE` pair and
   an `HTML_PAGES` entry plus a Tornado rule in `server_routes.py`, extend
   `scripts/route_check.py`, and run it (`python scripts/route_check.py`).

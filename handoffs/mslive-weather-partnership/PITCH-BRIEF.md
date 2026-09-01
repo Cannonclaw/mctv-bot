@@ -117,6 +117,65 @@ clinics and urgent care, tire and glass, outdoor/farm supply, lawn and pest.
 | 7 | Ready-to-post launch graphics for his socials ("find my forecast around town"). This is his half of the trade and it costs him one tap. | Creed | launch week |
 | 8 | Signature on the two-pager. A photo of it is fine. Chase it, but do not let it gate the build. | Swayze | week 1 |
 
+## Five looks for the board (`/mslive/looks`)
+
+A second page, same mechanism, for the "what could it look like" conversation:
+https://mctv-bot.onrender.com/mslive/looks. One 16:9 frame, five looks, a note under each.
+
+| # | Look | What it is | What it needs |
+|---|---|---|---|
+| 1 | Broadcast | The board as built: three panels, logo in the header, sponsor slot bottom-left. | Matt's approval. Runs on the demo screen today. |
+| 2 | Tower cam | The airport tower camera as the whole background, forecast and five-day strip laid over it. | The airport's OK and a direct camera feed (see below). |
+| 3 | Radar | Full-screen radar over North Mississippi, forecast card and Matt's heads-up on the right. | Its own board: Baron's radar widget will not render inside a frame. Natural bridge into the severe takeover. |
+| 4 | Clean | Light board for bright rooms: one big number, next six hours across the bottom. | Nothing new. A palette choice per venue type. |
+| 5 | Gameday | Saturday in four moments: tailgate, kickoff, fourth quarter, drive home, plus Matt's call. | An Oxford and a Starkville edition per home game. Sponsors ask for this one by name; one seat per market for the season. |
+
+All five keep the same four fixed things: Mississippi LIVE logo, the attribution line, the sponsor
+slot, the MCTV bug. The severe-weather takeover sits on top of every one of them.
+
+## The tower cam (Dylan's page) as a live feed
+
+**What exists.** Tupelo Regional Airport runs a live camera from the control tower at
+flytupelo.com/towercam ("watch live runway and ramp activity … with current field weather"). Dylan
+Meador rebuilt the page Aug 11 with Matt's three Baron widgets under the picture and a credit line
+to Mississippi LIVE Weather. His Aug 10 performance brief: 7,839 views Jan 1–Aug 10, ~35 a day,
+74 seconds average engagement (homepage: 19), 79% of visitors land on that page directly, 93% new
+to the site. People go looking for that picture and stay on it. The airport is an MCTV host venue
+(KTUP terminal screens, venue partner agreement signed Mar 18).
+
+**What we could not verify from here.** The sandbox this brief was written in cannot reach
+flytupelo.com, so the player behind the page (YouTube Live, an IP-camera relay such as IPCamLive or
+CamStreamer, a vendor HLS URL, or a still image on a timer) is unconfirmed. That is the first
+question for Dylan, and it decides the build:
+
+| If the page uses… | Then on our screens… |
+|---|---|
+| A direct HLS/RTSP stream from the camera (or a vendor URL the airport controls) | Best case. The board's HTML pulls the stream straight into a `<video>` behind the forecast overlay; we copy nothing off their web page. Same "at the source, not the embed" logic as Matt's stream. |
+| YouTube Live | Do not embed the YouTube player on a commercial screen (YouTube's ads and cards land on Matt's board, and YouTube's terms restrict commercial public screening). Ask the airport for the encoder's second output or the RTSP address of the camera instead. |
+| A still image refreshed every N seconds | Fine for the look. The overlay works the same; the picture just updates instead of playing. Ask for the image URL and refresh interval. |
+
+**The ask to Dylan (in order):**
+1. What is the camera and how does the page get the picture? (Make, model, and the URL the player
+   actually loads.)
+2. Would the airport allow the picture on MCTV screens in Tupelo, credited "Live camera · Tupelo
+   Regional Airport · flytupelo.com/towercam"? It is the airport's picture; the credit is theirs.
+3. Can we take the feed at the source: a second stream from the camera or encoder, or its RTSP/HLS
+   address, with a token we can rotate?
+4. Any rules on the picture: no zoom on the ramp, no recording, pull on request. We follow them.
+5. What does the airport want named in return? Creed's Aug 13 draft to Dylan already says the honest
+   answer: the airport should ask for something, and Matt pointing his audience at
+   flytupelo.com/towercam on air is a fair trade for the picture.
+
+**On our side.** The board is HTML on the player, so a `<video>` behind the overlay is a small
+change; the work is in reliability. Pull the stream through our own relay (one origin fetch, many
+screens), fall back to last-good frame then to the plain Broadcast look if the feed drops, and never
+show a spinner or a black frame on a wall. Bandwidth is per-screen, so Tupelo-only first (25
+screens), then a decision on other markets with their own local camera.
+
+**Other markets.** Oxford (the Square, campus), Starkville (Cotton District, campus), Columbus and
+West Point each want a local picture. Candidates are city, university, and chamber cameras; same
+credit-and-consent rule as the airport. Nothing goes up without the owner's yes.
+
 ## The news pipeline (separate to-do, same partner)
 
 **Where it is:** the news wrapper on mctvofms.com is deployed and self-healing, serving the **July 10**
@@ -191,5 +250,6 @@ sells, he has spent nothing and his brand rode 125+ screens across North Mississ
 
 - `static/mslive.html` — the one-pager, served at `/mslive` (`server_routes.py`); checked by
   `python scripts/route_check.py`.
+- `static/mslive-looks.html` — the five looks, served at `/mslive/looks`.
 - The two-page agreement: `MSLive_MCTV_Partnership_Agreement_FOR-SIGNATURE_2026-08-15.pdf`, in the
   Aug 25 sent mail. The Baron board and road brief are attached to the Aug 13 internal email.
