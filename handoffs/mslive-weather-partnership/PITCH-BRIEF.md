@@ -278,6 +278,39 @@ sells, he has spent nothing and his brand rode 125+ screens across North Mississ
 > Creed
 > 601-201-8202
 
+**Email to Dylan (the Verkada link ask):**
+
+> Subject: Tower cam on the MCTV screens in Tupelo. A link of our own?
+>
+> Dylan,
+>
+> Quick one, and it grew out of the widgets you sent. Matt Laubhan and I are working on putting the Mississippi LIVE forecast on the MCTV screens, and the best version of that board has the tower cam behind the numbers. Live picture of the runway, the sky as it actually is, your credit under it. People watch a live picture a lot longer than they read a chart, and your own numbers on the cam page say the same thing.
+>
+> I looked at how the page serves the camera. It is a Verkada share link. I would rather not point our screens at the link on your website, for two reasons: it is yours, and you would have no way to switch us off without breaking your own page. So the ask is simple.
+>
+> 1. Would the airport issue MCTV a second Verkada share link for the tower cam, just for our screens? Whoever runs Command for you can make one in about a minute, and you can revoke it any time without touching the site.
+> 2. Does your Verkada plan limit how many viewers can be on one link at a time? We would have about 25 screens in Tupelo. If there is a cap, there is an API route where we pull the picture once and re-serve it ourselves, and I would ask about that instead.
+> 3. Any rules you want on the picture. No recording, no zoom, pull it on request. Whatever you say, we follow.
+>
+> On our side: the credit reads "Live camera · Tupelo Regional Airport · flytupelo.com/towercam" on every screen it runs on, and nothing goes up until you have seen the board and said yes. Matt has to approve the look on his side too.
+>
+> And what the airport gets out of it should be named, not left unsaid. Two things I can offer now: the same board running on your terminal screens, and Matt sending his audience to flytupelo.com/towercam on air, which is exactly the direct traffic your report measures. If there is something else you would want, tell me.
+>
+> Happy to come by if it is easier to talk through.
+>
+> Thanks, Dylan.
+>
+> Creed
+>
+> T. Creed Cannon
+> Managing Partner
+> MCTV Digital, Inc
+> 601-201-8202
+> www.mctvofms.com
+
+To: d.meador@flytupelo.com · Cc: b.pannell@flytupelo.com. Attach the tower-cam look render
+(`mslive-look-2-towercam.png`) so he sees the picture before he reads the ask.
+
 ## Files
 
 - `static/mslive.html` — the one-pager, served at `/mslive` (`server_routes.py`); checked by
