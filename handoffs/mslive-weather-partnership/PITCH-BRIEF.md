@@ -186,23 +186,25 @@ emailed the embed ("KTUP Tower Camera Embed Code", cc Brandon):
 - "If you run into any issues getting it to load, let me know and I can check the whitelist."
 
 **What the whitelist means, and where the board lives.** Verkada serves the picture only to pages
-on a domain the airport has approved. The app already runs at **bot.mctvofms.com** (custom domain on
-Render), so the board is served by the app at **`/mslive/towercam`** and goes live the moment this
-branch merges to `main`. Player URL: `https://bot.mctvofms.com/mslive/towercam` (add
-`?sponsor=Watkins%20Roofing` for the slot). **Ask Dylan to add `bot.mctvofms.com` to the whitelist**;
-he said subdomains need adding. Until he does, the board shows the drawn sky with a chip saying why
-(`?force=1` tries the camera anyway, which is also how to confirm his whitelist took). The
-`/mslive/looks` page stays drawn on purpose.
+on mctvofms.com. That is where every MS Live board already lives (`mslive-weather.html`,
+`mslive-news.html`), so the tower-cam board goes there too: upload
+`mslive-towercam.html` from this folder the same way, and the player loads
+`https://mctvofms.com/mslive-towercam.html` (add `?sponsor=Watkins%20Roofing` for the slot). No
+new whitelist ask; Dylan approved that domain. The board refuses to load the camera from any other
+host and says why on a chip (`?force=1` overrides for a test). The `/mslive/looks` page on the bot
+stays drawn on purpose. Asking Dylan to add the `https://` and `www.` forms of the domain is still
+worth one line, so a redirect never trips it.
 
 The pre-call email draft is superseded; it is still in Outlook Drafts and can be discarded.
 
-**The board is built.** `static/mslive-towercam.html`, served at `/mslive/towercam`, is the
-1920×1080 tower-cam board for the player: the camera full-bleed, Matt's Baron "Right Now" and
+**The board is built.** `mslive-towercam.html` in this folder is the 1920×1080 tower-cam board
+for the player, hosted on mctvofms.com like the other boards: the camera full-bleed, Matt's Baron "Right Now" and
 "7-Day" widgets in cards left and right, his logo in the header, the airport credit and the sponsor
 slot in the footer, MCTV bug bottom-right. To use it:
 
-1. The link is already in `CAM_URL`. Merge the PR; point the office demo player at
-   `https://bot.mctvofms.com/mslive/towercam` (a local file shows the stand-in sky, by design).
+1. The link is already in `CAM_URL`. Upload `mslive-towercam.html` to mctvofms.com beside
+   `mslive-weather.html` and point the office demo player at
+   `https://mctvofms.com/mslive-towercam.html` (a local file shows the stand-in sky, by design).
 2. `?sponsor=Watkins%20Roofing` fills the sponsor slot. Until a link is set, a drawn sky stands in
    and a small chip says so; the drawn sky also sits behind the camera frame permanently, so a
    camera outage shows sky, not black.
@@ -350,7 +352,8 @@ To: d.meador@flytupelo.com · Cc: b.pannell@flytupelo.com. Attach the tower-cam 
 - `static/mslive.html` — the one-pager, served at `/mslive` (`server_routes.py`); checked by
   `python scripts/route_check.py`.
 - `static/mslive-looks.html` — the five looks, served at `/mslive/looks`.
-- `static/mslive-towercam.html` — the tower-cam board, served at `/mslive/towercam`. The airport
-  approved the embed on our site; putting it on venue screens still waits on Matt's and Dylan's OK.
+- `mslive-towercam.html` (this folder) — the tower-cam board, uploaded to mctvofms.com beside the
+  other boards. The airport approved the embed on that site; putting it on venue screens still waits
+  on Matt's and Dylan's OK.
 - The two-page agreement: `MSLive_MCTV_Partnership_Agreement_FOR-SIGNATURE_2026-08-15.pdf`, in the
   Aug 25 sent mail. The Baron board and road brief are attached to the Aug 13 internal email.

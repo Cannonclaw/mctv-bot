@@ -108,8 +108,7 @@ async def main() -> None:
     # case between board.html and mdot.html, so the pair doubles as a swap check.
     for path, marker in (("/board", b"<!DOCTYPE html"), ("/mdot", b"<!doctype html"),
                          ("/mslive", b"mslive one-pager v1"),
-                         ("/mslive/looks", b"mslive looks v1"),
-                         ("/mslive/towercam", b"mslive-towercam v1")):
+                         ("/mslive/looks", b"mslive looks v1")):
         status, _, body = await fetch(app, path)
         check(f"{path} routes", status == 200 and APP_SHELL not in body and marker in body,
               f"bytes={len(body)}")
