@@ -176,6 +176,25 @@ came from a partial paste and was wrong.)
 Verkada cameras are cloud-managed and do not hand out an RTSP address in the normal setup, so do not
 ask for one; ask for the share link or the API.
 
+**Status, Sep 1 (evening):** Creed spoke to Dylan by phone. **The airport is sending MCTV its own
+Verkada share link.** The email draft below was written before that call and is no longer needed;
+it is still in Outlook Drafts and can be discarded. Questions 2 to 5 below are still worth asking
+when the link arrives, in one reply.
+
+**When the link lands: the board is already built.** `towercam-board.html` in this folder is the
+1920×1080 tower-cam board for the player: the camera full-bleed, Matt's Baron "Right Now" and
+"7-Day" widgets in cards left and right, his logo in the header, the airport credit and the sponsor
+slot in the footer, MCTV bug bottom-right. To use it:
+
+1. Open the file, paste the Verkada link into `CAM_URL` near the bottom (or open it as
+   `towercam-board.html?cam=<link>`), and drop it on the office demo player next to the Baron board.
+2. `?sponsor=Watkins%20Roofing` fills the sponsor slot. Until a link is set, a drawn sky stands in
+   and a small chip says so; the drawn sky also sits behind the camera frame permanently, so a
+   camera outage shows sky, not black.
+3. Widgets poke at 14 s and refresh every 6 min; the camera frame reloads every 20 min; the page
+   reloads every 6 h; the clock is America/Chicago. Same habits as the Baron board.
+4. Send Matt and Dylan a photo of it on the demo screen. Two approvals, then Tupelo playlist.
+
 **The ask to Dylan (in order):**
 1. Confirm the camera is Verkada and ask who administers it in Verkada Command (airport IT, or
    Gibens, who built the site).
@@ -316,5 +335,8 @@ To: d.meador@flytupelo.com · Cc: b.pannell@flytupelo.com. Attach the tower-cam 
 - `static/mslive.html` — the one-pager, served at `/mslive` (`server_routes.py`); checked by
   `python scripts/route_check.py`.
 - `static/mslive-looks.html` — the five looks, served at `/mslive/looks`.
+- `towercam-board.html` (this folder) — the deployable tower-cam board; not served by the app on
+  purpose, since it frames the airport's camera and goes on the demo player only until both
+  approvals are in.
 - The two-page agreement: `MSLive_MCTV_Partnership_Agreement_FOR-SIGNATURE_2026-08-15.pdf`, in the
   Aug 25 sent mail. The Baron board and road brief are attached to the Aug 13 internal email.
