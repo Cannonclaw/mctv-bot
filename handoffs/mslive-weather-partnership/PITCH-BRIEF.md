@@ -143,43 +143,46 @@ to Mississippi LIVE Weather. His Aug 10 performance brief: 7,839 views Jan 1–A
 to the site. People go looking for that picture and stay on it. The airport is an MCTV host venue
 (KTUP terminal screens, venue partner agreement signed Mar 18).
 
-**How the page gets the picture (confirmed Sep 1 from the page source).** The tower cam is a
-**YouTube Live stream on the airport's channel**, embedded with YouTube's
-`youtube.com/embed/live_stream?channel=…` player, which always resolves to whatever that channel is
-broadcasting right now. So somewhere at the airport a camera (or a camera plus an encoder) is pushing
-a stream to YouTube around the clock. That is good news: the source stream exists and the airport
-controls it.
+**How the page gets the picture (confirmed Sep 1 from the full page source).** The tower cam is a
+**Verkada** cloud camera. The page embeds Verkada's own player through a public share link:
+`https://vauth.command.verkada.com/embed/html/46b56a4c-e1df-497b-9c7f-5181e64b5ba3/` (1500×600 on
+desktop, plus a "View Fullscreen" button). No YouTube, no local encoder: the camera uploads to
+Verkada's cloud and Verkada serves the picture. (An earlier note in this brief said YouTube Live; that
+came from a partial paste and was wrong.)
 
-**What that means for our screens.** Do **not** put the YouTube player on an MCTV screen:
+**What that means for our screens.** Better than YouTube in every way that matters:
 
-- YouTube runs ads on embedded video whether or not the channel is monetized, so a competitor's
-  pre-roll could play on the board next to Matt's name, and "up next" cards land on it when the
-  stream hiccups.
-- YouTube's terms restrict commercial public screening of embedded video, and that is Google's rule,
-  not the airport's to waive. Same problem we already avoided with Matt's own stream.
-- The `live_stream` embed shows a "video unavailable" card the moment the broadcast drops. A wall
-  cannot show that.
-- Unattended players and autoplay-with-sound rules make the embed unreliable on signage anyway.
+- Verkada's embed is the airport's own player: no ads, no "up next" cards, no third-party terms
+  about public screening. The permission question is purely the airport's.
+- Share links are made per camera in Verkada Command by the airport's admin, can carry an expiry or
+  none, and can be revoked one at a time. So MCTV should get **its own link**, not the website's:
+  if the airport ever wants us off, they kill ours and the website keeps working.
+- The embed is a plain HTML page with a muted video, which is what an unattended signage player
+  wants. It is the same shape as the Baron widgets we already frame on the board.
 
-**The path that works: take the feed at the source.** The camera or encoder that already pushes to
-YouTube can almost always push a second output (RTMP or SRT) or expose its own RTSP address. Most
-airport tower cams are an Axis-style IP camera, sometimes with a streaming app on the camera itself;
-those do exactly this. We stand up a small relay (MediaMTX or nginx-rtmp style: one stream in, HLS
-out), the board's HTML plays it in a `<video>` behind the forecast overlay, and every Tupelo screen
-pulls from our relay rather than from the airport. The airport keeps its YouTube stream untouched.
+**The path that works, in order of ease:**
 
-**Lighter fallback if a second stream is a hassle:** a still frame every 10 seconds. The same relay
-can write a JPEG from the source and the board refreshes it; the picture updates instead of playing,
-it works on any player, and it costs almost no bandwidth. The tower-cam look on `/mslive/looks`
-reads the same either way.
+1. **A second Verkada share link for MCTV**, framed behind the forecast overlay exactly the way the
+   airport frames it. Zero build on the airport's side beyond clicking "share" in Command. Each of the
+   25 Tupelo screens pulls from Verkada directly, so ask the airport's admin whether their plan caps
+   concurrent viewers on a share link; if it does, move to option 2.
+2. **Verkada's streaming API** (an HLS stream with an org API key that the airport's Command admin
+   issues). Our relay pulls once and every screen pulls from us; Verkada sees one viewer. Needs the
+   airport's Verkada plan to include API access, so it is a question, not an assumption.
+3. **Still frames.** The relay writes a JPEG every 10 seconds from either source and the board
+   refreshes it. Works on any player, costs almost nothing, and the tower-cam look on `/mslive/looks`
+   reads the same.
+
+Verkada cameras are cloud-managed and do not hand out an RTSP address in the normal setup, so do not
+ask for one; ask for the share link or the API.
 
 **The ask to Dylan (in order):**
-1. What is pushing the YouTube stream: the camera itself, or a PC/encoder? (Make and model. If it
-   is an Axis or similar with a streaming app, a second output is a settings change.)
+1. Confirm the camera is Verkada and ask who administers it in Verkada Command (airport IT, or
+   Gibens, who built the site).
 2. Would the airport allow the picture on MCTV screens in Tupelo, credited "Live camera · Tupelo
    Regional Airport · flytupelo.com/towercam"? It is the airport's picture; the credit is theirs.
-3. Can we take the feed at the source: a second RTMP/SRT output pointed at our relay, or the camera's
-   RTSP address on a credential we can rotate? YouTube stays exactly as it is.
+3. Will they issue MCTV its own Verkada share link for that camera (revocable, separate from the
+   website's), and does their plan cap viewers per link or include the streaming API?
 4. Any rules on the picture: no zoom on the ramp, no recording, pull on request. We follow them.
 5. What does the airport want named in return? Creed's Aug 13 draft to Dylan already says the honest
    answer: the airport should ask for something, and Matt pointing his audience at
@@ -189,8 +192,17 @@ reads the same either way.
 change; the work is in reliability. One relay pull from the airport, many screens off our relay;
 fall back to the last good frame, then to the plain Broadcast look if the feed drops; never a
 spinner or a black frame on a wall. Tupelo only first (25 screens), then a decision on other markets
-with their own local camera. Do not "capture" the YouTube stream server-side as a shortcut; that is
-the same terms problem in a different coat.
+with their own local camera. Do not scrape the website's share link into our boards as a shortcut;
+ask for our own, so the airport keeps a switch that is ours alone.
+
+**Radar lead from the same page.** The airport's weather panel carries a third Baron widget we had
+not seen: the live radar map,
+`https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/mapv2/index.html?initjson=/digitial_wx/widgets/dcms/a3e6bbb9-e4b6-45c4-a76b-d05241f58783/live/init.json#8/34.244/-88.704`,
+framed in an ordinary iframe with `allowfullscreen` and a `#zoom/lat/lon` hash centred on Tupelo. Our
+Aug 12 test concluded Baron's radar would not render inside a frame; the airport is rendering it
+inside one. Re-test with this exact URL (the hash and `allowfullscreen` are the two differences)
+before treating "radar needs its own board" as settled. If it frames, the Radar look on
+`/mslive/looks` can run Matt's real radar instead of a drawn one.
 
 **Other markets.** Oxford (the Square, campus), Starkville (Cotton District, campus), Columbus and
 West Point each want a local picture. Candidates are city, university, and chamber cameras; same
