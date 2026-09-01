@@ -143,34 +143,54 @@ to Mississippi LIVE Weather. His Aug 10 performance brief: 7,839 views Jan 1–A
 to the site. People go looking for that picture and stay on it. The airport is an MCTV host venue
 (KTUP terminal screens, venue partner agreement signed Mar 18).
 
-**What we could not verify from here.** The sandbox this brief was written in cannot reach
-flytupelo.com, so the player behind the page (YouTube Live, an IP-camera relay such as IPCamLive or
-CamStreamer, a vendor HLS URL, or a still image on a timer) is unconfirmed. That is the first
-question for Dylan, and it decides the build:
+**How the page gets the picture (confirmed Sep 1 from the page source).** The tower cam is a
+**YouTube Live stream on the airport's channel**, embedded with YouTube's
+`youtube.com/embed/live_stream?channel=…` player, which always resolves to whatever that channel is
+broadcasting right now. So somewhere at the airport a camera (or a camera plus an encoder) is pushing
+a stream to YouTube around the clock. That is good news: the source stream exists and the airport
+controls it.
 
-| If the page uses… | Then on our screens… |
-|---|---|
-| A direct HLS/RTSP stream from the camera (or a vendor URL the airport controls) | Best case. The board's HTML pulls the stream straight into a `<video>` behind the forecast overlay; we copy nothing off their web page. Same "at the source, not the embed" logic as Matt's stream. |
-| YouTube Live | Do not embed the YouTube player on a commercial screen (YouTube's ads and cards land on Matt's board, and YouTube's terms restrict commercial public screening). Ask the airport for the encoder's second output or the RTSP address of the camera instead. |
-| A still image refreshed every N seconds | Fine for the look. The overlay works the same; the picture just updates instead of playing. Ask for the image URL and refresh interval. |
+**What that means for our screens.** Do **not** put the YouTube player on an MCTV screen:
+
+- YouTube runs ads on embedded video whether or not the channel is monetized, so a competitor's
+  pre-roll could play on the board next to Matt's name, and "up next" cards land on it when the
+  stream hiccups.
+- YouTube's terms restrict commercial public screening of embedded video, and that is Google's rule,
+  not the airport's to waive. Same problem we already avoided with Matt's own stream.
+- The `live_stream` embed shows a "video unavailable" card the moment the broadcast drops. A wall
+  cannot show that.
+- Unattended players and autoplay-with-sound rules make the embed unreliable on signage anyway.
+
+**The path that works: take the feed at the source.** The camera or encoder that already pushes to
+YouTube can almost always push a second output (RTMP or SRT) or expose its own RTSP address. Most
+airport tower cams are an Axis-style IP camera, sometimes with a streaming app on the camera itself;
+those do exactly this. We stand up a small relay (MediaMTX or nginx-rtmp style: one stream in, HLS
+out), the board's HTML plays it in a `<video>` behind the forecast overlay, and every Tupelo screen
+pulls from our relay rather than from the airport. The airport keeps its YouTube stream untouched.
+
+**Lighter fallback if a second stream is a hassle:** a still frame every 10 seconds. The same relay
+can write a JPEG from the source and the board refreshes it; the picture updates instead of playing,
+it works on any player, and it costs almost no bandwidth. The tower-cam look on `/mslive/looks`
+reads the same either way.
 
 **The ask to Dylan (in order):**
-1. What is the camera and how does the page get the picture? (Make, model, and the URL the player
-   actually loads.)
+1. What is pushing the YouTube stream: the camera itself, or a PC/encoder? (Make and model. If it
+   is an Axis or similar with a streaming app, a second output is a settings change.)
 2. Would the airport allow the picture on MCTV screens in Tupelo, credited "Live camera · Tupelo
    Regional Airport · flytupelo.com/towercam"? It is the airport's picture; the credit is theirs.
-3. Can we take the feed at the source: a second stream from the camera or encoder, or its RTSP/HLS
-   address, with a token we can rotate?
+3. Can we take the feed at the source: a second RTMP/SRT output pointed at our relay, or the camera's
+   RTSP address on a credential we can rotate? YouTube stays exactly as it is.
 4. Any rules on the picture: no zoom on the ramp, no recording, pull on request. We follow them.
 5. What does the airport want named in return? Creed's Aug 13 draft to Dylan already says the honest
    answer: the airport should ask for something, and Matt pointing his audience at
    flytupelo.com/towercam on air is a fair trade for the picture.
 
 **On our side.** The board is HTML on the player, so a `<video>` behind the overlay is a small
-change; the work is in reliability. Pull the stream through our own relay (one origin fetch, many
-screens), fall back to last-good frame then to the plain Broadcast look if the feed drops, and never
-show a spinner or a black frame on a wall. Bandwidth is per-screen, so Tupelo-only first (25
-screens), then a decision on other markets with their own local camera.
+change; the work is in reliability. One relay pull from the airport, many screens off our relay;
+fall back to the last good frame, then to the plain Broadcast look if the feed drops; never a
+spinner or a black frame on a wall. Tupelo only first (25 screens), then a decision on other markets
+with their own local camera. Do not "capture" the YouTube stream server-side as a shortcut; that is
+the same terms problem in a different coat.
 
 **Other markets.** Oxford (the Square, campus), Starkville (Cotton District, campus), Columbus and
 West Point each want a local picture. Candidates are city, university, and chamber cameras; same
