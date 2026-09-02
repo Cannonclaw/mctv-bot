@@ -65,6 +65,20 @@ def classify_venue(name: str) -> str:
     return "General"
 
 
+# Labels NTV360 uses on the summary rows that close out a sheet. Matched whole,
+# never as a prefix — a real host called "Total Fitness" or "Totally Nutrition"
+# starts with "total" and must stay in the report.
+_SUMMARY_ROW_LABELS = {
+    "sum", "sums", "total", "totals", "grand total",
+    "ave", "avg", "average", "averages",
+}
+
+
+def is_summary_row(host: str) -> bool:
+    """True when a host cell is a sheet's summary row rather than a venue."""
+    return host.strip().rstrip(":").strip().lower() in _SUMMARY_ROW_LABELS
+
+
 def format_date_range(start: str, end: str) -> str:
     """Format a date range as 'January 31 – February 23, 2026'.
 
@@ -220,7 +234,7 @@ def parse_network_dashboard(file_path) -> dict:
         if not host:
             continue
         # Skip summary rows
-        if host.lower() in ("sum", "ave", "total", "average"):
+        if is_summary_row(host):
             continue
 
         def _float(col_key):
@@ -262,23 +276,44 @@ def parse_network_dashboard(file_path) -> dict:
     return lookup
 
 
-def enrich_report_with_dashboard(data, dashboard_lookup: dict):
+def enrich_report_with_dashboard(data, dashboard_lookup: dict) -> dict:
     """Enrich a TractionReportInput with data from the Network Dashboard.
 
     Matches venue records by host name and populates:
       - monthly_traffic, dwell_time_minutes, monthly_impressions, screen_count, address
     Also computes totals on the report data object.
+
+    ``data.total_screens`` is the sum of license_count over MATCHED venues only.
+    A venue the dashboard has never heard of contributes nothing rather than an
+    assumed screen — the figure is a floor we can defend, not an estimate. Any
+    unmatched host is named in the returned stats so it can be added to the
+    dashboard export and the count re-run.
+
+    Returns:
+        Match statistics: matched (int), unmatched (list of host names),
+        screens (int). Callers may ignore it; the report data is mutated
+        in place either way.
     """
+    stats = {"matched": 0, "unmatched": [], "duplicates": [], "screens": 0}
     if not dashboard_lookup:
-        return
+        stats["unmatched"] = [v.host_name for v in data.venue_records]
+        return stats
 
     total_impressions = 0.0
     total_traffic = 0.0
+    total_screens = 0
     dwell_sum = 0.0
     dwell_count = 0
+    # One export can spell the same venue two ways ("Amara Salon" / "AMARA
+    # SALON"), and aggregate_by_host keys on the raw name, so both arrive here
+    # as separate records pointing at one dashboard entry. Every record still
+    # gets its venue data for the table, but each entry contributes to the
+    # totals once — otherwise a venue's screens and impressions are counted
+    # twice and the client is quoted a number the network cannot back up.
+    counted = set()
 
     for venue in data.venue_records:
-        key = venue.host_name.lower()
+        key = venue.host_name.strip().lower()
         entry = dashboard_lookup.get(key)
         if entry:
             venue.monthly_traffic = entry["traffic"]
@@ -287,16 +322,28 @@ def enrich_report_with_dashboard(data, dashboard_lookup: dict):
             venue.screen_count = entry["license_count"]
             if not venue.address:
                 venue.address = entry["address"]
+            stats["matched"] += 1
+            if key in counted:
+                stats["duplicates"].append(venue.host_name)
+                continue
+            counted.add(key)
             total_impressions += entry["impressions"]
             total_traffic += entry["traffic"]
+            total_screens += entry["license_count"]
             if entry["dwell_time"] > 0:
                 dwell_sum += entry["dwell_time"]
                 dwell_count += 1
+        else:
+            stats["unmatched"].append(venue.host_name)
 
     data.total_impressions = total_impressions
     data.total_monthly_traffic = total_traffic
+    data.total_screens = total_screens
     if dwell_count > 0:
         data.avg_dwell_time = round(dwell_sum / dwell_count, 1)
+
+    stats["screens"] = total_screens
+    return stats
 
 
 def detect_format(wb: openpyxl.Workbook) -> str:
@@ -425,7 +472,7 @@ def parse_per_content_report(wb: openpyxl.Workbook) -> list:
         # Parse data rows
         for r in range(header_row + 1, max_row + 1):
             host = str(sheet.cell(r, col_map["host"]).value or "").strip()
-            if not host or host.lower().startswith("total") or host.lower().startswith("sum"):
+            if not host or is_summary_row(host):
                 continue
 
             # Read play count
@@ -572,7 +619,7 @@ def parse_traction_report(wb: openpyxl.Workbook) -> list:
         # Parse data rows
         for r in range(header_row + 1, max_row + 1):
             host = str(sheet.cell(r, host_col).value or "").strip()
-            if not host or host.lower().startswith("total") or host.lower().startswith("sum"):
+            if not host or is_summary_row(host):
                 continue
 
             # Skip demo/test venues
