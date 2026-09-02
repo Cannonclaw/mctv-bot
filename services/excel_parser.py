@@ -65,18 +65,38 @@ def classify_venue(name: str) -> str:
     return "General"
 
 
-# Labels NTV360 uses on the summary rows that close out a sheet. Matched whole,
-# never as a prefix — a real host called "Total Fitness" or "Totally Nutrition"
-# starts with "total" and must stay in the report.
-_SUMMARY_ROW_LABELS = {
-    "sum", "sums", "total", "totals", "grand total",
-    "ave", "avg", "average", "averages",
+# The words a summary row starts with, and the vocabulary such a row is allowed
+# to continue with. A plain prefix match ("total%") is what this replaces: it
+# dropped real hosts like "Total Fitness" and "Totally Nutrition" along with
+# their plays. A bare whole-label match is too narrow the other way — NTV360
+# sheets close with compound labels like "Total Plays" or "Totals for August",
+# which would then be read as a venue and counted twice into the campaign.
+# So: the first word must be a summary word, and every word after it must be
+# metric or filler vocabulary. A real business name supplies a word that is not.
+_SUMMARY_HEADS = {
+    "sum", "sums", "total", "totals", "ave", "avg", "average", "averages",
+    "grand", "subtotal", "subtotals", "overall",
+}
+_SUMMARY_TAIL_WORDS = {
+    "total", "totals", "sum", "sums", "average", "averages", "avg",
+    "play", "plays", "count", "counts", "duration", "air", "time",
+    "screen", "screens", "impression", "impressions", "all", "hosts",
+    "venues", "for", "of", "the", "and", "period", "month", "week", "day",
+    "days", "january", "february", "march", "april", "may", "june", "july",
+    "august", "september", "october", "november", "december",
 }
 
 
 def is_summary_row(host: str) -> bool:
     """True when a host cell is a sheet's summary row rather than a venue."""
-    return host.strip().rstrip(":").strip().lower() in _SUMMARY_ROW_LABELS
+    cleaned = host.strip().strip(":").replace("_", " ").strip().lower()
+    # Drop punctuation and digits so "Totals (2026-08):" reduces to "totals"
+    words = ["".join(ch for ch in w if ch.isalpha())
+             for w in cleaned.split()]
+    words = [w for w in words if w]
+    if not words or words[0] not in _SUMMARY_HEADS:
+        return False
+    return all(w in _SUMMARY_TAIL_WORDS for w in words[1:])
 
 
 def format_date_range(start: str, end: str) -> str:
@@ -283,7 +303,12 @@ def enrich_report_with_dashboard(data, dashboard_lookup: dict) -> dict:
       - monthly_traffic, dwell_time_minutes, monthly_impressions, screen_count, address
     Also computes totals on the report data object.
 
-    ``data.total_screens`` is the sum of license_count over MATCHED venues only.
+    ``data.total_screens`` is the sum of license_count over matched venues that
+    actually recorded plays. MCTV runs creative run-of-network by default — every
+    licence at a venue carries the market playlist — so a venue's full
+    license_count is its screen contribution. A licence-specific exclusion would
+    make that an overstatement, but the NTV360 export carries no per-licence
+    dimension to detect one.
     A venue the dashboard has never heard of contributes nothing rather than an
     assumed screen — the figure is a floor we can defend, not an estimate. Any
     unmatched host is named in the returned stats so it can be added to the
@@ -294,7 +319,8 @@ def enrich_report_with_dashboard(data, dashboard_lookup: dict) -> dict:
         screens (int). Callers may ignore it; the report data is mutated
         in place either way.
     """
-    stats = {"matched": 0, "unmatched": [], "duplicates": [], "screens": 0}
+    stats = {"matched": 0, "unmatched": [], "duplicates": [],
+             "screens": 0, "screens_from": 0}
     if not dashboard_lookup:
         stats["unmatched"] = [v.host_name for v in data.venue_records]
         return stats
@@ -329,7 +355,14 @@ def enrich_report_with_dashboard(data, dashboard_lookup: dict) -> dict:
             counted.add(key)
             total_impressions += entry["impressions"]
             total_traffic += entry["traffic"]
-            total_screens += entry["license_count"]
+            # Only a venue that actually ran the spot contributes screens.
+            # Callers that seed venue_records from the whole dashboard rather
+            # than from an export (report_service.generate_and_share_report)
+            # leave total_plays at 0, and must not end up telling an advertiser
+            # their ad ran on every screen in the network.
+            if venue.total_plays > 0:
+                total_screens += entry["license_count"]
+                stats["screens_from"] += 1
             if entry["dwell_time"] > 0:
                 dwell_sum += entry["dwell_time"]
                 dwell_count += 1
@@ -338,11 +371,20 @@ def enrich_report_with_dashboard(data, dashboard_lookup: dict) -> dict:
 
     data.total_impressions = total_impressions
     data.total_monthly_traffic = total_traffic
-    data.total_screens = total_screens
     if dwell_count > 0:
         data.avg_dwell_time = round(dwell_sum / dwell_count, 1)
 
+    # A screen count the document states must cover every venue that ran the
+    # spot. If even one is missing from the dashboard, the sum is a floor, and
+    # "34 screens across 22 venues" would attribute a 20-venue total to all 22.
+    # Report nothing rather than something that reads as complete; stats carries
+    # the floor so a caller can tell an operator what to add to the dashboard.
+    ran_the_ad = sum(1 for v in data.venue_records if v.total_plays > 0)
+    complete = stats["screens_from"] == ran_the_ad and ran_the_ad > 0
+    data.total_screens = total_screens if complete else 0
+
     stats["screens"] = total_screens
+    stats["screens_complete"] = complete
     return stats
 
 

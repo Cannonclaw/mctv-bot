@@ -59,35 +59,40 @@ def _load_dashboard() -> tuple:
     Returns ({}, "") when the dashboard is missing so the caller can decide
     whether to continue without impressions, dwell, and screen counts.
     """
-    from services.excel_parser import parse_network_dashboard
-
     path = ROOT / "data" / "network_dashboard.json"
     if not path.exists():
         return {}, ""
 
-    with open(path, "r", encoding="utf-8") as f:
-        raw = json.load(f)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"WARNING: could not read {path.name}: {exc}", file=sys.stderr)
+        return {}, ""
 
-    # parse_network_dashboard reads the Excel export; the cached JSON is already
-    # in lookup shape (lowercased host name -> venue dict), so use it directly
-    # and fall back to the parser only if the file is in the raw export format.
+    # The cached file is already in lookup shape (lowercased host name -> venue
+    # dict), which is what dashboard_service writes and what enrichment expects.
     venues = raw.get("venues")
-    if isinstance(venues, dict):
-        return venues, raw.get("updated_at", "")
-    return parse_network_dashboard(path), raw.get("updated_at", "")
+    if not isinstance(venues, dict):
+        print(f"WARNING: {path.name} has no venues object — continuing without "
+              "impressions, dwell time, and screen counts.", file=sys.stderr)
+        return {}, ""
+    return venues, raw.get("updated_at", "")
 
 
 def _dashboard_age_days(updated_at: str) -> int:
     """Whole days since the dashboard was refreshed, or -1 if unknown."""
-    if not updated_at:
+    if not updated_at or not isinstance(updated_at, str):
         return -1
     try:
         stamp = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
-    except ValueError:
+    except (ValueError, TypeError):
         return -1
     if stamp.tzinfo is None:
         stamp = stamp.replace(tzinfo=timezone.utc)
-    return (datetime.now(timezone.utc) - stamp).days
+    # A stamp slightly in the future is clock skew, not an unreadable date —
+    # report it as fresh rather than as "could not read the timestamp".
+    return max(0, (datetime.now(timezone.utc) - stamp).days)
 
 
 def _preflight(data, stats: dict, dashboard_age: int, args) -> list:
@@ -99,9 +104,8 @@ def _preflight(data, stats: dict, dashboard_age: int, args) -> list:
     print(f"  TRACTION REPORT PRE-FLIGHT — {data.advertiser_name}")
     print("=" * 68)
 
-    period = data.campaign_period or format_date_range(
-        data.campaign_start, data.campaign_end
-    ) or "(not set — cover page will stamp the current month)"
+    period = data.campaign_period or (
+        "(no dates in export — cover page will stamp the current month)")
     print(f"  Campaign period    : {period}")
     print(f"  Dates in export    : {data.campaign_start or '?'} to {data.campaign_end or '?'}")
     print(f"  Total ad plays     : {data.total_plays:,}")
@@ -114,8 +118,16 @@ def _preflight(data, stats: dict, dashboard_age: int, args) -> list:
     print(f"  Matched dashboard  : {matched}/{total_venues}")
 
     if data.total_screens:
-        print(f"  Screens running ad : {data.total_screens}"
-              f"{'  (floor — excludes unmatched venues)' if unmatched else ''}")
+        print(f"  Screens running ad : {data.total_screens}")
+    elif stats.get("screens"):
+        print(f"  Screens running ad : {stats['screens']} across "
+              f"{stats.get('screens_from', 0)} venue(s) — NOT in the report")
+        warnings.append(
+            f"The report will not state a screen count. {stats['screens']} screens "
+            f"is only the venues the dashboard knows; naming it beside the full "
+            f"venue count would credit those screens to venues it does not cover. "
+            f"Add the venues listed below to data/network_dashboard.json and re-run."
+        )
     else:
         print("  Screens running ad : unknown — no dashboard matches")
         warnings.append(
@@ -221,12 +233,23 @@ def main(argv=None) -> int:
     logging.basicConfig(level=logging.WARNING,
                         format="%(levelname)s %(name)s: %(message)s")
 
+    if args.rate < 0:
+        print("ERROR: --rate cannot be negative.", file=sys.stderr)
+        return 2
+
     excel_path = Path(args.excel).expanduser()
     if not excel_path.exists():
         print(f"ERROR: export not found: {excel_path}", file=sys.stderr)
         return 2
 
-    records = parse_excel(excel_path)
+    try:
+        records = parse_excel(excel_path)
+    except Exception as exc:
+        print(f"ERROR: could not read {excel_path.name}: "
+              f"{type(exc).__name__}: {exc}\n"
+              "  Export it again from NTV360 as .xlsx (not .xls or .csv).",
+              file=sys.stderr)
+        return 4
     if not records:
         print(
             f"ERROR: no play records parsed from {excel_path.name}.\n"
@@ -243,6 +266,10 @@ def main(argv=None) -> int:
     data.additional_notes = args.notes
     if args.rep:
         data.sales_rep = args.rep
+
+    if not data.campaign_period:
+        data.campaign_period = format_date_range(
+            data.campaign_start, data.campaign_end)
 
     dashboard_lookup, updated_at = _load_dashboard()
     stats = enrich_report_with_dashboard(data, dashboard_lookup)
