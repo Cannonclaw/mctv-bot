@@ -53,12 +53,18 @@ BOARD_DATA_PATH = "/board/events.json"
 MDOT_PATH = "/mdot"
 MDOT_FILE = STATIC_DIR / "mdot.html"
 
+# Pitch mockup for Huntington Bank Arena — their own announced shows rendered
+# as MCTV screen creative. A link is easier to send than an attachment.
+HBARENA_PATH = "/hbarena-mockup"
+HBARENA_FILE = STATIC_DIR / "hbarena_mockup.html"
+
 # Plain HTML pages, path -> file. The JSON feed below is handled separately
 # because it is generated rather than read off disk.
 HTML_PAGES = {
     RATES_PATH: RATES_FILE,
     BOARD_PATH: BOARD_FILE,
     MDOT_PATH: MDOT_FILE,
+    HBARENA_PATH: HBARENA_FILE,
 }
 
 HTML_CACHE_CONTROL = "public, max-age=300"
@@ -176,6 +182,7 @@ def _install_tornado() -> None:
             (r"/board/?", PublicPageHandler),
             (r"/rates/?", PublicPageHandler),
             (r"/mdot/?", PublicPageHandler),
+            (r"/hbarena-mockup/?", PublicPageHandler),
         ]
         router.add_rules(rules)
         # add_rules appends; Streamlit's catch-all is already in the list, so
