@@ -50,7 +50,8 @@ class TractionReportInput:
     network_name: str = ""
     venue_records: list = field(default_factory=list)  # list of VenueRecord
     total_plays: int = 0
-    total_screen_count: int = 0
+    total_screen_count: int = 0   # distinct host venues the creative played at
+    total_screens: int = 0        # physical screens across those venues (0 = unknown)
     total_air_time: str = ""
     total_impressions: float = 0.0
     avg_dwell_time: float = 0.0
