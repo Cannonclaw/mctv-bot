@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Huntington Bank Arena on MCTV — Screen Mockup</title>
+<!--
+  Pitch mockup, not a production board. Shows Huntington Bank Arena's own
+  announcement emails (Blackberry Smoke, Disney On Ice, Anthony Hamilton)
+  rendered as MCTV screen creative, plus a standing "Upcoming at the Arena"
+  slide. Static and self-contained so it can be opened from a file, emailed
+  as an attachment, or served at /hbarena-mockup.
+
+  Every event fact on this page came out of the arena's Ticketmaster emails —
+  dates, on-sale dates, promo codes. Nothing here is invented.
+-->
+<style>
+  :root{
+    --navy:#0a1220;
+    --navy2:#141f33;
+    --gold:#d4a017;
+    --gold-light:#e8b923;
+    --ink:#ffffff;
+    --mut:#8fa2b8;
+    --line:rgba(255,255,255,0.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  /* Single-theme by design: this is a mockup of a lit screen in a dark lobby,
+     so it commits to one look and paints its own ground rather than borrowing
+     the host's. */
+  html{background:var(--navy);color-scheme:dark}
+  body{
+    background:var(--navy);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 24px 96px}
+
+  /* ── Page header ─────────────────────────────────────────────────── */
+  .kicker{color:var(--gold);font-size:13px;font-weight:800;letter-spacing:.22em;
+          text-transform:uppercase}
+  h1{font-size:clamp(28px,4.4vw,46px);font-weight:800;letter-spacing:-.02em;
+     line-height:1.1;margin:10px 0 14px}
+  .lede{color:#c6d2e0;font-size:18px;max-width:70ch}
+  .rule{height:3px;background:var(--gold);width:96px;margin:26px 0 0}
+
+  h2{font-size:clamp(20px,2.6vw,28px);font-weight:800;letter-spacing:-.01em;
+     margin:0 0 6px}
+  .sub{color:var(--mut);font-size:15px;max-width:72ch;margin-bottom:22px}
+  section{margin-top:64px}
+
+  /* ── Screen mockups ──────────────────────────────────────────────── */
+  .screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:28px}
+  .screenwrap{min-width:0}
+  .bezel{
+    background:#000;border-radius:12px;padding:10px;
+    box-shadow:0 18px 44px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);
+    /* The query container has to be an ancestor of whatever uses cqw — an
+       element's own container-type does not resolve its own cqw units. */
+    container-type:inline-size;
+  }
+  .screen{
+    position:relative;aspect-ratio:16/9;border-radius:5px;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:5.4% 5.6%;
+    /* Every size inside a slide is an em off this base, and the base is a
+       percentage of the slide's own width — so a slide reads the same here as
+       it does at 1920x1080 in a lobby. */
+    font-size:2.7cqw;
+  }
+  /* Fallback for browsers without container queries: size off the viewport at
+     the width the two-up grid actually gives a slide. */
+  @supports not (container-type:inline-size){
+    .screen{font-size:min(2.4vw,14px)}
+    .art-board{font-size:min(2vw,18px)}
+  }
+  .caption{color:var(--mut);font-size:13px;margin-top:11px;display:flex;
+           justify-content:space-between;gap:12px}
+  .caption b{color:#cbd7e5;font-weight:700}
+
+  .s-top{display:flex;justify-content:space-between;align-items:flex-start;gap:2em}
+  .badge{
+    display:inline-block;background:var(--gold);color:#0a1220;
+    font-size:.72em;font-weight:900;letter-spacing:.16em;text-transform:uppercase;
+    padding:.42em .9em;border-radius:.3em;
+  }
+  .venuetag{font-size:.72em;font-weight:800;letter-spacing:.16em;
+            text-transform:uppercase;color:rgba(255,255,255,.72);text-align:right}
+  .s-title{font-size:2.9em;font-weight:900;line-height:.98;letter-spacing:-.02em;
+           text-transform:uppercase;text-shadow:0 .06em .3em rgba(0,0,0,.5)}
+  .s-support{font-size:1em;font-weight:700;color:var(--gold-light);margin-top:.5em;
+             letter-spacing:.02em}
+  .s-meta{display:flex;align-items:flex-end;justify-content:space-between;
+          flex-wrap:wrap;gap:.6em 2em;margin-top:.9em}
+  .s-date{font-size:1.5em;font-weight:800;line-height:1.1;white-space:nowrap;
+          flex:0 0 auto}
+  .s-date span{display:block;font-size:.52em;font-weight:700;color:rgba(255,255,255,.7);
+               letter-spacing:.16em;text-transform:uppercase;margin-top:.35em}
+  .s-cta{
+    background:var(--gold);color:#0a1220;font-weight:900;font-size:.86em;
+    letter-spacing:.1em;text-transform:uppercase;padding:.7em 1.2em;border-radius:.35em;
+    white-space:nowrap;flex:0 0 auto;
+  }
+  .s-cta.dark{background:#fff}
+
+  /* Per-slide art direction. No photography in a mockup — color and type do
+     the work, and the real spots would drop the tour art straight in. */
+  .art-bbs{background:
+    radial-gradient(120% 120% at 88% 8%, rgba(212,160,23,.42) 0%, rgba(212,160,23,0) 55%),
+    linear-gradient(140deg,#2a1408 0%,#120a06 55%,#0a0705 100%)}
+  .art-ice{background:
+    radial-gradient(110% 130% at 12% 0%, rgba(96,178,255,.5) 0%, rgba(96,178,255,0) 58%),
+    linear-gradient(140deg,#0b2f5c 0%,#0a1f3f 60%,#07132a 100%)}
+  .art-ah{background:
+    radial-gradient(120% 120% at 85% 100%, rgba(155,92,255,.42) 0%, rgba(155,92,255,0) 55%),
+    linear-gradient(140deg,#241041 0%,#150a28 60%,#0b0616 100%)}
+  .art-sale{background:
+    linear-gradient(140deg,#7a1420 0%,#3d0a12 60%,#1a0509 100%)}
+  .art-board{background:
+    radial-gradient(120% 90% at 12% 0%, var(--navy2) 0%, var(--navy) 62%);
+    font-size:2.25cqw}
+
+  .promo{display:flex;align-items:baseline;gap:.6em;margin-top:.6em}
+  .promo .pct{font-size:2.4em;font-weight:900;line-height:1;color:var(--gold-light)}
+  .promo .code{font-size:.92em;font-weight:800;letter-spacing:.06em}
+  .promo .code b{background:rgba(255,255,255,.14);padding:.2em .5em;border-radius:.25em;
+                 letter-spacing:.14em}
+
+  /* ── Standing "upcoming" slide ───────────────────────────────────── */
+  .boardwrap{max-width:820px}
+  .board-head{display:flex;justify-content:space-between;align-items:flex-end;
+              gap:1.5em;border-bottom:.12em solid var(--gold);padding-bottom:.6em}
+  .board-head h3{font-size:1.4em;font-weight:900;letter-spacing:-.01em;
+                 white-space:nowrap}
+  .board-head p{color:var(--gold);font-size:.72em;font-weight:800;letter-spacing:.2em;
+                text-transform:uppercase;margin-top:.3em}
+  .board-head .arena{font-size:.72em;font-weight:800;letter-spacing:.16em;
+                     text-transform:uppercase;color:rgba(255,255,255,.6);
+                     text-align:right;white-space:nowrap;flex:none}
+  .rows{margin-top:.8em;display:flex;flex-direction:column;gap:.5em}
+  .row{display:flex;align-items:center;gap:1.2em;
+       background:rgba(255,255,255,.05);border-left:.35em solid var(--gold);
+       border-radius:.3em;padding:.6em 1em}
+  .row .d{flex:none;width:5.4em;font-weight:900;font-size:1.05em;line-height:1.05;
+          white-space:nowrap}
+  .row .d span{display:block;font-size:.6em;font-weight:700;color:var(--gold);
+               letter-spacing:.12em;text-transform:uppercase}
+  .row .n{flex:1;min-width:0;font-weight:800;font-size:1.05em;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .n em{display:block;font-style:normal;font-size:.68em;font-weight:600;
+             color:var(--mut);margin-top:.15em;
+             overflow:hidden;text-overflow:ellipsis}
+  .row .s{flex:none;font-size:.72em;font-weight:800;letter-spacing:.1em;
+          text-transform:uppercase;color:var(--gold)}
+  .board-foot{display:flex;justify-content:space-between;align-items:center;
+              margin-top:.8em;color:var(--mut);font-size:.72em;font-weight:700;
+              letter-spacing:.14em;text-transform:uppercase}
+
+  /* ── Inbox → screen ──────────────────────────────────────────────── */
+  .flow{display:grid;grid-template-columns:1fr;gap:14px}
+  .mail{
+    background:#0f1728;border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;display:grid;grid-template-columns:150px 1fr auto;gap:18px;
+    align-items:center;
+  }
+  .mail .from{color:var(--mut);font-size:13px;font-weight:700}
+  .mail .subj{font-weight:800;font-size:15px;letter-spacing:.01em}
+  .mail .subj em{display:block;font-style:normal;font-weight:500;color:var(--mut);
+                 font-size:13px;margin-top:3px}
+  .mail .state{
+    font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+    color:#ff8b8b;background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.3);
+    padding:6px 10px;border-radius:5px;white-space:nowrap;
+  }
+  @media (max-width:640px){
+    .mail{grid-template-columns:1fr;gap:6px}
+  }
+
+  /* ── Numbers ─────────────────────────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+         gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;
+         overflow:hidden}
+  .stat{background:#101a2c;padding:22px 20px}
+  .stat b{display:block;color:var(--gold);font-size:30px;font-weight:900;line-height:1}
+  .stat span{display:block;color:var(--mut);font-size:12px;font-weight:800;
+             letter-spacing:.14em;text-transform:uppercase;margin-top:9px}
+  .note{color:var(--mut);font-size:13px;margin-top:14px;max-width:76ch}
+
+  .ask{
+    margin-top:34px;background:linear-gradient(100deg,rgba(212,160,23,.14) 0%,
+         rgba(212,160,23,.03) 60%);
+    border:1px solid rgba(212,160,23,.35);border-left:6px solid var(--gold);
+    border-radius:10px;padding:24px 26px;
+  }
+  .ask h3{font-size:19px;font-weight:900;margin-bottom:8px}
+  .ask p{color:#c6d2e0;font-size:15px;max-width:70ch}
+  .ask ul{margin:12px 0 0 20px;color:#c6d2e0;font-size:15px}
+  .ask li{margin-top:5px}
+
+  footer{margin-top:70px;border-top:1px solid var(--line);padding-top:20px;
+         color:var(--mut);font-size:13px;display:flex;justify-content:space-between;
+         gap:18px;flex-wrap:wrap}
+  footer b{color:#cbd7e5}
+
+  /* On a phone a 16:9 slide is only ~350px wide, which puts the slide's base
+     type near 8px. Trading the aspect ratio for 4:3 keeps the copy readable. */
+  @media (max-width:640px){
+    .wrap{padding:32px 14px 64px}
+    .bezel{padding:6px;border-radius:8px}
+    .screen{aspect-ratio:4/3;padding:6%}
+    .caption{flex-direction:column;gap:2px}
+  }
+
+  a{color:var(--gold-light)}
+  a:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="kicker">MCTV Elite Advertising · Screen Mockup</p>
+  <h1>Huntington Bank Arena, on 125+ screens across North Mississippi</h1>
+  <p class="lede">
+    Every one of these slides was built from an announcement the arena already
+    sent by email. The shows are booked, the art exists, the on-sale dates are
+    set. The only thing missing is the screens in front of the people who buy
+    the tickets.
+  </p>
+  <div class="rule"></div>
+
+  <!-- ── Event slides ───────────────────────────────────────────────── -->
+  <section>
+    <h2>The spots</h2>
+    <p class="sub">
+      Full-screen, 15-second slots in a 15-minute loop — roughly four plays an
+      hour, twelve hours a day, in restaurants, gyms, salons, and waiting rooms
+      across Tupelo (25 screens), Oxford (75), and Starkville (30).
+    </p>
+
+    <div class="screens">
+
+      <div class="screenwrap">
+        <div class="bezel"><div class="screen art-bbs">
+          <div class="s-top">
+            <span class="badge">On Sale Now</span>
+            <span class="venuetag">Huntington Bank Arena<br>Tupelo, MS</span>
+          </div>
+          <div>
+            <div class="s-title">Blackberry<br>Smoke</div>
+            <div class="s-support">with Michael Farris Smith &amp; The Smokes</div>
+            <div class="s-meta">
+              <div class="s-date">Fri, Oct 23, 2026<span>375 East Main Street</span></div>
+              <div class="s-cta">Tickets at Ticketmaster</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption"><span>From <b>"JUST ANNOUNCED: BLACKBERRY SMOKE"</b> + support-act email</span><span>Jul 28 &amp; Aug 27</span></p>
+      </div>
+
+      <div class="screenwrap">
+        <div class="bezel"><div class="screen art-ice">
+          <div class="s-top">
+            <span class="badge">Four Days Only</span>
+            <span class="venuetag">Huntington Bank Arena<br>Tupelo, MS</span>
+          </div>
+          <div>
+            <div class="s-title">Disney<br>On Ice</div>
+            <div class="s-meta">
+              <div class="s-date">Nov 5&ndash;8, 2026<span>Tickets on sale now</span></div>
+              <div class="s-cta">Tickets at Ticketmaster</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption"><span>From <b>"JUST ANNOUNCED: DISNEY ON ICE"</b></span><span>Jul 20</span></p>
+      </div>
+
+      <div class="screenwrap">
+        <div class="bezel"><div class="screen art-ah">
+          <div class="s-top">
+            <span class="badge">On Sale Now</span>
+            <span class="venuetag">Huntington Bank Arena<br>Tupelo, MS</span>
+          </div>
+          <div>
+            <div class="s-title">Anthony<br>Hamilton</div>
+            <div class="s-support">with Leela James</div>
+            <div class="s-meta">
+              <div class="s-date">Fri, Nov 13, 2026<span>375 East Main Street</span></div>
+              <div class="s-cta">Tickets at Ticketmaster</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption"><span>From <b>"ANTHONY HAMILTON ON SALE NOW"</b></span><span>Jul 10</span></p>
+      </div>
+
+      <div class="screenwrap">
+        <div class="bezel"><div class="screen art-sale">
+          <div class="s-top">
+            <span class="badge">Limited Time</span>
+            <span class="venuetag">Huntington Bank Arena<br>Tupelo, MS</span>
+          </div>
+          <div>
+            <div class="s-title">Labor Day<br>Sale</div>
+            <div class="promo">
+              <span class="pct">Up to 25% off</span>
+              <span class="code">Disney On Ice &mdash; code <b>LDTUP</b></span>
+            </div>
+            <div class="s-meta">
+              <div class="s-date">Through Sept 13<span>Face value, select seats</span></div>
+              <div class="s-cta dark">Ticketmaster</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption"><span>From <b>"SAVE TODAY! DISNEY ON ICE"</b> promo email</span><span>Sept 2</span></p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Standing slide ─────────────────────────────────────────────── -->
+  <section>
+    <h2>The standing slide</h2>
+    <p class="sub">
+      One slide that never comes down. We update it from your announcements, so
+      a show you announce Thursday morning is on every screen that afternoon —
+      no new artwork and no new order from you.
+    </p>
+    <div class="boardwrap"><div class="bezel"><div class="screen art-board">
+      <div>
+        <div class="board-head">
+          <div>
+            <h3>Coming to Huntington Bank Arena</h3>
+            <p>Tickets at Ticketmaster</p>
+          </div>
+          <div class="arena">375 East Main Street<br>Tupelo, MS</div>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="d">Oct 23<span>Friday</span></div>
+            <div class="n">Blackberry Smoke<em>with Michael Farris Smith &amp; The Smokes</em></div>
+            <div class="s">On Sale</div>
+          </div>
+          <div class="row">
+            <div class="d">Nov 5&ndash;8<span>Thu&ndash;Sun</span></div>
+            <div class="n">Disney On Ice<em>Four days at the arena</em></div>
+            <div class="s">On Sale</div>
+          </div>
+          <div class="row">
+            <div class="d">Nov 13<span>Friday</span></div>
+            <div class="n">Anthony Hamilton<em>with Leela James</em></div>
+            <div class="s">On Sale</div>
+          </div>
+        </div>
+      </div>
+      <div class="board-foot">
+        <span>Updated from the arena's announcements</span>
+        <span>MCTV Elite Advertising</span>
+      </div>
+    </div></div>
+    <p class="caption"><span>Standing slide &mdash; <b>no reprint, no new creative</b></span><span>Refreshes as shows are announced</span></p>
+    </div>
+  </section>
+
+  <!-- ── Inbox → screen ─────────────────────────────────────────────── -->
+  <section>
+    <h2>Where every slide came from</h2>
+    <p class="sub">
+      Ten sends in eight weeks, every one from the arena. Each one went to an
+      inbox and stopped there.
+    </p>
+    <div class="flow">
+      <div class="mail">
+        <span class="from">Sept 3, 2026</span>
+        <span class="subj">BLACKBERRY SMOKE LABOR DAY SALE!<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Sept 2, 2026</span>
+        <span class="subj">SAVE TODAY! DISNEY ON ICE<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Aug 27, 2026</span>
+        <span class="subj">NEW! MICHAEL FARRIS SMITH &amp; THE SMOKES<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 31, 2026</span>
+        <span class="subj">BLACKBERRY SMOKE ON SALE NOW<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 30, 2026</span>
+        <span class="subj">BLACKBERRY SMOKE PRESALE<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 28, 2026 &middot; 10:01am</span>
+        <span class="subj">DISNEY ON ICE ON SALE NOW<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 28, 2026 &middot; 9:01am</span>
+        <span class="subj">JUST ANNOUNCED: BLACKBERRY SMOKE<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 20, 2026</span>
+        <span class="subj">JUST ANNOUNCED: DISNEY ON ICE<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 10, 2026</span>
+        <span class="subj">ANTHONY HAMILTON ON SALE NOW<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+      <div class="mail">
+        <span class="from">Jul 9, 2026</span>
+        <span class="subj">ANTHONY HAMILTON PRESALE<em>hbarena@engage.ticketmaster.com</em></span>
+        <span class="state">Email only</span>
+      </div>
+    </div>
+    <p class="note">
+      An email reaches the people who already bought a ticket once. A screen in a
+      restaurant reaches the ones who never opened it.
+    </p>
+  </section>
+
+  <!-- ── Numbers ────────────────────────────────────────────────────── -->
+  <section>
+    <h2>What that reach looks like</h2>
+    <p class="sub">Network figures across Oxford, Starkville, and Tupelo, with Columbus and West Point coming on.</p>
+    <div class="stats">
+      <div class="stat"><b>125+</b><span>Screens</span></div>
+      <div class="stat"><b>1.9M+</b><span>Monthly impressions</span></div>
+      <div class="stat"><b>409,652+</b><span>Monthly visitors</span></div>
+      <div class="stat"><b>55 min</b><span>Average dwell time</span></div>
+      <div class="stat"><b>4&times; / hour</b><span>Plays per screen</span></div>
+    </div>
+    <p class="note">
+      Screens run 12 hours a day in a 15-minute loop. A 40-screen buy at $800/month
+      is roughly 60,000 plays &mdash; about a penny and a third per play, and less
+      than the cost of forty tickets to a single show.
+    </p>
+
+    <div class="ask">
+      <h3>What we're asking for</h3>
+      <p>Three things, none of which require new creative from the arena:</p>
+      <ul>
+        <li>Add MCTV to the announcement list, so we see a show the day it's announced.</li>
+        <li>Send us the tour art you already get from the promoter &mdash; we build the spot.</li>
+        <li>Pick a market. Tupelo is 25 screens; Oxford and Starkville add 105 more for the shows worth a drive.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span><b>MCTV Elite Advertising</b> &middot; North Mississippi's Indoor Digital Billboard Network<br>
+      Prepared Sept 3, 2026 — the offers shown were live that week.</span>
+    <span>T. Creed Cannon &middot; <a href="tel:+16012018202">(601) 201-8202</a>
+      &middot; <a href="mailto:creed@mctvofms.com">creed@mctvofms.com</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
