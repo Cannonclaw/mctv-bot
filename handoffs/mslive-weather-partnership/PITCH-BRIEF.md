@@ -126,7 +126,7 @@ https://mctv-bot.onrender.com/mslive/looks. One 16:9 frame, five looks, a note u
 |---|---|---|---|
 | 1 | Broadcast | The board as built: three panels, logo in the header, sponsor slot bottom-left. | Matt's approval. Runs on the demo screen today. |
 | 2 | Tower cam | The airport tower camera as the whole background, forecast and five-day strip laid over it. | The airport's OK and a direct camera feed (see below). |
-| 3 | Radar | Full-screen radar over North Mississippi, forecast card and Matt's heads-up on the right. | Its own board: Baron's radar widget will not render inside a frame. Natural bridge into the severe takeover. |
+| 3 | Radar | Full-screen radar over North Mississippi, forecast card and Matt's heads-up on the right. | Its own board, built and ready to test — see below. Natural bridge into the severe takeover. |
 | 4 | Clean | Light board for bright rooms: one big number, next six hours across the bottom. | Nothing new. A palette choice per venue type. |
 | 5 | Gameday | Saturday in four moments: tailgate, kickoff, fourth quarter, drive home, plus Matt's call. | An Oxford and a Starkville edition per home game. Sponsors ask for this one by name; one seat per market for the season. |
 
@@ -244,6 +244,33 @@ before treating "radar needs its own board" as settled. If it frames, the Radar 
 West Point each want a local picture. Candidates are city, university, and chamber cameras; same
 credit-and-consent rule as the airport. Nothing goes up without the owner's yes.
 
+## The radar board (`mslive-radar.html`) — and the framing question it settles
+
+**Why it exists.** Aug 12 we concluded Baron's radar widget would not render inside an iframe, so
+radar was going to need a non-framed treatment we did not have. Then the airport's tower-cam page
+turned up doing exactly that: the same Baron `mapv2` widget, in an ordinary iframe, with two things
+our test did not have — `allowfullscreen` on the iframe, and a `#zoom/lat/lon` hash on the URL. Both
+are reproduced verbatim in this board, so running it answers the question one way or the other.
+
+**How to run it.** Upload `mslive-radar.html` to mctvofms.com beside `mslive-weather.html` and open
+`https://mctvofms.com/mslive-radar.html`. `?sponsor=Watkins%20Roofing` fills the sponsor slot.
+
+**Reading the result.**
+- **Radar fills the screen, centred on North Mississippi** → the Aug 12 finding was wrong, and the
+  Radar look on `/mslive/looks` can run Matt's real radar instead of a drawn one. Send Matt a photo.
+- **Board shows the drawn map with a "Radar reconnecting" chip** → Baron is refusing the frame (or
+  the site cannot reach Baron). The finding stands; radar stays a Matt-supplied picture, not a widget.
+
+Either way the board never shows a broken frame or a black wall: the radar iframe stays hidden until
+a probe confirms Baron is reachable, and a drawn map of the three markets sits behind it. When the
+feed is down the board also drops the rain legend and the LIVE pill — an empty map under a legend
+reads as "no rain," which is a claim we are not entitled to make on Matt's name. `?force=1` skips
+the probe if a player blocks `fetch` but frames fine.
+
+**Do not strip** `allowfullscreen` or the `#8/34.244/-88.704` hash when editing. They are the two
+differences from the test that failed, and the refresh routine re-appends the hash on purpose —
+without it Baron recentres on its default view, which is not North Mississippi.
+
 ## The news pipeline (separate to-do, same partner)
 
 **Where it is:** the news wrapper on mctvofms.com is deployed and self-healing, serving the **July 10**
@@ -355,5 +382,7 @@ To: d.meador@flytupelo.com · Cc: b.pannell@flytupelo.com. Attach the tower-cam 
 - `mslive-towercam.html` (this folder) — the tower-cam board, uploaded to mctvofms.com beside the
   other boards. The airport approved the embed on that site; putting it on venue screens still waits
   on Matt's and Dylan's OK.
+- `mslive-radar.html` (this folder) — the full-screen radar board, same upload spot. Built to settle
+  the Baron framing question; see the section above for how to read the result.
 - The two-page agreement: `MSLive_MCTV_Partnership_Agreement_FOR-SIGNATURE_2026-08-15.pdf`, in the
   Aug 25 sent mail. The Baron board and road brief are attached to the Aug 13 internal email.

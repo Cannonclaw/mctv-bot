@@ -279,6 +279,12 @@ say, what not to say). The page is safe to forward; the brief is not.
   is `handoffs/mslive-weather-partnership/mslive-towercam.html`, a deployable
   file uploaded there by hand. The airport's camera share is whitelisted to
   that domain, so the board refuses to load the camera from anywhere else.
+  `mslive-radar.html` in the same folder is the full-screen radar board,
+  deployed the same way; it reproduces the airport page's Baron recipe
+  (`allowfullscreen` plus a `#zoom/lat/lon` hash) to settle whether the radar
+  widget frames. Both boards keep a drawn stand-in behind the live frame and
+  only reveal the frame once a probe says the source is reachable, so an
+  outage shows a map or a sky rather than a broken frame.
 - Adding one: drop the HTML in `static/`, add a `<NAME>_PATH`/`_FILE` pair and
   an `HTML_PAGES` entry plus a Tornado rule in `server_routes.py`, extend
   `scripts/route_check.py`, and run it (`python scripts/route_check.py`).
