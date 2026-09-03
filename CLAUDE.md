@@ -115,6 +115,9 @@ assets/
 static/                         # Public pages served outside Streamlit
   rates.html                    # Self-serve rate calculator (GET /rates)
   board.html                    # Venue lobby feed board (GET /board)
+  mdot.html                     # MDOT sponsorship mockup (GET /mdot)
+  hbarena_mockup.html           # Huntington Bank Arena pitch mockup
+                                #   (GET /hbarena-mockup)
 
 scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)

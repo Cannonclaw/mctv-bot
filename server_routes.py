@@ -3,13 +3,15 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Four routes, all public, all GET/HEAD:
+Five routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
     /board/events.json  the schedule the board polls (venue_events_service)
     /mdot               the MDOT sponsorship mockup (static/mdot.html), so it
                         can be texted as a link instead of an HTML attachment
+    /hbarena-mockup     the Huntington Bank Arena pitch mockup
+                        (static/hbarena_mockup.html), same reason
 
 Streamlit exposes no routing API, so this reaches into the web server it
 boots and inserts the routes ahead of Streamlit's catch-all (which
@@ -68,6 +70,9 @@ HTML_PAGES = {
 }
 
 HTML_CACHE_CONTROL = "public, max-age=300"
+# Per-page overrides. A one-off pitch link is edited and re-sent mid-conversation,
+# and carries a prospect's live offer terms, so it must not sit in a shared cache.
+PAGE_CACHE_CONTROL = {HBARENA_PATH: "no-cache"}
 # The board polls this every minute and re-derives now/next locally in between;
 # a cached copy in front of it would only ever show a stale room assignment.
 DATA_CACHE_CONTROL = "no-store"
@@ -128,7 +133,8 @@ def _resolve(path: str, query: str = "") -> tuple[str, bytes, str] | None:
         body = _page_bytes(HTML_PAGES[clean])
         if body is None:
             return None
-        return ("text/html; charset=utf-8", body, HTML_CACHE_CONTROL)
+        return ("text/html; charset=utf-8", body,
+                PAGE_CACHE_CONTROL.get(clean, HTML_CACHE_CONTROL))
 
     if clean == BOARD_DATA_PATH.rstrip("/"):
         try:
