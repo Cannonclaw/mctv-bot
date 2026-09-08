@@ -659,10 +659,19 @@ with tab_deals:
 
                 st.markdown("---")
 
+                # Widget keys carry the row's version. A keyed widget's
+                # session_state beats the `value=`/`index=` argument forever,
+                # so without this the stage and pricing controls keep showing
+                # whatever was picked the first time the deal was expanded —
+                # and Save would quietly revert a stage set with the Move
+                # button above. Every write bumps updated_at, so a changed row
+                # gets fresh widgets that reflect what is actually stored.
+                _v = str(deal.get("updated_at") or "")[:19]
+
                 # ── Pricing (outside the form: the Tier/Custom switch has to
                 #    react immediately, and form widgets don't rerun until submit)
                 st.markdown("**Pricing**")
-                e_pricing = render_pricing_inputs(f"editprice_{did}", deal)
+                e_pricing = render_pricing_inputs(f"editprice_{did}_{_v}", deal)
 
                 # ── Dates (outside the form for the same reason: whether a
                 #    close date is even relevant depends on the stage picked)
@@ -675,7 +684,7 @@ with tab_deals:
                 e_stage_label = d1.selectbox(
                     "Stage", _stage_labels,
                     index=_cur_i[0] if _cur_i else 0,
-                    key=f"editstage_{did}",
+                    key=f"editstage_{did}_{_v}",
                 )
                 e_stage_key = next(k for k, lbl in _stage_opts if lbl == e_stage_label)
 
@@ -683,7 +692,7 @@ with tab_deals:
                 e_close = d2.date_input(
                     "Expected close",
                     value=date.fromisoformat(str(_ecd)[:10]) if _ecd else None,
-                    key=f"editclose_{did}",
+                    key=f"editclose_{did}_{_v}",
                 )
 
                 if e_stage_key in CLOSED_STAGES:
@@ -691,7 +700,7 @@ with tab_deals:
                     e_closed_on = d3.date_input(
                         "Actually closed on",
                         value=date.fromisoformat(str(_cd)[:10]) if _cd else local_today(),
-                        key=f"editclosed_{did}",
+                        key=f"editclosed_{did}_{_v}",
                         help="The real won/lost date. Reporting reads this, so "
                              "editing an old deal never re-dates the win into "
                              "this month.",
@@ -704,7 +713,7 @@ with tab_deals:
                 e_excluded = x1.checkbox(
                     "Leave out of stats",
                     value=bool(deal.get("excluded_from_stats")),
-                    key=f"editexcl_{did}",
+                    key=f"editexcl_{did}_{_v}",
                     help="Keeps the deal on the board but drops it from win "
                          "rate, pipeline value and averages. For partnerships, "
                          "barters and placeholders that aren't real revenue.",
@@ -713,7 +722,7 @@ with tab_deals:
                     "Why it's excluded",
                     value=deal.get("exclusion_reason") or "",
                     placeholder="e.g. barter partnership, not advertiser revenue",
-                    key=f"editexclwhy_{did}",
+                    key=f"editexclwhy_{did}_{_v}",
                     disabled=not e_excluded,
                 )
 
@@ -774,6 +783,13 @@ with tab_deals:
                         # Stage changes go through advance_stage so probability,
                         # the SLA follow-up and the close date all stay in step.
                         _stage_moved = e_stage_key != deal.get("stage")
+                        if _stage_moved:
+                            # advance_stage schedules the new stage's follow-up.
+                            # The form still holds the OLD stage's next action,
+                            # so writing it back would undo that and leave the
+                            # deal in Action Items under the wrong instruction.
+                            _payload.pop("next_action", None)
+                            _payload.pop("next_action_date", None)
                         if e_stage_key in CLOSED_STAGES and e_closed_on:
                             _payload["closed_date"] = e_closed_on.isoformat()
                             _payload["next_action"] = None
@@ -1104,31 +1120,49 @@ with tab_cleanup:
     _lost_now = [o for o in counted(all_opps) if o.get("stage") == "lost"]
 
     # Rows a full cleanup would remove: every junk row, plus every duplicate
-    # past the first in each group.
-    _removable = set(_junk_ids)
+    # past the first in each group. A WON deal is never swept automatically —
+    # a won row is the outcome you want to keep, and find_junk_rows only looks
+    # at the name, so an oddly-named real win must not land here.
+    _removable = {j["id"] for j in _junk if j.get("stage") != "won"}
     for g in _dupes:
         for d in g["deals"][1:]:
-            _removable.add(d["id"])
+            if d.get("stage") != "won":
+                _removable.add(d["id"])
+
     _lost_after = [o for o in _lost_now if o["id"] not in _removable]
-    _fake_lost = sum(float(o.get("monthly_value") or 0)
-                     for o in _lost_now if o["id"] in _removable)
+    _won_after = [o for o in _won_now if o["id"] not in _removable]
+    _removable_lost = [o for o in _lost_now if o["id"] in _removable]
+    _fake_lost = sum(float(o.get("monthly_value") or 0) for o in _removable_lost)
 
     _rate_now = (len(_won_now) / (len(_won_now) + len(_lost_now)) * 100
                  if (_won_now or _lost_now) else 0)
-    _rate_after = (len(_won_now) / (len(_won_now) + len(_lost_after)) * 100
-                   if (_won_now or _lost_after) else 0)
+    # Numerator filtered too, so the projection can only move the way the
+    # buttons actually move it.
+    _rate_after = (len(_won_after) / (len(_won_after) + len(_lost_after)) * 100
+                   if (_won_after or _lost_after) else 0)
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Duplicate groups", len(_dupes))
     m2.metric("Junk rows", len(_junk))
     m3.metric("Fake lost revenue", f"${_fake_lost:,.0f}/mo")
+    # Say exactly how many of the removable rows are counted losses. Calling
+    # all of them "losses" when most are open deals reads as though the whole
+    # loss column is bogus.
+    _open_removable = len(_removable) - len(_removable_lost)
+    if _removable_lost:
+        _why = (f"{len(_removable_lost)} of them count as real losses today"
+                + (f", and {_open_removable} are open deals counted twice"
+                   if _open_removable else ""))
+    else:
+        _why = ("none of them are losses, so the win rate does not move - "
+                "they are open deals counted twice")
     m4.metric(
         "Win rate once clean", f"{_rate_after:.0f}%",
         delta=f"{_rate_after - _rate_now:+.0f} pts" if _removable else None,
         help=f"Reads {_rate_now:.0f}% today ({len(_won_now)} won vs "
-             f"{len(_lost_now)} lost) because {len(_removable)} duplicate or "
-             "junk row(s) count as real losses. This projection assumes you "
-             "keep the furthest-along row in each duplicate group.",
+             f"{len(_lost_now)} lost). Cleanup can remove {len(_removable)} "
+             f"row(s): {_why}. Assumes you keep the furthest-along row in "
+             "each duplicate group.",
     )
 
     st.divider()
@@ -1168,15 +1202,22 @@ with tab_cleanup:
                     st.rerun()
 
         st.markdown("")
-        if st.button(f"Delete all {len(_junk)} junk rows", key="deljunk_all"):
+        # Bulk delete never touches a won deal. find_junk_rows judges the NAME
+        # only, so an oddly-named real win could otherwise be swept in a click.
+        _bulk = [j for j in _junk if j.get("stage") != "won"]
+        _held = len(_junk) - len(_bulk)
+        if _held:
+            st.caption(f"{_held} of these is a won deal and is left out of the "
+                       "bulk delete. Remove it individually if it really is junk.")
+        if _bulk and st.button(f"Delete all {len(_bulk)} junk rows", key="deljunk_all"):
             st.session_state["confirm_junk_all"] = True
         if st.session_state.get("confirm_junk_all"):
-            st.warning(f"Delete all {len(_junk)} rows listed above?")
+            st.warning(f"Delete all {len(_bulk)} rows listed above?")
             ja1, ja2 = st.columns(2)
             if ja1.button("Yes, delete them all", key="yesjunk_all",
                           type="primary", width='stretch'):
                 _done = 0
-                for j in _junk:
+                for j in _bulk:
                     try:
                         if delete_opportunity(j["id"], deleted_by=active_rep,
                                               reason=f"Junk row: {j['_junk_reason']}"):
@@ -1229,11 +1270,17 @@ with tab_cleanup:
                 )
                 _ids.append(d["id"])
 
-            keep_label = st.radio(
-                "Keep this one", _labels, index=0, key=f"dupkeep_{gkey}",
+            # Select by POSITION, not by label. Two copies of the same deal
+            # usually render identical labels, and looking the choice up with
+            # _labels.index() would always return the first match — so picking
+            # the second row would silently keep the first and delete the one
+            # you meant to keep.
+            _pick = st.radio(
+                "Keep this one", list(range(len(_ids))), index=0,
+                format_func=lambda i: _labels[i], key=f"dupkeep_{gkey}",
             )
-            keep_id = _ids[_labels.index(keep_label)]
-            drop_ids = [i for i in _ids if i != keep_id]
+            keep_id = _ids[_pick]
+            drop_ids = [i for n, i in enumerate(_ids) if n != _pick]
 
             g1, g2 = st.columns(2)
             if g1.button(f"Merge the other {len(drop_ids)} into it",
