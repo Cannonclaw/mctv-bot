@@ -1,0 +1,388 @@
+# Mississippi LIVE Weather × MCTV — Pitch Brief
+
+**Internal only — do not forward.** The one-pager (`static/mslive.html`, served at
+https://mctv-bot.onrender.com/mslive) is the thing to put in front of Matt; this brief is not.
+
+**Contact:** Matt Laubhan, CBM — Chief Meteorologist, Mississippi LIVE Weather
+(matt@msliveweather.com), studio in Tupelo. **Money side:** Rick Wise
+(rick@msliveweather.com, 662-260-2565). Ours: Creed leads, Swayze cc'd on everything.
+
+---
+
+## Where it stands (as of Tue Sep 1, 2026)
+
+| Date | What happened |
+|---|---|
+| Jun 17 | Creed's intro email + concept PDF ("Powered by Mississippi LIVE Weather", severe-weather takeover, three-way win). |
+| Jun 25 | Rick: "let me get with Matt." |
+| Jul 2 | Teams intro call — Matt, Rick, Creed, Mary Michael, Swayze. |
+| Jul 10 | In person with Matt; he sends the first NEWS.mp4 Dropbox link (3:01 reel). |
+| Aug 4 | Matt sends new NEWS.mp4 + WXSHOW.mp4 links — both dead (delete-and-reupload). |
+| Aug 11 | Tupelo Airport (Dylan Meador) puts Matt's Baron/Velocity widgets on flytupelo.com/towercam. That is how we learned his vendor; the widgets embed cleanly. |
+| Aug 13 | In person at Matt's studio. Creed showed the board running Matt's own Baron data. Agreed in principle: keep running that board, his numbers can drive it whenever his team wants. |
+| Aug 25 | Creed emails the two-page agreement (dated Aug 15) for signature, cc Swayze, with the network map. Target live date Aug 28. |
+| **Sep 1** | **No reply on email since Aug 4. Not signed. Aug 28 missed.** Pipeline deal sits at *negotiation*; the daily briefing has flagged it stalled for two weeks. |
+
+**Dates that matter now:** Thu Sep 3 (Dropbox trash window for the Aug 4 files closes about here) ·
+Sat Sep 6 (season opener) · Sat Sep 12 (Ole Miss home opener, Oxford).
+
+## What /mslive is, and why it exists
+
+The two-page agreement is correct and it is already in his inbox. It is also two pages of terms,
+sent at 2 AM, to a man who runs a 24/7 weather operation during the run-up to football season.
+It has sat for a week.
+
+`/mslive` is the same deal on one screen, in the order he cares about: what it is, what he gets,
+what we get, what a sponsor gets, how it goes live this week, and one thing to do. Nothing on it
+adds to or contradicts the agreement. If he reads only this page and replies "go", we have what
+we need to start building (the signature can follow the same week).
+
+**Send it as a link, never as a file.** Same mechanism as `/rates` and `/mdot`: served by our
+app, no login, opens on any phone. It goes live the moment this branch merges to `main` — check it
+on your own phone before you text it. Print-to-PDF from the page if you need an attachment.
+
+## The order to run it
+
+1. **Text first** (draft below). Link + one line. This is a nudge between friends, not a re-pitch.
+2. **Call the next morning** if there is no reply. Say the page out loud: "your name, your call,
+   half of every sponsor dollar, live before the home opener, you can walk any time."
+3. **Email** only as the third touch, with the agreement PDF re-attached (draft below).
+4. If Matt says "talk to Rick": send Rick the same link, and the value table in this brief becomes
+   the conversation. Rick reads economics; the page is written so he has no questions on the split.
+
+## The deal, in one table (this is the agreement — do not improvise past it)
+
+| Term | What the agreement says |
+|---|---|
+| What we do together | MCTV builds, hosts and operates co-branded **weather** and **news** boards carrying the Mississippi LIVE Weather name, across the MCTV network. MS Live brings content + brand; MCTV brings distribution, production, sales. |
+| The weather is his | MS Live decides what weather appears under its name **and where the data comes from**. Two options: run on his data account (Baron), or MCTV licenses its own data and carries the cost so nothing touches his account or quota. We never substitute a source under his name; if the source is down, last-good data stays up, and if it stays down his branding comes off until it is back. Same principle for news. |
+| Each side brings | MS Live: name/logo permission, weather content + source choice, news content in whatever form works, a live-stream reference for severe coverage, brand guardrails. MCTV: all design/build/hosting/operation at no cost to him, placement across the network, severe-weather and breaking-news takeover, all sponsor sales/contracting/billing on MCTV paper, a monthly report (where it ran, modeled reach, every sponsor). Neither side pays the other a fee. |
+| Revenue | **50/50** on sponsorship revenue sold against a co-branded board, computed on what the advertiser actually pays and MCTV collects. MCTV's sales, production, hosting, ops and billing come out of MCTV's half — never deducted first. Paid monthly within 30 days of collecting, detail attached. Either side can reopen the split after six months. |
+| His control | He approves every sponsor before it airs and can decline any for any reason. One sponsor per category per board per market. Severe-weather coverage runs sponsor-free if he wants — permanently his call. He approves board designs before launch, sets guardrails, and can pull any content, any sponsor, or the whole presence **with a phone call, same business day**. |
+| Getting live | Sign → build to the source he names → he approves look and data before any public screen shows it → weather board live → news board joins when his news content is ready (weather does not wait on news). |
+| Exit | Either side, any time, any reason, **30 days' written notice, an email is enough.** No penalty, no fee, no minimum term. His branding comes off immediately on request. Sponsors are on MCTV's paper and MCTV's problem on exit. He keeps every dollar earned through the end date, no clawback. |
+| What it is not | Not a legal partnership or JV. No revenue guarantee — if nothing sells he has spent nothing and his brand still ran across the network. Reach is modeled, shown as ranges, said so in every report. Mutual confidentiality. Plain English, Mississippi law. |
+
+## The sponsor product at launch (one offer — tiers come later)
+
+What a sponsor buys, in the words on the page:
+
+- The Mississippi LIVE Weather segment plays **once every 15-minute loop** (4× an hour, 12 hours a
+  day) on **every MCTV screen in the sponsor's market**.
+- The sponsor gets a **5-second "presented by" intro**, their **logo in the sponsor slot for the whole
+  weather board**, and a **5-second outro**. (Same shape as the weather-sponsor product we already
+  sell — 5 / 10 / 5 — with the board itself as the middle.)
+- **One sponsor per category per market.** Roofing in Oxford is one seat.
+- **Matt approves every sponsor before it airs.**
+- Sold on MCTV's standard rate card, on MCTV paper, standard six-month minimum. **Mississippi LIVE
+  receives 50% of what is actually collected.** Example: a sponsor pays $1,000 in a month → $500 to
+  MS Live, and MCTV's selling, production and hosting come out of MCTV's $500.
+- Every sponsor appears on the monthly report he receives.
+
+**Suggested internal rate anchors** (starting points for Creed to set — not printed anywhere Matt
+sees, not in the agreement, and subject to what the market pays):
+
+| Seat | Screens | Anchor |
+|---|---|---|
+| Oxford weather sponsor | 75 | $1,000–$1,300 / mo (75+ tier is $1,300 for a standard spot; this is a standard spot plus the Mississippi LIVE association) |
+| Tupelo weather sponsor | 25 | $500–$700 / mo |
+| Golden Triangle (Starkville + Columbus + West Point) | 33 | $700–$900 / mo |
+| Network-wide weather sponsor | 130+ | $2,000 / mo (matches the holiday network package) |
+
+These sit well above the old NTV360 "weather sponsor" add-on ($400 / mo for 10 locations) because
+this one carries a name people trust and category exclusivity.
+
+**Watkins Construction & Roofing** is already on the weather board. They ride out their current term
+at their current rate, come through Matt's sign-off like everyone else, and at renewal move to the
+Mississippi LIVE Weather rate card with Matt's half applying. Creed's read: they can be upsold on
+the partnership. (Their invoicing runs through OnTargetTV — $2,300 / mo, "all 60 screens, 3× in
+loop; weather sponsorship; exclusivity" — so the MCTV weather seat is part of a bigger buy; keep
+the renewal conversation whole.)
+
+**First calls once Matt says go** (weather-adjacent categories, one seat each per market):
+roofing (Watkins renewal/upsell), HVAC, insurance (Van Wallace is already a client), auto (Cannon
+dealerships), electric co-ops (NEMEPA / NE Sparc already ran a weather sponsorship in June),
+clinics and urgent care, tire and glass, outdoor/farm supply, lawn and pest.
+
+## What we owe the minute he says go
+
+| # | Job | Owner | When |
+|---|---|---|---|
+| 1 | Put the Baron-driven board on the office demo screen; send Matt a photo and the page link for look-and-data approval. | Creed | same day |
+| 2 | Ask Matt which data option he wants (his Baron account vs. our own license). If ours: open the Baron conversation — **do not quote or promise a price**; say we would rather carry the data cost than put it on his quota. | Creed | day 1 |
+| 3 | Sponsor slot: swap "YOUR BUSINESS HERE" for Watkins (grandfathered) and confirm with Matt in the same approval. | Creed / Swayze | day 1–2 |
+| 4 | n-compass: add the weather board to each market playlist (Oxford, Tupelo, Golden Triangle) at one play per loop; log it in Loop Inventory as a run-of-network item so reconciliation knows about it. | Creed | after approval |
+| 5 | Severe-weather takeover: "ON AIR NOW" slate + QR to his stream, sponsor-free unless he says otherwise. Pin the 24/7 video ID, never the channel /live link (his channel runs several streams at once). | Creed | before Sep 12 |
+| 6 | Monthly report template: where it ran, modeled reach as ranges, every sponsor sold, payout math. First one goes out at the end of the first full month. | Swayze | month 1 |
+| 7 | Ready-to-post launch graphics for his socials ("find my forecast around town"). This is his half of the trade and it costs him one tap. | Creed | launch week |
+| 8 | Signature on the two-pager. A photo of it is fine. Chase it, but do not let it gate the build. | Swayze | week 1 |
+
+## Five looks for the board (`/mslive/looks`)
+
+A second page, same mechanism, for the "what could it look like" conversation:
+https://mctv-bot.onrender.com/mslive/looks. One 16:9 frame, five looks, a note under each.
+
+| # | Look | What it is | What it needs |
+|---|---|---|---|
+| 1 | Broadcast | The board as built: three panels, logo in the header, sponsor slot bottom-left. | Matt's approval. Runs on the demo screen today. |
+| 2 | Tower cam | The airport tower camera as the whole background, forecast and five-day strip laid over it. | The airport's OK and a direct camera feed (see below). |
+| 3 | Radar | Full-screen radar over North Mississippi, forecast card and Matt's heads-up on the right. | Its own board, built and ready to test — see below. Natural bridge into the severe takeover. |
+| 4 | Clean | Light board for bright rooms: one big number, next six hours across the bottom. | Nothing new. A palette choice per venue type. |
+| 5 | Gameday | Saturday in four moments: tailgate, kickoff, fourth quarter, drive home, plus Matt's call. | An Oxford and a Starkville edition per home game. Sponsors ask for this one by name; one seat per market for the season. |
+
+All five keep the same four fixed things: Mississippi LIVE logo, the attribution line, the sponsor
+slot, the MCTV bug. The severe-weather takeover sits on top of every one of them.
+
+## The tower cam (Dylan's page) as a live feed
+
+**What exists.** Tupelo Regional Airport runs a live camera from the control tower at
+flytupelo.com/towercam ("watch live runway and ramp activity … with current field weather"). Dylan
+Meador rebuilt the page Aug 11 with Matt's three Baron widgets under the picture and a credit line
+to Mississippi LIVE Weather. His Aug 10 performance brief: 7,839 views Jan 1–Aug 10, ~35 a day,
+74 seconds average engagement (homepage: 19), 79% of visitors land on that page directly, 93% new
+to the site. People go looking for that picture and stay on it. The airport is an MCTV host venue
+(KTUP terminal screens, venue partner agreement signed Mar 18).
+
+**How the page gets the picture (confirmed Sep 1 from the full page source).** The tower cam is a
+**Verkada** cloud camera. The page embeds Verkada's own player through a public share link:
+`https://vauth.command.verkada.com/embed/html/46b56a4c-e1df-497b-9c7f-5181e64b5ba3/` (1500×600 on
+desktop, plus a "View Fullscreen" button). No YouTube, no local encoder: the camera uploads to
+Verkada's cloud and Verkada serves the picture. (An earlier note in this brief said YouTube Live; that
+came from a partial paste and was wrong.)
+
+**What that means for our screens.** Better than YouTube in every way that matters:
+
+- Verkada's embed is the airport's own player: no ads, no "up next" cards, no third-party terms
+  about public screening. The permission question is purely the airport's.
+- Share links are made per camera in Verkada Command by the airport's admin, can carry an expiry or
+  none, and can be revoked one at a time. So MCTV should get **its own link**, not the website's:
+  if the airport ever wants us off, they kill ours and the website keeps working.
+- The embed is a plain HTML page with a muted video, which is what an unattended signage player
+  wants. It is the same shape as the Baron widgets we already frame on the board.
+
+**The path that works, in order of ease:**
+
+1. **A second Verkada share link for MCTV**, framed behind the forecast overlay exactly the way the
+   airport frames it. Zero build on the airport's side beyond clicking "share" in Command. Each of the
+   25 Tupelo screens pulls from Verkada directly, so ask the airport's admin whether their plan caps
+   concurrent viewers on a share link; if it does, move to option 2.
+2. **Verkada's streaming API** (an HLS stream with an org API key that the airport's Command admin
+   issues). Our relay pulls once and every screen pulls from us; Verkada sees one viewer. Needs the
+   airport's Verkada plan to include API access, so it is a question, not an assumption.
+3. **Still frames.** The relay writes a JPEG every 10 seconds from either source and the board
+   refreshes it. Works on any player, costs almost nothing, and the tower-cam look on `/mslive/looks`
+   reads the same.
+
+Verkada cameras are cloud-managed and do not hand out an RTSP address in the normal setup, so do not
+ask for one; ask for the share link or the API.
+
+**Status, Sep 1, 3:33 PM CT: the link is in hand.** Creed spoke to Dylan by phone; Dylan then
+emailed the embed ("KTUP Tower Camera Embed Code", cc Brandon):
+
+- `https://vauth.command.verkada.com/__v/tupeloair/embed/html/4c12eb18-fde6-49a4-912d-e675e9bacdc3/`
+- Configured on the Verkada side and **whitelisted for http://mctvofms.com/**. "If you end up using a
+  different URL, subdomain, or another site for it, just let me know and I can add that."
+- **Does not expire.** Width and height in his snippet are defaults; size it however we need.
+- "If you run into any issues getting it to load, let me know and I can check the whitelist."
+
+**What the whitelist means, and where the board lives.** Verkada serves the picture only to pages
+on mctvofms.com. That is where every MS Live board already lives (`mslive-weather.html`,
+`mslive-news.html`), so the tower-cam board goes there too: upload
+`mslive-towercam.html` from this folder the same way, and the player loads
+`https://mctvofms.com/mslive-towercam.html` (add `?sponsor=Watkins%20Roofing` for the slot). No
+new whitelist ask; Dylan approved that domain. The board refuses to load the camera from any other
+host and says why on a chip (`?force=1` overrides for a test). The `/mslive/looks` page on the bot
+stays drawn on purpose. Asking Dylan to add the `https://` and `www.` forms of the domain is still
+worth one line, so a redirect never trips it.
+
+The pre-call email draft is superseded; it is still in Outlook Drafts and can be discarded.
+
+**The board is built.** `mslive-towercam.html` in this folder is the 1920×1080 tower-cam board
+for the player, hosted on mctvofms.com like the other boards: the camera full-bleed, Matt's Baron "Right Now" and
+"7-Day" widgets in cards left and right, his logo in the header, the airport credit and the sponsor
+slot in the footer, MCTV bug bottom-right. To use it:
+
+1. The link is already in `CAM_URL`. Upload `mslive-towercam.html` to mctvofms.com beside
+   `mslive-weather.html` and point the office demo player at
+   `https://mctvofms.com/mslive-towercam.html` (a local file shows the stand-in sky, by design).
+2. `?sponsor=Watkins%20Roofing` fills the sponsor slot. Until a link is set, a drawn sky stands in
+   and a small chip says so; the drawn sky also sits behind the camera frame permanently, so a
+   camera outage shows sky, not black.
+3. Widgets poke at 14 s and refresh every 6 min; the camera frame reloads every 20 min; the page
+   reloads every 6 h; the clock is America/Chicago. Same habits as the Baron board.
+4. Send Matt and Dylan a photo of it on the demo screen. Two approvals, then Tupelo playlist.
+
+**The ask to Dylan (in order):**
+1. Confirm the camera is Verkada and ask who administers it in Verkada Command (airport IT, or
+   Gibens, who built the site).
+2. Would the airport allow the picture on MCTV screens in Tupelo, credited "Live camera · Tupelo
+   Regional Airport · flytupelo.com/towercam"? It is the airport's picture; the credit is theirs.
+3. Will they issue MCTV its own Verkada share link for that camera (revocable, separate from the
+   website's), and does their plan cap viewers per link or include the streaming API?
+4. Any rules on the picture: no zoom on the ramp, no recording, pull on request. We follow them.
+5. What does the airport want named in return? Creed's Aug 13 draft to Dylan already says the honest
+   answer: the airport should ask for something, and Matt pointing his audience at
+   flytupelo.com/towercam on air is a fair trade for the picture.
+
+**On our side.** The board is HTML on the player, so a `<video>` behind the overlay is a small
+change; the work is in reliability. One relay pull from the airport, many screens off our relay;
+fall back to the last good frame, then to the plain Broadcast look if the feed drops; never a
+spinner or a black frame on a wall. Tupelo only first (25 screens), then a decision on other markets
+with their own local camera. Do not scrape the website's share link into our boards as a shortcut;
+ask for our own, so the airport keeps a switch that is ours alone.
+
+**Radar lead from the same page.** The airport's weather panel carries a third Baron widget we had
+not seen: the live radar map,
+`https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/mapv2/index.html?initjson=/digitial_wx/widgets/dcms/a3e6bbb9-e4b6-45c4-a76b-d05241f58783/live/init.json#8/34.244/-88.704`,
+framed in an ordinary iframe with `allowfullscreen` and a `#zoom/lat/lon` hash centred on Tupelo. Our
+Aug 12 test concluded Baron's radar would not render inside a frame; the airport is rendering it
+inside one. Re-test with this exact URL (the hash and `allowfullscreen` are the two differences)
+before treating "radar needs its own board" as settled. If it frames, the Radar look on
+`/mslive/looks` can run Matt's real radar instead of a drawn one.
+
+**Other markets.** Oxford (the Square, campus), Starkville (Cotton District, campus), Columbus and
+West Point each want a local picture. Candidates are city, university, and chamber cameras; same
+credit-and-consent rule as the airport. Nothing goes up without the owner's yes.
+
+## The radar board (`mslive-radar.html`) — and the framing question it settles
+
+**Why it exists.** Aug 12 we concluded Baron's radar widget would not render inside an iframe, so
+radar was going to need a non-framed treatment we did not have. Then the airport's tower-cam page
+turned up doing exactly that: the same Baron `mapv2` widget, in an ordinary iframe, with two things
+our test did not have — `allowfullscreen` on the iframe, and a `#zoom/lat/lon` hash on the URL. Both
+are reproduced verbatim in this board, so running it answers the question one way or the other.
+
+**How to run it.** Upload `mslive-radar.html` to mctvofms.com beside `mslive-weather.html` and open
+`https://mctvofms.com/mslive-radar.html`. `?sponsor=Watkins%20Roofing` fills the sponsor slot.
+
+**Reading the result.**
+- **Radar fills the screen, centred on North Mississippi** → the Aug 12 finding was wrong, and the
+  Radar look on `/mslive/looks` can run Matt's real radar instead of a drawn one. Send Matt a photo.
+- **Board shows the drawn map with a "Radar reconnecting" chip** → Baron is refusing the frame (or
+  the site cannot reach Baron). The finding stands; radar stays a Matt-supplied picture, not a widget.
+
+Either way the board never shows a broken frame or a black wall: the radar iframe stays hidden until
+a probe confirms Baron is reachable, and a drawn map of the three markets sits behind it. When the
+feed is down the board also drops the rain legend and the LIVE pill — an empty map under a legend
+reads as "no rain," which is a claim we are not entitled to make on Matt's name. `?force=1` skips
+the probe if a player blocks `fetch` but frames fine.
+
+**Do not strip** `allowfullscreen` or the `#8/34.244/-88.704` hash when editing. They are the two
+differences from the test that failed, and the refresh routine re-appends the hash on purpose —
+without it Baron recentres on its default view, which is not North Mississippi.
+
+## The news pipeline (separate to-do, same partner)
+
+**Where it is:** the news wrapper on mctvofms.com is deployed and self-healing, serving the **July 10**
+NEWS.mp4 (3:01, 316 MB). Our slot is **30 seconds and restarts at 0:00 every rotation**, so screens
+replay the logo bumper and anchor open forever; the first story graphic lands at ~0:24. About 17% of
+the reel has ever aired. Nothing in this repo touches that pipeline — it lives on the mctvofms.com
+host, not in mctv-bot.
+
+**Fix, in order of preference:**
+
+1. **Direct feed from his encoder** (a second output, or an HLS URL). A stream cannot be deleted,
+   re-uploaded or forgotten. It also keeps YouTube's ads, "up next" cards and commercial-screening
+   terms off his board. Ask whoever runs the encoder, not Matt.
+2. **Overwrite in place.** If his producer overwrites the working July file instead of
+   delete-and-reupload, the link never dies again. Or we hand the producer a direct upload link to
+   our server and Dropbox stops mattering. The Aug 4 files (NEWS + WXSHOW) sit in his Dropbox trash
+   until about **Sep 3**; restoring them revives the original links.
+3. **Fallback only:** a :30 cut built for signage, no bumper, straight into stories. One export on
+   his end. Do not lead with this.
+
+Do not commit to airing WXSHOW (our pipeline handles one video today; a second asset type is real
+work), and do not promise a date for the direct-upload link before it is built.
+
+## Do not say
+
+- **"It's on the network."** It runs on the office demo player until he approves it. Every document
+  says it this way; stay consistent.
+- **Any private rate figure** — his top advertisers' spend, the internal $4–6K/mo yardstick, the
+  anchors above.
+- **"2× the impressions."** Two boards double surfaces, not audience.
+- **"Counted" impressions.** Modeled, in ranges, and we volunteer that.
+- **A price for Baron, or "the data costs us nothing."** We do not know Baron's price. Offer the
+  principle: we would rather carry the data cost than put it on his quota.
+- Anything that sounds like a term that is not in the agreement.
+
+If he asks where the Baron widgets came from: Dylan Meador at the airport, flytupelo.com/towercam, a
+public page with Matt's logo on it. Say it in the first breath.
+
+## The value line, if he or Rick asks "what is this actually worth to me"
+
+All modeled, all ranges, none counted — same math as our published rate card, not a number invented
+for him: 235K–299K modeled impressions a week across the network × 4.3 weeks × $6 CPM ≈
+**$6,000–$7,700 a month of brand exposure, at $0 to him** (~$73K–$93K a year). Sponsor share on top,
+illustrative at 50/50: Oxford weather-only pilot $250–$500/mo; all five markets, one board
+$500–$1,000/mo; all five markets, weather + news $1,000–$2,000/mo. **The floor:** if not one sponsor
+sells, he has spent nothing and his brand rode 125+ screens across North Mississippi all year.
+
+## Drafts
+
+**Text to Matt:**
+
+> Matt, Creed here. I put the weather deal on one page you can read on your phone in two minutes: https://mctv-bot.onrender.com/mslive. Your name stays yours, nothing airs without your OK, and one phone call pulls it. If it reads right, a reply or a photo of the signed page is all I need. Would love it up for the Oxford home opener on the 12th.
+
+**Email (third touch, agreement PDF re-attached):**
+
+> Subject: Mississippi LIVE Weather on MCTV: the one-page version
+>
+> Matt,
+> 
+> Good seeing you at the studio last month. The two-page agreement is in your inbox, so I boiled it down to one page you can read on your phone: https://mctv-bot.onrender.com/mslive
+> 
+> It says what the agreement says, plainer. Your name stays yours. You approve every sponsor and the look of the board before any public screen shows it. One phone call pulls anything, same day. Sponsors are sold on our paper, and half of what we actually collect is yours. If nothing sells, you have spent nothing and your brand still ran on 125-plus screens.
+> 
+> The board is built and sitting on our office demo screen, waiting on your eyes. Hear from you by Thursday and we can have it up before Saturday's opener. Either way, before the Oxford home opener on the 12th.
+> 
+> A reply or a photo of the signed page is all I need.
+> 
+> Creed
+> 601-201-8202
+
+**Email to Dylan (the Verkada link ask):**
+
+> Subject: Tower cam on the MCTV screens in Tupelo. A link of our own?
+>
+> Dylan,
+>
+> Quick one, and it grew out of the widgets you sent. Matt Laubhan and I are working on putting the Mississippi LIVE forecast on the MCTV screens, and the best version of that board has the tower cam behind the numbers. Live picture of the runway, the sky as it actually is, your credit under it. People watch a live picture a lot longer than they read a chart, and your own numbers on the cam page say the same thing.
+>
+> I looked at how the page serves the camera. It is a Verkada share link. I would rather not point our screens at the link on your website, for two reasons: it is yours, and you would have no way to switch us off without breaking your own page. So the ask is simple.
+>
+> 1. Would the airport issue MCTV a second Verkada share link for the tower cam, just for our screens? Whoever runs Command for you can make one in about a minute, and you can revoke it any time without touching the site.
+> 2. Does your Verkada plan limit how many viewers can be on one link at a time? We would have about 25 screens in Tupelo. If there is a cap, there is an API route where we pull the picture once and re-serve it ourselves, and I would ask about that instead.
+> 3. Any rules you want on the picture. No recording, no zoom, pull it on request. Whatever you say, we follow.
+>
+> On our side: the credit reads "Live camera · Tupelo Regional Airport · flytupelo.com/towercam" on every screen it runs on, and nothing goes up until you have seen the board and said yes. Matt has to approve the look on his side too.
+>
+> And what the airport gets out of it should be named, not left unsaid. Two things I can offer now: the same board running on your terminal screens, and Matt sending his audience to flytupelo.com/towercam on air, which is exactly the direct traffic your report measures. If there is something else you would want, tell me.
+>
+> Happy to come by if it is easier to talk through.
+>
+> Thanks, Dylan.
+>
+> Creed
+>
+> T. Creed Cannon
+> Managing Partner
+> MCTV Digital, Inc
+> 601-201-8202
+> www.mctvofms.com
+
+To: d.meador@flytupelo.com · Cc: b.pannell@flytupelo.com. Attach the tower-cam look render
+(`mslive-look-2-towercam.png`) so he sees the picture before he reads the ask.
+
+## Files
+
+- `static/mslive.html` — the one-pager, served at `/mslive` (`server_routes.py`); checked by
+  `python scripts/route_check.py`.
+- `static/mslive-looks.html` — the five looks, served at `/mslive/looks`.
+- `mslive-towercam.html` (this folder) — the tower-cam board, uploaded to mctvofms.com beside the
+  other boards. The airport approved the embed on that site; putting it on venue screens still waits
+  on Matt's and Dylan's OK.
+- `mslive-radar.html` (this folder) — the full-screen radar board, same upload spot. Built to settle
+  the Baron framing question; see the section above for how to read the result.
+- The two-page agreement: `MSLive_MCTV_Partnership_Agreement_FOR-SIGNATURE_2026-08-15.pdf`, in the
+  Aug 25 sent mail. The Baron board and road brief are attached to the Aug 13 internal email.

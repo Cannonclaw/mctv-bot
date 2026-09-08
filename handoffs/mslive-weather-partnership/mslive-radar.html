@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!-- mslive-radar v1 -- deploy marker, grep for this to confirm what is live -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<meta name="hz:canvas-width" content="1920"><meta name="hz:canvas-height" content="1080">
+<title>Mississippi LIVE Weather × MCTV — Live Radar</title>
+<style>
+  /*
+    The radar board. One 1920x1080 page for the player, full-screen Baron radar
+    with Matt's branding over it.
+
+    WHY THIS EXISTS, AND WHAT IT IS TESTING
+    On Aug 12 we concluded Baron's radar widget would not render inside an
+    iframe, so radar was going to need its own non-framed treatment. Then the
+    Tupelo Airport tower-cam page turned up doing exactly that: the same Baron
+    mapv2 widget, in an ordinary iframe, with two things our test did not have:
+      * allowfullscreen on the iframe
+      * a #zoom/lat/lon hash on the URL (theirs centres on Tupelo)
+    Both are reproduced verbatim below. So the first job of this board is to
+    settle that question on a real screen. If the radar paints, radar is a
+    normal board like any other. If it does not, the failure is visible here in
+    one place rather than buried in a panel, and the fallback (a full-screen
+    radar rendered outside a frame) is the next thing to build.
+
+    The radar comes from Mississippi LIVE's own Baron account, same as the
+    "Right Now" and "7-Day" widgets on the other boards. Nothing airs under
+    Matt's name until he approves the look.
+
+    Optional: ?sponsor=Your%20Business  fills the sponsor slot.
+  */
+  html, body { margin: 0; height: 100%; background: #08131F; overflow: hidden; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  .board { position: relative; width: 1920px; height: 1080px; overflow: hidden; transform-origin: top left; background: #08131F; }
+
+  /* The radar fills the board; the chrome floats over it.
+
+     The frame is transparent and starts hidden. A cross-origin iframe that
+     fails to load paints its own opaque error surface, which would sit on top
+     of the drawn map and hide it - so the frame is only revealed once the probe
+     below has confirmed Baron is reachable. Until then the drawn map shows
+     through, which is the whole point of having one. */
+  #radar { position: absolute; inset: 0; width: 1920px; height: 1080px; border: 0;
+           background: transparent; opacity: 0; transition: opacity .5s ease; }
+  .wxup #radar { opacity: 1; }
+
+  /* Drawn stand-in, always behind the radar frame: a blank wall shows a map, not black. */
+  .fallback { position: absolute; inset: 0; }
+  .fallback svg { width: 100%; height: 100%; display: block; }
+
+  /* An empty drawn map must never read as "no rain": with Baron down the legend
+     comes off (it is the only thing claiming a reading) and this says why. */
+  .chip { position: absolute; left: 44px; bottom: 126px; display: none; align-items: center; gap: 11px;
+          background: rgba(8,19,31,.82); border: 1px solid rgba(237,178,22,.55); border-radius: 999px;
+          padding: 9px 20px; font-size: 15px; font-weight: 700; letter-spacing: .12em;
+          text-transform: uppercase; color: #F2C24C; }
+  .chip i { width: 11px; height: 11px; border-radius: 50%; background: #F2C24C; animation: pulse 1.6s infinite; }
+  .wxup .chip { display: none; }
+  body:not(.wxup) .chip { display: flex; }
+  body:not(.wxup) .legend { display: none; }
+  /* Same reason as the legend: the pill is a claim, and with the feed down it
+     is not a true one. */
+  body:not(.wxup) .pill { display: none; }
+
+  .ui { position: absolute; inset: 0; pointer-events: none; }
+  .top { position: absolute; top: 0; left: 0; right: 0; height: 132px; display: flex; align-items: center; gap: 30px; padding: 0 44px; background: linear-gradient(180deg, rgba(8,19,31,.92), rgba(8,19,31,0)); }
+  .top .logo img { height: 76px; width: auto; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
+  .top .t { font-size: 42px; font-weight: 800; letter-spacing: .01em; line-height: 1.05; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+  .top .s { font-size: 17px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.78); margin-top: 7px; }
+  .top .right { margin-left: auto; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; background: #A61E2A; color: #fff; font-size: 21px; font-weight: 800; letter-spacing: .14em; padding: 7px 18px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+  .pill .dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+
+  .side { position: absolute; right: 44px; top: 156px; width: 430px; display: flex; flex-direction: column; gap: 14px; }
+  .card { background: rgba(8,19,31,.84); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.18); border-radius: 13px; overflow: hidden; box-shadow: 0 12px 34px rgba(0,0,0,.45); }
+  .card .cap { background: #0F2749; font-size: 15px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; padding: 10px 16px; border-bottom: 3px solid #EDB216; }
+  .wxbox { position: relative; height: 300px; }
+  .wxbox iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+                  background: #fff; opacity: 0; transition: opacity .5s ease; }
+  .wxup .wxbox iframe { opacity: 1; }
+  /* Deliberately carries no reading. Inventing a temperature on a wall under
+     Matt's name is worse than saying the feed is coming back. */
+  .wxbox .standin { position: absolute; inset: 0; display: flex; flex-direction: column;
+                    align-items: center; justify-content: center; gap: 13px; text-align: center; padding: 0 24px; }
+  .wxbox .standin img { height: 52px; width: auto; opacity: .9; }
+  .wxbox .standin span { font-size: 16px; font-weight: 700; letter-spacing: .1em;
+                         text-transform: uppercase; color: rgba(255,255,255,.62); }
+  .heads { padding: 16px 18px; }
+  .heads .k { font-size: 14px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #F2C24C; }
+  .heads .v { font-size: 27px; font-weight: 800; line-height: 1.15; margin: 6px 0 8px; }
+  .heads .m { font-size: 16px; color: rgba(255,255,255,.86); line-height: 1.45; }
+  .card.alert { border-color: rgba(242,194,76,.6); background: rgba(74,44,10,.82); }
+
+  .legend { position: absolute; left: 44px; bottom: 126px; display: flex; align-items: center; gap: 10px; background: rgba(8,19,31,.78); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 9px 18px; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.88); }
+  .legend i { display: block; width: 30px; height: 11px; border-radius: 3px; }
+
+  .foot { position: absolute; left: 0; right: 0; bottom: 0; height: 116px; display: flex; align-items: center; gap: 26px; padding: 0 44px; background: linear-gradient(0deg, rgba(8,19,31,.94), rgba(8,19,31,0)); }
+  .spon { display: flex; flex-direction: column; border: 2px dashed rgba(237,178,22,.62); background: rgba(8,19,31,.6); border-radius: 11px; padding: 13px 26px; }
+  .spon .k { font-size: 14px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #EDB216; }
+  .spon .v { font-size: 25px; font-weight: 800; letter-spacing: .02em; }
+  .credit { margin-left: auto; text-align: right; font-size: 16px; line-height: 1.4; color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .credit b { color: #EDB216; }
+  .clock { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .bug { display: flex; align-items: center; gap: 12px; background: rgba(7,16,34,.62); border: 1px solid rgba(255,255,255,.2); border-radius: 11px; padding: 8px 14px; }
+  .bug img { height: 42px; width: auto; display: block; }
+  .bug span { font-size: 18px; font-weight: 700; color: rgba(255,255,255,.85); }
+  @media (prefers-reduced-motion: reduce) { .pill .dot { animation: none; } }
+</style>
+</head>
+<body>
+<div class="board" id="board">
+
+  <div class="fallback" aria-hidden="true">
+    <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+      <defs><radialGradient id="g" cx="52%" cy="48%" r="60%"><stop offset="0" stop-color="#16324D"/><stop offset="1" stop-color="#08131F"/></radialGradient></defs>
+      <rect width="1920" height="1080" fill="url(#g)"/>
+      <g stroke="#1F3A55" stroke-width="2" opacity=".85">
+        <path d="M0 216 H1920 M0 432 H1920 M0 648 H1920 M0 864 H1920 M240 0 V1080 M480 0 V1080 M720 0 V1080 M960 0 V1080 M1200 0 V1080 M1440 0 V1080 M1680 0 V1080"/>
+      </g>
+      <g fill="none" stroke="#6EE7B7" stroke-opacity=".22" stroke-width="2">
+        <circle cx="990" cy="520" r="180"/><circle cx="990" cy="520" r="360"/><circle cx="990" cy="520" r="540"/>
+      </g>
+      <g font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#fff" opacity=".72">
+        <circle cx="990" cy="520" r="8" fill="#EDB216"/><text x="1012" y="514">Tupelo</text>
+        <circle cx="600" cy="430" r="6"/><text x="622" y="424">Oxford</text>
+        <circle cx="840" cy="800" r="6"/><text x="862" y="794">Starkville</text>
+      </g>
+    </svg>
+  </div>
+
+  <!--
+    The airport's exact recipe: allowfullscreen plus the #zoom/lat/lon hash.
+    Do not strip either one when editing; they are the two differences from
+    the framing test that failed in August.
+  -->
+  <iframe id="radar"
+          title="Live radar - North Mississippi - Mississippi LIVE Weather"
+          src="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/mapv2/index.html?initjson=/digitial_wx/widgets/dcms/a3e6bbb9-e4b6-45c4-a76b-d05241f58783/live/init.json#8/34.244/-88.704"
+          data-wx="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/mapv2/index.html?initjson=/digitial_wx/widgets/dcms/a3e6bbb9-e4b6-45c4-a76b-d05241f58783/live/init.json"
+          data-hash="#8/34.244/-88.704"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+
+  <div class="ui">
+    <div class="top">
+      <div class="logo"><img alt="Mississippi LIVE Weather" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxNTcuOTIgNzkuNDIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4zLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNTEpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogI2ZmZjsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGc+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNzguODUsMzkuMjJsLTE3Ljg2LDMxLjE0LDguODItMjMuNjNjLS45Mi0uMDMtMS44Ni4wMy0yLjc4LDAtMi4zLS4wNy00LjY2LS4xOS02Ljk2LS4yMy0xLjc5LS4wMy0zLjgxLjE1LTUuNTYsMC0uMTYtLjAxLS43NC0uMDMtLjctLjI3bDkuOTItMjYuNTYsMTAuNjEtNi45My05LjA5LDI2LjQ2aDEzLjYxWiIvPgogICAgPGc+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTQ5LjczIDIwLjgyIDE0Ny42NSAyNy4yMyAxMzQuNzcgMjcuMjQgMTMzLjYyIDMwLjUxIDE0NS41OSAzMC41MSAxNDMuNjQgMzUuOCAxMzEuNzMgMzUuODYgMTMwLjAyIDQwLjMxIDE0My4yIDQwLjMxIDE0MS4xMyA0Ni43MyAxMTkuNjggNDYuNzMgMTI3Ljk2IDI0LjE3IDEzMi42OSAyMC44MiAxNDkuNzMgMjAuODIiLz4KICAgICAgPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxMDcuODEgMjAuODIgMTA3LjgxIDM3LjM3IDExOC43IDIwLjgyIDEyNi43NiAyMC44MiAxMDkuNzIgNDYuNzMgOTkuNzUgNDYuNzMgOTkuNzUgMjAuODIgMTA3LjgxIDIwLjgyIi8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iOTYuNiAyMC44MiA4Ny4wNyA0Ni43MyA3OS42MSA0Ni43MyA4OS4wOCAyMC44MiA5Ni42IDIwLjgyIi8+CiAgICA8L2c+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01LjE5LDYyLjMxYy0uMTEtLjAzLTEuMTUtMS44My0xLjItMS45Ny0uMDQtLjEyLS4wOC0uMi0uMDEtLjMybDYuNy0xMC43Myw3LjQ5LTcuNjRjLjIyLTIuNzgtLjIyLTUuODQuMDItOC41OC4yLTIuMjIsMS4xOS00LjgzLDEuNTItNy4wOSw1LjI2LTcuMjIsMTAuNjMtMTQuNCwxNi44My0yMC44NS4xNi0uMTcuMzItLjMzLjQ5LS40OWwyNC4zMy0uMDVjMS40OSwxLDEuNjYsMi44NCwyLDQuNDlsLTE1LjU4LDQwLjgzLTQuNDMsMjAuNjZjLTEuMzMtLjA3LTIuNzYuMS00LjA4LDAtLjk3LS4wOC0yLjA2LS40OC0zLjA1LS40NC0xLjQ1LjA1LTMuMjcuNzgtNC43Ni45bC00LjM4LDMuNzgtMS42NC0xLjk1LTEuNDQtOC4yNiwxLjA2LTIuMzFINS4xOVpNNi4zMyw2MC4yNGgyMi4yMWwtMi4zOSw0LjY0LDEuMiw2LjljLjA5LjA3LjY5LS40NS44MS0uNTUuNjItLjUxLDEuNTgtMS41OSwyLjE4LTEuOTYuMzUtLjIyLDUuMjctMS4xOCw1Ljg4LTEuMi45LS4wMyw1LjA0Ljk5LDUuNDUuNDRsNC4yMi0xOS40MSwxNS4zNy00MC4xNC0uNjEtMi4yOC0yMi4zNi0uMDMtLjQ5LjE2Yy0yLjUyLDMuMDgtNS40Miw1Ljg3LTcuOTQsOC45NC0yLjg4LDMuNTEtNS4zNyw3LjUtOC4yMSwxMS4wNi0uMzgsMi4xOS0xLjI5LDQuNzItMS40OCw2LjkxLS4yNSwyLjg1LjIzLDUuOTktLjA2LDguODdsLTgsOC4yMy01Ljc3LDkuNDJaIi8+CiAgPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSI3Ny44NyA1NS40NSA4MC4yNiA2Mi41MiA4Mi42IDU1LjU1IDg0LjgzIDU1LjQ2IDg3LjIzIDYyLjYzIDg5LjUyIDU1LjQ1IDkxLjcgNTUuNDUgODguNDkgNjUuNDYgODYuMDggNjUuNTggODMuNjkgNTguNzEgODEuMzQgNjUuNTYgNzguNzUgNjUuNTYgNzUuNDcgNTUuNDUgNzcuODcgNTUuNDUiLz4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTUwLjU1LDU1LjQ1YzMuNzEuNDIsNC43MSw1LjE4LDEuMzUsNi44MmwyLjA4LDMuMzFoLTIuMzRsLTEuOTEtMi44M2gtMi4yOXYyLjgzaC0yLjI5di0xMC4xM2MxLjcxLjE0LDMuNzEtLjE5LDUuMzksMFpNMTQ3LjQ1LDYwLjU2aDIuMzRjLjIzLDAsMS4wNy0uMjEsMS4yOS0uMzQuODUtLjQ5LjktMS44LjA0LTIuMjktLjEyLS4wNy0uNy0uMy0uNzktLjNoLTIuODl2Mi45NFoiLz4KICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjEyNi4zNyA1NS41IDEyNi4zNyA1OS4zNyAxMjYuNTMgNTkuNTMgMTMxLjE2IDU5LjUzIDEzMS4xNiA1NS41IDEzMy40NSA1NS41IDEzMy40NSA2NS42MyAxMzEuMTYgNjUuNjMgMTMxLjE2IDYxLjM4IDEyNi41MyA2MS4zOCAxMjYuMzcgNjEuNTQgMTI2LjM3IDY1LjYzIDEyNC4wOCA2NS42MyAxMjQuMDggNTUuNSAxMjYuMzcgNTUuNSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTQzLjIgNTUuNDUgMTQzLjIgNTcuMTkgMTM3Ljc1IDU3LjE5IDEzNy43NSA1OS40MiAxMzcuOTIgNTkuNTggMTQyLjU1IDU5LjU4IDE0Mi41NSA2MS4zMyAxMzcuNzUgNjEuMzMgMTM3Ljc1IDYzLjcyIDE0My4zMSA2My43MiAxNDMuMzEgNjUuNTcgMTM1LjQ3IDY1LjU3IDEzNS40NyA1NS40NSAxNDMuMiA1NS40NSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTAwLjk1IDU1LjQ1IDEwMC45NSA1Ny4xOSA5NS42MiA1Ny4xOSA5NS42MiA1OS41OCAxMDAuMyA1OS41OCAxMDAuMyA2MS4zMyA5NS42MiA2MS4zMyA5NS42MiA2My43MiAxMDEuMTcgNjMuNzIgMTAxLjE3IDY1LjU3IDkzLjMzIDY1LjU3IDkzLjMzIDU1LjQ1IDEwMC45NSA1NS40NSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTIyLjI5IDU1LjQ1IDEyMi4yOSA1Ny4zIDExOS4wMyA1Ny4zIDExOS4wMyA2NS41NyAxMTYuNzQgNjUuNTcgMTE2Ljc0IDU3LjMgMTEzLjQ3IDU3LjMgMTEzLjQ3IDU1LjQ1IDEyMi4yOSA1NS40NSIvPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMDIuODEsNjUuNTdsNC42Mi0xMC4xMywyLjIyLjAzLDQuNDgsMTAuMTFoLTIuNGwtLjk0LTIuMTZjLTEuNC4wOS0zLjA5LS4xOC00LjQ1LS4wMi0uMi4wMi0uMjMuMDEtLjM2LjE4LS4zMS40LS41NSwxLjUtLjc3LDJoLTIuNFpNMTA2Ljg0LDYxLjY1aDMuMjdsLTEuNjktMy45Mi0xLjU4LDMuOTJaIi8+Cjwvc3ZnPg=="></div>
+      <div>
+        <div class="t">Live Radar · North Mississippi</div>
+        <div class="s">Matt Laubhan · Chief Meteorologist</div>
+      </div>
+      <div class="right"><span class="pill"><span class="dot"></span>LIVE</span></div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <div class="cap">Right Now · Tupelo</div>
+        <div class="wxbox">
+          <div class="standin" aria-hidden="true">
+            <svg width="66" height="44" viewBox="0 0 66 44" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="22" cy="16" r="9"/>
+              <path d="M20 36h26a9 9 0 0 0 0-18 13 13 0 0 0-24-3 8 8 0 0 0-2 21Z"/>
+            </svg>
+            <span>Conditions updating</span>
+          </div>
+          <iframe data-wx="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/current/index.html?initjson=/digitial_wx/widgets/dcms/81a01136-aa85-45f3-bc4b-d17dbe58e5c1/live/init.json"
+                  src="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/current/index.html?initjson=/digitial_wx/widgets/dcms/81a01136-aa85-45f3-bc4b-d17dbe58e5c1/live/init.json"
+                  title="Current conditions - Tupelo - Mississippi LIVE Weather" scrolling="no"></iframe>
+        </div>
+      </div>
+      <div class="card alert">
+        <div class="heads">
+          <div class="k">Matt's call</div>
+          <div class="v">Storms move through late afternoon</div>
+          <div class="m">Lightning inside ten miles stops outdoor practice. Clearing before kickoff Saturday.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chip" id="chip"><i></i><span id="chiptext">Radar reconnecting</span></div>
+
+    <div class="legend"><span>Light</span><i style="background:#22C55E"></i><i style="background:#EAB308"></i><i style="background:#EF4444"></i><span>Heavy</span></div>
+
+    <div class="foot">
+      <div class="spon"><span class="k">Presented by</span><span class="v" id="sponsor">YOUR BUSINESS HERE</span></div>
+      <div class="credit">Radar and forecast by <b>Mississippi LIVE Weather</b> · data by Baron</div>
+      <div class="clock" id="clock"></div>
+      <div class="bug"><img alt="MCTV" src="data:image/png;base64,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"><span>mctvofms.com</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var sponsor = (q.get("sponsor") || "").trim();
+  if (sponsor) document.getElementById("sponsor").textContent = sponsor.slice(0, 40);
+
+  // Fit 1920x1080 to whatever the player gives us. Never scale above 1.
+  function fit() {
+    var s = Math.min(innerWidth / 1920, innerHeight / 1080, 1);
+    document.getElementById("board").style.transform = "scale(" + s + ")";
+  }
+  fit(); addEventListener("resize", fit);
+
+  // Baron widgets stall on first paint often enough to be worth one poke, then a
+  // slow refresh. The radar keeps its #hash: without it the map recentres on
+  // Baron's default view, which is not North Mississippi.
+  function refresh() {
+    Array.prototype.forEach.call(document.querySelectorAll("iframe[data-wx]"), function (f) {
+      var base = f.getAttribute("data-wx");
+      var hash = f.getAttribute("data-hash") || "";
+      f.src = base + (base.indexOf("?") > -1 ? "&" : "?") + "_r=" + Date.now() + hash;
+    });
+  }
+  // Is Baron actually reachable? A cross-origin frame cannot be inspected, and a
+  // failed one paints an opaque error page - which would sit on top of the drawn
+  // map and hide it. So the frames stay hidden until a no-cors probe comes back:
+  // an opaque response resolves on success and rejects on a network failure,
+  // which is the only distinction this needs. ?force=1 skips the probe, and a
+  // browser without fetch shows the frames rather than losing the radar.
+  var PROBE = "https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/mapv2/index.html";
+  var skipProbe = q.get("force") === "1" || typeof fetch !== "function";
+  var wasUp = false;
+
+  function check() {
+    if (skipProbe) { document.body.classList.add("wxup"); return; }
+    fetch(PROBE + "?_p=" + Date.now(), { mode: "no-cors", cache: "no-store" }).then(
+      function () {
+        document.body.classList.add("wxup");
+        if (!wasUp) { wasUp = true; refresh(); }  // back after an outage: reload once
+      },
+      function () { document.body.classList.remove("wxup"); wasUp = false; }
+    );
+  }
+
+  check();
+  setTimeout(refresh, 14000); setInterval(function () { check(); refresh(); }, 6 * 60000);
+  setInterval(check, 45000);  // while it is down, watch for it coming back
+
+  // Bound browser drift on an unattended player.
+  setTimeout(function () { location.reload(); }, 6 * 60 * 60000);
+
+  // Venue time zone: a player sitting on UTC must not show the wrong hour.
+  var fmt; try { fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" }); } catch (e) { fmt = null; }
+  function tick() { var d = new Date(); document.getElementById("clock").textContent = fmt ? fmt.format(d) : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
