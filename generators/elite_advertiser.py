@@ -4,6 +4,7 @@
 """Elite Advertiser proposal generator — scannable, visual, 5-6 pages."""
 
 from generators.base_proposal import BaseProposal
+from generators import nil_sections as nil
 from services.config_service import (
     get_team_member, get_pricing_tier, get_all_tiers,
     get_tier_impressions, calculate_cpm, CPM_BENCHMARK_TEXT,
@@ -28,7 +29,7 @@ class EliteAdvertiserProposal(BaseProposal):
         return "elite_advertiser"
 
     def get_sections(self) -> list:
-        return [
+        sections = [
             ("opportunity_hook", "The Opportunity"),
             ("whats_included", "What's Included"),
             ("market_coverage", "Your Market Coverage"),
@@ -36,9 +37,16 @@ class EliteAdvertiserProposal(BaseProposal):
             ("_competitive", "How MCTV Compares"),
             ("why_choose_mctv", "Why MCTV"),
             ("_social_proof", "The MCTV Network"),
+        ]
+        # Optional athlete partnership page — off unless the rep turns it on.
+        # input_data is stashed by BaseProposal.generate() before this runs.
+        if getattr(getattr(self, "input_data", None), "include_nil", False):
+            sections.append(("_nil", "Athlete Partnership"))
+        sections.extend([
             ("getting_started", "Getting Started"),
             ("_team", "Meet Your Team"),
-        ]
+        ])
+        return sections
 
     def get_prompt_variables(self, data) -> dict:
         rep = get_team_member(self.config, data.sales_rep)
@@ -79,6 +87,8 @@ class EliteAdvertiserProposal(BaseProposal):
             self._build_why_choose_mctv(doc, content)
         elif section_key == "_social_proof":
             self._build_social_proof(doc, data)
+        elif section_key == "_nil":
+            self._build_nil(doc, data)
         elif section_key == "getting_started":
             self._build_getting_started(doc, data, content)
         elif section_key == "_team":
@@ -306,6 +316,37 @@ class EliteAdvertiserProposal(BaseProposal):
         else:
             # Final fallback if all parsing fails
             self.docx.add_bullet_list(doc, content)
+
+    # ── ATHLETE PARTNERSHIP (optional single page) ──
+
+    def _build_nil(self, doc, data):
+        """Condensed NIL page for advertisers who want the athlete angle.
+
+        A tighter cut of the standalone NIL Partnership proposal — same shared
+        renderers, so the compliance and tax language can't drift from it.
+        """
+        self.docx.add_section_header(doc, "Athlete Partnership", new_page=True)
+
+        collective = nil.collective_name(self.config)
+        nil.render_intro(self.docx, doc, self.config, collective)
+
+        self.docx.add_sub_header(doc, "HOW IT WORKS")
+        nil.render_how_it_works(
+            self.docx, doc, self.config,
+            getattr(data, "nil_structure", nil.DEFAULT_STRUCTURE), header="",
+        )
+
+        if nil.consented_voices(self.config):
+            self.docx.add_sub_header(doc, "IN THEIR WORDS")
+            nil.render_athlete_voices(self.docx, doc, self.config, limit=2, header="")
+
+        # Compliance bullets print even under tax_language="omit" — they are
+        # what makes the deal survive NIL Go review, not tax framing.
+        tax_language = getattr(data, "tax_language", nil.DEFAULT_TAX)
+        has_points = bool(nil.nil_config(self.config).get("compliance_points"))
+        if has_points or nil.normalize_tax(tax_language) != "omit":
+            self.docx.add_sub_header(doc, "HOW THIS STAYS CLEAN")
+            nil.render_compliance(self.docx, doc, self.config, tax_language, header="")
 
     # ── GETTING STARTED (numbered steps like Good Earth) ──
 

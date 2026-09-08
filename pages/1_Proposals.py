@@ -1,7 +1,7 @@
 # Copyright (c) 2026 MCTV Digital, Inc. All rights reserved.
 # Proprietary and confidential. Unauthorized copying, distribution,
 # or modification of this file is strictly prohibited.
-"""Proposal Generator page - creates all 6 proposal types."""
+"""Proposal Generator page - creates all 7 proposal types."""
 
 import streamlit as st
 import os
@@ -19,7 +19,7 @@ from services.claude_service import ClaudeService
 from services.docx_service import DocxService
 from models.proposal_data import (
     ProposalInput, HostInput, BundleInput, BundleBusiness,
-    VenuePartnerInput, ExclusivityInput, RenewalInput,
+    VenuePartnerInput, ExclusivityInput, RenewalInput, NILPartnerInput,
 )
 from generators.elite_advertiser import EliteAdvertiserProposal
 from generators.host_media_kit import HostMediaKitProposal
@@ -27,6 +27,8 @@ from generators.multi_brand_bundle import MultiBrandBundleProposal
 from generators.venue_partner import VenuePartnerProposal
 from generators.category_exclusivity import CategoryExclusivityProposal
 from generators.renewal_upgrade import RenewalUpgradeProposal
+from generators.nil_partnership import NILPartnershipProposal
+from generators.nil_handout import NILHandout
 
 st.set_page_config(page_title="Proposal Generator - MCTV Bot", page_icon="\U0001F4DD", layout="wide")
 
@@ -72,9 +74,75 @@ def _save_uploaded_files(uploaded_files) -> list[str]:
 
 # ── GENERATION ENGINE (must be defined before forms call it) ──────────────────
 
+# ── NIL VARIANT CONTROLS ─────────────────────────────────────────────────────
+# Two independent knobs on every NIL document. They are deliberately explicit
+# rep choices rather than a hardcoded framing: the "contribution" structure and
+# the "headline" tax language carry real exposure, so the rep picks them
+# knowingly and sees the warning at the moment of choice. The warnings are
+# Streamlit-only and never reach the generated document.
+
+_NIL_STRUCTURES = {
+    "Bundled athlete-featured tiers": "bundled",
+    "Media buy + athlete add-on tiers": "addon",
+    "Media buy + open contribution": "contribution",
+}
+_NIL_TAX = {
+    "State it plainly + disclaimer": "plain",
+    "Lead with the deduction": "headline",
+    "No tax language in the document": "omit",
+}
+
+
+def _nil_variant_controls(key_prefix: str):
+    """Render the structure / tax-language selectors plus the risk warning.
+
+    Returns the (nil_structure, tax_language) config keys.
+    """
+    col1, col2 = st.columns(2)
+    with col1:
+        structure_label = st.selectbox(
+            "Deal structure", list(_NIL_STRUCTURES),
+            key=f"{key_prefix}_nil_structure",
+            help="How the money is presented in the document.",
+        )
+    with col2:
+        tax_label = st.selectbox(
+            "Tax language", list(_NIL_TAX),
+            key=f"{key_prefix}_nil_tax",
+            help="How much tax framing appears in the printed piece.",
+        )
+    structure = _NIL_STRUCTURES[structure_label]
+    tax_language = _NIL_TAX[tax_label]
+
+    if structure == "contribution" and tax_language == "headline":
+        st.error(
+            "**Highest-risk combination.** An open contribution amount with no "
+            "defined athlete deliverable reads as a gift rather than advertising, "
+            "and this setting puts the deduction on the front page. IRS memo "
+            "AM 2023-004 closed the charitable route for collectives, and NIL Go "
+            "rejects deals with no verifiable promotion. Send it only if the "
+            "client's CPA has already signed off."
+        )
+    elif structure == "contribution":
+        st.warning(
+            "**Heads up.** The open contribution amount is what a CPA will push "
+            "back on — a deduction covers what the business *bought*, not what "
+            "it *gave*. The add-on structure keeps the 'as much or as little' "
+            "feel while tying every tier to defined athlete work."
+        )
+    elif tax_language == "headline":
+        st.info(
+            "Leading with the deduction holds up here because every dollar buys "
+            "defined athlete work. Leave the disclaimer in."
+        )
+
+    return structure, tax_language
+
+
 def _generate_proposal(generator_class, data, client_logo_path=None,
                        page2_photo_paths=None, page4_photo_paths=None,
-                       page4_captions=None, color_scheme="original"):
+                       page4_captions=None, color_scheme="original",
+                       require_api_key=True):
     """Run the proposal generation pipeline with progress UI.
 
     Args:
@@ -85,9 +153,12 @@ def _generate_proposal(generator_class, data, client_logo_path=None,
         page4_photo_paths: Photos for Market Coverage (page 4), max 6.
         page4_captions: Optional captions for page 4 photos (same order).
         color_scheme: Color scheme key.
+        require_api_key: Block generation when ANTHROPIC_API_KEY is unset.
+            False for generators that make no Claude calls (the NIL handout).
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key or api_key == "your-api-key-here":
+    # The NIL handout makes zero Claude calls, so it renders without a key.
+    if require_api_key and (not api_key or api_key == "your-api-key-here"):
         st.error(
             "ANTHROPIC_API_KEY not configured. "
             "Please set it in Settings or in the .env file."
@@ -242,6 +313,7 @@ proposal_type = st.selectbox(
         "Category Exclusivity",
         "Renewal / Upgrade",
         "Sponsorship Package",
+        "NIL Partnership",
     ],
     help="Choose the type of proposal to generate.",
 )
@@ -708,6 +780,16 @@ if proposal_type == "Elite Advertiser":
         except Exception:
             pass
 
+    # ── Optional athlete partnership page ──
+    include_nil = st.checkbox(
+        "Add an Athlete Partnership page",
+        help="Adds one page pitching advertising that features a collective "
+             "athlete. Off by default.",
+    )
+    nil_structure, tax_language = "bundled", "plain"
+    if include_nil:
+        nil_structure, tax_language = _nil_variant_controls("elite")
+
     if st.button("Generate Proposal", type="primary", width='stretch'):
         if not business_name or not contact_name or not industry:
             st.error("Please fill in all required fields (marked with *).")
@@ -727,6 +809,9 @@ if proposal_type == "Elite Advertiser":
                 custom_monthly_rate=custom_rate,
                 sales_rep=sales_rep,
                 additional_notes=additional_notes,
+                include_nil=include_nil,
+                nil_structure=nil_structure,
+                tax_language=tax_language,
             )
             _generate_proposal(EliteAdvertiserProposal, data,
                                client_logo_path=logo_path,
@@ -1016,3 +1101,164 @@ elif proposal_type == "Renewal / Upgrade":
                                page4_photo_paths=pg4_paths,
                                page4_captions=scraped_page4_captions,
                                color_scheme=color_scheme)
+
+
+# ── NIL PARTNERSHIP FORM ─────────────────────────────────────────────────────
+elif proposal_type == "NIL Partnership":
+    _nil_cfg = config.get("nil", {}) or {}
+    _default_collective = _nil_cfg.get("collective", {}).get("name", "")
+
+    st.markdown("### NIL / Athlete Partnership Proposal")
+    st.caption(
+        "Advertising that features a collective athlete. The business buys media, "
+        "the athlete is paid for defined promotional work, and the campaign carries "
+        "its own proof-of-play documentation."
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        business_name = st.text_input("Business Name *", placeholder="Oxford Auto Group")
+        contact_name = st.text_input("Contact Name *")
+        contact_email = st.text_input("Contact Email")
+        industry = st.text_input("Industry *", placeholder="Auto Dealer")
+    with col2:
+        collective_name = st.text_input("Collective Name", value=_default_collective,
+                                        help="Defaults to the collective in config.json.")
+        city = st.selectbox("Primary City", market_names)
+        selected_markets = st.multiselect("Markets", market_names, default=[market_names[0]])
+        sales_rep = st.selectbox("Sales Rep", team_names)
+
+    st.markdown("#### Deal shape")
+    nil_structure, tax_language = _nil_variant_controls("nilpartner")
+
+    tiers = get_all_tiers(config)
+    base_tier = 0
+    nil_tier = 0
+    athlete_count = 1
+    contribution_amount = 0.0
+
+    col3, col4 = st.columns(2)
+    if nil_structure == "bundled":
+        packages = _nil_cfg.get("packages", {}).get("bundled", []) or []
+        with col3:
+            if packages:
+                labels = [
+                    f"{p['name']} — ${p['monthly_rate']:,.0f}/mo "
+                    f"({p['screens']} screens, {p['athletes']} athlete"
+                    f"{'s' if p['athletes'] != 1 else ''})"
+                    for p in packages
+                ]
+                nil_tier = labels.index(st.selectbox("Package", labels))
+                athlete_count = packages[nil_tier].get("athletes", 1)
+            else:
+                st.warning("No bundled packages configured under config['nil']['packages'].")
+    else:
+        with col3:
+            tier_labels = [f"{t['name']} — ${t['monthly_rate']:,.0f}/mo" for t in tiers]
+            base_tier = tier_labels.index(st.selectbox("MCTV media package", tier_labels, index=1))
+        with col4:
+            if nil_structure == "addon":
+                addons = _nil_cfg.get("packages", {}).get("addon", []) or []
+                if addons:
+                    labels = [
+                        f"{p['name']} — ${p['monthly_rate']:,.0f}/mo "
+                        f"({p['athletes']} athlete{'s' if p['athletes'] != 1 else ''})"
+                        for p in addons
+                    ]
+                    nil_tier = labels.index(st.selectbox("Athlete tier", labels))
+                    athlete_count = addons[nil_tier].get("athletes", 1)
+                else:
+                    st.warning("No athlete tiers configured under config['nil']['packages'].")
+            else:
+                contribution_amount = st.number_input(
+                    "Monthly support amount ($)", min_value=0.0, value=500.0, step=50.0,
+                    help="Shown alongside the media buy, not bundled into it.",
+                )
+
+    category_exclusive = st.checkbox(
+        "Include category exclusivity",
+        help="Locks the category so a competitor cannot buy the same athlete on the "
+             "same screens. Priced as a premium.",
+    )
+    exclusive_category = ""
+    if category_exclusive:
+        exclusive_category = st.text_input("Exclusive Category", value=industry,
+                                           placeholder="Auto Dealer")
+        # Reuse the same live conflict check the Category Exclusivity form uses.
+        if exclusive_category and selected_markets:
+            try:
+                from services.exclusivity_service import find_conflicts, format_conflict_message
+                conflicts = find_conflicts(exclusive_category, selected_markets)
+                if conflicts:
+                    st.error(
+                        "**⚠️ Exclusivity Conflict Detected**\n\n"
+                        + format_conflict_message(conflicts)
+                    )
+                else:
+                    st.success(
+                        f"✅ No exclusivity conflicts for '{exclusive_category}' "
+                        f"in {', '.join(selected_markets)}."
+                    )
+            except Exception as _e:
+                st.caption(f"Exclusivity check unavailable: {_e}")
+
+    # Surface the consent gate so the rep knows why quotes are or aren't printing.
+    _voices = _nil_cfg.get("athlete_voices", []) or []
+    _cleared = [v for v in _voices if v.get("consent_on_file") is True]
+    if not _cleared:
+        st.warning(
+            f"**No athlete testimonials will print.** {len(_voices)} are configured "
+            "but none are marked `consent_on_file: true`. Quotes and photos are a "
+            "NIL use in their own right — get a signed release, then flip the flag "
+            "in config.json."
+        )
+    else:
+        st.caption(f"{len(_cleared)} of {len(_voices)} athlete testimonials cleared for print.")
+
+    additional_notes = st.text_area("Additional Notes", height=80)
+
+    def _build_nil_input():
+        return NILPartnerInput(
+            business_name=business_name,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            industry=industry,
+            city=city,
+            selected_markets=selected_markets or [city],
+            collective_name=collective_name,
+            base_tier=base_tier,
+            nil_tier=nil_tier,
+            athlete_count=athlete_count,
+            contribution_amount=contribution_amount,
+            category_exclusive=category_exclusive,
+            exclusive_category=exclusive_category,
+            nil_structure=nil_structure,
+            tax_language=tax_language,
+            sales_rep=sales_rep,
+            additional_notes=additional_notes,
+        )
+
+    btn1, btn2 = st.columns(2)
+    with btn1:
+        gen_proposal = st.button("Generate Proposal", type="primary", width='stretch')
+    with btn2:
+        gen_handout = st.button("Generate Handout", width='stretch',
+                                help="One-page leave-behind. No Claude calls, renders instantly.")
+
+    if gen_proposal or gen_handout:
+        if not business_name or not contact_name or not industry:
+            st.error("Please fill in all required fields.")
+        else:
+            logo_path = _save_uploaded_file(client_logo_file) or scraped_logo_path
+            pg2_paths = _save_uploaded_files(page2_photos)[:4] + scraped_page2_paths
+            pg4_paths = _save_uploaded_files(page4_photos)[:6] + scraped_page4_paths
+            _generate_proposal(
+                NILPartnershipProposal if gen_proposal else NILHandout,
+                _build_nil_input(),
+                client_logo_path=logo_path,
+                page2_photo_paths=pg2_paths,
+                page4_photo_paths=pg4_paths,
+                page4_captions=scraped_page4_captions,
+                color_scheme=color_scheme,
+                require_api_key=bool(gen_proposal),
+            )

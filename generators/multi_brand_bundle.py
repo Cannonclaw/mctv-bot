@@ -14,7 +14,7 @@ from generators.base_proposal import BaseProposal
 from services.config_service import (
     get_team_member, get_all_tiers,
     get_tier_impressions, calculate_cpm, get_network_impressions,
-    CPM_BENCHMARK_TEXT,
+    get_total_screens, CPM_BENCHMARK_TEXT,
 )
 
 
@@ -324,7 +324,7 @@ class MultiBrandBundleProposal(BaseProposal):
         network = self.config["network"]
 
         # Calculate monthly savings (lowest tier rate = the free brand)
-        total_screens = int(network["total_screens"])
+        total_screens = get_total_screens(self.config)
         if data.custom_monthly_rate and data.custom_monthly_rate > 0:
             per_brand = data.custom_monthly_rate / num_businesses if num_businesses else 0
             monthly_savings = f"${per_brand:,.0f}"
@@ -363,7 +363,7 @@ class MultiBrandBundleProposal(BaseProposal):
             "Here is how MCTV stacks up against the alternatives."
         )
 
-        total_screens = int(self.config["network"]["total_screens"])
+        total_screens = get_total_screens(self.config)
 
         if data.custom_monthly_rate and data.custom_monthly_rate > 0:
             rate = data.custom_monthly_rate
