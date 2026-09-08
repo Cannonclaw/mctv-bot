@@ -2,7 +2,7 @@
 # Proprietary and confidential.
 """Loop Inventory — Streamlit page for the MCTV Team Member portal.
 
-Four tabs:
+Five tabs:
 
     Screens     loop length per screen from the n-compass whitelist sweep
     Inventory   the manual book of record — what creative plays in each market,
@@ -10,9 +10,12 @@ Four tabs:
     Reconcile   inventory vs the sweep, and inventory vs the Encompass /
                 NTV360 play export
     Dark        playlist items whitelisted to zero screens
+    Health      upload a playlist export and flag items likely to wedge a
+                player (black screens, skipped spots)
 
 The sweep measures how long each screen's loop runs; the inventory says what
-is in it. Reconcile is where the two meet.
+is in it. Reconcile is where the two meet. Health answers a different
+question: is something in this playlist actively breaking the screens?
 
 Drop into: mctv-bot/pages/24_Loop_Inventory.py
 """
@@ -34,6 +37,11 @@ from services.loop_inventory_service import (
     latest_sweep_date,
     market_summary,
     screen_loops,
+)
+from services.playlist_health_service import (
+    check_playlist,
+    parse_playlist_export,
+    summarize as summarize_health,
 )
 from services.screen_inventory_service import (
     BUCKETS,
@@ -109,8 +117,8 @@ st.caption(
     + (f" Last sweep: **{sweep}**." if sweep else "")
 )
 
-tab_screens, tab_inventory, tab_reconcile, tab_dark = st.tabs(
-    ["Screens", "Inventory", "Reconcile", "Dark content"]
+tab_screens, tab_inventory, tab_reconcile, tab_dark, tab_health = st.tabs(
+    ["Screens", "Inventory", "Reconcile", "Dark content", "Playlist health"]
 )
 
 
@@ -747,7 +755,139 @@ with tab_dark:
             },
         )
 
+
+# ---------------------------------------------------------------------------
+# Tab 5 — Playlist health (what in this playlist is breaking screens)
+# ---------------------------------------------------------------------------
+
+with tab_health:
+    st.markdown("### \U0001FA7A Playlist health — what's wedging the players")
+    st.caption(
+        "Upload a playlist export from Encompass. This checks the items "
+        "themselves rather than the whitelist: a file encoded differently from "
+        "the rest of the loop, a zero-length spot, or a live feed that has "
+        "started failing will stop a player and show as a black screen. "
+        "Nothing is written to the database — this is a read-only check."
+    )
+
+    health_file = st.file_uploader(
+        "Playlist export (.xlsx, .xlsm or .csv)",
+        type=["xlsx", "xlsm", "csv", "tsv"],
+        key="health_upload",
+        help="The item list for one playlist — file names, durations, type, "
+             "and license/whitelist counts if the export includes them.",
+    )
+
+    if not health_file:
+        st.info(
+            "No export loaded. Column names don't need to match anything "
+            "exactly — the parser recognizes the usual variants "
+            "(Content Name / File / Duration / Length / Licenses)."
+        )
+    else:
+        try:
+            health_rows = parse_playlist_export(health_file)
+        except Exception as exc:  # noqa: BLE001 — surface any parse failure
+            health_rows = []
+            st.error(f"Could not read that file: {exc}")
+
+        if not health_rows:
+            st.warning(
+                "No playlist rows found. The export needs a header row with a "
+                "file/content column. Try the playlist item list rather than a "
+                "summary or schedule view."
+            )
+        else:
+            findings = check_playlist(health_rows)
+            summary = summarize_health(findings, health_rows)
+            counts = summary["by_severity"]
+
+            h1, h2, h3, h4 = st.columns(4)
+            h1.metric("Items checked", summary["items_checked"])
+            h2.metric("Can stop a player", counts["high"],
+                      delta=None if not counts["high"] else "fix first",
+                      delta_color="inverse")
+            h3.metric("Can misbehave", counts["medium"])
+            h4.metric("Cleanup", counts["low"])
+
+            if counts["high"]:
+                st.error(summary["headline"])
+            elif counts["medium"]:
+                st.warning(summary["headline"])
+            else:
+                st.success(summary["headline"])
+
+            SEVERITY_LABELS = {
+                "high": "Can stop a player",
+                "medium": "Can misbehave",
+                "low": "Cleanup",
+            }
+            RULE_LABELS = {
+                "container_mismatch": "Wrong format for this playlist",
+                "bad_duration": "Bad duration",
+                "dynamic_feed": "Live feed",
+                "dark_item": "Playing nowhere",
+                "duplicate_file": "Duplicate",
+                "risky_filename": "Risky file name",
+                "missing_file": "No file attached",
+            }
+
+            if findings:
+                only_blocking = st.checkbox(
+                    "Show only items that can stop a player",
+                    value=bool(counts["high"]),
+                    key="health_only_blocking",
+                )
+                shown = [f for f in findings
+                         if not only_blocking or f.severity == "high"]
+
+                st.dataframe(
+                    [
+                        {
+                            "Severity": SEVERITY_LABELS.get(f.severity, f.severity),
+                            "Problem": RULE_LABELS.get(f.rule, f.rule),
+                            "File": f.file_name,
+                            "Row": f.row_number,
+                            "What's wrong": f.detail,
+                            "What to do": f.action,
+                        }
+                        for f in shown
+                    ],
+                    width='stretch',
+                    hide_index=True,
+                    column_config={
+                        "What's wrong": st.column_config.TextColumn(width="large"),
+                        "What to do": st.column_config.TextColumn(width="medium"),
+                    },
+                )
+
+                st.download_button(
+                    "Download findings (CSV)",
+                    data=pd.DataFrame([f.as_dict() for f in findings]).to_csv(index=False),
+                    file_name="playlist_health_findings.csv",
+                    mime="text/csv",
+                    key="health_download",
+                )
+
+            with st.expander("How to read this"):
+                st.markdown(
+                    "**Wrong format for this playlist** is the one that most "
+                    "often causes a hard stop. Players are provisioned for a "
+                    "single encoding pipeline, so a lone `.mp4` dropped into an "
+                    "all-`.webm` loop can fail to decode and take the loop down "
+                    "with it.\n\n"
+                    "**Live feeds** are the sneaky ones. They can start failing "
+                    "*after* publish — a stale source, an expired certificate — "
+                    "with nobody having touched the playlist. If screens recover "
+                    "on reboot and then die again within the hour, pull the feeds "
+                    "first and watch.\n\n"
+                    "**Bad durations** at zero can push a player through the loop "
+                    "faster than it can render, which looks like spots being "
+                    "skipped right before the screen goes black."
+                )
+
 st.caption(
     "Sources: `screen_loops` / `dark_content` from the n-compass whitelist sweep, "
-    "and `loop_items` / `loop_item_screens` maintained by hand on the Inventory tab."
+    "and `loop_items` / `loop_item_screens` maintained by hand on the Inventory tab. "
+    "Playlist health reads an uploaded export only."
 )
