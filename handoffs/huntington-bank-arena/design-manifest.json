@@ -1,0 +1,378 @@
+{
+  "package": {
+    "name": "Huntington Bank Arena host media kit",
+    "prepared_for": "Claude Design",
+    "prepared_by": "MCTV Elite Advertising",
+    "date": "2026-08-13",
+    "status": "Copy final, 15-page Chamber flip-book format built; cover exterior + airport photography in place, arena interior photography missing",
+    "brief": "DESIGN-BRIEF.md",
+    "copy": "copy.md",
+    "format": "Chamber flip book \u2014 11 x 6.5 in landscape, spiral / wire-o bound"
+  },
+  "recipient": {
+    "venue": "Huntington Bank Arena and Conference Center",
+    "formerly": [
+      "Cadence Bank Arena",
+      "BancorpSouth Arena"
+    ],
+    "market": "Tupelo, Mississippi",
+    "contact_name": "Alli Shackelford",
+    "contact_title": "Director of Marketing",
+    "contact_email": "alli@hbarena.com",
+    "contact_phone": "662-841-6573 ext. 904",
+    "rep": "Creed Cannon"
+  },
+  "canvas": {
+    "width_px": 1280,
+    "height_px": 756,
+    "aspect": "11:6.5",
+    "pdf_in": [
+      11.0,
+      6.5
+    ],
+    "pdf_pt": [
+      792,
+      468
+    ],
+    "margins_px": {
+      "left": 70,
+      "right": 70,
+      "top": 52
+    },
+    "statrow_bottom_px": 74,
+    "footer_bottom_px": 30,
+    "note": "1280px wide preserves the type scale; 756 = 1280 * 6.5/11"
+  },
+  "palette": {
+    "navy": "#111C33",
+    "navy_deep": "#0C1526",
+    "cream": "#F7F4EC",
+    "red": "#C3312A",
+    "gold": "#C2A15C",
+    "ink": "#16223A",
+    "hba_green": "#8DC63F",
+    "rule": "red only on cream spreads, gold only on navy spreads",
+    "hba_green_use": "the Arena's own green: the sample spot, and the cover co-brand rule"
+  },
+  "type": {
+    "display": "Playfair Display",
+    "text": "Inter",
+    "headline_px": 50,
+    "cover_headline_px": 76,
+    "body_px": 13.5,
+    "eyebrow_px": 10,
+    "stat_number_px": 40,
+    "embedded": "_fonts.css (base64)"
+  },
+  "pages": [
+    {
+      "page": "01",
+      "title": "Cover",
+      "tone": "navy",
+      "layout": "Full-bleed hero. Logo top-left, venue eyebrow top-right, headline lower-left, PREPARED FOR card bottom-right. With exterior.jpg (and no cover.jpg) the photo runs as a top-right corner fade and the venue eyebrow moves under the logo.",
+      "photo_slots": [
+        "cover.jpg",
+        "exterior.jpg"
+      ]
+    },
+    {
+      "page": "02",
+      "title": "What we're proposing",
+      "tone": "cream",
+      "layout": "Two-column: left copy + sample-spot screen render; right three numbered items. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "03",
+      "title": "Proof \u2014 Tupelo Regional",
+      "tone": "navy",
+      "layout": "Two-column: left copy; right waiting-room photo card over a compact pull-quote card. Anchored stat row.",
+      "photo_slots": [
+        "airport_waiting.jpg"
+      ]
+    },
+    {
+      "page": "04",
+      "title": "Already live, across town",
+      "tone": "navy",
+      "layout": "Four real photo cards of the airport install (rotunda hero, live advertiser spot, ticket counter, gate area). Renders only when photos/airport.jpg exists. Anchored stat row.",
+      "photo_slots": [
+        "airport.jpg",
+        "airport_spot.jpg",
+        "airport_counter.jpg",
+        "airport_gate_alt.jpg"
+      ]
+    },
+    {
+      "page": "05",
+      "title": "The network & the value",
+      "tone": "cream",
+      "layout": "Stat row (static, top), local CPM bar comparison, and a photo card of a live local ad in a storefront.",
+      "photo_slots": [
+        "venue_window_ad.jpg"
+      ]
+    },
+    {
+      "page": "06",
+      "title": "The company you'd keep",
+      "tone": "cream",
+      "layout": "Three market chips, a two-column list of 28 Tupelo/Lee Co. venues, and a tall photo card of the loop running in a host venue.",
+      "photo_slots": [
+        "venue_keeping_local.jpg"
+      ]
+    },
+    {
+      "page": "07",
+      "title": "Where your screens would go",
+      "tone": "navy",
+      "layout": "Six proposed zones, two columns of three. Anchored stat row.",
+      "photo_slots": [
+        "concourse.jpg"
+      ]
+    },
+    {
+      "page": "08",
+      "title": "Not a wall of ads",
+      "tone": "navy",
+      "layout": "Four screens in a row showing the real loop \u2014 weather, news, trivia, and her event spot. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "09",
+      "title": "What it costs you: nothing",
+      "tone": "navy",
+      "layout": "Four $0 package cards across, then a bordered summary band.",
+      "photo_slots": []
+    },
+    {
+      "page": "10",
+      "title": "Sixty / forty",
+      "tone": "cream",
+      "layout": "Two-column: left copy; right economics table + disclaimer. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "11",
+      "title": "Your calendar, on every screen we own",
+      "tone": "navy",
+      "layout": "Two-column: left copy; right the lobby event board rendered inside a screen bezel. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "12",
+      "title": "Who we are",
+      "tone": "navy",
+      "layout": "Big display headline left, body right, then a three-photo band of real host-venue installs. Anchored stat row.",
+      "photo_slots": [
+        "venue_mctv_store.jpg",
+        "venue_opc.jpg",
+        "venue_restaurant.jpg"
+      ]
+    },
+    {
+      "page": "13",
+      "title": "Owner-operated, and local",
+      "tone": "cream",
+      "layout": "Three large circular headshots with name, role and contact. Anchored stat row.",
+      "photo_slots": []
+    },
+    {
+      "page": "14",
+      "title": "How this actually happens",
+      "tone": "cream",
+      "layout": "Five-step horizontal timeline.",
+      "photo_slots": []
+    },
+    {
+      "page": "15",
+      "title": "Thank you",
+      "tone": "cream",
+      "layout": "Two-column: left CTA + requirements card; right three contacts with headshots.",
+      "photo_slots": []
+    }
+  ],
+  "photo_slots": {
+    "cover.jpg": {
+      "page": "01",
+      "treatment": "full bleed under a 94%->30% navy scrim",
+      "min_px": [
+        1920,
+        1080
+      ],
+      "note": "subject must sit right of centre; left third goes near-black"
+    },
+    "exterior.jpg": {
+      "page": "01",
+      "treatment": "top-right corner, radial fade into the navy, navy tint gradient",
+      "status": "filled",
+      "source": "supplied by Creed, IMG_6251, 2026-08-16; 330px square upscaled to 660",
+      "note": "used only when cover.jpg is absent; a real cover.jpg supersedes it"
+    },
+    "airport.jpg": {
+      "page": "04",
+      "treatment": "hero photo card",
+      "status": "filled",
+      "source": "supplied by Creed 2026-08-16, 2000x2000; gate rotunda with MCTV screen live",
+      "note": "page 04 renders only when this file exists"
+    },
+    "concourse.jpg": {
+      "page": "07",
+      "treatment": "card beside the zone list",
+      "note": "arena concourse, west entry lobby, or link corridor"
+    },
+    "airport_spot.jpg": {
+      "page": "04",
+      "treatment": "photo card",
+      "status": "filled",
+      "source": "Tupelo Territory Media Kit asset MAHM-7FmA8U, extracted via Canva connector tile-render stitch, 1200x861"
+    },
+    "airport_counter.jpg": {
+      "page": "04",
+      "treatment": "photo card",
+      "status": "filled",
+      "source": "Tupelo Territory Media Kit asset MAHM-xTdTRA, same extraction, 996x1200"
+    },
+    "airport_waiting.jpg": {
+      "page": "03",
+      "status": "filled, not placed",
+      "source": "Tupelo Territory Media Kit asset MAHM-8T_m6Y, same extraction, 1200x881",
+      "treatment": "photo card above the compact quote"
+    },
+    "airport_gate_alt.jpg": {
+      "page": "04",
+      "status": "filled",
+      "source": "supplied by Creed 2026-08-16, 2000x2000; rotunda with the screen dark",
+      "treatment": "photo card"
+    },
+    "venue_keeping_local.jpg": {
+      "page": "06",
+      "treatment": "tall card beside the venue list",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
+    },
+    "venue_mctv_store.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 1200x900"
+    },
+    "venue_opc.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 1199x611"
+    },
+    "venue_restaurant.jpg": {
+      "page": "12",
+      "treatment": "band card",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200"
+    },
+    "venue_window_ad.jpg": {
+      "page": "05",
+      "status": "filled",
+      "source": "Cadence Bank Arena deck (Canva DAGnt1jROqg), extracted via Canva connector tile-render stitch, 900x1200",
+      "treatment": "tall card beside the CPM chart"
+    }
+  },
+  "rendered_not_placeholder": [
+    {
+      "what": "lobby event board",
+      "page": "11",
+      "source_of_truth": "static/board.html",
+      "tokens": {
+        "navy": "#0a1220",
+        "gold": "#d4a017",
+        "live": "#3fbf6a"
+      }
+    },
+    {
+      "what": "sample Arena spot",
+      "page": "02, 08",
+      "note": "mock event promo in the Arena's own green; keep the SAMPLE caption"
+    },
+    {
+      "what": "screen bezel",
+      "page": "02, 08, 11",
+      "note": "wall-mounted display with mount plate"
+    },
+    {
+      "what": "content feed screens",
+      "page": "08",
+      "note": "weather, news and trivia panels drawn in CSS \u2014 the real content mix, not stock UI"
+    }
+  ],
+  "locked_copy": {
+    "revenue_split": {
+      "value": "60/40 by origination",
+      "meaning": "60% to whoever brings the advertiser",
+      "appears_on": [
+        "02",
+        "03",
+        "09",
+        "10"
+      ],
+      "note": "change one, change all"
+    },
+    "network_figures": {
+      "screens": "125+",
+      "tupelo_venues": 28,
+      "monthly_impressions": "1.9M+",
+      "avg_dwell_min": "55+",
+      "blended_cpm": "$2.63"
+    },
+    "disclaimer_page_10": "Illustrative only, at a $350/mo blended advertiser rate - not a guarantee of earnings.",
+    "hedge_page_07": "A starting map, not a final one - drawn from the outside, before we've walked it with you."
+  },
+  "asset_sources": {
+    "blocked": "This session runs behind an egress allowlist. Canva CDN, SharePoint, hbarena.com and general web fetch are all denied; images must be pulled by hand.",
+    "canva_cadence_arena": {
+      "design_id": "DAGnt1jROqg",
+      "title": "CADENCE BANK ARENA PROPOSAL",
+      "page_4": "six photos of MCTV screens installed in venues",
+      "page_5": "Cadence Bank Arena event creative (promoter/artist owned - unusable)"
+    },
+    "canva_tupelo_kit": {
+      "design_id": "DAHM-yFHfPQ",
+      "title": "Tupelo Territory Media Kit",
+      "pages_3_5": "Tupelo Regional Airport install shots",
+      "page_1": "Elvis statue cover"
+    },
+    "sharepoint": "CADENCE BANK ARENA PROPOSAL.pdf (20MB, print res), linked from Creed's 2025-06-03 email to shelby@cb-arena.com",
+    "arena_site": [
+      "https://www.hbarena.com/p/about/seating",
+      "https://www.hbarena.com/sitemap.aspx"
+    ],
+    "visit_tupelo": "https://www.tupelo.net/directory/huntington-bank-arena-and-conference-center-meeting-conventions/"
+  },
+  "rights": {
+    "in_deck_today": "MCTV logo, MCTV team headshots, CSS renders of MCTV products, one Arena exterior photo supplied by Creed, MCTV's own airport install photography, and MCTV's own host-venue install photography. No stock, nothing scraped.",
+    "arena_photography": "Acceptable in a kit addressed to the Arena. Must be removed if the deck is reused for another venue or general marketing.",
+    "event_posters": "Promoter and artist owned. Do not use."
+  },
+  "open_items": [
+    "Airport pull-quote on page 03 attributed by role, never cleared for outbound use - Creed's call",
+    "Screen count (6-8) and six zones on page 06 proposed without a walkthrough"
+  ],
+  "build": {
+    "commands": [
+      "python build_deck.py",
+      "python build_copydeck.py",
+      "python build_email.py"
+    ],
+    "outputs": [
+      "output/proposals/MCTV_Host_Media_Kit_Huntington_Bank_Arena.pdf",
+      "output/emails/Huntington_Bank_Arena_Alli_Shackelford.eml"
+    ],
+    "renderer": "headless Chromium"
+  },
+  "print": {
+    "trim_in": [
+      11,
+      6.5
+    ],
+    "binding": "spiral / wire-o, lies flat",
+    "stock": "100 lb / 270 gsm silk or matte cover, not gloss (gloss flares the navy)",
+    "modelled_on": "MCTV Chamber print package, 2026-08-13"
+  }
+}
