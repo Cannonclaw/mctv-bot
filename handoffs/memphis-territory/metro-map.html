@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCTV &mdash; Memphis Metro Zone Map</title>
+<style>
+  :root { --navy:#1B1F3B; --gold:#C5A55A; --bg:#f7f7f9; --card:#fff; --text:#1a1a1a;
+          --muted:#5d616b; --line:#e3e3e8; --land:#eceef2; --water:#c9d6e2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6; --line:#2a2f36;
+            --land:#1b212a; --water:#233243; }
+  }
+  :root[data-theme="dark"] { --bg:#0d1117; --card:#161b22; --text:#e6e6e6; --muted:#9aa0a6;
+                             --line:#2a2f36; --land:#1b212a; --water:#233243; }
+  :root[data-theme="light"] { --bg:#f7f7f9; --card:#fff; --text:#1a1a1a; --muted:#5d616b;
+                              --line:#e3e3e8; --land:#eceef2; --water:#c9d6e2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text);
+         line-height:1.55; }
+  header.top { background:var(--navy); color:#fff; padding:34px 24px; border-bottom:5px solid var(--gold); }
+  header.top h1 { margin:0 0 6px; font-size:27px; text-wrap:balance; }
+  header.top p { margin:0; color:#c9cbd6; font-size:14px; }
+  .badge-int { display:inline-block; margin-top:12px; background:#C4576B; color:#fff; font-size:11px;
+               letter-spacing:.8px; text-transform:uppercase; padding:4px 10px; font-weight:bold; }
+  .wrap { max-width:1180px; margin:0 auto; padding:24px; }
+  h2 { font-size:19px; margin:34px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--gold);
+       text-wrap:balance; }
+  .stats { display:flex; flex-wrap:wrap; gap:12px; margin:0 0 18px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--gold);
+          padding:11px 15px; min-width:150px; }
+  .stat b { display:block; font-size:21px; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .stat span { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .mapbox { background:var(--card); border:1px solid var(--line); padding:10px; margin-bottom:14px;
+            overflow-x:auto; }
+  .mapbox svg { display:block; width:100%; min-width:660px; height:auto; }
+  .county { fill:var(--land); stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3;
+            fill-opacity:.75; }
+  .countylab { font:bold 11px Arial,sans-serif; fill:var(--muted); letter-spacing:.7px; }
+  .river { fill:none; stroke:var(--water); stroke-width:9; stroke-linecap:round;
+           stroke-linejoin:round; }
+  .riverlab { font:italic 11px Arial,sans-serif; fill:var(--water); }
+  .road { fill:none; stroke:#7d8797; stroke-width:2.5; stroke-linejoin:round; opacity:.9; }
+  .roadlab { font:bold 10.5px Arial,sans-serif; fill:#7d8797; }
+  .stateline { stroke:#C4576B; stroke-width:2; stroke-dasharray:8 5; }
+  .statelab { font:bold 11px Arial,sans-serif; fill:#C4576B; letter-spacing:1.4px; }
+  .zid { font:bold 12px Arial,sans-serif; fill:#fff; }
+  .dot { fill:var(--text); stroke:var(--card); stroke-width:1.5; }
+  .citylab { font:bold 11.5px Arial,sans-serif; fill:var(--text);
+             paint-order:stroke fill; stroke:var(--card); stroke-width:3px; stroke-linejoin:round; }
+  .scale { stroke:var(--muted); stroke-width:2; }
+  .scalelab { font:bold 10px Arial,sans-serif; fill:var(--muted); letter-spacing:.6px; }
+  .zone.dim, .zcard.dim { display:none; }
+  .legend { display:flex; flex-wrap:wrap; gap:15px; font-size:12px; color:var(--muted);
+            margin-bottom:20px; align-items:center; }
+  .legend i { display:inline-block; width:13px; height:13px; margin-right:5px; vertical-align:-2px; }
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; }
+  .filters button { font:inherit; font-size:13px; padding:8px 16px; cursor:pointer;
+    background:var(--card); color:var(--text); border:1px solid var(--line); }
+  .filters button[aria-pressed="true"] { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .filters button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+  .zones { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:15px; }
+  .zcard { background:var(--card); border:1px solid var(--line); padding:0 0 15px; }
+  .zcard header { display:flex; align-items:center; gap:9px; border-left:5px solid var(--gold);
+                  padding:13px 15px 9px; }
+  .zcard h3 { margin:0; font-size:16px; flex:1; }
+  .badge { color:#fff; font:bold 11px Arial,sans-serif; padding:3px 7px; }
+  .tierlab { font-size:10px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
+  .zcard p { margin:0 15px 9px; }
+  .anchors { font-size:12.5px; color:var(--muted); }
+  .figs { display:flex; gap:20px; margin:0 15px 11px; }
+  .figs b { display:block; font-size:17px; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .figs span { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .terr { font-size:11px; font-weight:bold; padding:4px 9px; display:inline-block;
+          margin-bottom:10px !important; }
+  .terr.on { background:rgba(79,138,87,.16); color:#4F8A57; }
+  .terr.off { background:rgba(196,87,107,.16); color:#C4576B; }
+  .why { font-size:13px; }
+  .verdict { font-size:13px; font-weight:bold; }
+  .callout { background:var(--card); border:1px solid var(--line); border-left:4px solid var(--navy);
+             padding:15px 19px; font-size:13.5px; margin-bottom:18px; }
+  .callout b { color:var(--gold); }
+  .callout.gap { border-left-color:#C4576B; }
+  .tablewrap { overflow-x:auto; margin-bottom:18px; }
+  table { border-collapse:collapse; width:100%; background:var(--card); border:1px solid var(--line);
+          font-size:13px; min-width:520px; }
+  th,td { padding:9px 13px; border-bottom:1px solid var(--line); text-align:left; }
+  td + td { font-variant-numeric:tabular-nums; }
+  th { background:var(--navy); color:#fff; font-size:11px; text-transform:uppercase;
+       letter-spacing:.6px; }
+  tr:last-child td { border-bottom:none; }
+  footer { padding:30px 24px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Memphis Metro &mdash; Where the Money Actually Is</h1>
+  <p>Zone map for MCTV Elite Advertising &middot; metro population 1,389,905
+     (41st-largest US metro) &middot; updated 2026-08-05</p>
+  <span class="badge-int">Internal &mdash; not for n-Compass</span>
+</header>
+<div class="wrap">
+
+  <div class="stats">
+    <div class="stat"><b>1,389,905</b><span>Metro population</span></div>
+    <div class="stat"><b>311,997</b><span>Tier A zones</span></div>
+    <div class="stat"><b>152,273</b><span>On the table (DeSoto)</span></div>
+    <div class="stat"><b>178,889</b><span>Tier A NOT on the table</span></div>
+    <div class="stat"><b>$149,920</b><span>Top zone income</span></div>
+  </div>
+
+  <div class="callout gap">
+    <b>Read this before the map.</b> Only the two solid-outlined zones &mdash; DeSoto County &mdash;
+    are what Don offered. Everything drawn with a <b>dashed outline sits in Tennessee or Arkansas
+    and is a separate n-Compass territory</b> that is very likely already held by someone else.
+    n-Compass sells protected territories for a $35,000 franchise fee and claims coverage in 250+
+    cities, so Memphis proper is unlikely to be sitting empty. This map shows where the value is,
+    not what is available &mdash; those are different questions, and the second one is a question
+    for Don.
+  </div>
+
+  <h2>The map</h2>
+  <div class="legend">
+    <span><i style="background:#C5A55A"></i>Tier A &mdash; primary target</span>
+    <span><i style="background:#4A7C9B"></i>Tier B &mdash; secondary</span>
+    <span><i style="background:#8A8FA3"></i>Tier C &mdash; watch</span>
+    <span><i style="background:#C4576B"></i>Tier D &mdash; avoid</span>
+    <span>&mdash; solid box = DeSoto (offered) &middot; dashed box = separate territory</span>
+  </div>
+  <div class="mapbox"><svg viewBox="0 0 1000 1008" role="img" aria-label="Memphis metropolitan area zone map"><rect x="96.5" y="225.3" width="596.5" height="444.5" class="county"/><text class="countylab" x="104.5" y="245.3">SHELBY CO, TN</text><rect x="96.5" y="669.8" width="517.5" height="360.1" class="county"/><text class="countylab" x="104.5" y="689.8">DESOTO CO, MS</text><rect x="693.0" y="214.6" width="298.2" height="455.2" class="county"/><text class="countylab" x="701.0" y="234.6">FAYETTE CO, TN</text><rect x="324.6" y="10.7" width="403.5" height="311.1" class="county"/><text class="countylab" x="332.6" y="30.7">TIPTON CO, TN</text><rect x="614.0" y="669.8" width="342.1" height="360.1" class="county"/><text class="countylab" x="622.0" y="689.8">MARSHALL CO, MS</text><rect x="0.0" y="225.3" width="271.9" height="439.9" class="county"/><text class="countylab" x="8.0" y="263.3">CRITTENDEN CO, AR</text><polyline points="228.1,10.7 254.4,182.4 289.5,332.6 324.6,450.6 289.5,525.7 245.6,600.8 157.9,675.9 96.5,772.4 52.6,901.2 78.9,987.0" class="river"/><text class="riverlab" x="105.3" y="901.2">MISSISSIPPI RIVER</text><polyline points="70.2,515.0 228.1,515.0 350.9,504.2 491.2,461.3 693.0,439.9 929.8,386.2" class="road"/><text class="roadlab" x="76.2" y="509.0">I-40</text><polyline points="228.1,214.6 280.7,429.1 315.8,547.1 350.9,643.7 368.4,772.4 377.2,965.5" class="road"/><text class="roadlab" x="234.1" y="208.6">I-55</text><polyline points="377.2,847.5 482.5,751.0 587.7,633.0 649.1,493.5 666.7,343.3 578.9,268.2" class="road"/><text class="roadlab" x="383.2" y="841.5">I-269</text><polyline points="359.6,568.6 464.9,675.9 596.5,761.7 763.2,847.5 929.8,922.6" class="road"/><text class="roadlab" x="365.6" y="562.6">I-22 / US-78</text><polyline points="324.6,493.5 421.1,493.5 482.5,557.9 438.6,633.0 342.1,622.2 315.8,547.1" class="road"/><text class="roadlab" x="330.6" y="487.5">I-240</text><line x1="0.0" y1="669.8" x2="1000.0" y2="669.8" class="stateline"/><text class="statelab" x="894.7" y="661.8">TENNESSEE</text><text class="statelab" x="894.7" y="687.8">MISSISSIPPI</text><g class="zone" data-tier="A" data-zone="Z1"><rect x="464.9" y="515.0" width="254.4" height="150.2" fill="#C5A55A" fill-opacity=".14" stroke="#C5A55A" stroke-width="3" stroke-dasharray="9 5"/><rect x="464.9" y="515.0" width="30" height="21" fill="#C5A55A"/><text class="zid" x="479.9" y="530.0" text-anchor="middle">Z1</text></g><g class="zone" data-tier="A" data-zone="Z2"><rect x="421.1" y="300.4" width="307.0" height="193.1" fill="#C5A55A" fill-opacity=".14" stroke="#C5A55A" stroke-width="3" stroke-dasharray="9 5"/><rect x="421.1" y="300.4" width="30" height="21" fill="#C5A55A"/><text class="zid" x="436.1" y="315.4" text-anchor="middle">Z2</text></g><g class="zone" data-tier="A" data-zone="Z3"><rect x="289.5" y="669.8" width="131.6" height="70.5" fill="#C5A55A" fill-opacity=".14" stroke="#C5A55A" stroke-width="3"/><rect x="289.5" y="669.8" width="30" height="21" fill="#C5A55A"/><text class="zid" x="304.5" y="684.8" text-anchor="middle">Z3</text></g><g class="zone" data-tier="A" data-zone="Z4"><rect x="429.8" y="665.2" width="157.9" height="85.8" fill="#C5A55A" fill-opacity=".14" stroke="#C5A55A" stroke-width="3"/><rect x="429.8" y="665.2" width="30" height="21" fill="#C5A55A"/><text class="zid" x="444.8" y="680.2" text-anchor="middle">Z4</text></g><g class="zone" data-tier="B" data-zone="Z5"><rect x="438.6" y="439.9" width="157.9" height="118.0" fill="#4A7C9B" fill-opacity=".14" stroke="#4A7C9B" stroke-width="3" stroke-dasharray="9 5"/><rect x="438.6" y="439.9" width="30" height="21" fill="#4A7C9B"/><text class="zid" x="453.6" y="454.9" text-anchor="middle">Z5</text></g><g class="zone" data-tier="B" data-zone="Z6"><rect x="315.8" y="751.0" width="122.8" height="150.2" fill="#4A7C9B" fill-opacity=".14" stroke="#4A7C9B" stroke-width="3"/><rect x="315.8" y="751.0" width="30" height="21" fill="#4A7C9B"/><text class="zid" x="330.8" y="766.0" text-anchor="middle">Z6</text></g><g class="zone" data-tier="C" data-zone="Z7"><rect x="719.3" y="343.3" width="193.0" height="300.4" fill="#8A8FA3" fill-opacity=".14" stroke="#8A8FA3" stroke-width="3" stroke-dasharray="9 5"/><rect x="719.3" y="343.3" width="30" height="21" fill="#8A8FA3"/><text class="zid" x="734.3" y="358.3" text-anchor="middle">Z7</text></g><g class="zone" data-tier="C" data-zone="Z8"><rect x="289.5" y="461.3" width="122.8" height="96.6" fill="#8A8FA3" fill-opacity=".14" stroke="#8A8FA3" stroke-width="3" stroke-dasharray="9 5"/><rect x="289.5" y="461.3" width="30" height="21" fill="#8A8FA3"/><text class="zid" x="304.5" y="476.3" text-anchor="middle">Z8</text></g><g class="zone" data-tier="C" data-zone="Z9"><rect x="412.3" y="21.5" width="307.0" height="236.0" fill="#8A8FA3" fill-opacity=".14" stroke="#8A8FA3" stroke-width="3" stroke-dasharray="9 5"/><rect x="412.3" y="21.5" width="30" height="21" fill="#8A8FA3"/><text class="zid" x="427.3" y="36.5" text-anchor="middle">Z9</text></g><g class="zone" data-tier="D" data-zone="Z10"><rect x="87.7" y="364.8" width="184.2" height="246.7" fill="#C4576B" fill-opacity=".14" stroke="#C4576B" stroke-width="3" stroke-dasharray="9 5"/><rect x="87.7" y="364.8" width="30" height="21" fill="#C4576B"/><text class="zid" x="102.7" y="379.8" text-anchor="middle">Z10</text></g><g class="city"><circle cx="325.4" cy="504.8" r="12.2" class="dot"/><text class="citylab" x="334.4" y="508.8">Memphis</text></g><g class="city"><circle cx="535.0" cy="572.0" r="5.7" class="dot"/><text class="citylab" x="544.0" y="576.0">Germantown</text></g><g class="city"><circle cx="662.7" cy="620.1" r="6.0" class="dot"/><text class="citylab" x="671.7" y="624.1">Collierville</text></g><g class="city"><circle cx="479.0" cy="445.8" r="6.1" class="dot"/><text class="citylab" x="488.0" y="449.8">Bartlett</text></g><g class="city"><circle cx="659.3" cy="346.8" r="4.9" class="dot"/><text class="citylab" x="668.3" y="350.8">Arlington</text></g><g class="city"><circle cx="599.1" cy="384.1" r="4.8" class="dot"/><text class="citylab" x="608.1" y="388.1">Lakeland</text></g><g class="city"><circle cx="564.0" cy="497.8" r="6.4" class="dot"/><text class="citylab" x="573.0" y="501.8">Cordova</text></g><g class="city"><circle cx="458.5" cy="298.8" r="4.6" class="dot"/><text class="citylab" x="467.5" y="302.8">Millington</text></g><g class="city"><circle cx="357.4" cy="677.0" r="6.2" class="dot"/><text class="citylab" x="366.4" y="681.0">Southaven</text></g><g class="city"><circle cx="337.5" cy="713.3" r="5.3" class="dot"/><text class="citylab" x="346.5" y="717.3">Horn Lake</text></g><g class="city"><circle cx="518.0" cy="706.1" r="5.9" class="dot"/><text class="citylab" x="527.0" y="710.1">Olive Branch</text></g><g class="city"><circle cx="375.7" cy="855.5" r="5.0" class="dot"/><text class="citylab" x="384.7" y="859.5">Hernando</text></g><g class="city"><circle cx="206.3" cy="508.0" r="5.2" class="dot"/><text class="citylab" x="215.3" y="512.0">West Memphis</text></g><g class="city"><circle cx="641.3" cy="802.5" r="3.9" class="dot"/><text class="citylab" x="650.3" y="806.5">Byhalia</text></g><g class="city"><circle cx="792.1" cy="420.8" r="4.6" class="dot"/><text class="citylab" x="801.1" y="424.8">Oakland</text></g><g class="city"><circle cx="678.9" cy="59.5" r="4.6" class="dot"/><text class="citylab" x="687.9" y="63.5">Covington</text></g><line x1="40" y1="968.455701611652" x2="195.1" y2="968.455701611652" class="scale"/><line x1="40" y1="962.455701611652" x2="40" y2="974.455701611652" class="scale"/><line x1="195.1" y1="962.455701611652" x2="195.1" y2="974.455701611652" class="scale"/><text class="scalelab" x="117.5" y="957.455701611652" text-anchor="middle">10 MILES</text></svg></div>
+
+  <div class="callout">
+    <b>To scale.</b> Equirectangular projection with cos(latitude) correction at 35.1°N, so the map is to scale. County and river outlines are simplified but geographically positioned. City dot size scales with population.
+  </div>
+
+  <h2>The number that changes the argument</h2>
+  <div class="callout">
+    DeSoto County's <b>$85,500</b> median household income is the highest in Mississippi, and it is
+    the reason to take the territory. But it is <b>not</b> the highest in this metro &mdash; it is
+    not close. Germantown is <b>$149,920</b>, Collierville <b>$134,319</b>, Arlington
+    <b>$135,105</b>. The wealthiest ground within 20 miles of the DeSoto line is on the Tennessee
+    side, and it is not ours to take today.
+  </div>
+
+  <div class="tablewrap"><table>
+    <tr><th>City</th><th>Population</th><th>Median household income</th></tr>
+    <tr><td><b>Germantown</b></td><td>39,773</td><td>$149,920</td></tr><tr><td><b>Arlington</b></td><td>15,866</td><td>$135,105</td></tr><tr><td><b>Collierville</b></td><td>52,126</td><td>$134,319</td></tr><tr><td><b>Lakeland</b></td><td>14,416</td><td>$116,250</td></tr><tr><td><b>Bartlett</b></td><td>56,708</td><td>$100,660</td></tr><tr><td><b>Southaven</b></td><td>58,551</td><td>$85,500</td></tr><tr><td><b>Horn Lake</b></td><td>26,738</td><td>$85,500</td></tr><tr><td><b>Olive Branch</b></td><td>47,819</td><td>$85,500</td></tr><tr><td><b>Hernando</b></td><td>19,165</td><td>$85,500</td></tr><tr><td><b>Memphis</b></td><td>606,132</td><td>$51,736</td></tr><tr><td><b>West Memphis</b></td><td>23,130</td><td>$42,674</td></tr><tr><td><b>Byhalia</b></td><td>1,417</td><td>$38,500</td></tr>
+  </table></div>
+
+  <h2>Zones, ranked</h2>
+  <div class="filters">
+    <button data-filter="all" aria-pressed="true">All zones</button>
+    <button data-filter="A" aria-pressed="false">Tier A</button>
+    <button data-filter="B" aria-pressed="false">Tier B</button>
+    <button data-filter="C" aria-pressed="false">Tier C</button>
+    <button data-filter="D" aria-pressed="false">Tier D</button>
+  </div>
+  <div class="zones"><article class="zcard" data-tier="A"><header style="border-left-color:#C5A55A"><span class="badge" style="background:#C5A55A">Z1</span><h3>East Shelby money crescent</h3><span class="tierlab">Primary target</span></header><p class="anchors">Germantown · Collierville</p><div class="figs"><div><b>91,899</b><span>Population</span></div><div><b>$134,319&ndash;$149,920</b><span>Median household income</span></div></div><p class="terr off">TN — INCUMBENT OPERATES HERE (~3 pins)</p><p class="why">The highest-income concentration in Tennessee. Germantown at $149,920 and Collierville at $134,319 are 57–75% above DeSoto County, which is itself #1 in Mississippi. ~92,000 people who can afford everything our advertisers sell.</p><p class="verdict">Reclassified. The DeSoto incumbent has screens in Germantown/East Memphis. Either her grant includes Shelby County or n-Compass territories are porous. Ask Don first — this is worth more than DeSoto.</p></article><article class="zcard" data-tier="A"><header style="border-left-color:#C5A55A"><span class="badge" style="background:#C5A55A">Z2</span><h3>Northeast growth arc</h3><span class="tierlab">Primary target</span></header><p class="anchors">Bartlett · Lakeland · Arlington</p><div class="figs"><div><b>86,990</b><span>Population</span></div><div><b>$100,660&ndash;$135,105</b><span>Median household income</span></div></div><p class="terr off">TN — INCUMBENT OPERATES HERE (~7-9 pins)</p><p class="why">Arlington ($135,105) and Lakeland ($116,250) are family-formation suburbs in a residential build-out; Bartlett adds 56,708 people at $100,660. Every income here beats DeSoto County.</p><p class="verdict">Her densest cluster outside Southaven sits here, in the $100K-$135K income band. Whatever arrangement lets her operate in Bartlett and Lakeland is the arrangement we want to understand.</p></article><article class="zcard" data-tier="A"><header style="border-left-color:#C5A55A"><span class="badge" style="background:#C5A55A">Z3</span><h3>DeSoto north</h3><span class="tierlab">Primary target</span></header><p class="anchors">Southaven · Horn Lake</p><div class="figs"><div><b>85,289</b><span>Population</span></div><div><b>$85,500</b><span>Median household income</span></div></div><p class="terr on">DeSoto — on the table from n-Compass</p><p class="why">Silo Square, Tanger Outlets, Landers Center, the Snowden District and the Goodman Road spine. The densest venue inventory in DeSoto County.</p><p class="verdict">Ours to take, and confirmed as the incumbent's stronghold — ~12-14 pins across Southaven/Horn Lake. Phase 2, after Olive Branch and Hernando are live.</p></article><article class="zcard" data-tier="A"><header style="border-left-color:#C5A55A"><span class="badge" style="background:#C5A55A">Z4</span><h3>Olive Branch</h3><span class="tierlab">Primary target</span></header><p class="anchors">Olive Branch · Craft Rd / I-22</p><div class="figs"><div><b>47,819</b><span>Population</span></div><div><b>$85,500</b><span>Median household income</span></div></div><p class="terr on">DeSoto — on the table from n-Compass</p><p class="why">Mississippi's #1 boomtown, and it borders Zone 1. An advertiser in Olive Branch is selling to Germantown and Collierville households too — the county line is not a shopping boundary.</p><p class="verdict">Phase 1 flagship. Incumbent has only ~3 pins here — a toehold against our 24-screen target, not a network.</p></article><article class="zcard" data-tier="B"><header style="border-left-color:#4A7C9B"><span class="badge" style="background:#4A7C9B">Z5</span><h3>Cordova / East Memphis</h3><span class="tierlab">Secondary</span></header><p class="anchors">Cordova · Poplar corridor</p><div class="figs"><div><b>68,779</b><span>Population</span></div><div><b>&mdash;</b><span>Median household income</span></div></div><p class="terr off">TN — incumbent present</p><p class="why">68,779 people and the Poplar Avenue retail spine. Mixed incomes — strong at the eastern end, thinner toward the I-240 loop.</p><p class="verdict">Real volume, but sits inside Memphis proper where media competition is heaviest.</p></article><article class="zcard" data-tier="B"><header style="border-left-color:#4A7C9B"><span class="badge" style="background:#4A7C9B">Z6</span><h3>DeSoto south</h3><span class="tierlab">Secondary</span></header><p class="anchors">Hernando · Nesbit</p><div class="figs"><div><b>19,165</b><span>Population</span></div><div><b>$85,500</b><span>Median household income</span></div></div><p class="terr on">DeSoto — on the table from n-Compass</p><p class="why">Fastest percentage growth in DeSoto County (+10.96% since 2020) and a walkable courthouse square — the Oxford playbook.</p><p class="verdict">Phase 1 co-launch. Incumbent has ~3-4 pins clustered near I-55; the courthouse square may still be open.</p></article><article class="zcard" data-tier="C"><header style="border-left-color:#8A8FA3"><span class="badge" style="background:#8A8FA3">Z7</span><h3>Fayette west — Piperton / Oakland</h3><span class="tierlab">Watch</span></header><p class="anchors">Piperton · Oakland · Somerville</p><div class="figs"><div><b>45,600</b><span>Population</span></div><div><b>&mdash;</b><span>Median household income</span></div></div><p class="terr off">TN — not DeSoto</p><p class="why">Fayette County is the fastest-growing county in the metro (+1.17%/yr, and 3.44% on the state's own certified report). But it is still mostly rural and its BlueOval City upside has slipped.</p><p class="verdict">Watch. Not enough venue density yet to support a build.</p></article><article class="zcard" data-tier="C"><header style="border-left-color:#8A8FA3"><span class="badge" style="background:#8A8FA3">Z8</span><h3>Memphis core</h3><span class="tierlab">Watch</span></header><p class="anchors">Downtown · Midtown</p><div class="figs"><div><b>606,132</b><span>Population</span></div><div><b>$51,736</b><span>Median household income</span></div></div><p class="terr off">TN — not DeSoto</p><p class="why">Huge raw population, but a $51,736 median household income and the most contested media market in the region. Density is not the same as spending power.</p><p class="verdict">Skip on economics, not on size. Our advertisers sell to households with disposable income.</p></article><article class="zcard" data-tier="C"><header style="border-left-color:#8A8FA3"><span class="badge" style="background:#8A8FA3">Z9</span><h3>Tipton — Atoka / Munford / Covington</h3><span class="tierlab">Watch</span></header><p class="anchors">Atoka · Munford · Covington</p><div class="figs"><div><b>62,268</b><span>Population</span></div><div><b>&mdash;</b><span>Median household income</span></div></div><p class="terr off">TN — not DeSoto</p><p class="why">62,268 people but growth is flat at -0.03%/yr, and West Tennessee counties are underperforming their BlueOval projections.</p><p class="verdict">Watch only. No growth story to sell against.</p></article><article class="zcard" data-tier="D"><header style="border-left-color:#C4576B"><span class="badge" style="background:#C4576B">Z10</span><h3>West Memphis / Crittenden</h3><span class="tierlab">Avoid</span></header><p class="anchors">West Memphis · Marion</p><div class="figs"><div><b>45,631</b><span>Population</span></div><div><b>$42,674&ndash;$55,358</b><span>Median household income</span></div></div><p class="terr off">AR — not DeSoto</p><p class="why">Population down 10.45% since 2010 and still falling at -1.25%/yr. West Memphis itself is at $42,674 median household income with a 29.13% poverty rate.</p><p class="verdict">Avoid. Shrinking population and the weakest advertiser base in the metro.</p></article></div>
+
+  <h2>What this means for the Don conversation</h2>
+  <div class="callout">
+    Taking DeSoto is still right &mdash; it is the best advertiser market in Mississippi and it is
+    being offered. But this map reframes the ask. <b>Olive Branch (Z4) borders the money crescent
+    (Z1).</b> An Olive Branch advertiser is already selling to Germantown and Collierville
+    households, because a county line is not a shopping boundary. That makes Olive Branch worth
+    more than its own 47,819 residents suggest.
+    <br><br>
+    So add a fourth question for Don: <b>who holds Shelby County, and is any of it available or
+    coming available?</b> If the answer is &ldquo;nobody&rdquo; or &ldquo;someone who is
+    struggling,&rdquo; that is a far bigger conversation than DeSoto &mdash; roughly
+    178,889 people in Tier A Tennessee zones at incomes well above anything in our
+    current network.
+  </div>
+
+  <div class="callout gap">
+    <b>One correction to the earlier brief.</b> It cited BlueOval City as a growth driver for the
+    region. Ford and SK On dissolved their joint venture and production dates have slipped, and
+    West Tennessee counties are now underperforming their projections &mdash; Tipton is flat at
+    -0.03%/yr. The Marshall County jobs story (Jabil, Amazon, Baxter) is real and unaffected;
+    the BlueOval halo is not something to lean on.
+  </div>
+
+</div>
+<footer>MCTV Digital, Inc. &mdash; internal planning document. Generated from metro_zones.json.</footer>
+<script>
+  const buttons = document.querySelectorAll('.filters button');
+  const targets = document.querySelectorAll('.zone, .zcard');
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    const f = btn.dataset.filter;
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    targets.forEach(el => el.classList.toggle('dim', !(f === 'all' || el.dataset.tier === f)));
+  }));
+</script>
+</body>
+</html>

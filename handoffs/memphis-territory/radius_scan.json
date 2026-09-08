@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "title": "60-Mile Radius Scan — Expansion Candidates",
+    "updated": "2026-08-04",
+    "audience": "internal",
+    "question": "Are there markets within 60 miles of any current MCTV market worth adding?",
+    "method": "Great-circle distance from every candidate to all five current markets; nearest wins. Distances are straight-line, not drive time.",
+    "radius_miles": 60,
+    "bounds": {"lat_min": 32.35, "lat_max": 35.95, "lon_min": -91.00, "lon_max": -86.70}
+  },
+
+  "tiers": {
+    "1": {"label": "Worth a real look", "color": "#C5A55A"},
+    "2": {"label": "Different play", "color": "#4A7C9B"},
+    "3": {"label": "Satellite fill-in", "color": "#5B8F7A"},
+    "4": {"label": "Skip", "color": "#C4576B"}
+  },
+
+  "current": [
+    {"name": "Oxford", "lat": 34.3665, "lon": -89.5192, "screens": 75},
+    {"name": "Starkville", "lat": 33.4504, "lon": -88.8184, "screens": 30},
+    {"name": "Tupelo", "lat": 34.2576, "lon": -88.7034, "screens": 25},
+    {"name": "Columbus", "lat": 33.4957, "lon": -88.4273, "screens": 2},
+    {"name": "West Point", "lat": 33.6076, "lon": -88.6503, "screens": 1}
+  ],
+
+  "candidates": [
+    {
+      "name": "Tuscaloosa + Northport, AL", "lat": 33.2098, "lon": -87.5692,
+      "tier": 1, "rank": 1, "population": 116477, "hhi": 51464,
+      "note": "116,477 people plus ~34,000 University of Alabama students. The only genuine second Oxford inside the radius — and Oxford is our most proven build at 75 screens. Metro median household income $62,280; the city figure is depressed by students, exactly as it is in Oxford.",
+      "against": "Contested. Impulse Digital Media already runs the same free-host model across Tuscaloosa and 40+ Alabama cities, Trillboards has 17 programmatic screens, and Lamar owns the outdoor. Also crosses a state line, needs its own rep, and 'MCTV of MS' does not travel."
+    },
+    {
+      "name": "Philadelphia, MS", "lat": 32.7712, "lon": -89.1167,
+      "tier": 2, "rank": 3, "population": 7000, "hhi": null,
+      "note": "The town is small, but Pearl River Resort next door runs three casinos, a hotel complex, a water park and a golf course on Choctaw tribal land, employing 2,400–3,000 people. MBCI operations carry roughly $1B in annual economic impact.",
+      "against": "This is a destination play, not a town network — a handful of high-dwell screens serving visitors, not a 20-screen municipal build. Different sale, different math."
+    },
+    {
+      "name": "Grenada, MS", "lat": 33.7690, "lon": -89.8081,
+      "tier": 2, "rank": 4, "population": 12335, "hhi": 46303,
+      "note": "12,335 people on the I-55 corridor, 44 miles from Oxford. The largest standalone town in the radius that we do not already touch.",
+      "against": "Median household income $46,303 — well below Oxford or Tupelo. Modest advertiser base."
+    },
+    {
+      "name": "Corinth, MS", "lat": 34.9343, "lon": -88.5222,
+      "tier": 4, "rank": 9, "population": 14000, "hhi": null,
+      "note": "48 miles from Tupelo, and the biggest town in the northeast corner.",
+      "against": "Alcorn County shrank from 34,740 (2020) to 34,569 (2025). We already ruled it out in the territory brief; distance does not change that."
+    },
+    {
+      "name": "Holly Springs, MS", "lat": 34.7676, "lon": -89.4468,
+      "tier": 4, "rank": 10, "population": 6285, "hhi": 45462,
+      "note": "28 miles from Oxford — the closest sizeable town we do not serve.",
+      "against": "Declining at -1.83%/yr with a $45,462 median household income. Close is not the same as worth it."
+    },
+
+    {"name": "Water Valley, MS", "lat": 34.1526, "lon": -89.6303, "tier": 3, "rank": 5, "population": 3200, "hhi": null, "note": "16 mi from Oxford.", "against": null},
+    {"name": "Aberdeen, MS", "lat": 33.8251, "lon": -88.5439, "tier": 3, "rank": 5, "population": 5200, "hhi": null, "note": "16 mi from West Point.", "against": null},
+    {"name": "Fulton, MS", "lat": 34.2701, "lon": -88.4089, "tier": 3, "rank": 5, "population": 4000, "hhi": null, "note": "17 mi from Tupelo. Itawamba Community College.", "against": null},
+    {"name": "Pontotoc, MS", "lat": 34.2476, "lon": -88.9995, "tier": 3, "rank": 5, "population": 6256, "hhi": null, "note": "17 mi from Tupelo. Toyota Blue Springs nearby.", "against": null},
+    {"name": "Baldwyn, MS", "lat": 34.5104, "lon": -88.6367, "tier": 3, "rank": 5, "population": 3200, "hhi": null, "note": "18 mi from Tupelo.", "against": null},
+    {"name": "Okolona, MS", "lat": 34.0007, "lon": -88.7517, "tier": 3, "rank": 5, "population": 2600, "hhi": null, "note": "18 mi from Tupelo.", "against": null},
+    {"name": "Amory, MS", "lat": 33.9843, "lon": -88.4884, "tier": 3, "rank": 5, "population": 6300, "hhi": null, "note": "23 mi from Tupelo.", "against": null},
+    {"name": "Ackerman, MS", "lat": 33.3115, "lon": -89.1734, "tier": 3, "rank": 5, "population": 1500, "hhi": null, "note": "23 mi from Starkville.", "against": null},
+    {"name": "New Albany, MS", "lat": 34.4943, "lon": -89.0053, "tier": 3, "rank": 5, "population": 7784, "hhi": null, "note": "24 mi from Tupelo.", "against": null},
+    {"name": "Batesville, MS", "lat": 34.3090, "lon": -89.9437, "tier": 3, "rank": 5, "population": 7445, "hhi": 51727, "note": "25 mi from Oxford, on I-55.", "against": null},
+    {"name": "Vernon, AL", "lat": 33.7554, "lon": -88.1103, "tier": 3, "rank": 5, "population": 2000, "hhi": null, "note": "26 mi from Columbus.", "against": null},
+    {"name": "Louisville, MS", "lat": 33.1237, "lon": -89.0559, "tier": 3, "rank": 5, "population": 6100, "hhi": null, "note": "26 mi from Starkville.", "against": null},
+    {"name": "Eupora, MS", "lat": 33.5401, "lon": -89.2678, "tier": 3, "rank": 5, "population": 2100, "hhi": null, "note": "27 mi from Starkville.", "against": null},
+    {"name": "Bruce, MS", "lat": 33.9926, "lon": -89.3459, "tier": 3, "rank": 5, "population": 2000, "hhi": null, "note": "28 mi from Oxford.", "against": null},
+    {"name": "Macon, MS", "lat": 33.1109, "lon": -88.5614, "tier": 3, "rank": 5, "population": 2500, "hhi": null, "note": "28 mi from Columbus.", "against": null},
+    {"name": "Houston, MS", "lat": 33.8981, "lon": -88.9995, "tier": 3, "rank": 5, "population": 3600, "hhi": null, "note": "28 mi from West Point.", "against": null},
+    {"name": "Booneville, MS", "lat": 34.6590, "lon": -88.5678, "tier": 3, "rank": 5, "population": 8600, "hhi": null, "note": "29 mi from Tupelo. Northeast MS Community College.", "against": null},
+    {"name": "Ripley, MS", "lat": 34.7290, "lon": -88.9506, "tier": 3, "rank": 5, "population": 5300, "hhi": null, "note": "36 mi from Tupelo.", "against": null},
+    {"name": "Kosciusko, MS", "lat": 33.0579, "lon": -89.5892, "tier": 3, "rank": 5, "population": 6800, "hhi": null, "note": "52 mi from Starkville.", "against": null},
+    {"name": "Winona, MS", "lat": 33.4874, "lon": -89.7284, "tier": 3, "rank": 5, "population": 4300, "hhi": null, "note": "53 mi from Starkville. I-55.", "against": null}
+  ],
+
+  "outside": [
+    {"name": "Clarksdale, MS", "lat": 34.2001, "lon": -90.5712, "note": "61 mi — just outside, and the Delta is losing population."},
+    {"name": "Selmer, TN", "lat": 35.1706, "lon": -88.5961, "note": "63 mi from Tupelo."},
+    {"name": "Muscle Shoals, AL", "lat": 34.7448, "lon": -87.6675, "note": "68 mi from Tupelo. The Shoals is a real market — worth a look if the radius ever widens."},
+    {"name": "Florence, AL", "lat": 34.7998, "lon": -87.6773, "note": "69 mi from Tupelo. University of North Alabama."},
+    {"name": "Greenwood, MS", "lat": 33.5162, "lon": -90.1795, "note": "70 mi from Oxford."},
+    {"name": "Cleveland, MS", "lat": 33.7440, "lon": -90.7248, "note": "81 mi from Oxford. Delta State."}
+  ]
+}
