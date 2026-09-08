@@ -132,6 +132,11 @@ class BaseProposal(ABC):
 
         # Add footer
         self.docx.add_footer(doc)
+        self.docx.set_document_properties(
+            doc,
+            title=f"MCTV Partnership Proposal - {input_data.business_name}",
+            subject="Advertising partnership proposal",
+        )
 
         # Save proposal
         safe_name = input_data.business_name.replace(" ", "_").replace("'", "")

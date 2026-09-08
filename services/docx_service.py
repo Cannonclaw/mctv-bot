@@ -1333,19 +1333,26 @@ class DocxService:
 
         self._remove_table_borders(table)
 
-    def add_footer(self, doc: Document, footer_text: str = "Confidential Partnership Proposal"):
+    def add_footer(self, doc: Document,
+                   footer_text: str = "Confidential Partnership Proposal",
+                   provenance: str = ""):
         """Add branded footer: 'MCTV Elite Advertising  |  [text]  |  Page X'
 
-        Skips the first section (cover page) so the navy background isn't
-        interrupted by a page-number footer.
+        The cover page gets a reduced footer — confidentiality and provenance
+        only, no page number — so the navy background stays clean while page 1
+        still carries attribution. Every other section gets the full footer.
 
         Args:
             footer_text: Middle text (default: "Confidential Partnership Proposal").
                          Reports can pass different text.
+            provenance: Optional per-viewer trace line appended below the footer,
+                        e.g. from partner_access.watermark_label(). Stamped on
+                        documents surfaced to evaluation accounts so a leaked
+                        file traces back to a session.
         """
         for idx, section in enumerate(doc.sections):
             if idx == 0:
-                # Cover page — no footer
+                self._add_cover_footer(section, footer_text, provenance)
                 continue
             footer = section.footer
             footer.is_linked_to_previous = False
@@ -1396,6 +1403,85 @@ class DocxService:
             run_fld3 = p.add_run()
             fld_end = run_fld3._element.makeelement(qn("w:fldChar"), {qn("w:fldCharType"): "end"})
             run_fld3._element.append(fld_end)
+
+            if provenance:
+                self._add_provenance_line(footer, provenance)
+
+    def _add_cover_footer(self, section, footer_text: str, provenance: str = ""):
+        """Minimal footer for the cover page: attribution, no page number.
+
+        Rendered in the accent color so it stays legible against the navy
+        cover background.
+        """
+        footer = section.footer
+        footer.is_linked_to_previous = False
+        p = footer.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        label = footer_text or "Confidential"
+        if "confidential" not in label.lower():
+            label = f"Confidential  |  {label}"
+
+        run = p.add_run(f"MCTV Elite Advertising   |   {label}")
+        run.font.size = Pt(8)
+        run.font.color.rgb = self.c["accent"]
+        run.font.name = "Arial"
+
+        if provenance:
+            self._add_provenance_line(footer, provenance, color=self.c["accent"])
+
+    def _add_provenance_line(self, footer, provenance: str, color=None):
+        """Append a small per-viewer trace line beneath a footer."""
+        p = footer.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(provenance)
+        run.font.size = Pt(6)
+        run.font.color.rgb = color if color is not None else self.c["gray"]
+        run.font.name = "Arial"
+
+    def set_document_properties(self, doc: Document, title: str = "",
+                                subject: str = "", provenance: str = ""):
+        """Stamp ownership into the file's own metadata.
+
+        Without this, python-docx leaves the author as "python-docx" and the
+        company blank, so a generated file carries nothing identifying it once
+        the logo and footer are stripped.
+        """
+        company = self.config.get("company", {})
+        legal_name = company.get("legal_name", "MCTV Digital")
+        owner = f"{legal_name}, Inc."
+        year = datetime.now().year
+
+        comments = (
+            f"Copyright (c) {year} {owner} All rights reserved. "
+            "Proprietary and confidential. Unauthorized copying, distribution, "
+            "or creation of derivative works is prohibited."
+        )
+        if provenance:
+            comments += f" {provenance}"
+
+        # Note: there is no core "company" property — company lives in the
+        # extended app.xml part, which python-docx doesn't expose. The owner is
+        # carried in author/comments instead.
+        values = {
+            "author": owner,
+            "last_modified_by": owner,
+            "category": "Confidential",
+            "comments": comments,
+        }
+        if title:
+            values["title"] = title
+        if subject:
+            values["subject"] = subject
+
+        props = doc.core_properties
+        for name, value in values.items():
+            # Set individually so one unsupported property can't silently drop
+            # the rest.
+            try:
+                setattr(props, name, value)
+            except Exception as e:
+                print(f"[docx_service] Could not set document property '{name}': {e}")
 
     def add_competitive_comparison(self, doc: Document, monthly_rate: float,
                                     screen_count: int, monthly_impressions: float = 0):

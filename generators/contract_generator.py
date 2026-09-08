@@ -587,14 +587,105 @@ RENEWAL_CLAUSES = [
 ]
 
 
+# ── Protective clauses (appended to every contract type) ────────────────────
+# These run in MCTV's favor and were absent from every clause set: nothing in
+# the standard agreements obliged a counterparty to keep MCTV's pricing,
+# process, or platform confidential, or stopped them from rebuilding it.
+# Titles carry no number — _with_protective_clauses() numbers them per set.
+
+CONFIDENTIALITY_CLAUSE = {
+    "title": "Confidentiality",
+    "body": (
+        "Each party may receive information from the other that is confidential, "
+        "including pricing, rate cards, audience and performance data, venue lists, "
+        "proposal and report formats, software, and business processes. Each party "
+        "agrees to keep that information confidential, to use it only for the purpose "
+        "of this partnership, and not to disclose it to any third party without prior "
+        "written consent. This obligation continues for three years after this "
+        "agreement ends."
+    ),
+}
+
+TRADE_SECRET_CLAUSE = {
+    "title": "Proprietary Materials",
+    "body": (
+        "The MCTV platform, including its software, client portal, proposal and "
+        "report templates, pricing models, audience methodology, and supporting "
+        "documentation, is the exclusive property of MCTV Digital, Inc. and contains "
+        "trade secrets protected under the Mississippi Uniform Trade Secrets Act and "
+        "the federal Defend Trade Secrets Act. Nothing in this agreement grants any "
+        "license to that material. The counterparty agrees not to copy, reverse "
+        "engineer, decompile, or create derivative works from it, and not to use it "
+        "to build or assist in building a competing product or service."
+    ),
+}
+
+NON_COMPETE_CLAUSE = {
+    "title": "Non-Circumvention",
+    "body": (
+        "During the term of this agreement and for twelve months afterward, the "
+        "counterparty agrees not to use MCTV's confidential information to establish, "
+        "operate, fund, or advise a competing indoor digital advertising network in "
+        "the markets covered by this agreement, and not to circumvent MCTV by "
+        "contracting directly with venues, hosts, or advertisers first introduced by "
+        "MCTV. This clause restricts the use of MCTV's confidential information and "
+        "introductions; it does not restrict ordinary competition on independently "
+        "developed terms."
+    ),
+}
+
+NON_SOLICIT_CLAUSE = {
+    "title": "Non-Solicitation",
+    "body": (
+        "During the term of this agreement and for twelve months afterward, neither "
+        "party will knowingly solicit for employment any employee or contractor of the "
+        "other party who was involved in this partnership, without prior written "
+        "consent. General public job postings not targeted at the other party's "
+        "personnel are not a violation of this clause."
+    ),
+}
+
+PROTECTIVE_CLAUSES = [
+    CONFIDENTIALITY_CLAUSE,
+    TRADE_SECRET_CLAUSE,
+    NON_COMPETE_CLAUSE,
+    NON_SOLICIT_CLAUSE,
+]
+
+
+_LEADING_NUMBER_RE = re.compile(r"^\d+\.\s*")
+
+
+def _with_protective_clauses(clauses: list[dict]) -> list[dict]:
+    """Append the protective clauses to a set, continuing its numbering.
+
+    The existing clause sets hardcode their numbers in the title, and each set
+    is a different length, so numbering is computed per set rather than baked
+    into the constants. Governing Law is kept last, where it conventionally sits.
+    """
+    body = list(clauses)
+
+    tail = []
+    if body and "governing law" in body[-1].get("title", "").lower():
+        tail = [body.pop()]
+
+    out = body + [dict(c) for c in PROTECTIVE_CLAUSES] + tail
+
+    renumbered = []
+    for idx, clause in enumerate(out, start=1):
+        label = _LEADING_NUMBER_RE.sub("", clause["title"])
+        renumbered.append({**clause, "title": f"{idx}. {label}"})
+    return renumbered
+
+
 # Map contract types to their clause sets
 _CLAUSE_MAP = {
-    "advertiser": STANDARD_CLAUSES,
-    "host": HOST_CLAUSES,
-    "host_advertising": HOST_ADVERTISING_CLAUSES,
-    "category_exclusivity": CATEGORY_EXCLUSIVITY_CLAUSES,
-    "bundle": BUNDLE_CLAUSES,
-    "renewal": RENEWAL_CLAUSES,
+    "advertiser": _with_protective_clauses(STANDARD_CLAUSES),
+    "host": _with_protective_clauses(HOST_CLAUSES),
+    "host_advertising": _with_protective_clauses(HOST_ADVERTISING_CLAUSES),
+    "category_exclusivity": _with_protective_clauses(CATEGORY_EXCLUSIVITY_CLAUSES),
+    "bundle": _with_protective_clauses(BUNDLE_CLAUSES),
+    "renewal": _with_protective_clauses(RENEWAL_CLAUSES),
 }
 
 
@@ -781,7 +872,10 @@ class ContractGenerator:
         # ── Terms & Conditions section ──────────────────────────────
         self.docx_service.add_section_header(doc, "Terms & Conditions", new_page=True)
 
-        clauses = _CLAUSE_MAP.get(contract_type, STANDARD_CLAUSES)
+        # Fall back to the protected advertiser set — never the raw constant,
+        # or an unrecognized contract_type would ship without the
+        # confidentiality and non-circumvention clauses.
+        clauses = _CLAUSE_MAP.get(contract_type, _CLAUSE_MAP["advertiser"])
         for clause in clauses:
             self.docx_service.add_accent_card(doc, clause["title"], clause["body"])
 
@@ -790,7 +884,12 @@ class ContractGenerator:
         self._add_signature_section(doc, business_name, client_name, contract_type)
 
         # ── Footer ──────────────────────────────────────────────────
-        self.docx_service.add_footer(doc, "Partnership Agreement")
+        self.docx_service.add_footer(doc, "Confidential Partnership Agreement")
+        self.docx_service.set_document_properties(
+            doc,
+            title=f"MCTV Partnership Agreement - {business_name}",
+            subject="Advertising partnership agreement",
+        )
 
         # ── Save ────────────────────────────────────────────────────
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

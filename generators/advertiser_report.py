@@ -112,7 +112,12 @@ class AdvertiserReportGenerator:
             progress_callback("Adding team section", current_step, total_steps)
 
         # --- Step 8: Footer ---
-        self.docx.add_footer(doc, footer_text="Ad Performance Report")
+        self.docx.add_footer(doc, footer_text="Confidential Ad Performance Report")
+        self.docx.set_document_properties(
+            doc,
+            title="MCTV Ad Performance Report",
+            subject="Advertiser traction report",
+        )
         current_step += 1
         if progress_callback:
             progress_callback("Finalizing report", current_step, total_steps)

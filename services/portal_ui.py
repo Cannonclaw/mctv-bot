@@ -7,6 +7,8 @@ Centralizes CSS, sidebar navigation, and footer so every portal page
 stays consistent without duplicating 50+ lines of boilerplate.
 """
 
+from pathlib import Path
+
 import streamlit as st
 from services.auth import portal_logout
 from services.config_service import load_config
@@ -115,9 +117,14 @@ def render_portal_footer():
 def load_portal_client(user: dict):
     """Load the client record for the current portal user.
 
+    This is the choke point every guarded portal page goes through, so it also
+    resolves read-only partner/demo state and records the page view for audit.
+    Keeping both here means an individual page cannot forget to check.
+
     Returns the client dict, or calls st.stop() if the client isn't set up yet.
     """
     from services.portal_service import get_client_by_user_id
+    from services.partner_access import resolve_access, require_terms_acceptance
 
     try:
         client = get_client_by_user_id(user.get("user_id", ""))
@@ -131,4 +138,44 @@ def load_portal_client(user: dict):
         st.stop()
         return None
 
+    st.session_state["_portal_client_id"] = client.get("id", "")
+    resolve_access(user, client)
+    # Gate here as well as on the dashboard — otherwise an evaluation account
+    # could navigate straight to /portal_invoices and skip the terms.
+    require_terms_acceptance(user)
+    _log_page_view(client)
+
     return client
+
+
+def _log_page_view(client: dict):
+    """Record one audit row per page per session.
+
+    Streamlit reruns the whole script on every widget interaction, so the visit
+    is de-duplicated in session state — otherwise a single page visit would
+    produce dozens of rows and bury the signal.
+
+    The page name comes from the calling frame: load_portal_client() is called
+    directly from each portal page, so the caller's filename is the page.
+    """
+    import inspect
+
+    from services.auth import log_portal_event
+
+    page = ""
+    try:
+        caller = inspect.stack()[2]
+        page = Path(caller.filename).stem
+    except Exception:
+        page = "unknown"
+
+    seen_key = f"_pv_logged_{page}"
+    if st.session_state.get(seen_key):
+        return
+    st.session_state[seen_key] = True
+
+    log_portal_event(
+        "portal_page_view",
+        entity_type="page",
+        details={"page": page, "client": client.get("business_name", "")},
+    )

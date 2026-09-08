@@ -200,9 +200,22 @@ def get_client_dashboard(client_id: str) -> dict:
         "total_screens": total_screens,
         "pending_invoice_count": len(pending_invoices),
         "next_invoice": pending_invoices[0] if pending_invoices else None,
-        # Live performance metrics (computed from NTV360 snapshots + config)
-        "live_performance": _compute_live_performance(active_contracts, total_screens),
+        # Live performance metrics (computed from NTV360 snapshots + config).
+        # Demo tenants get synthetic figures — _compute_live_performance reads
+        # network-wide NTV360 totals, which a partner must never see.
+        "live_performance": (
+            _demo_live_performance(total_screens)
+            if client.get("is_demo")
+            else _compute_live_performance(active_contracts, total_screens)
+        ),
     }
+
+
+def _demo_live_performance(total_screens: int) -> dict:
+    """Synthetic performance figures for sandbox tenants."""
+    from services.partner_access import demo_live_performance
+
+    return demo_live_performance(total_screens)
 
 
 def _compute_live_performance(active_contracts: list, total_screens: int) -> dict:
@@ -362,11 +375,15 @@ def get_host_dashboard(client_id: str) -> dict:
 def log_activity(client_id: str, action: str, entity_type: str = "",
                  entity_id: str = "", user_id: str = "",
                  details: dict | None = None, ip_address: str = ""):
-    """Log an activity event for audit trail."""
-    data = {
-        "client_id": client_id,
-        "action": action,
-    }
+    """Log an activity event for audit trail.
+
+    Empty ids are omitted rather than sent as "" — activity_log.client_id and
+    entity_id are UUID columns, and an empty string is rejected outright. Login
+    and logout events legitimately have no client yet.
+    """
+    data = {"action": action}
+    if client_id:
+        data["client_id"] = client_id
     if entity_type:
         data["entity_type"] = entity_type
     if entity_id:
@@ -383,8 +400,40 @@ def log_activity(client_id: str, action: str, entity_type: str = "",
 
 # ── Admin Summary ────────────────────────────────────────────────────────────
 
+def _assert_not_portal_session(fn_name: str):
+    """Refuse to run a team-only aggregate inside a client/partner session.
+
+    Portal isolation is enforced in Python rather than by RLS, so functions
+    that read across all clients must not be reachable from a portal page —
+    including by accident, via an import in a shared module.
+    """
+    try:
+        import streamlit as st
+    except Exception:
+        return  # Not in a Streamlit context (cron job, script) — allow.
+
+    try:
+        in_portal = bool(st.session_state.get("portal_authenticated"))
+        is_team = bool(st.session_state.get("authenticated"))
+    except Exception:
+        return  # No session context available.
+
+    if in_portal and not is_team:
+        raise PermissionError(
+            f"{fn_name}() is team-only and cannot be called from a portal session."
+        )
+
+
+
 def get_admin_summary() -> dict:
-    """Get high-level stats for the internal admin dashboard."""
+    """Get high-level stats for the internal admin dashboard.
+
+    Team-only. This aggregates the entire book of business — every client,
+    every contract, total MRR — and lives in the same module the portal pages
+    import, so it guards itself rather than trusting call sites.
+    """
+    _assert_not_portal_session("get_admin_summary")
+
     all_clients = get_all_clients()
     all_contracts = query_table("contracts", order="-created_at")
     all_invoices = query_table("invoices", order="-issued_date")

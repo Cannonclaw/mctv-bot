@@ -119,6 +119,11 @@ class VenueReportGenerator:
 
         # --- Step 8: Footer ---
         self.docx.add_footer(doc)
+        self.docx.set_document_properties(
+            doc,
+            title="MCTV Venue Partner Report",
+            subject="Venue partner performance report",
+        )
         current_step += 1
         if progress_callback:
             progress_callback("Finalizing report", current_step, total_steps)

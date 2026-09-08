@@ -16,6 +16,7 @@ from services.supabase_client import query_table, insert_row
 from services.storage_service import upload_file, BUCKET_CREATIVE_UPLOADS
 from services.notification_service import notify_creative_submitted
 from services.portal_ui import inject_portal_css, render_portal_sidebar, render_portal_footer, load_portal_client
+from services.partner_access import render_partner_banner, assert_writable, is_demo_session
 
 st.set_page_config(
     page_title="Creative Requests - MCTV Client Portal",
@@ -30,6 +31,7 @@ require_portal_auth()
 user = get_portal_user()
 render_portal_sidebar(user)
 client = load_portal_client(user)
+render_partner_banner(user)
 
 client_id = client.get("id", "")
 bname = client.get("business_name", "")
@@ -137,6 +139,7 @@ with tab_new:
                                           width='stretch')
 
         if submitted:
+            assert_writable("submit a creative request")
             if not req_title:
                 st.error("Please enter a title for your request.")
             else:
