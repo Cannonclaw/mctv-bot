@@ -19,13 +19,56 @@ if not check_team_auth():
 from services.team_ui import render_team_sidebar
 render_team_sidebar()
 from services.pipeline_service import (
-    STAGES, TIERS, FOLLOW_UP_SLA,
+    STAGES, TIERS, FOLLOW_UP_SLA, CLOSED_STAGES,
     get_all_opportunities, get_opportunity, create_opportunity,
     update_opportunity, delete_opportunity, advance_stage, mark_lost,
     get_pipeline_summary, get_revenue_forecast, get_deals_needing_action,
     get_activity, log_note, log_call, log_event, import_lead_to_pipeline,
     get_stage_options, get_rep_scoreboard,
+    # Editability + data hygiene
+    get_deleted, restore_opportunity, purge_deleted, merge_opportunities,
+    find_duplicate_groups, find_junk_rows, looks_like_junk,
+    validate_business_name, normalize_name, deleted_fingerprints,
+    tier_payload, custom_payload, total_contract_value,
+    get_forecast_gaps, local_today, counted,
 )
+
+
+# ── Write helpers ─────────────────────────────────────────────────────────────
+# Every save goes through one of these so a rejected write is shown instead of
+# silently swallowed. st.rerun() ALWAYS happens at the call site, never inside
+# the try — RerunException subclasses Exception and would be caught as a bogus
+# error (same trap documented in pages/23_Tasks.py).
+
+def _run(fn, *args, **kwargs) -> bool:
+    """Run a write and surface any failure. True when it actually succeeded."""
+    try:
+        result = fn(*args, **kwargs)
+    except Exception as e:  # noqa: BLE001
+        st.error(f"That didn't save: {e}")
+        return False
+    if result is False or result is None:
+        st.error("That didn't save. The database rejected the change.")
+        return False
+    return True
+
+
+def _save_deal(stage_moved: bool, did: str, stage_key: str,
+               payload: dict, rep: str) -> bool:
+    """Save an edited deal, routing a stage change through advance_stage."""
+    try:
+        if stage_moved:
+            advance_stage(did, stage_key, performed_by=rep)
+        if not update_opportunity(did, payload):
+            st.error("That didn't save. The database rejected the change.")
+            return False
+        log_event(did, "value_updated", details="Deal details edited",
+                  performed_by=rep)
+    except Exception as e:  # noqa: BLE001
+        st.error(f"That didn't save: {e}")
+        return False
+    st.success("Deal updated.")
+    return True
 from services.enrichment_service import (
     enrich_from_website, merge_enrichment, format_hours, normalize_url,
 )
@@ -112,17 +155,116 @@ k1, k2, k3, k4, k5 = st.columns(5)
 k1.metric("Active Deals", summary["total_opportunities"])
 k2.metric("Pipeline Value", f"${summary['total_pipeline_value']:,.0f}/mo")
 k3.metric("Weighted Value", f"${summary['weighted_pipeline_value']:,.0f}/mo")
-k4.metric("Won This Month", f"${summary['mrr_won_this_month']:,.0f}/mo")
-k5.metric("Win Rate", f"{summary['conversion_rate']:.0f}%")
+k4.metric(
+    "Won This Month", f"${summary['mrr_won_this_month']:,.0f}/mo",
+    help="Counted by the date each deal was actually won, so editing an old "
+         "deal no longer moves its revenue into this month.",
+)
+k5.metric(
+    "Win Rate", f"{summary['conversion_rate']:.0f}%",
+    help=f"{summary['total_won']} won vs {summary['total_lost']} lost. "
+         "Duplicates and junk rows marked Lost drag this down. Clear them "
+         "in the Cleanup tab.",
+)
+
+_notes = []
+if summary.get("excluded_count"):
+    _notes.append(f"{summary['excluded_count']} deal(s) left out of these "
+                  "numbers on purpose")
+if summary.get("one_time_pipeline_value"):
+    _notes.append(f"${summary['one_time_pipeline_value']:,.0f} in one-time "
+                  "fees is tracked separately from MRR")
+if summary.get("undated_wins"):
+    _notes.append(f"{summary['undated_wins']} won deal(s) have no close date, "
+                  "so they aren't in any month")
+if _notes:
+    st.caption(" - ".join(_notes))
 
 st.divider()
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
 
-tab_pipeline, tab_deals, tab_add, tab_import, tab_nurture, tab_forecast, tab_actions, tab_scoreboard = st.tabs([
-    "Pipeline View", "All Deals", "Add Deal", "Import Leads",
+(tab_pipeline, tab_deals, tab_add, tab_cleanup, tab_import,
+ tab_nurture, tab_forecast, tab_actions, tab_scoreboard) = st.tabs([
+    "Pipeline View", "All Deals", "Add Deal", "Cleanup", "Import Leads",
     "Nurture Center", "Forecast", "Action Items", "Rep Scoreboard",
 ])
+
+
+# ── Shared pricing editor ────────────────────────────────────────────────────
+# Used by both Add Deal and Edit Deal so a custom package is entered the same
+# way in both places. Returns the pricing fields ready to save.
+
+def render_pricing_inputs(key_prefix: str, deal: dict | None = None) -> dict:
+    """Tier-or-custom pricing controls. Cannot be used inside st.form."""
+    deal = deal or {}
+    is_custom = deal.get("pricing_mode") == "custom"
+
+    mode = st.radio(
+        "Pricing",
+        ["Standard tier", "Custom package"],
+        index=1 if is_custom else 0,
+        horizontal=True,
+        key=f"{key_prefix}_mode",
+        help="Use Custom for any proposal that doesn't fit the four stock "
+             "tiers: a bundled rate, a flat project fee, a political flight.",
+    )
+
+    if mode == "Standard tier":
+        tier_keys = list(TIERS.keys())
+        cur = deal.get("tier_name")
+        idx = tier_keys.index(cur) if cur in tier_keys else 1
+        chosen = st.selectbox("Tier", tier_keys, index=idx, key=f"{key_prefix}_tier")
+        st.caption(
+            f"{TIERS[chosen]['screens']} screens - "
+            f"${TIERS[chosen]['monthly']:,.0f}/mo"
+        )
+        return tier_payload(chosen)
+
+    p1, p2 = st.columns(2)
+    with p1:
+        pkg = st.text_input(
+            "Package name",
+            value=deal.get("tier_name", "") if is_custom else "",
+            placeholder="e.g. Full Flight, Founding Partner, Project bundle",
+            key=f"{key_prefix}_pkg",
+        )
+        monthly = st.number_input(
+            "Monthly rate ($/mo)", min_value=0.0, step=50.0, format="%.2f",
+            value=float(deal.get("monthly_value") or 0),
+            key=f"{key_prefix}_monthly",
+            help="Recurring revenue only. Put one-time project fees on the right.",
+        )
+    with p2:
+        screens = st.number_input(
+            "Screens", min_value=0, step=5,
+            value=int(deal.get("screen_count") or 0),
+            key=f"{key_prefix}_screens",
+        )
+        one_time = st.number_input(
+            "One-time / flat fee ($)", min_value=0.0, step=100.0, format="%.2f",
+            value=float(deal.get("one_time_value") or 0),
+            key=f"{key_prefix}_onetime",
+            help="Flat project or flight fees. Tracked separately so they "
+                 "never get counted as monthly recurring revenue.",
+        )
+
+    term = st.number_input(
+        "Contract term (months, 0 = not set)", min_value=0, max_value=120, step=1,
+        value=int(deal.get("term_months") or 0),
+        key=f"{key_prefix}_term",
+    )
+
+    payload = custom_payload(pkg, monthly, one_time, screens, term or None)
+    tcv = total_contract_value({
+        "monthly_value": monthly, "one_time_value": one_time, "term_months": term})
+    st.caption(
+        f"Total contract value: **${tcv:,.0f}**"
+        + (f"  (${monthly:,.0f}/mo x {int(term)} mo"
+           + (f" + ${one_time:,.0f} flat" if one_time else "") + ")"
+           if term else "  (no term set - counted as one month)")
+    )
+    return payload
 
 
 # ── Tab 1: Pipeline View ─────────────────────────────────────────────────────
@@ -207,7 +349,16 @@ with tab_deals:
         deals = [d for d in deals if search_lower in (d.get("business_name") or "").lower()
                  or search_lower in (d.get("contact_name") or "").lower()]
 
-    st.caption(f"Showing {len(deals)} deal(s)")
+    # Each deal renders a full editor, so drawing all 80+ at once makes the
+    # tab crawl. Show a page at a time; the filters above narrow it further.
+    PAGE = 15
+    _total = len(deals)
+    _shown = st.session_state.get("deals_shown", PAGE)
+    if _shown > _total:
+        _shown = max(PAGE, _total)
+    deals = deals[:_shown]
+
+    st.caption(f"Showing {len(deals)} of {_total} deal(s)")
 
     for deal in deals:
         stage_info = STAGES.get(deal.get("stage", "prospect"), STAGES["prospect"])
@@ -236,8 +387,22 @@ with tab_deals:
                 st.markdown(f"**Rep:** {deal.get('assigned_rep', 'N/A')}")
 
             with c2:
-                st.markdown(f"**Tier:** {deal.get('tier_name', 'N/A')} ({deal.get('screen_count', 0)} screens)")
+                _pkg = deal.get("tier_name") or "N/A"
+                _label = "Package" if deal.get("pricing_mode") == "custom" else "Tier"
+                st.markdown(f"**{_label}:** {_pkg} ({deal.get('screen_count', 0)} screens)")
+                st.markdown(f"**Monthly:** ${float(deal.get('monthly_value') or 0):,.0f}/mo")
+                if float(deal.get("one_time_value") or 0):
+                    st.markdown(
+                        f"**One-time fee:** ${float(deal['one_time_value']):,.0f} "
+                        "(not counted as recurring)")
+                if deal.get("term_months"):
+                    st.markdown(
+                        f"**Term:** {deal['term_months']} months - "
+                        f"total ${total_contract_value(deal):,.0f}")
                 st.markdown(f"**Expected Close:** {deal.get('expected_close_date', 'N/A')}")
+                if deal.get("closed_date"):
+                    _verb = "Won" if deal.get("stage") == "won" else "Lost"
+                    st.markdown(f"**{_verb} on:** {str(deal['closed_date'])[:10]}")
                 st.markdown(f"**Last Contact:** {(deal.get('last_contact_date') or 'Never')[:10]}")
                 st.markdown(f"**Next Action:** {deal.get('next_action', 'None set')}")
                 st.markdown(f"**Next Action Date:** {deal.get('next_action_date', 'N/A')}")
@@ -269,35 +434,54 @@ with tab_deals:
                 new_stage_key = [k for k, label in stage_options if label == new_stage][0]
                 if new_stage_key != deal.get("stage"):
                     if st.button("Move", key=f"move_{deal['id']}", type="primary"):
-                        advance_stage(deal["id"], new_stage_key, performed_by=active_rep)
-                        _sla = FOLLOW_UP_SLA.get(new_stage_key)
-                        if _sla:
-                            st.success(
-                                f"Moved to {new_stage} — follow-up auto-scheduled: "
-                                f"{_sla['action']} in {_sla['days']} day(s)"
-                            )
-                        else:
-                            st.success(f"Moved to {new_stage}")
-                        st.rerun()
+                        # advance_stage returns None when the deal is gone
+                        # (someone else deleted it); _run turns that into a
+                        # visible error instead of a false "Moved to X".
+                        if _run(advance_stage, deal["id"], new_stage_key,
+                                performed_by=active_rep):
+                            _sla = FOLLOW_UP_SLA.get(new_stage_key)
+                            if _sla:
+                                st.success(
+                                    f"Moved to {new_stage}. Follow-up auto-scheduled: "
+                                    f"{_sla['action']} in {_sla['days']} day(s)"
+                                )
+                            elif new_stage_key in CLOSED_STAGES:
+                                st.success(
+                                    f"Moved to {new_stage}, closed today. "
+                                    "If it actually closed on a different day, "
+                                    "set the date under Edit Deal."
+                                )
+                            else:
+                                st.success(f"Moved to {new_stage}")
+                            st.rerun()
 
             with a2:
-                new_value = st.selectbox(
-                    "Update Tier",
-                    list(TIERS.keys()),
-                    index=list(TIERS.keys()).index(deal.get("tier_name", "20 Screens"))
-                    if deal.get("tier_name") in TIERS else 1,
-                    key=f"tier_{deal['id']}"
-                )
-                if new_value != deal.get("tier_name"):
-                    if st.button("Update", key=f"upd_tier_{deal['id']}"):
-                        tier = TIERS[new_value]
-                        update_opportunity(deal["id"], {
-                            "tier_name": new_value,
-                            "screen_count": tier["screens"],
-                            "monthly_value": tier["monthly"],
-                        })
-                        st.success(f"Updated to {new_value}")
-                        st.rerun()
+                if deal.get("pricing_mode") == "custom":
+                    # Never offer a tier dropdown on a hand-priced deal — one
+                    # stray click would overwrite a negotiated package with a
+                    # stock rate. Editing custom pricing happens in Edit Deal.
+                    st.markdown("**Custom pricing**")
+                    st.caption(
+                        f"{deal.get('tier_name') or 'Custom package'}  \n"
+                        f"${float(deal.get('monthly_value') or 0):,.0f}/mo"
+                        + (f" + ${float(deal.get('one_time_value') or 0):,.0f} one-time"
+                           if float(deal.get('one_time_value') or 0) else "")
+                    )
+                    st.caption("Change it under Edit Deal below.")
+                else:
+                    new_value = st.selectbox(
+                        "Update Tier",
+                        list(TIERS.keys()),
+                        index=list(TIERS.keys()).index(deal.get("tier_name", "20 Screens"))
+                        if deal.get("tier_name") in TIERS else 1,
+                        key=f"tier_{deal['id']}"
+                    )
+                    if new_value != deal.get("tier_name"):
+                        if st.button("Update", key=f"upd_tier_{deal['id']}"):
+                            if _run(update_opportunity, deal["id"],
+                                    tier_payload(new_value)):
+                                st.success(f"Updated to {new_value}")
+                                st.rerun()
 
             with a3:
                 note_text = st.text_input("Add Note", key=f"note_{deal['id']}")
@@ -315,10 +499,16 @@ with tab_deals:
 
                 if deal.get("stage") != "lost":
                     loss_reason = st.text_input("Loss reason", key=f"loss_{deal['id']}")
+                    st.caption(
+                        "Only for deals you actually pitched and lost. "
+                        "Duplicates and bad rows belong in **Cleanup**. "
+                        "marking those Lost is what drags the win rate down."
+                    )
                     if st.button("Mark Lost", key=f"lost_{deal['id']}"):
-                        mark_lost(deal["id"], reason=loss_reason, performed_by=active_rep)
-                        st.warning("Marked as lost")
-                        st.rerun()
+                        if _run(mark_lost, deal["id"], reason=loss_reason,
+                                performed_by=active_rep):
+                            st.warning("Marked as lost")
+                            st.rerun()
 
             # Quick send — hand this deal off to the proposal/contract tools
             q1, q2, q3 = st.columns(3)
@@ -452,8 +642,67 @@ with tab_deals:
 
                 st.markdown("---")
 
+                # ── Pricing (outside the form: the Tier/Custom switch has to
+                #    react immediately, and form widgets don't rerun until submit)
+                st.markdown("**Pricing**")
+                e_pricing = render_pricing_inputs(f"editprice_{did}", deal)
+
+                # ── Dates (outside the form for the same reason: whether a
+                #    close date is even relevant depends on the stage picked)
+                st.markdown("**Stage and dates**")
+                d1, d2, d3 = st.columns(3)
+                _stage_opts = get_stage_options()
+                _stage_labels = [lbl for _, lbl in _stage_opts]
+                _cur_i = [i for i, (k, _) in enumerate(_stage_opts)
+                          if k == deal.get("stage")]
+                e_stage_label = d1.selectbox(
+                    "Stage", _stage_labels,
+                    index=_cur_i[0] if _cur_i else 0,
+                    key=f"editstage_{did}",
+                )
+                e_stage_key = next(k for k, lbl in _stage_opts if lbl == e_stage_label)
+
+                _ecd = deal.get("expected_close_date")
+                e_close = d2.date_input(
+                    "Expected close",
+                    value=date.fromisoformat(str(_ecd)[:10]) if _ecd else None,
+                    key=f"editclose_{did}",
+                )
+
+                if e_stage_key in CLOSED_STAGES:
+                    _cd = deal.get("closed_date")
+                    e_closed_on = d3.date_input(
+                        "Actually closed on",
+                        value=date.fromisoformat(str(_cd)[:10]) if _cd else local_today(),
+                        key=f"editclosed_{did}",
+                        help="The real won/lost date. Reporting reads this, so "
+                             "editing an old deal never re-dates the win into "
+                             "this month.",
+                    )
+                else:
+                    e_closed_on = None
+                    d3.caption("Close date applies once the deal is won or lost.")
+
+                x1, x2 = st.columns([1, 2])
+                e_excluded = x1.checkbox(
+                    "Leave out of stats",
+                    value=bool(deal.get("excluded_from_stats")),
+                    key=f"editexcl_{did}",
+                    help="Keeps the deal on the board but drops it from win "
+                         "rate, pipeline value and averages. For partnerships, "
+                         "barters and placeholders that aren't real revenue.",
+                )
+                e_excl_reason = x2.text_input(
+                    "Why it's excluded",
+                    value=deal.get("exclusion_reason") or "",
+                    placeholder="e.g. barter partnership, not advertiser revenue",
+                    key=f"editexclwhy_{did}",
+                    disabled=not e_excluded,
+                )
+
                 # ── Manual edit form
                 with st.form(f"edit_form_{did}"):
+                    e_name = st.text_input("Business Name", value=deal.get("business_name") or "")
                     e1, e2 = st.columns(2)
                     with e1:
                         e_contact = st.text_input("Contact Name", value=deal.get("contact_name") or "")
@@ -470,12 +719,23 @@ with tab_deals:
                         _nd = deal.get("next_action_date")
                         e_next_date = st.date_input(
                             "Next Action Date",
-                            value=date.fromisoformat(_nd[:10]) if _nd else date.today() + timedelta(days=3),
+                            value=date.fromisoformat(str(_nd)[:10]) if _nd else local_today() + timedelta(days=3),
                         )
+                    e_loss = st.text_input(
+                        "Loss reason", value=deal.get("loss_reason") or "",
+                        placeholder="Only used when the stage is Lost",
+                    )
                     e_notes = st.text_area("Notes", value=deal.get("notes") or "")
 
-                    if st.form_submit_button("Save Changes", type="primary"):
-                        update_opportunity(did, {
+                    save_edit = st.form_submit_button("Save Changes", type="primary")
+
+                if save_edit:
+                    _ok, _clean_name, _why = validate_business_name(e_name)
+                    if not _ok:
+                        st.error(f"{_why}.")
+                    else:
+                        _payload = {
+                            "business_name": _clean_name,
                             "contact_name": e_contact,
                             "contact_email": e_email,
                             "contact_phone": e_phone,
@@ -484,13 +744,59 @@ with tab_deals:
                             "city": e_city,
                             "assigned_rep": e_rep,
                             "next_action": e_next,
-                            "next_action_date": e_next_date.isoformat(),
+                            "next_action_date": e_next_date.isoformat() if e_next_date else None,
+                            "loss_reason": e_loss,
                             "notes": e_notes,
+                            "expected_close_date": e_close.isoformat() if e_close else None,
+                            "excluded_from_stats": e_excluded,
+                            "exclusion_reason": e_excl_reason if e_excluded else None,
                             "website": normalize_url(st.session_state.get(f"edit_web_{did}", deal.get("website") or "")),
-                        })
-                        log_event(did, "value_updated", details="Deal details edited",
-                                  performed_by=active_rep)
-                        st.success("Deal updated!")
+                        }
+                        _payload.update(e_pricing)
+
+                        # Stage changes go through advance_stage so probability,
+                        # the SLA follow-up and the close date all stay in step.
+                        _stage_moved = e_stage_key != deal.get("stage")
+                        if e_stage_key in CLOSED_STAGES and e_closed_on:
+                            _payload["closed_date"] = e_closed_on.isoformat()
+                            _payload["next_action"] = None
+                            _payload["next_action_date"] = None
+                        elif e_stage_key not in CLOSED_STAGES:
+                            _payload["closed_date"] = None
+
+                        if _save_deal(_stage_moved, did, e_stage_key, _payload, active_rep):
+                            st.rerun()
+
+                # ── Danger zone: delete this deal outright ───────────────
+                st.markdown("---")
+                st.caption(
+                    "A duplicate or a bad row is not a lost deal. Deleting it "
+                    "keeps the win rate honest. Marking it Lost does not. "
+                    "Deleted deals go to the Cleanup tab, where you can put "
+                    "them back."
+                )
+                if st.button("Delete this deal", key=f"del_deals_{did}"):
+                    st.session_state[f"confirm_delete_{did}"] = True
+
+                if st.session_state.get(f"confirm_delete_{did}"):
+                    st.warning(
+                        f"Delete **{deal.get('business_name', 'this deal')}** "
+                        f"and its {len(get_activity(did))} activity record(s)? "
+                        "It moves to Recently deleted and can be restored."
+                    )
+                    _why_del = st.text_input(
+                        "Reason (optional)", key=f"delwhy_deals_{did}",
+                        placeholder="duplicate / junk row / test data",
+                    )
+                    dc1, dc2 = st.columns(2)
+                    if dc1.button("Yes, delete it", key=f"yesdel_deals_{did}",
+                                  type="primary", width='stretch'):
+                        if _run(delete_opportunity, did, deleted_by=active_rep,
+                                reason=_why_del or "Deleted from All Deals"):
+                            del st.session_state[f"confirm_delete_{did}"]
+                            st.rerun()
+                    if dc2.button("Cancel", key=f"nodel_deals_{did}", width='stretch'):
+                        del st.session_state[f"confirm_delete_{did}"]
                         st.rerun()
 
             # Activity history
@@ -505,6 +811,16 @@ with tab_deals:
                         st.caption(f"{ts} — **{action}** — {details} ({performer})")
                 else:
                     st.caption("No activity yet")
+
+    if _total > _shown:
+        if st.button(f"Show {min(PAGE, _total - _shown)} more "
+                     f"({_total - _shown} left)", key="deals_show_more"):
+            st.session_state["deals_shown"] = _shown + PAGE
+            st.rerun()
+    elif _shown > PAGE:
+        if st.button("Collapse the list", key="deals_show_less"):
+            st.session_state["deals_shown"] = PAGE
+            st.rerun()
 
 
 # ── Tab 3: Add Deal ──────────────────────────────────────────────────────────
@@ -571,6 +887,50 @@ with tab_add:
                     key=f"add_img_{i}",
                 )
 
+    # ── Pricing and dates sit OUTSIDE the form so the Tier/Custom switch and
+    #    the "already closed" switch react as soon as you flip them.
+    st.markdown("**Pricing**")
+    add_pricing = render_pricing_inputs("addprice")
+
+    st.markdown("**Stage and dates**")
+    s1, s2 = st.columns([1, 1])
+    stage = s1.selectbox(
+        "Stage", [label for _, label in get_stage_options()], index=0,
+        key="add_stage",
+    )
+    stage_key = next(k for k, label in get_stage_options() if label == stage)
+
+    is_history = stage_key in CLOSED_STAGES
+    if not is_history:
+        is_history = s2.checkbox(
+            "This is an old deal I'm entering after the fact",
+            key="add_backdate",
+            help="Log a deal that already happened so the historical numbers "
+                 "are right. You set the dates instead of today's.",
+        )
+    else:
+        s2.caption("Entering a won or lost deal. Set the real dates below.")
+
+    if is_history:
+        h1, h2 = st.columns(2)
+        started_on = h1.date_input(
+            "Deal started", value=local_today() - timedelta(days=60),
+            key="add_started_on",
+            help="When this deal actually entered the pipeline.",
+        )
+        if stage_key in CLOSED_STAGES:
+            closed_on = h2.date_input(
+                "Won / lost on", value=local_today(), key="add_closed_on",
+                help="Reporting counts the deal in this month, not the month "
+                     "you happen to type it in.",
+            )
+        else:
+            closed_on = None
+            h2.caption("Not closed yet, so no close date.")
+    else:
+        started_on = None
+        closed_on = None
+
     with st.form("add_deal_form"):
         c1, c2 = st.columns(2)
 
@@ -578,8 +938,16 @@ with tab_add:
         _enr_city = (enr.get("city") or "").strip().title()
         _city_idx = _cities.index(_enr_city) if _enr_city in _cities else 0
 
+        # The scraped <title> is a poor name source ("Home | Brock Partners"
+        # prefills as "Home"), so only use it when it survives validation.
+        _prefill = ""
+        if enr:
+            _cand = (enr.get("title", "") or "").split("|")[0].split("–")[0].strip()
+            _cand_ok, _cand_clean, _ = validate_business_name(_cand)
+            _prefill = _cand_clean if _cand_ok else ""
+
         with c1:
-            biz_name = st.text_input("Business Name *", value=enr.get("title", "").split("|")[0].split("–")[0].strip() if enr else "")
+            biz_name = st.text_input("Business Name *", value=_prefill)
             contact_name = st.text_input("Contact Name", value=enr.get("contact_name", ""))
             contact_email = st.text_input("Contact Email", value=enr.get("contact_email", ""))
             contact_phone = st.text_input("Contact Phone", value=enr.get("contact_phone", ""))
@@ -589,9 +957,13 @@ with tab_add:
         with c2:
             city = st.selectbox("City", _cities, index=_city_idx)
             source = st.selectbox("Source", ["manual", "intake_form", "prospector", "referral", "website", "cold_outreach"])
-            tier = st.selectbox("Tier", list(TIERS.keys()), index=1)
-            stage = st.selectbox("Initial Stage", [label for _, label in get_stage_options()], index=0)
-            close_date = st.date_input("Expected Close Date", value=date.today() + timedelta(days=30))
+            close_date = st.date_input(
+                "Expected Close Date",
+                value=(closed_on or local_today()) if is_history
+                else local_today() + timedelta(days=30),
+            )
+            loss_reason_new = st.text_input(
+                "Loss reason", placeholder="Only used if the stage is Lost")
 
         notes = st.text_area("Notes", value=enr.get("description", ""))
 
@@ -604,22 +976,34 @@ with tab_add:
 
         submitted = st.form_submit_button("Add to Pipeline", type="primary")
 
-        if submitted and biz_name:
-            # Duplicate guard: warn once, add on second submit
-            _existing_names = {(o.get("business_name") or "").strip().lower() for o in all_opps}
-            _name_key = biz_name.strip().lower()
-            if _name_key in _existing_names and st.session_state.get("add_dup_ok") != _name_key:
+        _name_ok, _name_clean, _name_why = (
+            validate_business_name(biz_name) if submitted else (False, "", ""))
+
+        if submitted and not _name_ok:
+            st.warning(_name_why or "Business name is required")
+        elif submitted:
+            # Duplicate guard on the canonical key, so "Enterprise tupelo "
+            # and "Enterprise Tupelo" are recognised as the same business.
+            _existing = {normalize_name(o.get("business_name") or ""): o
+                         for o in all_opps}
+            _name_key = normalize_name(_name_clean)
+            _match = _existing.get(_name_key)
+            if _match and st.session_state.get("add_dup_ok") != _name_key:
                 st.session_state["add_dup_ok"] = _name_key
+                _mstage = STAGES.get(_match.get("stage", ""), {}).get(
+                    "label", _match.get("stage"))
                 st.warning(
-                    f"**{biz_name}** is already in the pipeline. "
-                    "Click **Add to Pipeline** again to add it anyway."
+                    f"**{_match.get('business_name')}** is already in the "
+                    f"pipeline. {_mstage}, "
+                    f"${float(_match.get('monthly_value') or 0):,.0f}/mo, "
+                    f"{_match.get('assigned_rep') or 'no rep'}, added "
+                    f"{str(_match.get('created_at'))[:10]}.  \n"
+                    "Edit that one over in **All Deals**, or click **Add to "
+                    "Pipeline** again to add this as a separate deal."
                 )
             else:
-                stage_key = [k for k, label in get_stage_options() if label == stage][0]
-                tier_info = TIERS[tier]
-
                 opp_payload = {
-                    "business_name": biz_name,
+                    "business_name": _name_clean,
                     "contact_name": contact_name,
                     "contact_email": contact_email,
                     "contact_phone": contact_phone,
@@ -628,14 +1012,21 @@ with tab_add:
                     "city": city if city != "Other" else "",
                     "source": source,
                     "stage": stage_key,
-                    "monthly_value": tier_info["monthly"],
-                    "screen_count": tier_info["screens"],
-                    "tier_name": tier,
                     "expected_close_date": close_date.isoformat(),
                     "notes": notes,
                     "assigned_rep": assigned,
                     "nurture_sequence": seq_options.get(nurture),
+                    "loss_reason": loss_reason_new or None,
                 }
+                opp_payload.update(add_pricing)
+
+                # Backdated entry: the deal's own dates, not today's.
+                if started_on:
+                    opp_payload["created_at"] = datetime.combine(
+                        started_on, datetime.min.time()).isoformat()
+                    opp_payload["stage_entered_at"] = opp_payload["created_at"]
+                if closed_on:
+                    opp_payload["closed_date"] = closed_on.isoformat()
 
                 if enr:
                     opp_payload["website"] = enr.get("website") or normalize_url(scan_url)
@@ -659,20 +1050,240 @@ with tab_add:
                 elif scan_url.strip():
                     opp_payload["website"] = normalize_url(scan_url)
 
-                opp = create_opportunity(opp_payload)
+                # st.rerun() stays OUTSIDE the try — RerunException subclasses
+                # Exception and would be swallowed as a bogus error.
+                opp = None
+                try:
+                    opp = create_opportunity(opp_payload)
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"Could not add the deal: {e}")
 
                 if opp:
                     st.session_state.pop("deal_enrichment", None)
                     st.session_state.pop("add_dup_ok", None)
-                    st.success(f"Added {biz_name} to pipeline!")
+                    _when = (" (backdated to "
+                             f"{started_on.isoformat()})" if started_on else "")
+                    st.success(f"Added {_name_clean} to the pipeline{_when}.")
                     st.rerun()
-                else:
-                    st.error("Failed to create opportunity")
-        elif submitted:
-            st.warning("Business name is required")
 
 
-# ── Tab 4: Import Leads ──────────────────────────────────────────────────────
+# ── Tab 4: Cleanup ───────────────────────────────────────────────────────────
+
+with tab_cleanup:
+    st.markdown("### Clean up the pipeline")
+    st.caption(
+        "Duplicates and junk rows that got marked Lost drag the win rate down "
+        "and inflate lost revenue. Deleting them is what makes the numbers "
+        "true. Nothing here is permanent. Every delete lands in "
+        "**Recently deleted** at the bottom of this tab."
+    )
+
+    _dupes = find_duplicate_groups(all_opps)
+    _junk = find_junk_rows(all_opps)
+    _junk_ids = {j["id"] for j in _junk}
+
+    # ── What the cleanup is worth, before you do it ──────────────────────
+    _won_now = [o for o in counted(all_opps) if o.get("stage") == "won"]
+    _lost_now = [o for o in counted(all_opps) if o.get("stage") == "lost"]
+
+    # Rows a full cleanup would remove: every junk row, plus every duplicate
+    # past the first in each group.
+    _removable = set(_junk_ids)
+    for g in _dupes:
+        for d in g["deals"][1:]:
+            _removable.add(d["id"])
+    _lost_after = [o for o in _lost_now if o["id"] not in _removable]
+    _fake_lost = sum(float(o.get("monthly_value") or 0)
+                     for o in _lost_now if o["id"] in _removable)
+
+    _rate_now = (len(_won_now) / (len(_won_now) + len(_lost_now)) * 100
+                 if (_won_now or _lost_now) else 0)
+    _rate_after = (len(_won_now) / (len(_won_now) + len(_lost_after)) * 100
+                   if (_won_now or _lost_after) else 0)
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Duplicate groups", len(_dupes))
+    m2.metric("Junk rows", len(_junk))
+    m3.metric("Fake lost revenue", f"${_fake_lost:,.0f}/mo")
+    m4.metric(
+        "Win rate once clean", f"{_rate_after:.0f}%",
+        delta=f"{_rate_after - _rate_now:+.0f} pts" if _removable else None,
+        help=f"Reads {_rate_now:.0f}% today ({len(_won_now)} won vs "
+             f"{len(_lost_now)} lost) because {len(_removable)} duplicate or "
+             "junk row(s) count as real losses. This projection assumes you "
+             "keep the furthest-along row in each duplicate group.",
+    )
+
+    st.divider()
+
+    # ── Junk rows ────────────────────────────────────────────────────────
+    st.markdown("#### Rows that don't look like businesses")
+    if not _junk:
+        st.success("No junk rows. Every deal has a real business name.")
+    else:
+        st.caption(
+            "These came in through a paste that split one contact block into "
+            "one deal per line. New deals are validated now, so this list "
+            "should stay empty."
+        )
+        for j in _junk:
+            jid = j["id"]
+            jc1, jc2 = st.columns([4, 1])
+            jc1.warning(
+                f"**{j.get('business_name')}**  \n{j['_junk_reason']}  \n"
+                f"{STAGES.get(j.get('stage', ''), {}).get('label', j.get('stage'))}"
+                f" - ${float(j.get('monthly_value') or 0):,.0f}/mo"
+                f" - added {str(j.get('created_at'))[:10]}"
+            )
+            if jc2.button("Delete", key=f"deljunk_{jid}", width='stretch'):
+                st.session_state[f"confirm_junk_{jid}"] = True
+
+            if st.session_state.get(f"confirm_junk_{jid}"):
+                k1, k2 = st.columns(2)
+                if k1.button("Confirm delete", key=f"yesjunk_{jid}",
+                             type="primary", width='stretch'):
+                    if _run(delete_opportunity, jid, deleted_by=active_rep,
+                            reason=f"Junk row: {j['_junk_reason']}"):
+                        del st.session_state[f"confirm_junk_{jid}"]
+                        st.rerun()
+                if k2.button("Keep it", key=f"nojunk_{jid}", width='stretch'):
+                    del st.session_state[f"confirm_junk_{jid}"]
+                    st.rerun()
+
+        st.markdown("")
+        if st.button(f"Delete all {len(_junk)} junk rows", key="deljunk_all"):
+            st.session_state["confirm_junk_all"] = True
+        if st.session_state.get("confirm_junk_all"):
+            st.warning(f"Delete all {len(_junk)} rows listed above?")
+            ja1, ja2 = st.columns(2)
+            if ja1.button("Yes, delete them all", key="yesjunk_all",
+                          type="primary", width='stretch'):
+                _done = 0
+                for j in _junk:
+                    try:
+                        if delete_opportunity(j["id"], deleted_by=active_rep,
+                                              reason=f"Junk row: {j['_junk_reason']}"):
+                            _done += 1
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"{j.get('business_name')}: {e}")
+                st.session_state.pop("confirm_junk_all", None)
+                st.success(f"Deleted {_done} junk row(s).")
+                st.rerun()
+            if ja2.button("Cancel", key="nojunk_all", width='stretch'):
+                del st.session_state["confirm_junk_all"]
+                st.rerun()
+
+    st.divider()
+
+    # ── Duplicates ───────────────────────────────────────────────────────
+    st.markdown("#### Duplicates")
+    if not _dupes:
+        st.success("No duplicates. Every business appears once.")
+    else:
+        st.caption(
+            "Pick the row that's right, then merge. Merging moves the other "
+            "rows' call log and notes onto the one you keep, fills in any "
+            "blanks from them, and deletes the extras. Nothing is lost "
+            "except the double count."
+        )
+
+    for _gi, g in enumerate(_dupes):
+        # Index-based key: two different groups could otherwise truncate to
+        # the same string and collide.
+        gkey = f"{_gi}_{g['key'].replace(' ', '_')[:24]}"
+        flag = ", stages disagree" if g["has_conflict"] else ""
+        with st.expander(f"**{g['name']}**: {len(g['deals'])} rows{flag}",
+                         expanded=g["has_conflict"]):
+            if g["has_conflict"]:
+                st.warning(
+                    "These rows are in different stages, so one of them is the "
+                    "real outcome and the rest are stale copies. Keep the one "
+                    "that actually happened."
+                )
+
+            _labels, _ids = [], []
+            for d in g["deals"]:
+                _st = STAGES.get(d.get("stage", ""), {}).get("label", d.get("stage"))
+                _labels.append(
+                    f"{_st} - ${float(d.get('monthly_value') or 0):,.0f}/mo"
+                    f" - {d.get('assigned_rep') or 'no rep'}"
+                    f" - added {str(d.get('created_at'))[:10]}"
+                    f" - {len(get_activity(d['id']))} activity"
+                )
+                _ids.append(d["id"])
+
+            keep_label = st.radio(
+                "Keep this one", _labels, index=0, key=f"dupkeep_{gkey}",
+            )
+            keep_id = _ids[_labels.index(keep_label)]
+            drop_ids = [i for i in _ids if i != keep_id]
+
+            g1, g2 = st.columns(2)
+            if g1.button(f"Merge the other {len(drop_ids)} into it",
+                         key=f"dupmerge_{gkey}", type="primary", width='stretch'):
+                if _run(merge_opportunities, keep_id, drop_ids,
+                        performed_by=active_rep):
+                    st.success(f"Merged {len(drop_ids)} duplicate(s) into one deal.")
+                    st.rerun()
+            if g2.button(f"Delete the other {len(drop_ids)}, don't merge",
+                         key=f"dupdel_{gkey}", width='stretch'):
+                _done = 0
+                for i in drop_ids:
+                    try:
+                        if delete_opportunity(i, deleted_by=active_rep,
+                                              reason=f"Duplicate of {g['name']}"):
+                            _done += 1
+                    except Exception as e:  # noqa: BLE001
+                        st.error(str(e))
+                st.success(f"Deleted {_done} duplicate(s).")
+                st.rerun()
+
+    st.divider()
+
+    # ── Undo ─────────────────────────────────────────────────────────────
+    st.markdown("#### Recently deleted")
+    st.caption("Everything deleted from the pipeline lands here, with its "
+               "activity history, until you clear it out for good.")
+
+    _trash = get_deleted(limit=50)
+    if not _trash:
+        st.info("Nothing deleted yet.")
+    for t in _trash:
+        tid = t["id"]
+        t1, t2, t3 = st.columns([4, 1, 1])
+        t1.markdown(
+            f"**{t.get('business_name')}**: "
+            f"{STAGES.get(t.get('stage', ''), {}).get('label', t.get('stage') or '?')}"
+            f" - ${float(t.get('monthly_value') or 0):,.0f}/mo  \n"
+            f"<span style='font-size:0.8rem;color:#666'>"
+            f"{t.get('deleted_reason') or 'no reason given'} - "
+            f"deleted {str(t.get('deleted_at'))[:16].replace('T', ' ')} "
+            f"by {t.get('deleted_by') or 'unknown'}</span>",
+            unsafe_allow_html=True,
+        )
+        if t2.button("Restore", key=f"restore_{tid}", width='stretch'):
+            if _run(restore_opportunity, tid, performed_by=active_rep):
+                st.success(f"Restored {t.get('business_name')}.")
+                st.rerun()
+        if t3.button("Purge", key=f"purge_{tid}", width='stretch',
+                     help="Delete permanently. This one cannot be undone."):
+            st.session_state[f"confirm_purge_{tid}"] = True
+
+        if st.session_state.get(f"confirm_purge_{tid}"):
+            st.warning(f"Permanently erase **{t.get('business_name')}**? "
+                       "There is no undo past this point.")
+            p1, p2 = st.columns(2)
+            if p1.button("Erase it", key=f"yespurge_{tid}", type="primary",
+                         width='stretch'):
+                if _run(purge_deleted, tid):
+                    del st.session_state[f"confirm_purge_{tid}"]
+                    st.rerun()
+            if p2.button("Keep it", key=f"nopurge_{tid}", width='stretch'):
+                del st.session_state[f"confirm_purge_{tid}"]
+                st.rerun()
+
+
+# ── Tab 5: Import Leads ──────────────────────────────────────────────────────
 
 with tab_import:
     st.markdown("### Import Existing Leads into Pipeline")
@@ -688,9 +1299,34 @@ with tab_import:
         else:
             # Filter out leads already in pipeline
             existing_lead_ids = {o.get("lead_id") for o in all_opps if o.get("lead_id")}
+            existing_names = {normalize_name(o.get("business_name") or "")
+                              for o in all_opps}
 
-            available = [l for l in leads if l.get("id") not in existing_lead_ids
-                        and l.get("status") != "closed"]
+            # ...and leads whose deal was deliberately deleted. Without this,
+            # cleaning up a duplicate just makes it importable again and the
+            # next import recreates it.
+            _dead_names, _dead_leads = deleted_fingerprints()
+
+            available = [
+                l for l in leads
+                if l.get("id") not in existing_lead_ids
+                and l.get("id") not in _dead_leads
+                and normalize_name(l.get("business_name") or "") not in existing_names
+                and normalize_name(l.get("business_name") or "") not in _dead_names
+                and l.get("status") != "closed"
+            ]
+
+            _suppressed = len([
+                l for l in leads
+                if l.get("id") in _dead_leads
+                or normalize_name(l.get("business_name") or "") in _dead_names
+            ])
+            if _suppressed:
+                st.caption(
+                    f"{_suppressed} lead(s) hidden because their deal was "
+                    "deleted on purpose. Restore it from the Cleanup tab if "
+                    "that was a mistake."
+                )
 
             if not available:
                 st.success("All active leads are already in the pipeline!")
@@ -808,7 +1444,11 @@ with tab_nurture:
 
 with tab_forecast:
     st.markdown("### Revenue Forecast")
-    st.caption("Projected MRR from weighted pipeline over the next 3 months.")
+    st.caption(
+        "Projected MRR from the weighted pipeline. Each month holds the deals "
+        "whose expected close lands **in that month**. The three figures are "
+        "three separate months, not a running total."
+    )
 
     forecast = get_revenue_forecast(months=3, opps=all_opps)
 
@@ -826,6 +1466,37 @@ with tab_forecast:
                     f'</div>',
                     unsafe_allow_html=True
                 )
+
+    # ── Open pipeline the forecast can't place ───────────────────────────
+    _gaps = get_forecast_gaps(all_opps)
+    if _gaps["undated"] or _gaps["overdue"]:
+        st.markdown("#### Not in any month above")
+        st.caption(
+            "Real open pipeline the forecast can't place. These used to be "
+            "invisible here. Undated deals were dropped and past-due ones "
+            "were counted in every month at once."
+        )
+        gc1, gc2 = st.columns(2)
+        with gc1:
+            st.metric(
+                "No close date set", f"${_gaps['undated_value']:,.0f}/mo",
+                help=f"{len(_gaps['undated'])} open deal(s) with no expected "
+                     "close date. Set one under Edit Deal to forecast them.")
+            for o in _gaps["undated"][:8]:
+                st.caption(f"- {o.get('business_name')} "
+                           f"(${float(o.get('monthly_value') or 0):,.0f}/mo)")
+            if len(_gaps["undated"]) > 8:
+                st.caption(f"+{len(_gaps['undated']) - 8} more")
+        with gc2:
+            st.metric(
+                "Close date already passed", f"${_gaps['overdue_value']:,.0f}/mo",
+                help=f"{len(_gaps['overdue'])} open deal(s) whose expected "
+                     "close date is in the past. Move the date or the stage.")
+            for o in _gaps["overdue"][:8]:
+                st.caption(f"- {o.get('business_name')} "
+                           f"(due {str(o.get('expected_close_date'))[:10]})")
+            if len(_gaps["overdue"]) > 8:
+                st.caption(f"+{len(_gaps['overdue']) - 8} more")
 
     st.divider()
 

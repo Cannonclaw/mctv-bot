@@ -23,6 +23,7 @@ from services.team_ui import render_team_sidebar
 render_team_sidebar()
 from services.pipeline_service import (
     TIERS, create_opportunity, get_all_opportunities,
+    validate_business_name, normalize_name,
 )
 from services.nurture_service import get_available_sequences
 
@@ -287,12 +288,19 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
 
         # Check which are already in pipeline
         existing_opps = get_all_opportunities()
-        existing_names = {(o.get("business_name") or "").lower() for o in existing_opps}
+        # Canonical keys, not raw lowercase: the old comparison never stripped,
+        # so "Enterprise tupelo " and "Enterprise Tupelo" read as two different
+        # businesses and the guard let the duplicate straight through.
+        existing_names = {normalize_name(o.get("business_name") or "")
+                          for o in existing_opps}
 
         selected = []
+        _batch_seen = set()
         for i, prospect in enumerate(prospects):
             name = prospect.get("business_name", "Unknown")
-            already_exists = name.lower() in existing_names
+            _key = normalize_name(name)
+            already_exists = _key in existing_names or _key in _batch_seen
+            _batch_seen.add(_key)
             interest = prospect.get("estimated_interest", "medium")
             interest_icon = {"high": "green", "medium": "orange", "low": "gray"}.get(interest, "gray")
 
@@ -398,14 +406,25 @@ with tab_batch:
     batch_rep = st.selectbox("Assigned Rep", ["Mary Michael", "Creed", "Swayze"], key="batch_rep")
     batch_tier_sel = st.selectbox("Tier", list(TIERS.keys()), index=1, key="batch_tier_sel")
 
+    # Survives the rerun that clears the box, so the confirmation is actually
+    # readable instead of being wiped by the rerun that follows it.
+    if st.session_state.get("batch_added_msg"):
+        st.success(st.session_state.pop("batch_added_msg"))
+
     st.markdown("**Enter one business per line** (format: `Business Name | Contact Name | Phone | Email | Website`)")
     st.caption("Only business name is required. Contact, phone, email, and website are optional.")
 
+    # The key rotates so the box can be emptied after a successful add.
+    # Streamlit forbids assigning to a key already bound to an instantiated
+    # widget, so clearing it directly would raise — bumping the suffix gives a
+    # fresh, empty widget instead. `batch_text_n` is a plain state value, not
+    # a widget key, so it is safe to write.
+    _bt_n = st.session_state.get("batch_text_n", 0)
     batch_text = st.text_area(
         "Business List",
         height=200,
         placeholder="Joe's Restaurant | Joe Smith | 662-555-1234 | joe@email.com | joesrestaurant.com\nMain Street Salon | Jane Doe\nDowntown Fitness",
-        key="batch_text"
+        key=f"batch_text_{_bt_n}"
     )
 
     batch_nurture = st.selectbox(
@@ -414,45 +433,97 @@ with tab_batch:
         key="batch_nurture_seq"
     )
 
-    if st.button("Add All to Pipeline", type="primary") and batch_text.strip():
-        lines = [l.strip() for l in batch_text.strip().split("\n") if l.strip()]
+    # ── Preview before writing ───────────────────────────────────────────
+    # This splitter is one deal per line, and the only check used to be "is
+    # the line non-empty". A pasted contact block became one deal per line —
+    # that is where "drew@brockpartners.com", "Marketing Director: Drew
+    # Langford" and "Pitched to Drew July 22, 2026" came from. Now every line
+    # is parsed and shown before anything is written.
+    if batch_text.strip():
+        _lines = [l.strip() for l in batch_text.strip().split("\n") if l.strip()]
+        _existing = {normalize_name(o.get("business_name") or ""): o
+                     for o in get_all_opportunities()}
+
+        _rows, _accept = [], []
+        _seen = set()
+        for line in _lines:
+            parts = [p.strip() for p in line.split("|")]
+            raw_name = parts[0] if parts else ""
+            ok, clean, why = validate_business_name(raw_name)
+            key = normalize_name(clean)
+
+            if not ok:
+                verdict = f"Skipped - {why}"
+            elif key in _existing:
+                verdict = f"Skipped - already in the pipeline ({_existing[key].get('business_name')})"
+            elif key in _seen:
+                verdict = "Skipped - listed twice in this paste"
+            else:
+                verdict = "Will be added"
+                _seen.add(key)
+                _accept.append((clean, parts))
+
+            _rows.append({"Line": line[:60], "Business": clean or raw_name[:40],
+                          "Result": verdict})
+
+        st.markdown(f"**Preview: {len(_accept)} of {len(_lines)} line(s) will be added**")
+        st.dataframe(_rows, hide_index=True, width='stretch')
+        _rejected = len(_lines) - len(_accept)
+        if _rejected:
+            st.warning(
+                f"{_rejected} line(s) will be skipped. Contact details, notes "
+                "and businesses already in the pipeline don't become deals."
+            )
+    else:
+        _accept = []
+
+    if st.button("Add All to Pipeline", type="primary", disabled=not _accept):
         tier_info = TIERS[batch_tier_sel]
         seq_map = {"Cold Outreach": "cold_outreach", "New Lead Nurture": "new_lead", "None": None}
         seq = seq_map.get(batch_nurture)
 
         added = 0
+        skipped = []
         from services.enrichment_service import normalize_url
 
-        for line in lines:
-            parts = [p.strip() for p in line.split("|")]
-            biz_name = parts[0] if len(parts) > 0 else ""
+        for biz_name, parts in _accept:
             contact = parts[1] if len(parts) > 1 else ""
             phone = parts[2] if len(parts) > 2 else ""
             email = parts[3] if len(parts) > 3 else ""
             website = parts[4] if len(parts) > 4 else ""
 
-            if not biz_name:
-                continue
-
-            opp = create_opportunity({
-                "business_name": biz_name,
-                "contact_name": contact,
-                "contact_phone": phone,
-                "contact_email": email,
-                "website": normalize_url(website) if website else "",
-                "industry": batch_industry,
-                "city": batch_city,
-                "source": "prospector",
-                "stage": "prospect",
-                "monthly_value": tier_info["monthly"],
-                "screen_count": tier_info["screens"],
-                "tier_name": batch_tier_sel,
-                "expected_close_date": (date.today() + timedelta(days=45)).isoformat(),
-                "assigned_rep": batch_rep,
-                "nurture_sequence": seq,
-            })
+            try:
+                opp = create_opportunity({
+                    "business_name": biz_name,
+                    "contact_name": contact,
+                    "contact_phone": phone,
+                    "contact_email": email,
+                    "website": normalize_url(website) if website else "",
+                    "industry": batch_industry,
+                    "city": batch_city,
+                    "source": "prospector",
+                    "stage": "prospect",
+                    "monthly_value": tier_info["monthly"],
+                    "screen_count": tier_info["screens"],
+                    "tier_name": batch_tier_sel,
+                    "expected_close_date": (date.today() + timedelta(days=45)).isoformat(),
+                    "assigned_rep": batch_rep,
+                    "nurture_sequence": seq,
+                })
+            except Exception as e:  # noqa: BLE001
+                skipped.append(f"{biz_name}: {e}")
+                opp = None
             if opp:
                 added += 1
 
-        st.success(f"Added {added} prospect(s) to pipeline!")
+        # Empty the paste box before rerunning. It used to survive the rerun
+        # while the success message was thrown away by it, so the screen just
+        # flickered with the text still sitting there — click again and every
+        # line went in a second time. That is where duplicates came from.
+        st.session_state["batch_text_n"] = _bt_n + 1
+        st.session_state["batch_added_msg"] = (
+            f"Added {added} prospect(s) to the pipeline."
+            + (f" {len(skipped)} failed." if skipped else ""))
+        for msg in skipped:
+            logger.warning("Batch add failed: %s", msg)
         st.rerun()

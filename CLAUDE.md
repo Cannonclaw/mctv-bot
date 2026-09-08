@@ -182,7 +182,62 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
   (same convention as Research page) and switches to the Proposals page.
 - **Perf rule**: the Pipeline page fetches `get_all_opportunities()` once per rerun
   and passes the list into every tab and analytics helper (`opps=` params) — don't
-  add per-tab fetches.
+  add per-tab fetches. All Deals pages 15 deals at a time (`deals_shown` in session
+  state) because each deal renders a full editor.
+
+#### Editing, deleting and true numbers
+A duplicate or a mis-parsed row is **not** a lost deal. Marking one Lost permanently
+poisons win rate and lost-revenue totals, so the pipeline deletes them instead.
+
+- **Delete + undo**: `delete_opportunity()` snapshots the deal *and its activity*
+  into `pipeline_deleted` before removing it, and **refuses to delete if the archive
+  fails**. `get_deleted()` / `restore_opportunity()` / `purge_deleted()` back the
+  "Recently deleted" list in the Cleanup tab. Restore reuses the original id.
+  `_cleanup_references()` also clears the two pointers no FK covers:
+  `tasks.source_id` (else a stalled-deal task haunts the 7am email forever) and
+  `contract_requests.opportunity_id` (nulled, the signed record itself is kept).
+  Only `pipeline_activity` has a real FK, and it is `ON DELETE CASCADE`.
+- **Deleted stays deleted**: `deleted_fingerprints()` feeds the Import Leads tab so a
+  cleaned-up deal is not immediately re-imported from its lead.
+- **Merge** (`merge_opportunities`): archives each loser **before** re-pointing its
+  activity at the survivor (archiving after would snapshot an empty history), fills
+  only genuinely blank fields, and never copies identity/outcome/pricing fields off a
+  duplicate. Blank test is explicit — `v in (None, "", 0, [], {})` is wrong because
+  `0 == False` in Python and would clobber a real $0 value or an `excluded_from_stats`
+  flag.
+- **Name validation**: `validate_business_name()` runs inside `create_opportunity()`,
+  so no call site can bypass it, and it returns a whitespace-collapsed name (which is
+  what killed the `"Enterprise tupelo "` duplicate class). It blocks emails, URLs,
+  phone numbers, `Marketing Director: …` contact lines, `Pitched to … July 22, 2026`
+  notes, and placeholders. Keep the bare-domain TLD list SHORT — a full one would
+  reject `Fuse.Cloud`. `normalize_name()` is the canonical duplicate key: it strips
+  accents, punctuation and *trailing* legal suffixes only, so `Enterprise Tupelo`
+  keeps `enterprise`, and it deliberately keeps city words so
+  `St. Jude Dream Home - Oxford` and `- Tupelo` stay distinct.
+- **`closed_date` is the real win/lost date.** Everything that reports "this month"
+  or "last 30 days" reads it — `get_pipeline_summary`, `get_rep_scoreboard`,
+  `scripts/weekly_rep_recap.py`, `scripts/win_back_lost_leads.py`. It replaced
+  `updated_at`, which moves on **every** edit: touching a phone number on an old won
+  deal used to re-date the win into the current month. Month windows are bounded on
+  both sides so a backdating typo can't count forever. Do **not** repoint the
+  `updated_at`/`stage_entered_at` reads that legitimately mean "last touched"
+  (stalled-deal alerts, `avg_days_since_touch`).
+- **Custom pricing**: `pricing_mode` is `'tier'` or `'custom'`. Custom deals put a
+  free-text package name in `tier_name` and hand-entered figures in `monthly_value`,
+  `one_time_value` (flat/project fees, never counted as MRR) and `term_months`.
+  `total_contract_value()` = monthly x term + one-time.
+- **`excluded_from_stats`**: keeps a deal on the board but out of every statistic —
+  for partnerships, barters and $0 placeholders. `counted()` applies it; use it in any
+  new analytic.
+- **Write failures are loud now.** `_sb_request(..., raise_on_error=True)` raises
+  `PipelineWriteError`, and create/update only fall back to local JSON when Supabase
+  is genuinely *unconfigured*. Previously any HTTP 400 (e.g. a column that hadn't been
+  migrated) fell through to ephemeral local JSON while the UI said "Saved!". **Always
+  ship the migration before code that writes a new column.**
+- **`pipeline_activity.action` is CHECK-constrained.** New verbs need an `ALTER`;
+  `merged`, `restored`, `deleted`, `pricing_changed`, `backdated` were added. So are
+  `source`, `stage`, `probability` and `deal_type` — a value outside those lists fails
+  the whole insert.
 
 ### Screen Inventory & Loop Tracking
 `pages/24_Loop_Inventory.py` covers two halves of the same question, in four tabs:

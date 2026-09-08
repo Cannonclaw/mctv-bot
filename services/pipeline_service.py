@@ -11,14 +11,60 @@ local JSON fallback.
 import json
 import logging
 import os
+import re
 import urllib.request
 import urllib.error
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "pipeline"
+
+
+# ── Shared helpers ────────────────────────────────────────────────────────────
+
+def local_today() -> date:
+    """Today in MCTV's timezone (America/Chicago), not the server's UTC.
+
+    Render runs in UTC, so the plain stdlib "today" rolls over at 6-7 PM
+    Central — a deal closed on a Tuesday evening would be dated Wednesday
+    and land in the wrong month at a month boundary.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/Chicago")).date()
+    except Exception:  # tzdata missing in the image — fall back to fixed CST
+        return (datetime.now(timezone.utc) - timedelta(hours=6)).date()
+
+
+def _num(value) -> float:
+    """Coerce a money/count field to float, whatever the API handed back.
+
+    PostgREST serialises Postgres `numeric` columns as JSON *strings*
+    ("1300.00") to preserve precision, and blank form fields arrive as None
+    or "". Every arithmetic site in this module goes through here, so a null
+    or a string can never crash a total or silently drop a deal out of one.
+    """
+    if value is None or value == "":
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _day(value) -> str:
+    """Normalise a date/timestamp field to a bare YYYY-MM-DD string ("" if unset)."""
+    if not value:
+        return ""
+    return str(value)[:10]
+
+
+def month_start(d: date, offset: int = 0) -> date:
+    """First day of the month `offset` months from `d`."""
+    m = d.month - 1 + offset
+    return date(d.year + m // 12, m % 12 + 1, 1)
 
 # ── Stage Configuration ──────────────────────────────────────────────────────
 
@@ -41,6 +87,18 @@ TIERS = {
     "40 Screens":  {"screens": 40, "monthly": 800},
     "75+ Screens": {"screens": 75, "monthly": 1300},
 }
+
+# Stages where the deal is decided and the money is no longer "pipeline".
+CLOSED_STAGES = ("won", "lost")
+
+# Pricing modes. Most deals are a stock tier, but plenty of real submitted
+# proposals never fit one — they have run $3,850, $4,950/mo, $2,000 flat for a
+# project, and $21,000 for a political flight. `pricing_mode` says which fields
+# are authoritative:
+#   'tier'   → tier_name is a key of TIERS; monthly_value mirrors that tier
+#   'custom' → tier_name is a free-text package name and monthly_value,
+#              one_time_value, screen_count and term_months were entered by hand
+PRICING_MODES = ("tier", "custom")
 
 # ── Follow-up SLA (accountability) ───────────────────────────────────────────
 # The strict follow-up schedule: max days between touches per stage, and the
@@ -76,7 +134,30 @@ def _sb_headers(key: str) -> dict:
     }
 
 
-def _sb_request(method: str, endpoint: str, data: dict | None = None) -> list | None:
+class PipelineWriteError(RuntimeError):
+    """A write to Supabase was rejected. Never swallow this on a live app.
+
+    The local-JSON fallback below exists so the app runs on a dev box with no
+    secrets. It must NOT catch production failures: on Render the container
+    disk is ephemeral and get_all_opportunities() reads Supabase whenever it
+    answers, so a row written to local JSON is gone on the next deploy while
+    the UI has already said "Saved!". A rejected write has to be loud.
+    """
+
+
+def _sb_configured() -> bool:
+    return bool(_sb_config()[0])
+
+
+def _sb_request(method: str, endpoint: str, data: dict | None = None,
+                raise_on_error: bool = False) -> list | None:
+    """Call the Supabase REST API.
+
+    Returns the decoded rows, or None when Supabase is unreachable/not
+    configured. With raise_on_error=True a configured-but-failing request
+    raises PipelineWriteError instead of returning None, so callers can tell
+    "no database here" apart from "the database said no".
+    """
     url, key = _sb_config()
     if not url:
         return None
@@ -91,11 +172,15 @@ def _sb_request(method: str, endpoint: str, data: dict | None = None) -> list | 
             raw = resp.read().decode("utf-8")
             return json.loads(raw) if raw else []
     except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="replace")[:200]
+        err = e.read().decode("utf-8", errors="replace")[:300]
         logger.error("Pipeline REST %s %s HTTP %s: %s", method, endpoint, e.code, err)
+        if raise_on_error:
+            raise PipelineWriteError(f"HTTP {e.code}: {err}") from e
         return None
     except Exception as e:
         logger.error("Pipeline REST %s %s failed: %s", method, endpoint, e)
+        if raise_on_error:
+            raise PipelineWriteError(str(e)) from e
         return None
 
 
@@ -150,10 +235,24 @@ def create_opportunity(opp_data: dict) -> dict | None:
             source, stage, monthly_value, screen_count, tier_name,
             expected_close_date, assigned_rep, notes, tags
 
+    Backdating: pass `created_at` (and, for an already-decided deal,
+    `closed_date` plus stage 'won'/'lost') to log a deal that happened months
+    ago. Historical deals are entered exactly like current ones — the only
+    difference is that the dates are yours instead of today's.
+
     Returns:
         The created opportunity dict, or None on failure.
     """
-    now = datetime.now().isoformat()
+    # Backstop for every create path in the app (Add Deal, Prospector batch
+    # paste, lead import, host forms). Enforced here so no call site can skip
+    # it, and so the cleaned name is what actually gets stored.
+    ok, cleaned, reason = validate_business_name(opp_data.get("business_name", ""))
+    if not ok and not opp_data.pop("_force_name", False):
+        raise ValueError(f"{reason}: {opp_data.get('business_name', '')!r}")
+    opp_data.pop("_force_name", None)
+    opp_data["business_name"] = cleaned
+
+    now = datetime.now(timezone.utc).isoformat()
     opp_data.setdefault("stage", "prospect")
     opp_data.setdefault("source", "manual")
     opp_data.setdefault("probability", STAGES.get(opp_data["stage"], {}).get("probability", 10))
@@ -161,19 +260,29 @@ def create_opportunity(opp_data: dict) -> dict | None:
     opp_data.setdefault("created_at", now)
     opp_data.setdefault("updated_at", now)
 
-    # Accountability: every new deal starts with a scheduled follow-up
+    # A deal entered straight into won/lost is history, not a live deal: date
+    # the close, and never leave a phantom follow-up hanging off it.
+    if opp_data["stage"] in CLOSED_STAGES:
+        opp_data.setdefault("closed_date", _day(opp_data.get("created_at")) or local_today().isoformat())
+        opp_data.setdefault("stage_entered_at", opp_data["closed_date"])
+        opp_data["next_action"] = None
+        opp_data["next_action_date"] = None
+
+    # Accountability: every new OPEN deal starts with a scheduled follow-up
     sla = FOLLOW_UP_SLA.get(opp_data["stage"])
     if sla and not opp_data.get("next_action_date"):
         opp_data["next_action"] = opp_data.get("next_action") or sla["action"]
-        opp_data["next_action_date"] = (date.today() + timedelta(days=sla["days"])).isoformat()
+        opp_data["next_action_date"] = (local_today() + timedelta(days=sla["days"])).isoformat()
 
-    # Try Supabase
-    result = _sb_request("POST", "pipeline_opportunities", opp_data)
+    # Try Supabase. A configured-but-failing write raises rather than
+    # silently landing in local JSON that the next deploy throws away.
+    result = _sb_request("POST", "pipeline_opportunities", opp_data,
+                         raise_on_error=_sb_configured())
     if result and len(result) > 0:
         _log_activity(result[0]["id"], "created", details=f"Added to pipeline: {opp_data.get('business_name', '')}")
         return result[0]
 
-    # Fallback: local JSON
+    # Fallback: local JSON (dev box with no Supabase secrets)
     import uuid
     opp_data["id"] = str(uuid.uuid4())
     opps = _load_local()
@@ -236,9 +345,10 @@ def get_opportunity(opp_id: str) -> dict | None:
 
 def update_opportunity(opp_id: str, updates: dict) -> dict | None:
     """Update fields on an opportunity."""
-    updates["updated_at"] = datetime.now().isoformat()
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    result = _sb_request("PATCH", f"pipeline_opportunities?id=eq.{opp_id}", updates)
+    result = _sb_request("PATCH", f"pipeline_opportunities?id=eq.{opp_id}", updates,
+                         raise_on_error=_sb_configured())
     if result and len(result) > 0:
         return result[0]
 
@@ -252,16 +362,539 @@ def update_opportunity(opp_id: str, updates: dict) -> dict | None:
     return None
 
 
-def delete_opportunity(opp_id: str) -> bool:
-    """Delete an opportunity."""
-    result = _sb_request("DELETE", f"pipeline_opportunities?id=eq.{opp_id}")
-    if result is not None:
+# ── Deletion (with an undo trail) ────────────────────────────────────────────
+# A duplicate or a junk row is not a lost deal. Marking it "lost" poisons the
+# win rate and the lost-revenue total forever, so the pipeline deletes it
+# instead. Every delete is snapshotted to `pipeline_deleted` first — including
+# the activity trail, which the FK would otherwise cascade away — so a wrong
+# delete is one click from coming back.
+
+def delete_opportunity(opp_id: str, deleted_by: str = "MCTV Bot",
+                       reason: str = "", archive: bool = True,
+                       merged_into: str | None = None) -> bool:
+    """Delete an opportunity outright, archiving it first so it can be restored.
+
+    Args:
+        opp_id: The opportunity to remove.
+        deleted_by: Rep name recorded on the archive row.
+        reason: Why it went ("duplicate", "junk row", "test data", ...).
+        archive: Snapshot to `pipeline_deleted` before deleting. Only pass
+            False when the caller has already archived the row itself.
+        merged_into: When this row lost a merge, the id of the surviving deal.
+
+    Returns:
+        True only if a row was actually removed.
+
+    The old version returned True unconditionally. Because every request
+    sends `Prefer: return=representation`, a DELETE that matched nothing
+    comes back as `[]` — not None — so the caller was told the delete
+    succeeded when no row had been touched. The UI would have confirmed
+    deletions that never happened. Count the returned rows instead.
+    """
+    opp = get_opportunity(opp_id)
+    if not opp:
+        return False
+
+    # Archive FIRST, and refuse to delete if the archive did not take. A
+    # delete that silently skipped its snapshot is unrecoverable, and the
+    # undo list would look legitimately empty afterwards.
+    if archive and not _archive_opportunity(
+            opp, deleted_by=deleted_by, reason=reason, merged_into=merged_into):
+        raise PipelineWriteError(
+            "Could not archive this deal, so it was not deleted. "
+            "Nothing was lost — try again."
+        )
+
+    if _sb_configured():
+        result = _sb_request("DELETE", f"pipeline_opportunities?id=eq.{opp_id}",
+                             raise_on_error=True)
+        if not result:
+            return False
+        _cleanup_references(opp_id, opp)
         return True
 
     opps = _load_local()
+    before = len(opps)
     opps = [o for o in opps if o.get("id") != opp_id]
     _save_local(opps)
-    return True
+    activity = [a for a in _load_local_activity() if a.get("opportunity_id") != opp_id]
+    _save_local_activity(activity)
+    return len(opps) < before
+
+
+def _cleanup_references(opp_id: str, opp: dict) -> None:
+    """Clear pointers that no foreign key would clean up on its own.
+
+    Only pipeline_activity has an FK (ON DELETE CASCADE). Two other tables
+    hold a bare uuid:
+
+      tasks.source_id           — a stalled-deal task whose deal is gone would
+                                  otherwise reappear in the 7am email forever.
+      contract_requests.opportunity_id — a signed agreement would keep a
+                                  dangling id; the row itself must survive, so
+                                  the pointer is nulled, not the record.
+
+    Best-effort: a failure here must never strand an already-deleted deal.
+    """
+    try:
+        _sb_request("DELETE",
+                    f"tasks?source=eq.stalled_deal&source_id=eq.{opp_id}")
+    except Exception as e:  # noqa: BLE001
+        logger.warning("Could not clear tasks for deleted deal %s: %s", opp_id, e)
+
+    try:
+        _sb_request("PATCH",
+                    f"contract_requests?opportunity_id=eq.{opp_id}",
+                    {"opportunity_id": None})
+    except Exception as e:  # noqa: BLE001
+        logger.warning("Could not clear contract_requests for %s: %s", opp_id, e)
+
+
+def _archive_opportunity(opp: dict, deleted_by: str = "MCTV Bot",
+                         reason: str = "", merged_into: str | None = None) -> bool:
+    """Snapshot a deal and its activity into `pipeline_deleted`."""
+    record = {
+        "opportunity_id": opp.get("id"),
+        "business_name": opp.get("business_name") or "(unnamed)",
+        "deal_type": opp.get("deal_type") or "advertiser",
+        "stage": opp.get("stage"),
+        "monthly_value": _num(opp.get("monthly_value")),
+        "deal_data": opp,
+        "activity_data": get_activity(opp.get("id"), limit=500),
+        "deleted_by": deleted_by,
+        "deleted_reason": reason,
+        "merged_into": merged_into,
+    }
+    result = _sb_request("POST", "pipeline_deleted", record)
+    if result is not None:
+        return True
+    logger.warning("Could not archive opportunity %s before delete", opp.get("id"))
+    return False
+
+
+def get_deleted(limit: int = 100) -> list[dict]:
+    """Recently deleted deals, newest first — the undo list."""
+    result = _sb_request(
+        "GET", f"pipeline_deleted?select=*&order=deleted_at.desc&limit={limit}")
+    return result if result is not None else []
+
+
+def restore_opportunity(archive_id: str, performed_by: str = "MCTV Bot") -> dict | None:
+    """Put an archived deal back in the pipeline, activity trail and all.
+
+    The original id is reused, so anything that still references the deal
+    lines back up. Returns the restored opportunity, or None if the archive
+    row is missing or the insert failed.
+    """
+    rows = _sb_request("GET", f"pipeline_deleted?id=eq.{archive_id}&limit=1")
+    if not rows:
+        return None
+
+    archived = rows[0]
+    deal = dict(archived.get("deal_data") or {})
+    if not deal.get("id"):
+        return None
+
+    restored = _sb_request("POST", "pipeline_opportunities", deal)
+    if not restored:
+        return None
+
+    # Activity rows carry their own ids; re-insert them so the history
+    # survives the round trip. Best-effort — a failure here must not
+    # strand the restored deal.
+    for act in (archived.get("activity_data") or []):
+        _sb_request("POST", "pipeline_activity", act)
+
+    _sb_request("DELETE", f"pipeline_deleted?id=eq.{archive_id}")
+    _log_activity(deal["id"], "restored",
+                  details=f"Restored from deleted (was: {archived.get('deleted_reason') or 'no reason given'})",
+                  performed_by=performed_by)
+    return restored[0]
+
+
+def purge_deleted(archive_id: str) -> bool:
+    """Permanently drop an archived deal. There is no undo past this."""
+    return bool(_sb_request("DELETE", f"pipeline_deleted?id=eq.{archive_id}",
+                            raise_on_error=_sb_configured()))
+
+
+def deleted_fingerprints() -> tuple[set, set]:
+    """Name keys and lead ids of deals that were deliberately deleted.
+
+    Cleaning up is pointless if the deleted rows walk straight back in. Both
+    re-entry paths key off what is currently in the pipeline: Import Leads
+    treats a lead as importable once its opportunity is gone, and the
+    Prospector re-enables a prospect once its name is gone. Feeding these
+    sets into both keeps a deletion deleted until someone restores it.
+
+    Returns (name_keys, lead_ids). Rows deleted by a merge are excluded —
+    the survivor is still in the pipeline under that name.
+    """
+    names, leads = set(), set()
+    for row in get_deleted(limit=500):
+        if row.get("merged_into"):
+            continue
+        key = normalize_name(row.get("business_name", ""))
+        if key:
+            names.add(key)
+        lead_id = (row.get("deal_data") or {}).get("lead_id")
+        if lead_id:
+            leads.add(lead_id)
+    return names, leads
+
+
+# ── Data hygiene: duplicates, junk rows, merges ──────────────────────────────
+
+# Words that only ever show up when a note or a contact line got pasted into
+# the business-name box. Matched on the whole name, never inside one, so real
+# businesses ("The Pants Store", "Something Southern") are never touched.
+_JUNK_NAME_PREFIXES = (
+    "pitched", "called", "emailed", "spoke", "left voicemail", "followed up",
+    "follow up", "sent", "met with", "meeting", "note", "notes", "no answer",
+    "contact", "owner", "manager", "director", "president",
+)
+_TITLE_LINE = re.compile(
+    r"^(marketing|sales|general|managing|creative|operations|regional)?\s*"
+    r"(director|manager|owner|president|vp|coordinator|contact|rep)\s*:",
+    re.IGNORECASE,
+)
+_DATE_ISH = re.compile(
+    r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b",
+    re.IGNORECASE,
+)
+
+
+_LEGAL_SUFFIXES = {
+    "inc", "incorporated", "llc", "llp", "lp", "ltd", "limited", "co",
+    "company", "corp", "corporation", "pllc", "pc", "pa",
+}
+
+
+def normalize_name(name: str) -> str:
+    """Reduce a business name to a canonical key for duplicate detection.
+
+    Collapses the noise that makes one business look like two — case,
+    punctuation, accents, curly quotes, trailing legal suffixes, and the
+    stray trailing space that let "Enterprise tupelo " and "Enterprise
+    Tupelo" both get created. Deliberately conservative:
+
+      - city and descriptor words are KEPT, so "St. Jude Dream Home - Oxford"
+        and "... - Tupelo" stay distinct rows;
+      - only TRAILING legal suffixes are dropped, so "Enterprise" survives in
+        "Enterprise Tupelo".
+    """
+    import unicodedata
+
+    raw = unicodedata.normalize("NFKD", name or "")
+    raw = "".join(c for c in raw if not unicodedata.combining(c))
+    key = raw.casefold()
+    key = key.replace("’", "'").replace("‘", "'")
+    key = key.replace("–", "-").replace("—", "-")
+    key = key.replace("&", " and ")
+    key = key.replace("'", "")                 # joe's -> joes
+    key = re.sub(r"[^a-z0-9]+", " ", key)      # fuse.cloud -> fuse cloud
+    words = key.split()
+
+    if words and words[0] == "the":
+        words = words[1:]
+    while len(words) > 1 and words[-1] in _LEGAL_SUFFIXES:
+        words.pop()
+
+    return " ".join(words)
+
+
+# Labels and job titles that mean a contact line got pasted into the name box.
+_LABEL_LINE = re.compile(
+    r"(?i)^\s*(contact(\s+name)?|name|owner|manager|gm|general\s+manager|"
+    r"marketing\s+director|director\s+of\s+marketing|marketing\s+manager|"
+    r"e-?mail|phone|tel|telephone|cell|mobile|address|website|url|notes?|"
+    r"follow[-\s]?up|next\s+steps?|status|budget|rep|source|title|position|"
+    r"role|decision\s+maker|poc|point\s+of\s+contact)\s*:"
+)
+_TITLE_COLON = re.compile(
+    r"(?i)^[A-Za-z][A-Za-z /&.\-]{2,40}"
+    r"(director|manager|owner|president|vp|vice\s+president|ceo|cfo|cmo|coo|"
+    r"partner|principal|coordinator|supervisor|administrator|officer|broker|"
+    r"agent)\s*:"
+)
+_ACTIVITY_NOTE = re.compile(
+    r"(?i)^(pitched|called|emailed|e-mailed|texted|spoke|talked|visited|"
+    r"met\s+with|meeting\s+with|followed\s+up|follow\s+up\s+with|stopped\s+by|"
+    r"dropped\s+by|left\s+(a\s+)?message|voicemail|no\s+answer|"
+    r"waiting\s+(on|for)|needs?\s+to|needed\s+to|will\s+(call|follow)|"
+    r"sent\s+(the\s+)?(proposal|contract|email|deck))\b"
+)
+_MONTH_DAY = re.compile(
+    r"(?i)\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b"
+)
+_NUMERIC_DATE = re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b")
+# Deliberately a SHORT list. A full TLD list would reject "Fuse.Cloud".
+_BARE_DOMAIN = re.compile(r"(?i)\.(com|net|org|biz|info)$")
+_PLACEHOLDERS = {
+    "unknown", "n/a", "na", "none", "tbd", "test", "testing", "asdf",
+    "business name", "name", "owner", "home", "welcome", "index",
+    "untitled", "-", "--", "?", "x",
+}
+
+
+def validate_business_name(name: str) -> tuple[bool, str, str]:
+    """Gate the business-name field before a deal can be created.
+
+    Junk rows like "drew@brockpartners.com", "Marketing Director: Drew
+    Langford" and "Pitched to Drew July 22, 2026" reached the pipeline
+    because the only check anywhere was "is the string non-empty" — then got
+    marked lost, which is what poisoned the win rate.
+
+    Returns (ok, cleaned, reason). `cleaned` has its whitespace collapsed, so
+    saving through this permanently kills the trailing-space duplicates
+    ("Enterprise tupelo " vs "Enterprise Tupelo") at the source.
+    """
+    cleaned = " ".join((name or "").split())
+
+    if len(cleaned) < 2:
+        return False, cleaned, "Business name is required"
+    if not re.search(r"[A-Za-z]", cleaned):
+        return False, cleaned, "A business name has to contain letters"
+    if re.search(r"\S@[\w.-]+\.[A-Za-z]{2,}", cleaned):
+        return False, cleaned, "That's an email address - put it in Contact Email"
+    if re.match(r"(?i)^(https?://|www\.)", cleaned) or (
+            " " not in cleaned and _BARE_DOMAIN.search(cleaned)):
+        return False, cleaned, "That's a website - put it in the Website field"
+    if re.fullmatch(r"[\d\s().+\-]{7,}", cleaned) and len(re.findall(r"\d", cleaned)) >= 7:
+        return False, cleaned, "That's a phone number - put it in Contact Phone"
+    if _LABEL_LINE.match(cleaned) or _TITLE_COLON.match(cleaned):
+        return False, cleaned, "That's a contact detail, not a business name"
+    if _ACTIVITY_NOTE.match(cleaned):
+        return False, cleaned, "That's an activity note - put it in Notes"
+    if _MONTH_DAY.search(cleaned) or _NUMERIC_DATE.search(cleaned):
+        return False, cleaned, "That contains a date - put it in Notes"
+    if cleaned.casefold() in _PLACEHOLDERS:
+        return False, cleaned, f"'{cleaned}' isn't a real business name"
+    if len(cleaned) > 80 or len(cleaned.split()) > 14:
+        return False, cleaned, "Too long - that looks like a pasted sentence"
+
+    return True, cleaned, ""
+
+
+def looks_like_junk(name: str) -> str:
+    """Explain why a business name looks like a pasted note, or "" if it's fine.
+
+    Catches exactly the shapes that leaked in through the Prospector's
+    line-splitting paste box — a bare email address, a "Marketing Director:
+    Drew Langford" contact line, a "Pitched to Drew July 22, 2026" activity
+    note. Legitimate names with punctuation and parentheses
+    ("Neel-Schaffer, Inc.", "Natchez-Adams County Airport (Hardy-Anders
+    Field / HEZ)", "Fuse.Cloud", "mTrade") pass clean.
+    """
+    raw = (name or "").strip()
+    if not raw:
+        return "Blank business name"
+    if "@" in raw and " " not in raw:
+        return "Looks like an email address, not a business"
+    if raw.startswith(("http://", "https://", "www.")):
+        return "Looks like a URL, not a business"
+    if _TITLE_LINE.match(raw):
+        return "Looks like a contact line (job title + name)"
+
+    first = raw.split()[0].lower().rstrip(":,")
+    if first in _JUNK_NAME_PREFIXES and len(raw.split()) > 2:
+        return f"Starts with '{first}' — looks like an activity note"
+    if _DATE_ISH.search(raw) and len(raw.split()) > 3:
+        return "Contains a date — looks like a note, not a name"
+    if len(raw) > 90:
+        return "Unusually long — looks like a pasted sentence"
+    return ""
+
+
+def find_duplicate_groups(opps: list[dict] | None = None) -> list[dict]:
+    """Group opportunities that are almost certainly the same business.
+
+    Returns one dict per group, richest first:
+        {key, name, deals: [...], has_conflict: bool}
+    `has_conflict` is True when the group's rows disagree about stage — those
+    need a human to pick the survivor, because one of them is the real
+    outcome and the other is a stale copy.
+    """
+    if opps is None:
+        opps = get_all_opportunities()
+
+    groups: dict[str, list[dict]] = {}
+    for o in opps:
+        key = normalize_name(o.get("business_name", ""))
+        if not key:
+            continue
+        groups.setdefault(key, []).append(o)
+
+    out = []
+    for key, deals in groups.items():
+        if len(deals) < 2:
+            continue
+        stages = {d.get("stage") for d in deals}
+        deals = sorted(deals, key=lambda d: (
+            -STAGES.get(d.get("stage", ""), {}).get("order", 0),
+            _day(d.get("created_at")),
+        ))
+        out.append({
+            "key": key,
+            "name": deals[0].get("business_name", key),
+            "deals": deals,
+            "has_conflict": len(stages) > 1,
+        })
+
+    out.sort(key=lambda g: (-len(g["deals"]), g["name"]))
+    return out
+
+
+def find_junk_rows(opps: list[dict] | None = None) -> list[dict]:
+    """Opportunities whose business name looks like pasted note text.
+
+    Each returned deal carries a `_junk_reason` explaining the call.
+    """
+    if opps is None:
+        opps = get_all_opportunities()
+    flagged = []
+    for o in opps:
+        reason = looks_like_junk(o.get("business_name", ""))
+        if reason:
+            o["_junk_reason"] = reason
+            flagged.append(o)
+    return flagged
+
+
+def merge_opportunities(keep_id: str, merge_ids: list[str],
+                        performed_by: str = "MCTV Bot",
+                        fill_blanks: bool = True) -> dict | None:
+    """Fold duplicate rows into one surviving deal.
+
+    The losers' activity history is re-pointed at the survivor before they are
+    deleted, so nothing about the relationship is lost — only the double
+    counting is. With `fill_blanks`, any field the survivor left empty is
+    filled from a duplicate, so merging never throws away a phone number.
+
+    Returns the surviving opportunity, or None if it could not be found.
+    """
+    keeper = get_opportunity(keep_id)
+    if not keeper:
+        return None
+
+    merge_ids = [mid for mid in merge_ids if mid and mid != keep_id]
+    if not merge_ids:
+        return keeper
+
+    # Fields that describe the SURVIVOR's own identity and outcome. Copying
+    # any of these off a duplicate would rewrite the deal: merging a lost
+    # duplicate into a won deal must not import the loss reason or re-date
+    # the win, and a $0 partnership must not inherit a junk row's price.
+    _SKIP = {"id", "created_at", "updated_at", "deal_type", "stage",
+             "probability", "stage_entered_at", "closed_date", "loss_reason",
+             "business_name", "monthly_value", "one_time_value", "tier_name",
+             "pricing_mode", "screen_count", "term_months",
+             "excluded_from_stats", "exclusion_reason"}
+
+    def _blank(v) -> bool:
+        """Empty for merge purposes. Deliberately NOT a `v in (None,"",0,...)`
+        test: in Python `0 == False`, so that would treat a real $0 value and
+        a real `False` flag as missing and overwrite them."""
+        return v is None or v == "" or v == [] or v == {}
+
+    filled: dict = {}
+    merged_names = []
+
+    for mid in merge_ids:
+        loser = get_opportunity(mid)
+        if not loser:
+            continue
+        merged_names.append(loser.get("business_name", mid))
+
+        if fill_blanks:
+            for field, value in loser.items():
+                if field in _SKIP or _blank(value):
+                    continue
+                if _blank(keeper.get(field)) and field not in filled:
+                    filled[field] = value
+
+        # Archive BEFORE re-pointing the activity, or the snapshot captures an
+        # already-empty history and undoing the merge restores a bare row.
+        if not _archive_opportunity(
+                loser, deleted_by=performed_by,
+                reason=f"Merged into {keeper.get('business_name', keep_id)}",
+                merged_into=keep_id):
+            raise PipelineWriteError(
+                f"Could not archive {loser.get('business_name', mid)}, so the "
+                "merge was stopped. Nothing was changed."
+            )
+
+        # Re-point the loser's history at the survivor BEFORE the delete —
+        # the FK cascades, so anything still attached would be destroyed.
+        _sb_request("PATCH", f"pipeline_activity?opportunity_id=eq.{mid}",
+                    {"opportunity_id": keep_id})
+
+        delete_opportunity(mid, deleted_by=performed_by, archive=False,
+                           reason=f"Merged into {keeper.get('business_name', keep_id)}",
+                           merged_into=keep_id)
+
+    if filled:
+        keeper = update_opportunity(keep_id, filled) or keeper
+
+    _log_activity(keep_id, "merged",
+                  details=f"Merged {len(merged_names)} duplicate(s): {', '.join(merged_names)}",
+                  performed_by=performed_by)
+    return keeper
+
+
+# ── Pricing ───────────────────────────────────────────────────────────────────
+
+def tier_payload(tier_name: str) -> dict:
+    """The stock-tier pricing fields for a TIERS key."""
+    tier = TIERS.get(tier_name) or {}
+    return {
+        "pricing_mode": "tier",
+        "tier_name": tier_name,
+        "screen_count": tier.get("screens", 0),
+        "monthly_value": tier.get("monthly", 0),
+        "one_time_value": 0,
+    }
+
+
+def custom_payload(package_name: str, monthly_value: float = 0,
+                   one_time_value: float = 0, screen_count: int = 0,
+                   term_months: int | None = None) -> dict:
+    """Pricing fields for a proposal that doesn't fit a stock tier.
+
+    `monthly_value` is recurring revenue; `one_time_value` is a flat project
+    or flight fee that must never be counted as MRR.
+    """
+    return {
+        "pricing_mode": "custom",
+        "tier_name": (package_name or "Custom package").strip(),
+        "screen_count": int(screen_count or 0),
+        "monthly_value": float(monthly_value or 0),
+        "one_time_value": float(one_time_value or 0),
+        "term_months": int(term_months) if term_months else None,
+    }
+
+
+def total_contract_value(opp: dict) -> float:
+    """Full value of the deal: monthly rate over the term, plus any flat fee.
+
+    Falls back to a single month when no term is recorded, so a deal without
+    a term is never counted as if it were free.
+    """
+    months = opp.get("term_months")
+    try:
+        months = int(months) if months else 1
+    except (TypeError, ValueError):
+        months = 1
+    return _num(opp.get("monthly_value")) * max(months, 1) + _num(opp.get("one_time_value"))
+
+
+def counted(opps: list[dict]) -> list[dict]:
+    """Drop deals the team flagged as not-real-revenue before doing any math.
+
+    Partnerships, barters and $0 placeholders can stay in the pipeline for
+    visibility without dragging down win rate or average deal size.
+    """
+    return [o for o in opps if not o.get("excluded_from_stats")]
 
 
 # ── Stage Management ──────────────────────────────────────────────────────────
@@ -277,24 +910,32 @@ def advance_stage(opp_id: str, new_stage: str, performed_by: str = "MCTV Bot") -
         return opp
 
     stage_info = STAGES.get(new_stage, {})
-    from datetime import datetime as _dt
     updates = {
         "stage": new_stage,
         "probability": stage_info.get("probability", 10),
-        "stage_entered_at": _dt.now().isoformat(),
+        "stage_entered_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    if new_stage == "won":
-        updates["probability"] = 100
-    elif new_stage == "lost":
-        updates["probability"] = 0
+    if new_stage in CLOSED_STAGES:
+        updates["probability"] = 100 if new_stage == "won" else 0
+        # Stamp the close date once. "Won this month" reads this, never
+        # updated_at, so editing an old deal can't re-date the win.
+        if not opp.get("closed_date"):
+            updates["closed_date"] = local_today().isoformat()
+        # A decided deal has no next step — leaving one behind puts closed
+        # deals in the Action Items list forever.
+        updates["next_action"] = None
+        updates["next_action_date"] = None
+    elif old_stage in CLOSED_STAGES:
+        # Reopening a deal: it is live again, so the close date is wrong.
+        updates["closed_date"] = None
 
     # Accountability: entering a stage automatically schedules that stage's
     # follow-up per the SLA — reps never have to remember to set one.
     sla = FOLLOW_UP_SLA.get(new_stage)
     if sla:
         updates["next_action"] = sla["action"]
-        updates["next_action_date"] = (date.today() + timedelta(days=sla["days"])).isoformat()
+        updates["next_action_date"] = (local_today() + timedelta(days=sla["days"])).isoformat()
 
     result = update_opportunity(opp_id, updates)
 
@@ -306,8 +947,13 @@ def advance_stage(opp_id: str, new_stage: str, performed_by: str = "MCTV Bot") -
     return result
 
 
-def mark_lost(opp_id: str, reason: str = "", performed_by: str = "MCTV Bot") -> dict | None:
-    """Mark an opportunity as lost with an optional reason."""
+def mark_lost(opp_id: str, reason: str = "", performed_by: str = "MCTV Bot",
+              closed_date: str | None = None) -> dict | None:
+    """Mark an opportunity as lost with an optional reason.
+
+    A duplicate or a junk row is NOT a loss — deleting it keeps the win rate
+    honest. Use this only for deals that were genuinely pitched and declined.
+    """
     opp = get_opportunity(opp_id)
     if not opp:
         return None
@@ -317,6 +963,10 @@ def mark_lost(opp_id: str, reason: str = "", performed_by: str = "MCTV Bot") -> 
         "stage": "lost",
         "probability": 0,
         "loss_reason": reason,
+        "stage_entered_at": datetime.now(timezone.utc).isoformat(),
+        "closed_date": closed_date or opp.get("closed_date") or local_today().isoformat(),
+        "next_action": None,
+        "next_action_date": None,
     }
 
     result = update_opportunity(opp_id, updates)
@@ -349,7 +999,16 @@ def _log_activity(opp_id: str, action: str, from_stage: str = "",
     if result is not None:
         return
 
-    # Fallback: local
+    if _sb_configured():
+        # Configured but rejected — almost always an `action` value outside
+        # the CHECK constraint. Do NOT fall through to local JSON: that hides
+        # the audit trail on a disk the next deploy wipes, which is worst for
+        # exactly the destructive actions we most want recorded.
+        logger.error("Activity %r on %s was rejected by Supabase and not logged.",
+                     action, opp_id)
+        return
+
+    # Fallback: local (dev box with no Supabase secrets)
     activity = _load_local_activity()
     import uuid
     record["id"] = str(uuid.uuid4())
@@ -451,16 +1110,20 @@ def get_pipeline_summary(opps: list[dict] | None = None) -> dict:
     if opps is None:
         opps = get_all_opportunities()
 
+    # Deals flagged "don't count me" never reach the math — that is the whole
+    # point of the flag. They stay visible everywhere else.
+    scored = counted(opps)
+
     # Exclude lost/won from active pipeline
-    active = [o for o in opps if o.get("stage") not in ("won", "lost")]
-    won = [o for o in opps if o.get("stage") == "won"]
-    lost = [o for o in opps if o.get("stage") == "lost"]
+    active = [o for o in scored if o.get("stage") not in CLOSED_STAGES]
+    won = [o for o in scored if o.get("stage") == "won"]
+    lost = [o for o in scored if o.get("stage") == "lost"]
 
     # By stage
     by_stage = {}
     for stage_key, stage_info in STAGES.items():
-        stage_opps = [o for o in opps if o.get("stage") == stage_key]
-        value = sum(float(o.get("monthly_value", 0)) for o in stage_opps)
+        stage_opps = [o for o in scored if o.get("stage") == stage_key]
+        value = sum(_num(o.get("monthly_value")) for o in stage_opps)
         by_stage[stage_key] = {
             "count": len(stage_opps),
             "value": value,
@@ -469,81 +1132,139 @@ def get_pipeline_summary(opps: list[dict] | None = None) -> dict:
             "color": stage_info["color"],
         }
 
-    total_value = sum(float(o.get("monthly_value", 0)) for o in active)
+    total_value = sum(_num(o.get("monthly_value")) for o in active)
     weighted_value = sum(
-        float(o.get("monthly_value", 0)) * float(o.get("probability", 0)) / 100
+        _num(o.get("monthly_value")) * _num(o.get("probability")) / 100
         for o in active
     )
+    one_time_open = sum(_num(o.get("one_time_value")) for o in active)
 
-    # This month's wins
-    this_month = date.today().replace(day=1).isoformat()
+    # This month's wins, keyed off the real close date. Using updated_at (as
+    # this did before) meant any edit to an old won deal re-dated the win
+    # into the current month and inflated the number.
+    _today = local_today()
+    this_month = month_start(_today).isoformat()
+    next_month = month_start(_today, 1).isoformat()
+    # Bounded on BOTH sides: an open-ended ">= this month" would let a
+    # backdating typo (2027-01-15) count as won this month forever.
+    # closed_date only — NO updated_at fallback. Falling back would reinstate
+    # the exact bug this replaced, since updated_at moves on every edit. A won
+    # deal with no close date is reported as undated instead of guessed at.
     won_this_month = [
         o for o in won
-        if (o.get("updated_at") or o.get("created_at", "")) >= this_month
+        if this_month <= _day(o.get("closed_date")) < next_month
     ]
-    mrr_won = sum(float(o.get("monthly_value", 0)) for o in won_this_month)
+    mrr_won = sum(_num(o.get("monthly_value")) for o in won_this_month)
+    one_time_won = sum(_num(o.get("one_time_value")) for o in won_this_month)
+    # A won deal with no close date can't be placed in a month — surface it
+    # rather than letting it drop out of reporting unnoticed.
+    undated_wins = [o for o in won if not _day(o.get("closed_date"))]
 
     # Conversion rate (won / (won + lost))
     total_decided = len(won) + len(lost)
     conversion_rate = (len(won) / total_decided * 100) if total_decided > 0 else 0
 
-    # Average deal size
-    avg_deal = total_value / len(active) if active else 0
+    # Average deal size — over deals that actually carry a price, so a $0
+    # partnership placeholder can't drag the average down.
+    priced = [o for o in active if _num(o.get("monthly_value")) > 0]
+    avg_deal = (sum(_num(o.get("monthly_value")) for o in priced) / len(priced)
+                if priced else 0)
 
     return {
         "total_opportunities": len(active),
         "total_pipeline_value": total_value,
         "weighted_pipeline_value": weighted_value,
+        "one_time_pipeline_value": one_time_open,
         "by_stage": by_stage,
         "avg_deal_size": avg_deal,
         "conversion_rate": conversion_rate,
         "deals_won_this_month": len(won_this_month),
         "mrr_won_this_month": mrr_won,
+        "one_time_won_this_month": one_time_won,
         "total_won": len(won),
         "total_lost": len(lost),
+        "excluded_count": len(opps) - len(scored),
+        "undated_wins": len(undated_wins),
     }
 
 
 def get_revenue_forecast(months: int = 3, opps: list[dict] | None = None) -> list[dict]:
     """Forecast revenue for the next N months based on weighted pipeline.
 
-    Returns list of dicts: [{month, expected_mrr, best_case, worst_case}]
+    Returns list of dicts:
+        [{month, expected_mrr, best_case, worst_case, deal_count, one_time}]
+
+    Each month holds the deals whose expected close falls IN that month.
+    Previously every bucket was cumulative ("closing on or before"), so one
+    deal was counted again in every later month and the three numbers could
+    not be read as three months of revenue.
+
+    Deals with no expected close date, and deals already past due, cannot
+    belong to a future month — they are reported separately rather than
+    dropped silently, which is what used to happen to undated deals.
     """
     if opps is None:
         opps = get_all_opportunities()
-    active = [o for o in opps if o.get("stage") not in ("won", "lost")]
+    active = [o for o in counted(opps) if o.get("stage") not in CLOSED_STAGES]
+
+    today = local_today()
 
     forecast = []
     for i in range(months):
-        target_date = date.today() + timedelta(days=30 * (i + 1))
-        month_label = target_date.strftime("%B %Y")
+        start = month_start(today, i + 1)
+        end = month_start(today, i + 2)
 
-        # Deals expected to close by this month
         closing = [
             o for o in active
-            if o.get("expected_close_date") and o["expected_close_date"] <= target_date.isoformat()
+            if start.isoformat() <= _day(o.get("expected_close_date")) < end.isoformat()
         ]
 
         expected = sum(
-            float(o.get("monthly_value", 0)) * float(o.get("probability", 0)) / 100
+            _num(o.get("monthly_value")) * _num(o.get("probability")) / 100
             for o in closing
         )
-        best_case = sum(float(o.get("monthly_value", 0)) for o in closing)
+        best_case = sum(_num(o.get("monthly_value")) for o in closing)
         worst_case = sum(
-            float(o.get("monthly_value", 0))
+            _num(o.get("monthly_value"))
             for o in closing
-            if float(o.get("probability", 0)) >= 75
+            if _num(o.get("probability")) >= 75
         )
 
         forecast.append({
-            "month": month_label,
+            "month": start.strftime("%B %Y"),
             "expected_mrr": expected,
             "best_case": best_case,
             "worst_case": worst_case,
             "deal_count": len(closing),
+            "one_time": sum(_num(o.get("one_time_value")) for o in closing),
         })
 
     return forecast
+
+
+def get_forecast_gaps(opps: list[dict] | None = None) -> dict:
+    """Open deals the month-by-month forecast cannot place.
+
+    Returns counts and values for deals with no expected close date and for
+    deals whose close date has already passed. Both are real pipeline that
+    would otherwise be invisible on the Forecast tab.
+    """
+    if opps is None:
+        opps = get_all_opportunities()
+    active = [o for o in counted(opps) if o.get("stage") not in CLOSED_STAGES]
+    today_iso = local_today().isoformat()
+
+    undated = [o for o in active if not _day(o.get("expected_close_date"))]
+    overdue = [o for o in active
+               if _day(o.get("expected_close_date"))
+               and _day(o.get("expected_close_date")) < today_iso]
+
+    return {
+        "undated": undated,
+        "undated_value": sum(_num(o.get("monthly_value")) for o in undated),
+        "overdue": overdue,
+        "overdue_value": sum(_num(o.get("monthly_value")) for o in overdue),
+    }
 
 
 def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
@@ -559,13 +1280,13 @@ def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
     """
     if opps is None:
         opps = get_all_opportunities()
-    today = date.today()
+    today = local_today()
     today_iso = today.isoformat()
     needs_action = []
 
     for opp in opps:
         stage = opp.get("stage")
-        if stage in ("won", "lost"):
+        if stage in CLOSED_STAGES:
             continue
 
         sla = FOLLOW_UP_SLA.get(stage, {"days": 7, "action": "Follow up"})
@@ -582,8 +1303,7 @@ def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
         elif not next_date:
             reason = f"No follow-up scheduled — set one ({sla['action']})"
         else:
-            last_touch = (opp.get("last_contact_date")
-                          or opp.get("updated_at") or "")[:10]
+            last_touch = _day(opp.get("last_contact_date") or opp.get("updated_at"))
             sla_cutoff = (today - timedelta(days=sla["days"])).isoformat()
             if last_touch and last_touch <= sla_cutoff:
                 reason = (f"No touch in {sla['days']}+ days — "
@@ -594,7 +1314,7 @@ def get_deals_needing_action(opps: list[dict] | None = None) -> list[dict]:
             opp["_action_reason"] = reason
             needs_action.append(opp)
 
-    needs_action.sort(key=lambda o: -float(o.get("monthly_value", 0) or 0))
+    needs_action.sort(key=lambda o: -_num(o.get("monthly_value")))
     return needs_action
 
 
@@ -625,9 +1345,11 @@ def get_rep_scoreboard(opps: list[dict] | None = None, days: int = 30) -> list[d
     """
     if opps is None:
         opps = get_all_opportunities()
+    opps = counted(opps)
     activities = get_all_activity(days=days)
-    today = date.today()
-    month_start = today.replace(day=1).isoformat()
+    today = local_today()
+    _month_from = month_start(today).isoformat()
+    _month_to = month_start(today, 1).isoformat()
 
     reps: dict[str, dict] = {}
 
@@ -650,24 +1372,29 @@ def get_rep_scoreboard(opps: list[dict] | None = None, days: int = 30) -> list[d
 
         if stage == "won":
             r["won_total"] += 1
-            if (o.get("updated_at") or o.get("created_at") or "") >= month_start:
-                r["mrr_won_month"] += float(o.get("monthly_value", 0) or 0)
+            # Real close date, not updated_at — otherwise editing an old won
+            # deal moves its revenue into this month's credit.
+            # closed_date only, matching get_pipeline_summary exactly — if
+            # these two disagree, the KPI tile and this scoreboard show
+            # different revenue for the same month on the same screen.
+            if _month_from <= _day(o.get("closed_date")) < _month_to:
+                r["mrr_won_month"] += _num(o.get("monthly_value"))
         elif stage == "lost":
             r["lost_total"] += 1
         else:
             r["open_deals"] += 1
-            value = float(o.get("monthly_value", 0) or 0)
+            value = _num(o.get("monthly_value"))
             r["pipeline_value"] += value
-            r["weighted_value"] += value * float(o.get("probability", 0) or 0) / 100
+            r["weighted_value"] += value * _num(o.get("probability")) / 100
 
-            next_date = o.get("next_action_date")
+            next_date = _day(o.get("next_action_date"))
             if not next_date:
                 r["no_followup"] += 1
             elif next_date <= today.isoformat():
                 r["overdue"] += 1
 
-            last_touch = (o.get("last_contact_date") or o.get("updated_at")
-                          or o.get("created_at") or "")[:10]
+            last_touch = _day(o.get("last_contact_date") or o.get("updated_at")
+                              or o.get("created_at"))
             if last_touch:
                 try:
                     r["_touch_ages"].append(

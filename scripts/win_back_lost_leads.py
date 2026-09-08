@@ -86,10 +86,12 @@ def main() -> int:
 
     cutoff = (date.today() - timedelta(days=90)).isoformat()
 
+    # NB: this select names its columns, so any new column has to be added
+    # here explicitly or the script silently won't see it.
     candidates = query_table(
         "pipeline_opportunities",
         select=("id,business_name,contact_name,contact_email,contact_phone,"
-                "stage,deal_type,updated_at,win_back_sent_at,city"),
+                "stage,deal_type,updated_at,closed_date,win_back_sent_at,city"),
         filters={"deal_type": "advertiser", "stage": "lost"},
         order="-updated_at",
     ) or []
@@ -98,8 +100,10 @@ def main() -> int:
     for c in candidates:
         if c.get("win_back_sent_at"):
             continue
-        updated = (c.get("updated_at") or "")[:10]
-        if not updated or updated > cutoff:
+        # "Lost 90+ days ago" means 90 days since the deal was actually lost,
+        # not since someone last edited the row.
+        lost_on = str(c.get("closed_date") or c.get("updated_at") or "")[:10]
+        if not lost_on or lost_on > cutoff:
             continue
         if not c.get("contact_email"):
             continue

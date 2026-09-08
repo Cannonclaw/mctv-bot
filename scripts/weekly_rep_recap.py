@@ -113,10 +113,13 @@ def build_rep_digest(rep_full: str, rep_first: str) -> dict:
         hot_leads = []
     hot_leads = hot_leads[:8]
 
-    # Recent wins (closed-won in last 30 days)
+    # Recent wins (closed-won in last 30 days). Keyed off closed_date, the
+    # real win date — updated_at moves on any edit, so a 2025 deal touched
+    # this week used to get emailed to the rep as a fresh win.
     recent_wins = [d for d in my_deals
                     if d.get("stage") in ("won", "live")
-                    and (d.get("updated_at") or "")[:10] >= cutoff_30d_ago]
+                    and str(d.get("closed_date") or d.get("updated_at") or "")[:10]
+                        >= cutoff_30d_ago]
 
     return {
         "rep_full": rep_full,
