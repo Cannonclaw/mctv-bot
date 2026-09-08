@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Oxford Conference Center × MCTV — Advertiser Proposal</title>
+<link rel="stylesheet" href="assets/fonts/ttf.css" />
+<style>
+/* ============================================================
+   MCTV Elite Advertising — deck chassis per Design.md v1.0
+   Canvas 1920×1080 · 1u = 19.2px · cream/navy/gold
+   ============================================================ */
+:root{
+  --cream:#FAF6EF; --navy:#00377E; --navy-dk:#002A5E; --gold:#C9A227;
+  --gold-lt:#E7CE8A; --gold-bg:#FFF6DE; --gold-dk:#7A5B00; --white:#FFFFFF;
+  --ink:#2A2A2A; --muted:#5A5A5A; --light:#8A8A8A; --rule:#E4DFD3;
+  --bar-track:#EFEAE0; --bar-a:#C7D3E8; --bar-b:#B0BFDC;
+  --u:19.2px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:#DDD8CC;}
+body{font-family:'Work Sans','Segoe UI',system-ui,sans-serif; color:var(--ink);}
+
+.page{
+  width:1920px; height:1080px; position:relative; overflow:hidden;
+  background:var(--cream); margin:24px auto;
+  box-shadow:0 6px 30px rgba(0,0,0,.18);
+}
+@media print{
+  html,body{background:none;}
+  .page{margin:0; box-shadow:none; page-break-after:always;}
+  .page:last-child{page-break-after:auto;}
+}
+@page{size:1920px 1080px; margin:0;}
+
+/* — page furniture — */
+.pad{position:absolute; inset:calc(5.5 * var(--u));}
+.hdr{
+  position:absolute; top:calc(2.4 * var(--u)); left:calc(5.5 * var(--u)); right:calc(5.5 * var(--u));
+  display:flex; justify-content:space-between; align-items:baseline;
+}
+.wordmark{line-height:1;}
+.wordmark .wm1{font-family:'Playfair Display',Georgia,serif; font-weight:600; letter-spacing:.22em; font-size:calc(1.35*var(--u)); color:var(--navy);}
+.wordmark .wm2{font-family:'Work Sans',sans-serif; font-weight:600; letter-spacing:.30em; font-size:calc(.42*var(--u)); color:var(--gold-dk); margin-top:calc(.28*var(--u));}
+.dark .wordmark .wm1{color:#fff;}
+.dark .wordmark .wm2{color:var(--gold-lt);}
+.hdr .sect{font-weight:600; letter-spacing:.19em; text-transform:uppercase; font-size:calc(.86*var(--u)); color:var(--navy);}
+.dark .hdr .sect{color:var(--gold-lt);}
+.ftr{
+  position:absolute; bottom:calc(2.2 * var(--u)); left:calc(5.5 * var(--u)); right:calc(5.5 * var(--u));
+  display:flex; justify-content:space-between; align-items:baseline;
+}
+.ftr .fl{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--navy);}
+.ftr .folio{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.1*var(--u)); color:var(--navy);}
+.dark .ftr .fl,.dark .ftr .folio{color:var(--gold-lt);}
+
+/* — type — */
+.eyebrow{font-weight:600; letter-spacing:.19em; text-transform:uppercase; font-size:calc(1.02*var(--u)); color:var(--navy);}
+.dark .eyebrow{color:var(--gold-lt);}
+.goldrule{width:calc(7*var(--u)); height:calc(.34*var(--u)); background:var(--gold); margin:calc(1.1*var(--u)) 0 calc(1.6*var(--u));}
+h1.display{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(6.4*var(--u)); line-height:.98; letter-spacing:-0.012em; color:#fff;}
+h2{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(3.9*var(--u)); line-height:1.03; letter-spacing:-0.008em; color:var(--navy);}
+h3{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.1*var(--u)); color:var(--navy);}
+.lead{font-weight:500; font-size:calc(1.42*var(--u)); line-height:1.45; color:var(--ink);}
+p.body,li.body{font-weight:400; font-size:calc(1.16*var(--u)); line-height:1.55; color:var(--muted);}
+.small{font-size:calc(.98*var(--u)); color:var(--muted);}
+.micro{font-size:calc(.82*var(--u)); color:var(--light);}
+.label{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--muted);}
+
+/* — bullets — */
+ul.dash{list-style:none;}
+ul.dash li{position:relative; padding-left:calc(1.9*var(--u)); margin-bottom:calc(.85*var(--u));}
+ul.dash li::before{content:"—"; position:absolute; left:0; color:var(--gold); font-weight:700;}
+
+/* — cards & stats — */
+.statrow{display:grid; grid-template-columns:repeat(5,1fr); gap:calc(1.2*var(--u));}
+.stat{background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); text-align:center; padding:calc(1.7*var(--u)) calc(.8*var(--u)) calc(1.5*var(--u));}
+.stat .n{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.9*var(--u)); line-height:1; color:var(--navy);}
+.stat .l{margin-top:calc(.75*var(--u)); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.76*var(--u)); color:var(--muted);}
+
+.card{background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u));}
+
+/* — pricing — */
+.pricegrid{display:grid; grid-template-columns:repeat(4,1fr); gap:calc(1.2*var(--u));}
+.price{position:relative; background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); padding:calc(1.6*var(--u)) calc(1.4*var(--u)); display:flex; flex-direction:column;}
+.price .tier{font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.82*var(--u)); color:var(--muted);}
+.price .amt{font-family:'Playfair Display',serif; font-weight:700; font-size:calc(3.15*var(--u)); color:var(--navy); margin-top:calc(.6*var(--u));}
+.price .amt span{font-family:'Work Sans',sans-serif; font-weight:500; font-size:calc(1.05*var(--u)); color:var(--muted);}
+.price .det{border-top:1px solid var(--rule); margin-top:calc(1*var(--u)); padding-top:calc(.9*var(--u)); font-size:calc(.95*var(--u)); color:var(--muted); line-height:1.55;}
+.price .note{margin-top:auto; padding-top:calc(.9*var(--u)); font-style:italic; font-size:calc(.82*var(--u)); color:var(--light);}
+.price.feature{background:var(--navy); border-color:var(--navy);}
+.price.feature .tier{color:var(--gold-lt);}
+.price.feature .amt{color:#fff;}
+.price.feature .amt span{color:rgba(255,255,255,.75);}
+.price.feature .det{color:rgba(255,255,255,.82); border-color:rgba(255,255,255,.25);}
+.price.feature .note{color:var(--gold-lt);}
+.flag{position:absolute; top:calc(-.85*var(--u)); left:calc(1.2*var(--u)); background:var(--gold); color:#3A2C00; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.7*var(--u)); padding:calc(.35*var(--u)) calc(.8*var(--u)); border-radius:calc(.25*var(--u));}
+
+/* — promo — */
+.promo{background:var(--gold-bg); border:1px solid var(--gold-lt); border-radius:calc(.5*var(--u)); color:var(--gold-dk); padding:calc(1.3*var(--u)) calc(1.6*var(--u));}
+.promo b{letter-spacing:.13em; text-transform:uppercase;}
+
+/* — dark pages — */
+.dark{background:linear-gradient(180deg,var(--navy) 0%,var(--navy-dk) 100%);}
+.dark h2,.dark h3{color:#fff;}
+.dark p.body,.dark .lead{color:rgba(255,255,255,.82);}
+
+/* — cover — */
+.cover-photo{position:absolute; inset:0; background-size:cover; background-position:center;}
+.scrim-h{position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,20,50,.78) 0%,rgba(0,20,50,.55) 40%,rgba(0,20,50,0) 78%);}
+.scrim-v{position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,20,50,.30) 0%,rgba(0,20,50,.12) 45%,rgba(0,20,50,.82) 100%);}
+
+.chip{display:inline-block; border:1.5px solid rgba(255,255,255,.85); color:#fff; letter-spacing:.19em; text-transform:uppercase; font-weight:600; font-size:calc(.9*var(--u)); padding:calc(.55*var(--u)) calc(1.3*var(--u)); border-radius:calc(.25*var(--u));}
+
+/* — tables — */
+table.data{width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--rule); border-radius:calc(.5*var(--u)); overflow:hidden;}
+table.data th{background:var(--navy); color:#fff; font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:calc(.82*var(--u)); padding:calc(1*var(--u)) calc(1.2*var(--u)); text-align:left;}
+table.data td{padding:calc(.95*var(--u)) calc(1.2*var(--u)); border-top:1px solid var(--rule); font-size:calc(1.02*var(--u)); color:var(--muted);}
+table.data td.em{font-family:'Playfair Display',serif; font-weight:700; color:var(--navy); font-size:calc(1.25*var(--u));}
+table.data tr.home td{background:var(--gold-bg); color:var(--gold-dk);}
+table.data tr.home td.em{color:var(--navy);}
+
+/* — comparison bars — */
+.bars .row{display:grid; grid-template-columns:calc(13*var(--u)) 1fr calc(6*var(--u)); align-items:center; gap:calc(1*var(--u)); margin-bottom:calc(.95*var(--u));}
+.bars .bl{font-size:calc(.98*var(--u)); color:var(--muted); text-align:right;}
+.bars .track{height:calc(1.15*var(--u)); background:var(--bar-track); border-radius:999px; overflow:hidden;}
+.bars .fill{height:100%; background:var(--bar-a); border-radius:999px;}
+.bars .bv{font-size:calc(.98*var(--u)); color:var(--muted);}
+.bars .row.mctv .bl,.bars .row.mctv .bv{color:var(--navy); font-weight:700;}
+.bars .row.mctv .fill{background:var(--navy);}
+
+/* ── book mode (?print=1): imposes each 16:9 page on an 11 x 6.5in sheet with a
+   ~0.32in white margin on every side — the trim line falls in clear white, so no
+   bleed is needed. Same treatment as the Smith Murphy coil book. ── */
+body.printbook{background:#fff;}
+body.printbook .page{zoom:0.5175; margin:0; box-shadow:none;}
+</style>
+<script>if (location.search.indexOf('print') !== -1) document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('printbook'); var s = document.createElement('style'); s.textContent = '@page{size:11in 6.5in; margin:0.34in 0.325in;}'; document.head.appendChild(s); });</script>
+</head>
+<body>
+
+<!-- ═══════════════ 1 · COVER ═══════════════ -->
+<section class="page dark">
+  <div class="cover-photo" style="background-image:url('assets/img/oxford-square-aerial.png');"></div>
+  <div class="scrim-h"></div><div class="scrim-v"></div>
+  <img src="assets/img/476MCTV_D_Logo_WhiteText_1200.png" alt="MCTV Elite Advertising"
+       style="position:absolute; top:calc(2.6*var(--u)); left:calc(5.5*var(--u)); width:calc(13*var(--u));" />
+  <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(9.5*var(--u)); right:calc(30*var(--u));">
+    <div style="color:#fff; font-weight:600; letter-spacing:.24em; text-transform:uppercase; font-size:calc(1.02*var(--u));">Advertiser Partnership Proposal</div>
+    <div class="goldrule"></div>
+    <h1 class="display">Fill every date<br/>on the calendar.</h1>
+    <div style="margin-top:calc(2.2*var(--u));" class="chip">Oxford Conference Center</div>
+  </div>
+  <div style="position:absolute; left:calc(5.5*var(--u)); bottom:calc(2.4*var(--u)); right:calc(5.5*var(--u)); display:flex; justify-content:space-between; color:rgba(255,255,255,.85); font-size:calc(.9*var(--u)); letter-spacing:.13em; text-transform:uppercase; font-weight:600;">
+    <span>Prepared for Monique Horan · Sales &amp; Marketing Manager</span>
+    <span>August 11, 2026</span>
+  </div>
+</section>
+
+<!-- ═══════════════ 2 · THE OPPORTUNITY ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Opportunity</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">A venue this good deserves a bigger audience</div>
+    <div class="goldrule"></div>
+    <h2 style="max-width:30ch;">The people who book your dates<br/>don't all live in Oxford.</h2>
+    <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.2*var(--u));">
+      <div>
+        <p class="lead" style="margin-bottom:calc(1.4*var(--u));">The Oxford Conference Center competes for conferences, corporate meetings, banquets, and weddings — and the planners making those decisions sit in Jackson, Tupelo, Starkville, and across the Mid-South.</p>
+        <ul class="dash">
+          <li class="body">Corporate and association planners choose a city first, then a venue. Your name needs to be in front of them before that choice is made.</li>
+          <li class="body">Wedding and social bookings are won regionally — families split between college towns book where they've seen the room.</li>
+          <li class="body">MCTV puts the Conference Center on screens in the rooms where those decision-makers already spend their day — locally and across five Southern markets.</li>
+        </ul>
+      </div>
+      <div class="card" style="padding:calc(2*var(--u));">
+        <div class="label" style="color:var(--gold-dk); margin-bottom:calc(1.2*var(--u));">Your venue, on paper</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.4*var(--u));">
+          <div><div class="stat-n" style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">25,000+</div><div class="label">Sq ft of event space</div></div>
+          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">300+</div><div class="label">Attendee capacity</div></div>
+          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">3</div><div class="label">Hotel partners steps away</div></div>
+          <div><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.4*var(--u)); color:var(--navy);">4</div><div class="label">Distinct event spaces</div></div>
+        </div>
+        <p class="micro" style="margin-top:calc(1.4*var(--u));">Every empty Tuesday ballroom is unsold inventory. Advertising is how venues keep midweek and off-season dates full.</p>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">02</span></div>
+</section>
+
+<!-- ═══════════════ 3 · THE MCTV NETWORK ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Home Network</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">North Mississippi's indoor digital billboard network</div>
+    <div class="goldrule"></div>
+    <h2>Screens where your customers<br/>already sit and wait.</h2>
+    <div class="statrow" style="margin-top:calc(2.4*var(--u));">
+      <div class="stat"><div class="n">125+</div><div class="l">Digital Screens</div></div>
+      <div class="stat"><div class="n">100+</div><div class="l">Premier Venues</div></div>
+      <div class="stat"><div class="n">1.9M+</div><div class="l">Impressions / mo</div></div>
+      <div class="stat"><div class="n">55+</div><div class="l">Min Avg Dwell</div></div>
+      <div class="stat"><div class="n">3</div><div class="l">Growth Markets</div></div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.4*var(--u)); align-items:center;">
+      <div>
+        <p class="lead" style="margin-bottom:calc(1.2*var(--u));">Restaurants, clinics, salons, fitness studios, the airport — full-motion screens inside the businesses of <b>Oxford, Tupelo, and the Golden Triangle</b>.</p>
+        <p class="body">Your spot can't be skipped, muted, or scrolled past. It plays in rooms where people wait with time on their hands — 1,500+ plays per screen every month.</p>
+      </div>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-newks.png" alt="MCTV screen running in a host venue" style="width:100%; height:calc(19*var(--u)); object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption class="micro" style="margin-top:calc(.6*var(--u));">An MCTV screen in the wild — host venue, North Mississippi.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">03</span></div>
+</section>
+
+<!-- ═══════════════ 4 · DARK DIVIDER / REGIONAL ═══════════════ -->
+<section class="page dark">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Regional Reach</div>
+  </div>
+  <div class="pad" style="top:calc(7.2*var(--u));">
+    <div class="eyebrow">The part most local media can't offer</div>
+    <div class="goldrule"></div>
+    <h2 style="color:#fff; max-width:26ch;">One order. One spot.<br/>Six Southern markets.</h2>
+    <p class="lead" style="max-width:62ch; margin-top:calc(1.4*var(--u));">Through the Southern Regional Dealer Network, MCTV schedules your campaign on partner-operated indoor billboard networks across the Mid-South — the exact audiences that travel to Oxford for conferences, game weekends, and events.</p>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.3*var(--u)); margin-top:calc(1.9*var(--u));">
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">125+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Oxford · Tupelo · Golden Triangle</div>
+        <div class="micro" style="color:var(--gold-lt); margin-top:calc(.3*var(--u));">YOUR HOME MARKET — MCTV</div>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">100+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Jackson &amp; Surrounding</div>
+        <div class="micro" style="color:rgba(255,255,255,.6); margin-top:calc(.3*var(--u));">MADISON · RIDGELAND · FLOWOOD · BRANDON</div>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">50+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Knoxville &amp; Surrounding</div>
+        <div class="micro" style="color:rgba(255,255,255,.6); margin-top:calc(.3*var(--u));">EAST TENNESSEE</div>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">40+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Chattanooga &amp; Surrounding</div>
+        <div class="micro" style="color:rgba(255,255,255,.6); margin-top:calc(.3*var(--u));">CLEVELAND · RINGGOLD · HIXSON</div>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">40+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Shreveport &amp; Surrounding</div>
+        <div class="micro" style="color:rgba(255,255,255,.6); margin-top:calc(.3*var(--u));">BOSSIER CITY · RUSTON · MONROE</div>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.6*var(--u)); color:#fff;">40+ <span style="font-size:calc(1*var(--u)); font-family:'Work Sans'; font-weight:600; color:var(--gold-lt); letter-spacing:.13em;">SCREENS</span></div>
+        <div style="color:#fff; font-weight:600; margin-top:calc(.4*var(--u)); font-size:calc(1.1*var(--u));">Florence &amp; Muscle Shoals</div>
+        <div class="micro" style="color:rgba(255,255,255,.6); margin-top:calc(.3*var(--u));">NORTHWEST ALABAMA</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">04</span></div>
+</section>
+
+<!-- ═══════════════ 5 · REGIONAL AUDIENCE DATA ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Regional Reach</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Published network figures, by market</div>
+    <div class="goldrule"></div>
+    <h2>The audiences behind the screens.</h2>
+    <table class="data" style="margin-top:calc(2.2*var(--u));">
+      <tr><th>Market</th><th>Screens</th><th>Ad Plays / mo</th><th>Venue Traffic / mo</th><th>Avg Dwell</th></tr>
+      <tr class="home"><td><b>Oxford · Tupelo · Golden Triangle</b> — home market</td><td class="em">125+</td><td>1,500+ per screen</td><td>1.9M+ impressions</td><td>55+ min</td></tr>
+      <tr><td>Jackson &amp; Surrounding</td><td class="em">100+</td><td>154,500+</td><td>343,700+ visitors</td><td>48+ min</td></tr>
+      <tr><td>Knoxville &amp; Surrounding</td><td class="em">50+</td><td>78,000+</td><td>460,000+ visitors</td><td>60+ min</td></tr>
+      <tr><td>Chattanooga &amp; Surrounding</td><td class="em">40+</td><td>73,500+</td><td>243,500+ visitors</td><td>49+ min</td></tr>
+      <tr><td>Shreveport &amp; Surrounding</td><td class="em">40+</td><td>73,500+</td><td>240,500+ visitors</td><td>60+ min</td></tr>
+      <tr><td>Florence &amp; Muscle Shoals</td><td class="em">40+</td><td>63,000+</td><td>119,500+ visitors</td><td>49+ min</td></tr>
+    </table>
+    <div class="promo" style="margin-top:calc(1.8*var(--u));">
+      <b>Why this matters for a venue —</b>&nbsp; Jackson alone puts your name in front of 343,700+ monthly venue visitors, a two-and-a-half-hour drive from your front door. That is the corporate retreat, association conference, and wedding-party audience no Oxford-only media buy can reach.
+    </div>
+    <p class="micro" style="margin-top:calc(1.2*var(--u));">Partner-market figures published by the Southern Regional Dealer Network, 2026. Regional placement is scheduled by MCTV on your behalf — one contract, one point of contact.</p>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">05</span></div>
+</section>
+
+<!-- ═══════════════ 6 · THE PRODUCT ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">How It Works</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Full-motion, silent, unskippable</div>
+    <div class="goldrule"></div>
+    <h2>Your venue, on a loop,<br/>all day, every day.</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(3*var(--u)); margin-top:calc(2.2*var(--u)); align-items:start;">
+      <div>
+        <ul class="dash">
+          <li class="body"><b style="color:var(--ink);">:15 full-motion spot, produced by MCTV.</b> We design the creative — venue photography, dates, offer, and a booking call-to-action. You approve before anything airs.</li>
+          <li class="body"><b style="color:var(--ink);">Designed to be read, not heard.</b> Screens run silent, so the message is built into bold on-screen text — it works in a waiting room the way a billboard works on a highway.</li>
+          <li class="body"><b style="color:var(--ink);">Every 15 minutes, on every screen you buy.</b> A guaranteed rotation, 1,500+ plays per screen per month — not an algorithm deciding who sees you.</li>
+          <li class="body"><b style="color:var(--ink);">Category exclusivity available.</b> Lock out competing venues on the screens you sponsor.</li>
+        </ul>
+      </div>
+      <figure>
+        <img src="assets/img/wild-waitingroom.png" alt="MCTV screen in a waiting room" style="width:100%; height:calc(21*var(--u)); object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption class="micro" style="margin-top:calc(.6*var(--u));">Captive-audience placement — an average of 55+ minutes of dwell time per visit.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">06</span></div>
+</section>
+
+<!-- ═══════════════ 7 · IN THE WILD ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Network</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Real screens, real venues, photographed this year</div>
+    <div class="goldrule"></div>
+    <h2>The network, in the wild.</h2>
+    <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr; grid-template-rows:calc(14.5*var(--u)) calc(14.5*var(--u)); gap:calc(1.1*var(--u)); margin-top:calc(1.8*var(--u));">
+      <figure style="grid-row:1 / 3; position:relative;">
+        <img src="assets/img/in-the-wild-alt.jpg" alt="MCTV screen running a client ad at a fuel stop" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Client ad · fuel stop</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/in-the-wild-counter.jpg" alt="MCTV screen above the airline counter, Tupelo Regional Airport" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Airport counter</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/wild-newks.png" alt="MCTV screen in a retail venue" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Retail &amp; dining</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/in-the-wild.jpg" alt="Traveler at the gate area, Tupelo Regional Airport" style="width:100%; height:100%; object-fit:cover; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Airport gate</figcaption>
+      </figure>
+      <figure style="position:relative;">
+        <img src="assets/img/velvet_screens.jpg" alt="Screens above the bar at The Velvet Ditch, Oxford" style="width:100%; height:100%; object-fit:cover; object-position:50% 38%; border-radius:calc(.5*var(--u)); border:1px solid var(--rule); display:block;" />
+        <figcaption style="position:absolute; left:calc(.8*var(--u)); bottom:calc(.8*var(--u)); background:rgba(0,42,94,.85); color:#fff; font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.68*var(--u)); padding:calc(.4*var(--u)) calc(.9*var(--u)); border-radius:calc(.25*var(--u));">Sports bar · Oxford</figcaption>
+      </figure>
+    </div>
+    <p class="small" style="margin-top:calc(1.2*var(--u));">Wall-mounted 1080p displays inside the businesses people already visit — fuel stops, airports, bars, waiting rooms, salons, and gyms. Your spot rides every one of them.</p>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">07</span></div>
+</section>
+
+<!-- ═══════════════ 8 · CAMPAIGN CONCEPTS ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Campaign</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Three spots, three audiences</div>
+    <div class="goldrule"></div>
+    <h2>What we'd put on screen for you.</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.6*var(--u)); margin-top:calc(2.4*var(--u));">
+      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--navy);">
+        <div class="label" style="color:var(--gold-dk);">Spot 01 · Regional markets</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Meet in Oxford."</h3>
+        <p class="body">Aimed at corporate planners and associations in Jackson, Chattanooga, and beyond: 25,000+ square feet, three hotels within steps, and a town your attendees will actually thank you for. Runs on regional partner screens.</p>
+      </div>
+      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--gold);">
+        <div class="label" style="color:var(--gold-dk);">Spot 02 · Home market</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"The room Oxford celebrates in."</h3>
+        <p class="body">Weddings, rehearsal dinners, galas, and banquets for the local and college audience — beautiful room shots, real events, one clear call to book a tour. Runs across the MCTV home network.</p>
+      </div>
+      <div class="card" style="padding:calc(1.8*var(--u)); border-top:calc(.3*var(--u)) solid var(--navy);">
+        <div class="label" style="color:var(--gold-dk);">Spot 03 · Seasonal flights</div>
+        <h3 style="margin:calc(.8*var(--u)) 0 calc(.8*var(--u));">"Book the season."</h3>
+        <p class="body">Swapped quarterly: holiday parties in the fall, graduation and reunion season in spring, corporate planning windows in January. Fresh creative keeps the venue top-of-mind at each booking moment.</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr calc(21.4*var(--u)); gap:calc(1.6*var(--u)); margin-top:calc(1.2*var(--u)); align-items:stretch;">
+      <div class="promo" style="display:flex; align-items:center;">
+        <div><b>Every spot ends the same way —</b>&nbsp; your logo, your booking line, and oxfordconferencecenter.com, held on screen for a full three seconds — long enough to read, remember, and act on. Shown right: the closing frame, simulated — final creative uses your photography and brand.</div>
+      </div>
+      <div style="height:calc(12*var(--u)); background:linear-gradient(160deg,#131C26 0%,#0B121A 100%); border-radius:calc(.4*var(--u)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--rule);">
+        <div style="color:rgba(255,255,255,.75); font-weight:600; letter-spacing:.30em; text-transform:uppercase; font-size:calc(.6*var(--u));">Oxford Conference Center</div>
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); color:#fff; margin:calc(.5*var(--u)) 0;">Where Oxford meets.</div>
+        <div style="width:calc(4*var(--u)); height:2px; background:var(--gold); margin-bottom:calc(.6*var(--u));"></div>
+        <div style="color:var(--gold-lt); font-weight:600; letter-spacing:.13em; text-transform:uppercase; font-size:calc(.62*var(--u));">Book your date · oxfordconferencecenter.com</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">08</span></div>
+</section>
+
+<!-- ═══════════════ 9 · VALUE COMPARISON ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">The Math</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Cost per thousand impressions, by medium</div>
+    <div class="goldrule"></div>
+    <h2>The least expensive way to reach<br/>a thousand people.</h2>
+    <div style="display:grid; grid-template-columns:1.25fr 1fr; gap:calc(3.5*var(--u)); margin-top:calc(2.6*var(--u)); align-items:center;">
+      <div class="bars">
+        <div class="row"><div class="bl">Magazine</div><div class="track"><div class="fill" style="width:100%;"></div></div><div class="bv">$65.00</div></div>
+        <div class="row"><div class="bl">Television</div><div class="track"><div class="fill" style="width:54%;"></div></div><div class="bv">$35.00</div></div>
+        <div class="row"><div class="bl">Radio</div><div class="track"><div class="fill" style="width:41%;"></div></div><div class="bv">$27.00</div></div>
+        <div class="row"><div class="bl">Social Media</div><div class="track"><div class="fill" style="width:30%;"></div></div><div class="bv">$19.51</div></div>
+        <div class="row"><div class="bl">Outdoor Billboards</div><div class="track"><div class="fill" style="width:9%;"></div></div><div class="bv">$6.00</div></div>
+        <div class="row mctv"><div class="bl">MCTV Indoor Network</div><div class="track"><div class="fill" style="width:4%;"></div></div><div class="bv">$2.63</div></div>
+      </div>
+      <div>
+        <div class="card" style="padding:calc(2*var(--u)); text-align:center;">
+          <div class="label">MCTV cost per 1,000 impressions</div>
+          <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(5*var(--u)); color:var(--navy); margin:calc(.6*var(--u)) 0;">$2.63</div>
+          <p class="small">Indoor digital reaches the same local audience as broadcast at a fraction of the cost — and the spend never disappears into an auction or an algorithm.</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.2*var(--u)); margin-top:calc(2.2*var(--u));">
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">84%</div><div class="l">Ad recall — highest of any traditional medium</div></div>
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">2.5×</div><div class="l">Impact of full-motion video vs static</div></div>
+      <div class="stat" style="padding:calc(1.3*var(--u)) calc(.8*var(--u));"><div class="n" style="font-size:calc(2.2*var(--u));">0</div><div class="l">Skip buttons, mute switches, or scroll-pasts</div></div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">09</span></div>
+</section>
+
+<!-- ═══════════════ 10 · INVESTMENT ═══════════════ -->
+<section class="page">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Investment</div>
+  </div>
+  <div class="pad" style="top:calc(7.5*var(--u));">
+    <div class="eyebrow">Home network packages · month to month</div>
+    <div class="goldrule"></div>
+    <div class="pricegrid" style="margin-top:calc(1.6*var(--u));">
+      <div class="price">
+        <div class="tier">20 Screens</div>
+        <div class="amt">$500<span>/mo</span></div>
+        <div class="det">30,000+ plays per month<br/>Entry network reach</div>
+        <div class="note">$25 per 1,000 plays</div>
+      </div>
+      <div class="price">
+        <div class="tier">40 Screens</div>
+        <div class="amt">$800<span>/mo</span></div>
+        <div class="det">60,000+ plays per month<br/>Market saturation</div>
+        <div class="note">$20 per 1,000 plays</div>
+      </div>
+      <div class="price">
+        <div class="flag">Most Popular</div>
+        <div class="tier">80 Screens</div>
+        <div class="amt">$1,400<span>/mo</span></div>
+        <div class="det">120,000+ plays per month<br/>Multi-market coverage</div>
+        <div class="note">$17.50 per 1,000 plays</div>
+      </div>
+      <div class="price feature">
+        <div class="flag">Best Value</div>
+        <div class="tier">125+ Screens</div>
+        <div class="amt">$2,000<span>/mo</span></div>
+        <div class="det">187,500+ plays per month<br/>The entire MCTV network</div>
+        <div class="note">$16 per 1,000 plays</div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:calc(1.6*var(--u)); margin-top:calc(2*var(--u));">
+      <div class="card" style="padding:calc(1.6*var(--u));">
+        <div class="label" style="color:var(--gold-dk); margin-bottom:calc(.8*var(--u));">Regional add-on · per partner market</div>
+        <p class="body" style="margin-bottom:calc(.9*var(--u));">Extend the same spot into Jackson, Knoxville, Chattanooga, Shreveport, or Florence:</p>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(.8*var(--u)); text-align:center;">
+          <div style="border:1px solid var(--rule); border-radius:calc(.4*var(--u)); padding:calc(.8*var(--u)) calc(.4*var(--u));"><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); color:var(--navy);">$300<span style="font-family:'Work Sans'; font-size:calc(.8*var(--u)); color:var(--muted); font-weight:500;">/mo</span></div><div class="label" style="margin-top:calc(.3*var(--u));">10 Screens</div></div>
+          <div style="border:1px solid var(--rule); border-radius:calc(.4*var(--u)); padding:calc(.8*var(--u)) calc(.4*var(--u));"><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); color:var(--navy);">$600<span style="font-family:'Work Sans'; font-size:calc(.8*var(--u)); color:var(--muted); font-weight:500;">/mo</span></div><div class="label" style="margin-top:calc(.3*var(--u));">20 Screens</div></div>
+          <div style="border:1px solid var(--rule); border-radius:calc(.4*var(--u)); padding:calc(.8*var(--u)) calc(.4*var(--u));"><div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(1.7*var(--u)); color:var(--navy);">$1,500<span style="font-family:'Work Sans'; font-size:calc(.8*var(--u)); color:var(--muted); font-weight:500;">/mo</span></div><div class="label" style="margin-top:calc(.3*var(--u));">50 Screens</div></div>
+        </div>
+        <p class="micro" style="margin-top:calc(.9*var(--u));">Per partner market. Category-exclusive rates available. One-time $250 ad-creation fee covers your produced spot across all markets.</p>
+      </div>
+      <div class="promo" style="display:flex; flex-direction:column; justify-content:center;">
+        <div style="margin-bottom:calc(.9*var(--u));"><b>Suggested opening play —</b>&nbsp; full MCTV home network plus 20 Jackson screens, packaged at <b>$2,500/mo</b> — $100 off the à-la-carte total. The whole of North Mississippi, and the state's largest metro.</div>
+        <div>Month to month, no annual lock-in. Regional scheduling is handled by MCTV — one agreement, one invoice, one point of contact.</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">Oxford Conference Center × MCTV</span><span class="folio">10</span></div>
+</section>
+
+<!-- ═══════════════ 11 · NEXT STEPS / CONTACT ═══════════════ -->
+<section class="page dark">
+  <div class="hdr">
+    <div class="wordmark"><div class="wm1">MCTV</div><div class="wm2">ELITE ADVERTISING</div></div>
+    <div class="sect">Next Steps</div>
+  </div>
+  <div class="pad" style="top:calc(8.5*var(--u));">
+    <div class="eyebrow">From this meeting to on-screen in two weeks</div>
+    <div class="goldrule"></div>
+    <h2 style="color:#fff;">Let's put the Conference Center<br/>on 125+ screens.</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.4*var(--u)); margin-top:calc(2.4*var(--u));">
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">1</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">Pick the package and markets. We'll confirm category exclusivity for event venues on your screens.</p>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">2</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">We produce your :15 spot from your photography and offer — you approve every frame before it airs.</p>
+      </div>
+      <div class="card" style="background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); padding:calc(1.6*var(--u));">
+        <div style="font-family:'Playfair Display',serif; font-weight:700; font-size:calc(2.2*var(--u)); color:var(--gold-lt);">3</div>
+        <p class="body" style="color:rgba(255,255,255,.85); margin-top:calc(.6*var(--u));">Live within two weeks of signature. Month-to-month terms — the results carry the renewal.</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:calc(1.4*var(--u)); margin-top:calc(2.6*var(--u)); border-top:1px solid rgba(255,255,255,.25); padding-top:calc(2*var(--u));">
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/mary-michael.jpg" alt="Mary Michael Cannon" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">Mary Michael Cannon</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">CEO &amp; Founder</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">mmc@mctvofms.com<br/>662-801-5677</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/creed.jpg" alt="T. Creed Cannon" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">T. Creed Cannon</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">Owner</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">creed@mctvofms.com<br/>601-201-8202</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:calc(1.1*var(--u));">
+        <img src="assets/img/swayze.jpg" alt="Swayze Hollingsworth" style="width:calc(4.6*var(--u)); height:calc(4.6*var(--u)); object-fit:cover; border-radius:50%; border:2px solid var(--gold-lt); flex:none;" />
+        <div>
+          <div style="color:#fff; font-weight:600; font-size:calc(1.1*var(--u));">Swayze Hollingsworth</div>
+          <div class="micro" style="color:var(--gold-lt); letter-spacing:.13em; text-transform:uppercase;">Director of Sales</div>
+          <div class="small" style="color:rgba(255,255,255,.8); margin-top:calc(.4*var(--u));">swayze@mctvofms.com<br/>662-907-0404</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span class="fl">MCTV Digital, Inc. · mctvofms.com</span><span class="folio">11</span></div>
+</section>
+
+</body>
+</html>
