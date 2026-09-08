@@ -258,6 +258,12 @@ def bulk_update_status(lead_ids: list[str], status: str):
         update_lead_status(lid, status)
 
 
+def bulk_assign_rep(lead_ids: list[str], rep: str):
+    """Assign a team rep to multiple leads at once."""
+    for lid in lead_ids:
+        update_lead(lid, {"assigned_rep": rep})
+
+
 def export_leads_csv(leads: list[dict]) -> str:
     """Export a list of lead dicts to a CSV string."""
     if not leads:
@@ -266,7 +272,7 @@ def export_leads_csv(leads: list[dict]) -> str:
     fieldnames = [
         "business_name", "contact_name", "contact_email", "contact_phone",
         "city", "industry", "interest_level", "how_heard", "goals",
-        "additional_notes", "status", "submitted_at",
+        "additional_notes", "status", "assigned_rep", "submitted_at",
     ]
 
     buf = io.StringIO()
