@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1600px; height:1300px; background:transparent; }
+  svg { position:absolute; left:20px; }
+  #navy { top:20px; }
+  #white { top:640px; }
+</style></head><body>
+
+<svg width="0" height="0">
+  <defs>
+    <!-- double-arrow mark: rear triangle offset up-right, front triangle -->
+    <g id="arrows">
+      <polygon points="34,-24 224,86 34,196" class="rear"/>
+      <polygon points="0,0 190,110 0,220" class="front"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- navy variant (for white/light backgrounds) -->
+<svg id="navy" width="1620" height="600" viewBox="0 0 1620 600">
+  <text x="10" y="465" font-family="'Liberation Serif','Times New Roman',serif" font-weight="bold"
+    font-size="560" letter-spacing="-8" fill="#132441">FNB</text>
+  <g transform="translate(1160 105) scale(1.62)">
+    <polygon points="30,-21 214,110 30,241" fill="#8E9093"/>
+    <polygon points="0,0 184,110 0,220" fill="#132441"/>
+  </g>
+</svg>
+
+<!-- white variant (for navy/dark backgrounds) -->
+<svg id="white" width="1620" height="600" viewBox="0 0 1620 600">
+  <text x="10" y="465" font-family="'Liberation Serif','Times New Roman',serif" font-weight="bold"
+    font-size="560" letter-spacing="-8" fill="#FFFFFF">FNB</text>
+  <g transform="translate(1160 105) scale(1.62)">
+    <polygon points="30,-21 214,110 30,241" fill="#9BA0A8"/>
+    <polygon points="0,0 184,110 0,220" fill="#FFFFFF"/>
+  </g>
+</svg>
+
+</body></html>
