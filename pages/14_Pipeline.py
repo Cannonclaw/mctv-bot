@@ -29,7 +29,7 @@ from services.pipeline_service import (
     get_deleted, restore_opportunity, purge_deleted, merge_opportunities,
     find_duplicate_groups, find_junk_rows, looks_like_junk,
     validate_business_name, normalize_name, deleted_fingerprints,
-    tier_payload, custom_payload, total_contract_value,
+    tier_payload, custom_payload, total_contract_value, is_custom_priced,
     get_forecast_gaps, local_today, counted,
 )
 
