@@ -453,6 +453,25 @@ def _cleanup_references(opp_id: str, opp: dict) -> None:
 def _archive_opportunity(opp: dict, deleted_by: str = "MCTV Bot",
                          reason: str = "", merged_into: str | None = None) -> bool:
     """Snapshot a deal and its activity into `pipeline_deleted`."""
+    # Read the activity with errors RAISING. get_activity() returns [] both
+    # for "no history" and for "the read failed", and the delete that follows
+    # cascades the real trail away — so a transient timeout here would archive
+    # an empty history and destroy years of call logs with no way back.
+    opp_id = opp.get("id")
+    if _sb_configured():
+        acts = _sb_request(
+            "GET",
+            f"pipeline_activity?opportunity_id=eq.{opp_id}&order=created_at.desc&limit=500",
+            raise_on_error=True,
+        )
+        if acts is None:
+            raise PipelineWriteError(
+                "Could not read this deal's activity history, so it was not "
+                "archived or deleted. Nothing was lost."
+            )
+    else:
+        acts = get_activity(opp_id, limit=500)
+
     record = {
         "opportunity_id": opp.get("id"),
         "business_name": opp.get("business_name") or "(unnamed)",
@@ -460,16 +479,14 @@ def _archive_opportunity(opp: dict, deleted_by: str = "MCTV Bot",
         "stage": opp.get("stage"),
         "monthly_value": _num(opp.get("monthly_value")),
         "deal_data": opp,
-        "activity_data": get_activity(opp.get("id"), limit=500),
+        "activity_data": acts,
         "deleted_by": deleted_by,
         "deleted_reason": reason,
         "merged_into": merged_into,
     }
-    result = _sb_request("POST", "pipeline_deleted", record)
-    if result is not None:
-        return True
-    logger.warning("Could not archive opportunity %s before delete", opp.get("id"))
-    return False
+    result = _sb_request("POST", "pipeline_deleted", record,
+                         raise_on_error=_sb_configured())
+    return bool(result)
 
 
 def get_deleted(limit: int = 100) -> list[dict]:
@@ -624,8 +641,12 @@ _ACTIVITY_NOTE = re.compile(
     r"waiting\s+(on|for)|needs?\s+to|needed\s+to|will\s+(call|follow)|"
     r"sent\s+(the\s+)?(proposal|contract|email|deck))\b"
 )
+# The month must be a WHOLE word. An open-ended `(mar)[a-z]*` would match
+# "Marshall 8 Cinemas" and "Augusta 5", blocking real businesses.
 _MONTH_DAY = re.compile(
-    r"(?i)\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b"
+    r"(?i)\b(jan|january|feb|february|mar|march|apr|april|may|jun|june|"
+    r"jul|july|aug|august|sep|sept|september|oct|october|nov|november|"
+    r"dec|december)\.?\s+\d{1,2}\b"
 )
 _NUMERIC_DATE = re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b")
 # Deliberately a SHORT list. A full TLD list would reject "Fuse.Cloud".
@@ -730,8 +751,11 @@ def find_duplicate_groups(opps: list[dict] | None = None) -> list[dict]:
         if len(deals) < 2:
             continue
         stages = {d.get("stage") for d in deals}
+        # Furthest-along first, so the default keeper is the real outcome.
+        # keeper_rank puts 'won' top and 'lost' bottom; display order does the
+        # opposite and would default to keeping the lost copy.
         deals = sorted(deals, key=lambda d: (
-            -STAGES.get(d.get("stage", ""), {}).get("order", 0),
+            -keeper_rank(d.get("stage", "")),
             _day(d.get("created_at")),
         ))
         out.append({
@@ -797,22 +821,38 @@ def merge_opportunities(keep_id: str, merge_ids: list[str],
         a real `False` flag as missing and overwrite them."""
         return v is None or v == "" or v == [] or v == {}
 
+    losers = [o for o in (get_opportunity(mid) for mid in merge_ids) if o]
+    if not losers:
+        return keeper
+    merged_names = [o.get("business_name", o.get("id")) for o in losers]
+
+    # Harvest what the survivor is missing, and append the losers' notes to
+    # its own rather than dropping them. Do this for ALL losers up front and
+    # SAVE IT FIRST: writing after the deletes means a failure part-way
+    # through loses the harvested detail along with the rows it came from.
     filled: dict = {}
-    merged_names = []
-
-    for mid in merge_ids:
-        loser = get_opportunity(mid)
-        if not loser:
-            continue
-        merged_names.append(loser.get("business_name", mid))
-
-        if fill_blanks:
+    if fill_blanks:
+        extra_notes = []
+        for loser in losers:
             for field, value in loser.items():
                 if field in _SKIP or _blank(value):
                     continue
+                if field == "notes":
+                    if value.strip() not in (keeper.get("notes") or ""):
+                        extra_notes.append(
+                            f"[merged from {loser.get('business_name', '')}] {value}")
+                    continue
                 if _blank(keeper.get(field)) and field not in filled:
                     filled[field] = value
+        if extra_notes:
+            filled["notes"] = "\n\n".join(
+                [n for n in [keeper.get("notes") or ""] if n] + extra_notes)
 
+    if filled:
+        keeper = update_opportunity(keep_id, filled) or keeper
+
+    for loser in losers:
+        mid = loser["id"]
         # Archive BEFORE re-pointing the activity, or the snapshot captures an
         # already-empty history and undoing the merge restores a bare row.
         if not _archive_opportunity(
@@ -826,15 +866,22 @@ def merge_opportunities(keep_id: str, merge_ids: list[str],
 
         # Re-point the loser's history at the survivor BEFORE the delete —
         # the FK cascades, so anything still attached would be destroyed.
-        _sb_request("PATCH", f"pipeline_activity?opportunity_id=eq.{mid}",
-                    {"opportunity_id": keep_id})
+        # This MUST be checked: an unnoticed failure here means the next line
+        # silently shreds the history instead of moving it.
+        if _sb_configured():
+            moved = _sb_request(
+                "PATCH", f"pipeline_activity?opportunity_id=eq.{mid}",
+                {"opportunity_id": keep_id}, raise_on_error=True)
+            if moved is None:
+                raise PipelineWriteError(
+                    f"Could not move {loser.get('business_name', mid)}'s history "
+                    "onto the deal you kept, so the merge stopped before "
+                    "deleting anything."
+                )
 
         delete_opportunity(mid, deleted_by=performed_by, archive=False,
                            reason=f"Merged into {keeper.get('business_name', keep_id)}",
                            merged_into=keep_id)
-
-    if filled:
-        keeper = update_opportunity(keep_id, filled) or keeper
 
     _log_activity(keep_id, "merged",
                   details=f"Merged {len(merged_names)} duplicate(s): {', '.join(merged_names)}",
@@ -853,7 +900,44 @@ def tier_payload(tier_name: str) -> dict:
         "screen_count": tier.get("screens", 0),
         "monthly_value": tier.get("monthly", 0),
         "one_time_value": 0,
+        # Clear the term too. Leaving a stale 12 behind after a switch back to
+        # a stock tier makes All Deals print a fabricated total contract value.
+        "term_months": None,
     }
+
+
+def is_custom_priced(opp: dict) -> bool:
+    """True when a deal's price is NOT one of the four stock tiers.
+
+    `pricing_mode` alone is not enough to trust. It defaults to 'tier' at the
+    column level, so every row that predates custom pricing claims to be a
+    tier deal — including ones created by the self-serve rate card at a
+    negotiated rate, and the $0 partnership placeholders whose tier_name is
+    NULL. Showing those a tier dropdown would silently rewrite a real price
+    to a stock one the moment somebody saved an unrelated edit.
+    """
+    if opp.get("pricing_mode") == "custom":
+        return True
+    if _num(opp.get("one_time_value")) or opp.get("term_months"):
+        return True
+    tier = TIERS.get(opp.get("tier_name") or "")
+    if tier is None:
+        return True                      # unknown or missing package name
+    return _num(opp.get("monthly_value")) != float(tier["monthly"])
+
+
+def keeper_rank(stage: str) -> int:
+    """How 'far along' a stage is, for picking which duplicate to keep.
+
+    NOT STAGES[...]['order'] — that is display order, where 'lost' sorts
+    after 'won'. Using it would default a Won/Lost duplicate pair to keeping
+    the LOST row and deleting the real won deal.
+    """
+    if stage == "won":
+        return 1000
+    if stage == "lost":
+        return -1
+    return STAGES.get(stage or "", {}).get("order", 0)
 
 
 def custom_payload(package_name: str, monthly_value: float = 0,
@@ -1209,14 +1293,21 @@ def get_revenue_forecast(months: int = 3, opps: list[dict] | None = None) -> lis
 
     today = local_today()
 
+    # Start with the CURRENT month, not next month. Bucketing from month+1
+    # left every deal closing later this month in no bucket at all, and it
+    # was not "undated" or "overdue" either, so it vanished from the tab.
     forecast = []
     for i in range(months):
-        start = month_start(today, i + 1)
-        end = month_start(today, i + 2)
+        start = month_start(today, i)
+        end = month_start(today, i + 1)
 
+        # In the current month, only what is still ahead — a close date that
+        # already passed is past due, not forecast, and is reported as such
+        # by get_forecast_gaps().
+        lo = max(start, today).isoformat() if i == 0 else start.isoformat()
         closing = [
             o for o in active
-            if start.isoformat() <= _day(o.get("expected_close_date")) < end.isoformat()
+            if lo <= _day(o.get("expected_close_date")) < end.isoformat()
         ]
 
         expected = sum(

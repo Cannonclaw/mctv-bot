@@ -23,7 +23,7 @@ from services.team_ui import render_team_sidebar
 render_team_sidebar()
 from services.pipeline_service import (
     TIERS, create_opportunity, get_all_opportunities,
-    validate_business_name, normalize_name,
+    validate_business_name, normalize_name, deleted_fingerprints,
 )
 from services.nurture_service import get_available_sequences
 
@@ -293,20 +293,27 @@ Example: [{{"business_name": "Joe's Gym", "contact_name": "Joe Smith", "industry
         # businesses and the guard let the duplicate straight through.
         existing_names = {normalize_name(o.get("business_name") or "")
                           for o in existing_opps}
+        # Businesses deliberately deleted from the pipeline must not be
+        # re-added by the next prospect run, or the cleanup undoes itself.
+        _deleted_names, _ = deleted_fingerprints()
 
         selected = []
         _batch_seen = set()
         for i, prospect in enumerate(prospects):
             name = prospect.get("business_name", "Unknown")
             _key = normalize_name(name)
-            already_exists = _key in existing_names or _key in _batch_seen
+            _was_deleted = _key in _deleted_names
+            already_exists = (_key in existing_names or _key in _batch_seen
+                              or _was_deleted)
             _batch_seen.add(_key)
             interest = prospect.get("estimated_interest", "medium")
             interest_icon = {"high": "green", "medium": "orange", "low": "gray"}.get(interest, "gray")
 
             disabled = already_exists
             label = f"**{name}** — {prospect.get('industry', 'N/A')}"
-            if already_exists:
+            if _was_deleted:
+                label += " (you deleted this one - restore it from Cleanup)"
+            elif already_exists:
                 label += " (already in pipeline)"
 
             checked = st.checkbox(
@@ -443,6 +450,7 @@ with tab_batch:
         _lines = [l.strip() for l in batch_text.strip().split("\n") if l.strip()]
         _existing = {normalize_name(o.get("business_name") or ""): o
                      for o in get_all_opportunities()}
+        _gone, _ = deleted_fingerprints()
 
         _rows, _accept = [], []
         _seen = set()
@@ -456,6 +464,8 @@ with tab_batch:
                 verdict = f"Skipped - {why}"
             elif key in _existing:
                 verdict = f"Skipped - already in the pipeline ({_existing[key].get('business_name')})"
+            elif key in _gone:
+                verdict = "Skipped - you deleted this one; restore it from Cleanup"
             elif key in _seen:
                 verdict = "Skipped - listed twice in this paste"
             else:

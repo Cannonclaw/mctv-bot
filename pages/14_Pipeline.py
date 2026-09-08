@@ -198,7 +198,10 @@ st.divider()
 def render_pricing_inputs(key_prefix: str, deal: dict | None = None) -> dict:
     """Tier-or-custom pricing controls. Cannot be used inside st.form."""
     deal = deal or {}
-    is_custom = deal.get("pricing_mode") == "custom"
+    # is_custom_priced, not pricing_mode: the column defaults to 'tier', so a
+    # negotiated rate or a $0 placeholder would otherwise open on the tier
+    # dropdown and be rewritten to a stock $500 the moment anything was saved.
+    is_custom = is_custom_priced(deal) if deal else False
 
     mode = st.radio(
         "Pricing",
@@ -219,6 +222,13 @@ def render_pricing_inputs(key_prefix: str, deal: dict | None = None) -> dict:
             f"{TIERS[chosen]['screens']} screens - "
             f"${TIERS[chosen]['monthly']:,.0f}/mo"
         )
+        _was = float(deal.get("monthly_value") or 0)
+        if deal and is_custom_priced(deal) and _was != float(TIERS[chosen]["monthly"]):
+            st.warning(
+                f"This deal is priced at ${_was:,.0f}/mo. Saving on **Standard "
+                f"tier** replaces that with ${TIERS[chosen]['monthly']:,.0f}/mo. "
+                "Switch back to **Custom package** to keep the negotiated rate."
+            )
         return tier_payload(chosen)
 
     p1, p2 = st.columns(2)
@@ -278,7 +288,11 @@ with tab_pipeline:
     for col, (stage_key, stage_info) in zip(cols, sorted(active_stages.items(), key=lambda x: x[1]["order"])):
         with col:
             stage_opps = [o for o in all_opps if o.get("stage") == stage_key]
-            stage_value = sum(float(o.get("monthly_value", 0)) for o in stage_opps)
+            # Column total counts only what the KPI row counts, or this board
+            # and the Forecast tab's "Pipeline by Stage" disagree on one page.
+            stage_value = sum(float(o.get("monthly_value") or 0)
+                              for o in counted(stage_opps))
+            _excl_here = len(stage_opps) - len(counted(stage_opps))
 
             st.markdown(
                 f'<div class="stage-header" style="background:{stage_info["color"]}">'
@@ -289,7 +303,7 @@ with tab_pipeline:
             )
 
             for opp in stage_opps[:10]:
-                value = float(opp.get("monthly_value", 0))
+                value = float(opp.get("monthly_value") or 0)
                 city = opp.get("city", "")
                 contact = opp.get("contact_name", "")
 
@@ -305,6 +319,9 @@ with tab_pipeline:
 
             if len(stage_opps) > 10:
                 st.caption(f"+{len(stage_opps) - 10} more")
+
+            if _excl_here:
+                st.caption(f"{_excl_here} not counted in the total")
 
             if not stage_opps:
                 st.caption("No deals")
@@ -362,7 +379,7 @@ with tab_deals:
 
     for deal in deals:
         stage_info = STAGES.get(deal.get("stage", "prospect"), STAGES["prospect"])
-        value = float(deal.get("monthly_value", 0))
+        value = float(deal.get("monthly_value") or 0)
         prob = deal.get("probability", 0)
 
         with st.expander(
@@ -1289,6 +1306,11 @@ with tab_import:
     st.markdown("### Import Existing Leads into Pipeline")
     st.caption("Pull leads from your Incoming Leads page into the sales pipeline for tracking.")
 
+    # Declared up front so the import runs AFTER the try block below. Running
+    # it inside would put st.rerun() under `except Exception`, which catches
+    # the RerunException and reports a successful import as an error.
+    _do_import, selected = False, []
+
     try:
         from services.leads_service import get_all_leads, calculate_lead_score, get_score_label
 
@@ -1350,17 +1372,30 @@ with tab_import:
                         selected.append(lead)
 
                 if selected:
-                    if st.button(f"Import {len(selected)} Lead(s) to Pipeline", type="primary"):
-                        imported = 0
-                        for lead in selected:
-                            result = import_lead_to_pipeline(lead)
-                            if result:
-                                imported += 1
-                        st.success(f"Imported {imported} lead(s) into the pipeline!")
-                        st.rerun()
+                    _do_import = st.button(
+                        f"Import {len(selected)} Lead(s) to Pipeline", type="primary")
 
     except Exception as e:
         st.error(f"Could not load leads: {e}")
+
+    if _do_import:
+        imported, rejected = 0, []
+        for lead in selected:
+            # A lead with a junk business name now raises instead of creating
+            # another bad row. Catch per lead so one bad record cannot abort
+            # the whole import half-way through.
+            try:
+                if import_lead_to_pipeline(lead):
+                    imported += 1
+            except Exception as e:  # noqa: BLE001
+                rejected.append(f"{lead.get('business_name') or lead.get('id')}: {e}")
+        for msg in rejected:
+            st.warning(msg)
+        if imported:
+            st.success(f"Imported {imported} lead(s) into the pipeline.")
+            st.rerun()
+        elif not rejected:
+            st.info("Nothing was imported.")
 
 
 # ── Tab 5: Nurture Center ────────────────────────────────────────────────────
@@ -1541,7 +1576,7 @@ with tab_actions:
     if action_items:
         for item in action_items:
             stage_info = STAGES.get(item.get("stage", "prospect"), STAGES["prospect"])
-            value = float(item.get("monthly_value", 0))
+            value = float(item.get("monthly_value") or 0)
             reason = item.get("_action_reason", "")
 
             st.warning(
