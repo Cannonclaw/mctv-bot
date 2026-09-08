@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Grove Collective — First Saturday, Social Cut (:15, 1080x1920)</title>
+    <link rel="stylesheet" href="../lib/brand.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script type="module">
+      import {
+        Spot,
+        el,
+        seg,
+        tw,
+        band,
+        clamp,
+        lerp,
+        ease,
+        splitChars,
+      } from "../lib/spot-engine.js";
+      import {
+        stadiumLights,
+        crowd,
+        atmosphere,
+        endcard,
+        lockup,
+      } from "../lib/scene.js";
+      import { impact, confetti, pennants } from "../lib/fx.js";
+
+      /* SPOT 90 — "FIRST SATURDAY" SOCIAL CUT  :15 / 1080x1920 / silent
+         ------------------------------------------------------------------
+         Vertical re-stage of spot 04 for the collective's own channels
+         (Reels / Stories / TikTok). Same beats, same voice, same world —
+         re-composed for a phone held in one hand. Their feed is built on
+         attached graphics (see VOICE.md), so this is cut to be posted, not
+         just aired.
+
+         The 1920x1080 stadium world is reused wholesale: it renders into a
+         fixed landscape container scaled to fill the lower half of the
+         vertical frame — no changes to scene.js.
+
+           0.0 - 3.4   it's been quiet in oxford.
+           3.4 - 6.4   NOT FOR / MUCH LONGER.
+           6.4 - 10.6  SEPT 12 (stacked huge) / first saturday in the grove
+          10.6 - 15.0  Lockup + pennants + MCTV endcard                  */
+
+      const CUTS = [3.4, { t: 6.7, color: "red", k: 1.5 }, 10.6];
+
+      new Spot({
+        duration: 15,
+        fps: 30,
+        width: 1080,
+        height: 1920,
+        build(stage) {
+          /* ------------------------------------------- the world, scaled -- */
+          /* Lights + crowd live in a 1920x1080 landscape plane pinned to the
+             bottom of the vertical frame and scaled up to fill its lower
+             half. Atmosphere paints on the full vertical canvas. */
+          const world = el("div", null, stage, {
+            position: "absolute",
+            left: "50%",
+            bottom: "-60px",
+            width: "1920px",
+            height: "1080px",
+            transform: "translateX(-50%) scale(1.35)",
+            transformOrigin: "50% 100%",
+          });
+          const lights = stadiumLights(world);
+          const bowl = crowd(world, { seed: 91226, zIndex: 3 });
+          const air = atmosphere(stage, { zIndex: 40 });
+
+          /* ---------------------------------- beat 1: an actual whisper -- */
+          const beat1 = el("div", null, stage, {
+            position: "absolute",
+            left: "0",
+            right: "0",
+            top: "56%",
+            zIndex: "20",
+            textAlign: "center",
+          });
+          const l1 = el("div", "sub", beat1, {
+            fontSize: "56px",
+            fontWeight: "700",
+            letterSpacing: "0.34em",
+            color: "#d8e8f6",
+            lineHeight: "1.6",
+          });
+          l1.innerHTML = "IT'S BEEN QUIET<br />IN OXFORD.";
+
+          /* ------------------------------------------------- beat 2 ---- */
+          const beat2 = el("div", "center", stage, { zIndex: 20 });
+          const l2 = el("div", "headline", beat2, {
+            fontSize: "196px",
+            color: "var(--white)",
+          });
+          const c2 = splitChars(l2, "NOT FOR");
+          const l2b = el("div", "headline", beat2, {
+            fontSize: "196px",
+            color: "var(--red-hot)",
+            marginTop: "6px",
+          });
+          const c2b = splitChars(l2b, "MUCH");
+          const l2c = el("div", "headline", beat2, {
+            fontSize: "196px",
+            color: "var(--red-hot)",
+            marginTop: "6px",
+          });
+          const c2c = splitChars(l2c, "LONGER.");
+
+          /* --------------------------------------- beat 3: the date ---- */
+          const dateCard = el("div", "center", stage, { zIndex: 24 });
+          el("div", null, dateCard, {
+            position: "absolute",
+            inset: "-6%",
+            zIndex: "-1",
+            background:
+              "radial-gradient(ellipse 70% 42% at 50% 50%, rgba(5,12,29,0.66), transparent 75%)",
+          });
+          const dateRule = el("div", "rule", dateCard, {
+            width: "260px",
+            marginBottom: "44px",
+            background: "var(--powder)",
+          });
+          /* Stacked huge for the vertical frame — one unit per line, so the
+             date is never partially legible. */
+          const dateMonth = el("div", "headline", dateCard, {
+            fontSize: "290px",
+            color: "var(--white)",
+            lineHeight: "0.86",
+          });
+          dateMonth.textContent = "SEPT";
+          const dateDay = el("div", "headline", dateCard, {
+            fontSize: "560px",
+            color: "var(--red-hot)",
+            lineHeight: "0.84",
+          });
+          dateDay.textContent = "12";
+          const dateLine = el("div", "sub", dateCard, {
+            fontSize: "52px",
+            fontWeight: "700",
+            marginTop: "44px",
+            color: "var(--white)",
+            textShadow: "0 6px 40px rgba(5,12,29,0.85)",
+            lineHeight: "1.55",
+          });
+          dateLine.innerHTML = "FIRST SATURDAY<br />IN THE GROVE";
+
+          const party = confetti(stage, {
+            at: 6.75,
+            seed: 912,
+            count: 120,
+            zIndex: 30,
+            width: 1080,
+            originY: 1960,
+          });
+
+          /* -------------------------------------------------- lockup --- */
+          const bunting = pennants(stage, { y: 60, seed: 7, zIndex: 28, width: 1080 });
+          const lock = lockup(stage, {
+            at: 10.9,
+            cta: "HOTTY TODDY, REBEL NATION.",
+          });
+          /* The shared lockup's frozen geometry is wider than a phone frame
+             at full size — scale the whole component down as one object so
+             its anatomy stays identical to the broadcast cuts. */
+          lock.node.style.transform = "scale(0.82)";
+
+          const end = endcard(stage, { at: 11.4 });
+          const hit = impact(stage, stage);
+
+          /* ================================================== timeline == */
+          return (t) => {
+            const snap = (s) =>
+              seg(t, s, s + 0.08) *
+              (1 + Math.pow(1 - seg(t, s + 0.08, s + 0.7), 2) * 1.6);
+            const power = clamp(0.22 + seg(t, 3.4, 6.4) * 0.78);
+            const bp =
+              t < 6.4
+                ? [0.5, 1.25, 2.0, 2.7].map((s) => Math.max(snap(s), power))
+                : null;
+            const heat = clamp(seg(t, 6.6, 7.4)) * (1 - seg(t, 12.0, 13.2) * 0.5);
+            lights.seek(t, power, bp, heat);
+            air.seek(t, power);
+
+            const dormant = 1 - seg(t, 3.4, 4.6);
+            const fill = seg(t, 3.5, 6.6);
+            const energy = clamp(
+              Math.max(0.3, lerp(0.3, 1, seg(t, 6.4, 7.0)) - seg(t, 12.0, 13.2) * 0.4)
+            );
+            bowl.seek(t, fill, energy, { dormant });
+            world.style.opacity = String(1 - seg(t, 12.0, 13.0) * 0.25);
+
+            /* ---- beat 1: whisper ------------------------------------ */
+            const b1 = band(t, 0.6, 3.4, 0.35);
+            beat1.style.opacity = String(b1);
+
+            /* ---- beat 2 --------------------------------------------- */
+            const b2 = band(t, 3.4, 6.4, 0.22);
+            beat2.style.opacity = String(b2);
+            c2.forEach((ch, i) => {
+              const p = seg(t, 3.4 + i * 0.03, 3.85 + i * 0.03);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(p);
+            });
+            [...c2b, ...c2c].forEach((ch, i) => {
+              const p = seg(t, 3.85 + i * 0.026, 4.3 + i * 0.026);
+              ch.style.transform = `translate3d(0, ${lerp(70, 0, ease.back(p))}px, 0)`;
+              ch.style.opacity = String(clamp(p * 4));
+            });
+
+            /* ---- beat 3: the date ----------------------------------- */
+            const b3 = band(t, 6.4, 10.6, 0.24);
+            dateCard.style.opacity = String(b3);
+            dateRule.style.transform = `scaleX(${ease.out(seg(t, 6.45, 6.9))})`;
+            const slam = tw(t, 6.6, 6.95, 1.3, 1, ease.back);
+            const push = tw(t, 6.95, 10.6, 1.0, 1.06, ease.linear);
+            dateMonth.style.opacity = String(seg(t, 6.55, 6.65));
+            dateDay.style.opacity = String(seg(t, 6.62, 6.72));
+            dateCard.style.transform = `scale(${slam * push})`;
+            dateLine.style.opacity = String(seg(t, 7.3, 7.8));
+            party.seek(t);
+
+            /* ---- lockup + bunting ----------------------------------- */
+            bunting.seek(t, seg(t, 10.6, 11.3));
+            lock.seek(t);
+            /* Re-apply the vertical fit after the component's own entrance
+               writes to child transforms (the node scale is ours). */
+            lock.node.style.transform = "scale(0.82)";
+
+            end.seek(t);
+            hit.seek(t, CUTS);
+          };
+        },
+      }).mount();
+    </script>
+  </body>
+</html>
