@@ -21,7 +21,10 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=True)
 
 from services.auth import check_password
 from services.supabase_client import (
-    delete_row, insert_row, query_table, update_row,
+    insert_row, query_table, update_row,
+)
+from services.pipeline_service import (
+    delete_opportunity, get_deleted, restore_opportunity,
 )
 from services.config_service import load_config, get_team_first_names
 
@@ -227,10 +230,55 @@ if save_cols[0].button("Save changes", type="primary", width="stretch"):
 
 if save_cols[1].button("Delete venue", width="stretch"):
     if st.session_state.get(f"confirm_del_host_{selected_id}"):
-        delete_row("pipeline_opportunities", selected_id)
-        st.success("Removed from pipeline.")
+        # Goes through the pipeline service, not delete_row, so the venue and
+        # its history are archived first and can be restored below. A raw
+        # delete_row here was permanent, and the FK cascaded the activity away
+        # with it.
+        _gone = False
+        try:
+            _gone = delete_opportunity(
+                selected_id, deleted_by=st.session_state.get("active_rep", "MCTV Bot"),
+                reason="Deleted from Host Pipeline")
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Could not delete: {e}")
         st.session_state.pop(f"confirm_del_host_{selected_id}", None)
-        st.rerun()
+        if _gone:
+            st.success("Removed from pipeline. You can restore it below.")
+            st.rerun()
+        elif not _gone:
+            st.error("Nothing was deleted - that venue is already gone.")
     else:
         st.session_state[f"confirm_del_host_{selected_id}"] = True
         st.warning("Click Delete again to confirm.")
+
+
+# ── Recently deleted venues ──────────────────────────────────────────────────
+
+st.divider()
+with st.expander("Recently deleted venues"):
+    st.caption("Deleted venues are kept here with their history so a wrong "
+               "delete can be undone.")
+    _host_trash = get_deleted(limit=25, deal_type="host")
+    if not _host_trash:
+        st.caption("Nothing deleted yet.")
+    for _t in _host_trash:
+        _c1, _c2 = st.columns([4, 1])
+        _c1.markdown(
+            f"**{_t.get('business_name')}** - {_t.get('stage') or '?'}  \n"
+            f"<span style='font-size:0.8rem;color:#666'>"
+            f"{_t.get('deleted_reason') or 'no reason given'} - "
+            f"{str(_t.get('deleted_at'))[:16].replace('T', ' ')} "
+            f"by {_t.get('deleted_by') or 'unknown'}</span>",
+            unsafe_allow_html=True,
+        )
+        if _c2.button("Restore", key=f"host_restore_{_t['id']}", width="stretch"):
+            _back = None
+            try:
+                _back = restore_opportunity(
+                    _t["id"],
+                    performed_by=st.session_state.get("active_rep", "MCTV Bot"))
+            except Exception as e:  # noqa: BLE001
+                st.error(f"Could not restore: {e}")
+            if _back:
+                st.success(f"Restored {_t.get('business_name')}.")
+                st.rerun()

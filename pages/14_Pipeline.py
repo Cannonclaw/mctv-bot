@@ -1309,7 +1309,9 @@ with tab_cleanup:
     st.caption("Everything deleted from the pipeline lands here, with its "
                "activity history, until you clear it out for good.")
 
-    _trash = get_deleted(limit=50)
+    # Advertiser only — deleted host venues are restored from the Host
+    # Pipeline page, which shares this archive.
+    _trash = get_deleted(limit=50, deal_type="advertiser")
     if not _trash:
         st.info("Nothing deleted yet.")
     for t in _trash:

@@ -489,10 +489,16 @@ def _archive_opportunity(opp: dict, deleted_by: str = "MCTV Bot",
     return bool(result)
 
 
-def get_deleted(limit: int = 100) -> list[dict]:
-    """Recently deleted deals, newest first — the undo list."""
-    result = _sb_request(
-        "GET", f"pipeline_deleted?select=*&order=deleted_at.desc&limit={limit}")
+def get_deleted(limit: int = 100, deal_type: str | None = None) -> list[dict]:
+    """Recently deleted deals, newest first — the undo list.
+
+    Pass deal_type to scope it to one pipeline; the sales and host pipelines
+    share this archive the same way they share pipeline_opportunities.
+    """
+    endpoint = f"pipeline_deleted?select=*&order=deleted_at.desc&limit={limit}"
+    if deal_type:
+        endpoint += f"&deal_type=eq.{deal_type}"
+    result = _sb_request("GET", endpoint)
     return result if result is not None else []
 
 
@@ -548,7 +554,7 @@ def deleted_fingerprints() -> tuple[set, set]:
     the survivor is still in the pipeline under that name.
     """
     names, leads = set(), set()
-    for row in get_deleted(limit=500):
+    for row in get_deleted(limit=500, deal_type="advertiser"):
         if row.get("merged_into"):
             continue
         key = normalize_name(row.get("business_name", ""))
@@ -1150,11 +1156,25 @@ def import_lead_to_pipeline(lead: dict, source: str = "intake_form") -> dict | N
     else:
         initial_stage = "prospect"
 
-    # Estimate value based on city/industry
-    estimated_monthly = 500  # Default to 20-screen tier
-    city = (lead.get("city") or "").lower()
-    if city in ("oxford", "starkville", "tupelo"):
-        estimated_monthly = 500
+    # Size the estimate off the lead score, which was already being computed
+    # here and then thrown away. The old code set 500, then re-set 500 for the
+    # three main cities, so every intake deal entered at the 20-screen tier
+    # regardless of what the lead said.
+    if score >= 70:                       # Hot
+        _tier = "40 Screens"
+    elif score >= 40:                     # Warm
+        _tier = "20 Screens"
+    else:                                 # Cold
+        _tier = "10 Screens"
+    tier = TIERS[_tier]
+
+    # Marked as an estimate, not a quote. Nobody has priced this deal yet, and
+    # a made-up figure sitting in Pipeline Value unlabelled is the kind of
+    # number that gets believed.
+    _note = lead.get("goals", "") or lead.get("additional_notes", "") or ""
+    _note = (f"{_note}\n\n" if _note else "") + (
+        f"Value is an estimate from the lead score ({score}/100), not a quote. "
+        "Price it before relying on the forecast.")
 
     opp_data = {
         "lead_id": lead.get("id", ""),
@@ -1166,11 +1186,11 @@ def import_lead_to_pipeline(lead: dict, source: str = "intake_form") -> dict | N
         "city": lead.get("city", ""),
         "source": source,
         "stage": initial_stage,
-        "monthly_value": estimated_monthly,
-        "screen_count": 20,
-        "tier_name": "20 Screens",
-        "expected_close_date": (date.today() + timedelta(days=30)).isoformat(),
-        "notes": lead.get("goals", "") or lead.get("additional_notes", ""),
+        "monthly_value": tier["monthly"],
+        "screen_count": tier["screens"],
+        "tier_name": _tier,
+        "expected_close_date": (local_today() + timedelta(days=30)).isoformat(),
+        "notes": _note.strip(),
         "nurture_sequence": "new_lead",
         "nurture_step": 0,
     }

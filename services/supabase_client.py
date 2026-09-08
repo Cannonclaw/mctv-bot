@@ -676,7 +676,14 @@ def update_row(table: str, row_id: str, data: dict,
 
 def delete_row(table: str, row_id: str, id_column: str = "id",
                use_service_key: bool = True) -> bool:
-    """Delete a row by ID. Returns True on success."""
+    """Delete a row by ID. Returns True only if a row was actually removed.
+
+    Every request here sends `Prefer: return=representation`, so a DELETE that
+    matched nothing comes back as `[]` — not None. The old `result is not None`
+    therefore reported success for a bogus id, an already-deleted row, or an
+    RLS block, and callers that branch on it (screen_inventory_service,
+    venue_events_service, the QA scripts) were told the delete happened.
+    """
     result = _rest_request("DELETE", f"{table}?{id_column}=eq.{urllib.parse.quote(str(row_id), safe='')}",
                            use_service_key=use_service_key)
-    return result is not None
+    return bool(result)
