@@ -242,6 +242,12 @@ class AdvertiserReportGenerator:
         metrics_row1 = {}
         metrics_row1[f"{data.total_plays:,}"] = "Total Campaign\nAd Plays"
         metrics_row1[str(data.total_screen_count)] = "Active\nVenues"
+        # Screens is the number a competing network quotes as "locations", so
+        # spell it out whenever it differs from the venue count. Sourced from
+        # the dashboard's license_count for venues that actually ran the spot;
+        # stays hidden when the dashboard could not confirm it.
+        if data.total_screens > data.total_screen_count:
+            metrics_row1[str(data.total_screens)] = "Screens Running\nYour Ad"
         if data.total_air_time:
             metrics_row1[data.total_air_time] = "Total\nScreen Time"
         # Show impressions if available from dashboard, otherwise avg plays
@@ -311,10 +317,16 @@ class AdvertiserReportGenerator:
         has_impressions = any(v.monthly_impressions > 0 for v in data.venue_records)
         has_cpm = has_impressions and data.monthly_rate > 0
 
+        venue_count = len(data.venue_records)
+        if data.total_screens > venue_count:
+            reach = (
+                f"{data.total_screens} screens across {venue_count} venue locations"
+            )
+        else:
+            reach = f"{venue_count} venue locations"
         intro = (
-            f"Your ad played across {len(data.venue_records)} venue locations during "
-            f"this campaign period. The table below shows performance at each host, "
-            f"sorted by total ad plays."
+            f"Your ad played on {reach} during this campaign period. The table "
+            f"below shows performance at each host, sorted by total ad plays."
         )
         if has_impressions:
             intro += (
