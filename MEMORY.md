@@ -21,6 +21,19 @@
 - **MCTV does NOT do revenue sharing** with most venue partners — don't suggest or imply it
 - **Walk through WordPress like user is 12** — step-by-step, no assumed knowledge
 
+### Off-Book / Personal Context (not MCTV work — background only)
+
+**House renovation (Creed's own house)**
+- **Mark** is bidding on the *remainder* of the renovations, working off the proposal
+  we put together. Bid not in yet as of 2026-09-09.
+- **Paul Davis did the cabinetry and Mark says it is completely screwed up.** His read
+  is that it has to come out and be redone, so the remaining scope — and the bid — is
+  bigger than what the proposal assumed. Don't treat the proposal's scope or dollar
+  figure as current.
+- **Follow-up with Mark: 2026-09-16** (seven days out from the 2026-09-09 meeting).
+- This is personal, not an MCTV client or pipeline deal. It does **not** belong in
+  `pipeline_opportunities`, the Clients table, or any proposal/contract flow.
+
 ---
 
 ## The Project
