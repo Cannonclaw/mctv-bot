@@ -314,13 +314,38 @@ if st.button("Submit", type="primary", width='stretch'):
         logo_filename = None
         if client_logo:
             from pathlib import Path
-            logos_dir = Path(__file__).parent.parent / "data" / "logos"
+            logos_dir = (Path(__file__).parent.parent / "data" / "logos").resolve()
             logos_dir.mkdir(parents=True, exist_ok=True)
-            suffix = Path(client_logo.name).suffix
-            safe_biz = business_name.replace(" ", "_").replace("'", "")
-            logo_filename = f"{safe_biz}{suffix}"
-            with open(logos_dir / logo_filename, "wb") as f:
-                f.write(client_logo.getbuffer())
+
+            # This page is public and unauthenticated, and both halves of the
+            # old filename were attacker-controlled: business_name went in
+            # after only replacing spaces and apostrophes, so "../../pages/x"
+            # escaped data/logos, and the extension came from the upload's own
+            # name. Writing a .py into pages/ is code execution on the next
+            # Streamlit rerun.
+            #
+            # Build the name from an explicit allowlist instead of trying to
+            # strip bad characters, and pin the extension to what the uploader
+            # already accepts rather than trusting the client's filename.
+            slug = "".join(
+                c if (c.isalnum() or c in "-_") else "_"
+                for c in business_name.strip()
+            ).strip("_")[:64] or "logo"
+
+            suffix = Path(client_logo.name).suffix.lower()
+            if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+                suffix = ".png"
+
+            logo_filename = f"{slug}{suffix}"
+            dest = (logos_dir / logo_filename).resolve()
+
+            # Belt and braces: even with the allowlist above, never write
+            # outside data/logos.
+            if dest.parent != logos_dir:
+                logo_filename = None
+            else:
+                with open(dest, "wb") as f:
+                    f.write(client_logo.getbuffer())
 
         # Capture client IP (best-effort) for proof-of-consent
         client_ip = ""

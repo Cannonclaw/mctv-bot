@@ -16,12 +16,15 @@ Usage:
     python scripts/setup_test_client.py
 
 Login credentials (after running):
-    Email:    test@mctvofms.com
-    Password: MCTVtest2026!
+    Email:    test@mctvofms.com  (or $PORTAL_TEST_EMAIL)
+    Password: printed once when the run finishes, generated fresh each time.
+              Set $PORTAL_TEST_PASSWORD to reuse an existing account instead.
     Role:     advertiser
 """
 
 import os
+import secrets
+import string
 import sys
 import json
 from pathlib import Path
@@ -39,8 +42,17 @@ from services.supabase_client import (
 
 # ── Test Client Configuration ────────────────────────────────────────────────
 
-TEST_EMAIL = "test@mctvofms.com"
-TEST_PASSWORD = "MCTVtest2026!"
+TEST_EMAIL = os.environ.get("PORTAL_TEST_EMAIL", "test@mctvofms.com")
+
+# Generated per run, not committed. This account is real: services/auth.py adds
+# every client holding a portal_user_id to the portal allowlist, so a password
+# literal here was a working login to the production portal for anyone with
+# repo access. Override with PORTAL_TEST_PASSWORD to re-run against an account
+# that already exists.
+TEST_PASSWORD = os.environ.get("PORTAL_TEST_PASSWORD") or (
+    "Mctv-" + "".join(secrets.choice(string.ascii_letters + string.digits)
+                      for _ in range(20))
+)
 TEST_FULL_NAME = "Jordan Mitchell"
 TEST_COMPANY = "Oxford Coffee Co."
 TEST_PHONE = "(662) 555-0142"
@@ -333,6 +345,7 @@ def main():
     print("  Portal Login Credentials:")
     print(f"    Email:      {TEST_EMAIL}")
     print(f"    Password:   {TEST_PASSWORD}")
+    print("                (generated this run — copy it now, it is stored nowhere)")
     print()
     print("  Test Data Created:")
     print(f"    Contracts:        2 (1 awaiting signature, 1 active)")

@@ -282,7 +282,7 @@ Progressive Web App layer enabling "Add to Home Screen" on mobile devices, with 
 - **`static/manifest.json`** — Web app manifest: MCTV branding (navy #1B2A4A), 8 icon sizes (72-512px), display standalone, 3 shortcuts (Contracts, Invoices, Creative Requests).
 - **`static/service-worker.js`** — Cache-first for static assets (icons, fonts, images), network-first with cache fallback for data/pages, offline fallback to cached home page. Pre-caches critical assets on install.
 - **`static/icons/icon-{72,96,128,144,152,192,384,512}x{size}.png`** — Generated from `mctv_logo_on_navy.png` using Pillow. Navy background with centered logo at 75% size.
-- **`scripts/setup_test_client.py`** — Portal QA test data generator. Creates "Oxford Coffee Co." with: 1 client, 1 Supabase Auth user (`test@mctvofms.com` / `MCTVtest2026!`), 2 contracts (1 awaiting signature, 1 active), 3 invoices (pending, paid, overdue), 2 creative requests, 1 traction report, 6 activity log entries.
+- **`scripts/setup_test_client.py`** — Portal QA test data generator. Creates "Oxford Coffee Co." with: 1 client, 1 Supabase Auth user (`test@mctvofms.com`, password generated per run), 2 contracts (1 awaiting signature, 1 active), 3 invoices (pending, paid, overdue), 2 creative requests, 1 traction report, 6 activity log entries.
 
 #### Modified Files
 - **`app.py`** — Added `mimetypes.add_type()` fix for Windows `.js` → `text/plain` registry issue. Patched `SAFE_APP_STATIC_FILE_EXTENSIONS` in both `app_static_file_handler` and `starlette_routes` modules to serve `.js` as `application/javascript`. Added `inject_pwa()` and `inject_install_banner()` calls.

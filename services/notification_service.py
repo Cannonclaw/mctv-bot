@@ -14,10 +14,24 @@ Extends the existing SMTP pattern from leads_service.py for:
 import logging
 import os
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
+
+
+def _tls_context():
+    """Return an SMTP TLS context that actually verifies the server.
+
+    Python's smtplib does not verify on its own: with no context argument both
+    ``SMTP_SSL()`` and ``starttls()`` fall back to ``ssl._create_stdlib_context()``,
+    which sets ``check_hostname=False`` and ``verify_mode=CERT_NONE``. The
+    connection is encrypted but unauthenticated, so anyone able to answer in
+    place of the mail host is handed SMTP_PASS on login. ``create_default_context()``
+    verifies the chain and the hostname.
+    """
+    return ssl.create_default_context()
 
 
 def _get_smtp_config() -> tuple:
@@ -69,12 +83,12 @@ def _send_email(to_emails: str, subject: str, body: str) -> bool:
         recipients = [e.strip() for e in to_emails.split(",") if e.strip()]
 
         if port == 465:
-            with smtplib.SMTP_SSL(host, port) as server:
+            with smtplib.SMTP_SSL(host, port, context=_tls_context()) as server:
                 server.login(user, password)
                 server.sendmail(from_addr, recipients, msg.as_string())
         else:
             with smtplib.SMTP(host, port) as server:
-                server.starttls()
+                server.starttls(context=_tls_context())
                 server.login(user, password)
                 server.sendmail(from_addr, recipients, msg.as_string())
 

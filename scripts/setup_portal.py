@@ -21,6 +21,8 @@ Just paste your service_role key when prompted.
 
 import json
 import os
+import secrets
+import string
 import sys
 import urllib.request
 import urllib.error
@@ -31,26 +33,47 @@ import getpass
 SUPABASE_URL = "https://dtapevlfnekzepbtlabj.supabase.co"
 PROJECT_ID = "dtapevlfnekzepbtlabj"
 
+# No password literals here, deliberately.
+#
+# Until the September 2026 credential review this list carried one shared
+# password in plain text for all three accounts — two of them admins. A literal
+# in a tracked file is a live credential in every clone, every fork and every
+# commit of the repo's history, and rotating it later does not remove it from
+# any of those. The "CHANGE THESE PASSWORDS after first login" note that used to
+# sit at the bottom of this script did not help: nothing enforced it.
+#
+# Each account now gets its own random password, generated at run time and shown
+# once to the operator running the script. Nothing is persisted here.
 TEAM_USERS = [
     {
         "email": "creed@mctvofms.com",
-        "password": "MCTV2026!",
         "full_name": "T. Creed Cannon",
         "role": "admin",
     },
     {
         "email": "mmc@mctvofms.com",
-        "password": "MCTV2026!",
         "full_name": "Mary Michael Cannon",
         "role": "admin",
     },
     {
         "email": "swayze@mctvofms.com",
-        "password": "MCTV2026!",
         "full_name": "Swayze Hollingsworth",
         "role": "sales_rep",
     },
 ]
+
+
+def initial_password() -> str:
+    """Return a fresh random password for one team account.
+
+    ``secrets`` rather than ``random``: the value is a real credential the
+    moment the account exists, and ``random`` is seeded predictably enough to
+    be guessable. The Mctv- prefix and the mixed alphabet satisfy Supabase
+    Auth's complexity rule without making the tail any less random.
+    """
+    alphabet = string.ascii_letters + string.digits
+    return "Mctv-" + "".join(secrets.choice(alphabet) for _ in range(20))
+
 
 STORAGE_BUCKETS = ["contracts", "reports", "creative-uploads", "creative-deliveries"]
 
@@ -241,6 +264,7 @@ def main():
     print("Step 3: Creating team logins...")
 
     for user in TEAM_USERS:
+        user["password"] = initial_password()
         result = create_user(
             service_key,
             user["email"],
@@ -249,14 +273,21 @@ def main():
             user["role"]
         )
         if isinstance(result, dict) and result.get("id"):
+            user["created"] = True
             print(f"  ✅ {user['full_name']} ({user['email']}) — created!")
         elif isinstance(result, dict) and "error" in result:
             err = result["error"]
             if isinstance(err, dict) and "already" in str(err).lower():
+                # The account predates this run, so the password generated above
+                # was never applied. Forget it rather than printing a value that
+                # does not log anyone in.
+                user["password"] = None
                 print(f"  ℹ️  {user['full_name']} ({user['email']}) — already exists")
             else:
+                user["password"] = None
                 print(f"  ⚠️  {user['full_name']}: {err}")
         else:
+            user["created"] = True
             print(f"  ✅ {user['full_name']} ({user['email']}) — done!")
 
     # ── Step 4: Create storage buckets ───────────────────────────
@@ -289,12 +320,19 @@ def main():
     print("  🎉  SETUP COMPLETE!")
     print("=" * 60)
     print()
-    print("  Team Logins (password for all: MCTV2026!):")
-    print("  ├── creed@mctvofms.com    (admin)")
-    print("  ├── mmc@mctvofms.com      (admin)")
-    print("  └── swayze@mctvofms.com   (sales_rep)")
-    print()
-    print("  ⚠️  CHANGE THESE PASSWORDS after first login!")
+    created = [u for u in TEAM_USERS if u.get("password")]
+    if created:
+        print("  Team logins — copy these now, they are shown once and stored nowhere:")
+        for u in created:
+            print(f"  ├── {u['email']}  ({u['role']})")
+            print(f"  │     {u['password']}")
+        print()
+        print("  ⚠️  Hand each password to its owner over a private channel, and")
+        print("      have them change it at first login. Do not paste them into")
+        print("      chat, a ticket, or any file in this repo.")
+    else:
+        print("  Team logins: all three accounts already existed — no passwords")
+        print("  were set or changed by this run.")
     print()
     print("  Storage Buckets:")
     print("  ├── contracts, reports")
