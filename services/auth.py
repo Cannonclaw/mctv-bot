@@ -26,7 +26,9 @@ Password reset flow:
 """
 
 import streamlit as st
+import hmac
 import os
+import threading
 import time
 from pathlib import Path
 from dotenv import load_dotenv
@@ -38,36 +40,119 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=False)
 # ── Login Rate Limiting ────────────────────────────────────────────────────
 _LOGIN_MAX_ATTEMPTS = 5
 _LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
+_LOGIN_FAILURE_DELAY_SECONDS = 1.0
+_LOGIN_TRACKER_MAX_KEYS = 4096
+
+# Failure counters live in module scope, NOT in st.session_state.
+#
+# They used to live in session state, which is per browser session. Reopening
+# the app in a new tab, or clearing one cookie, handed the attacker a fresh
+# counter — so the five-attempt lockout bounded nothing at all, against a
+# single shared team password that unlocks every internal page.
+#
+# Module scope is shared by every session in the Streamlit process, which on a
+# single Render instance is the whole app. Entries are keyed by scope plus
+# client IP so one attacker cannot lock out the entire team, and pruned on
+# write so a header-rotating attacker cannot grow the dict without bound.
+#
+# X-Forwarded-For can be rotated, so the per-IP counter alone is a speed bump
+# rather than a wall. _LOGIN_FAILURE_DELAY_SECONDS is what bounds that case:
+# every failed guess costs wall-clock time no matter which key it lands under.
+_login_failures: dict = {}
+
+# Streamlit serves each browser session on its own thread, so the tracker is
+# shared mutable state. ``entry["attempts"] += 1`` is a read-modify-write and
+# two simultaneous failures could otherwise both read the same count.
+_login_lock = threading.Lock()
+
+
+def _client_ip() -> str:
+    """Best-effort client IP, or "" when it cannot be read.
+
+    Render sits behind a proxy, so the peer address is the proxy's. The
+    leftmost X-Forwarded-For hop is client-controlled and therefore only a
+    rate-limiting hint — never use it as proof of identity.
+    """
+    try:
+        headers = getattr(st.context, "headers", {}) or {}
+        return (
+            headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            or headers.get("X-Real-Ip", "")
+            or ""
+        )
+    except Exception:
+        return ""
+
+
+def _rate_limit_key(key: str) -> str:
+    return f"{key}:{_client_ip()}"
+
+
+def _prune_login_failures(now: float) -> None:
+    """Drop entries whose lockout window has fully elapsed.
+
+    Callers must hold ``_login_lock``.
+    """
+    stale = [k for k, v in _login_failures.items()
+             if now - v.get("last_seen", 0) > _LOGIN_LOCKOUT_SECONDS]
+    for k in stale:
+        _login_failures.pop(k, None)
+
+    # Backstop: if an attacker rotates the header faster than entries expire,
+    # drop the oldest rather than letting the process grow without limit.
+    if len(_login_failures) > _LOGIN_TRACKER_MAX_KEYS:
+        for k, _ in sorted(_login_failures.items(),
+                           key=lambda kv: kv[1].get("last_seen", 0)
+                           )[:len(_login_failures) - _LOGIN_TRACKER_MAX_KEYS]:
+            _login_failures.pop(k, None)
 
 
 def _check_rate_limit(key: str) -> bool:
     """Return True if the login attempt is allowed, False if locked out."""
-    attempts = st.session_state.get(f"_login_attempts_{key}", 0)
-    lockout_until = st.session_state.get(f"_login_lockout_{key}", 0)
+    now = time.time()
+    rk = _rate_limit_key(key)
+    with _login_lock:
+        entry = _login_failures.get(rk)
+        if not entry:
+            return True
 
-    if lockout_until and time.time() < lockout_until:
-        return False
+        if entry.get("lockout_until", 0) > now:
+            return False
 
-    if lockout_until and time.time() >= lockout_until:
-        st.session_state[f"_login_attempts_{key}"] = 0
-        st.session_state[f"_login_lockout_{key}"] = 0
+        if entry.get("lockout_until", 0):
+            # Window elapsed — start the caller over with a clean slate.
+            _login_failures.pop(rk, None)
 
     return True
 
 
 def _record_failed_login(key: str):
     """Record a failed login attempt and lock out if threshold reached."""
-    attempts = st.session_state.get(f"_login_attempts_{key}", 0) + 1
-    st.session_state[f"_login_attempts_{key}"] = attempts
+    now = time.time()
+    rk = _rate_limit_key(key)
 
-    if attempts >= _LOGIN_MAX_ATTEMPTS:
-        st.session_state[f"_login_lockout_{key}"] = time.time() + _LOGIN_LOCKOUT_SECONDS
+    with _login_lock:
+        _prune_login_failures(now)
+        entry = _login_failures.setdefault(rk, {"attempts": 0, "lockout_until": 0})
+        entry["attempts"] += 1
+        entry["last_seen"] = now
+
+        if entry["attempts"] >= _LOGIN_MAX_ATTEMPTS:
+            entry["lockout_until"] = now + _LOGIN_LOCKOUT_SECONDS
+
+    # Outside the lock, deliberately: holding it across a sleep would serialise
+    # every other login in the process behind this one attacker.
+    #
+    # Costs the attacker wall-clock time on every guess, including the ones
+    # that land under a freshly rotated X-Forwarded-For. Sleeping here blocks
+    # only this session's script-run thread, not other users.
+    time.sleep(_LOGIN_FAILURE_DELAY_SECONDS)
 
 
 def _reset_login_attempts(key: str):
     """Reset login attempt counter after successful login."""
-    st.session_state.pop(f"_login_attempts_{key}", None)
-    st.session_state.pop(f"_login_lockout_{key}", None)
+    with _login_lock:
+        _login_failures.pop(_rate_limit_key(key), None)
 
 
 # ── Portal Access Control ───────────────────────────────────────────────────
@@ -128,7 +213,7 @@ def render_team_login_form():
             correct = os.environ.get("APP_PASSWORD")
             if not correct:
                 st.error("Team login is not configured. Contact an administrator.")
-            elif password == correct:
+            elif hmac.compare_digest(password or "", correct):
                 _reset_login_attempts("team")
                 st.session_state["authenticated"] = True
                 st.session_state["auth_mode"] = "team"

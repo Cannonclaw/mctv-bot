@@ -65,6 +65,16 @@ def _save_tokens(tokens: dict):
     with open(TOKEN_FILE, "w") as f:
         json.dump(tokens, f, indent=2)
 
+    # This file holds a live OAuth refresh token for the company's QuickBooks
+    # accounting data. open() creates it 0644, i.e. readable by every account
+    # on the host and by anything that can traverse the repo directory. Narrow
+    # it to owner-only; chmod is a no-op that can raise on some Windows setups,
+    # so a failure here must not break the token save itself.
+    try:
+        TOKEN_FILE.chmod(0o600)
+    except OSError:
+        pass
+
     # Also save to Supabase for cross-deploy persistence
     try:
         from services.supabase_client import query_table, insert_row, update_row

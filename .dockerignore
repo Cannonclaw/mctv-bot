@@ -1,8 +1,33 @@
 __pycache__
 *.pyc
+
+# Secrets must never enter the build context: COPY . . in the Dockerfile bakes
+# whatever survives this file into an image layer, where it stays readable via
+# `docker history` / layer export even if a later step deletes it. Render reads
+# its configuration from the env group, so none of this is needed to run.
 .env
-output/proposals/*
-output/reports/*
-output/emails/*
+.env.*
+config/qb_tokens.json
+
+# Runtime state — customer data written by the running app, not source.
+# data/sms is TCPA consent evidence and data/pipeline is the full deal list.
+# The three reference JSONs below ARE read at runtime by dashboard_service,
+# simulator_service and screen_health_service, so they must stay in the image.
+data/*
+!data/network_dashboard.json
+!data/venue_audience_profiles.json
+!data/venue_geocodes.json
+
+# Generated documents — proposals, reports, contracts and emails for real
+# clients. Regenerated on demand; nothing here belongs in a shipped image.
+output/
+
+# Repo history and local tooling. Excluding .git also keeps the credential
+# literals that live in this repo's past commits out of the image.
 .git
+.gitignore
 .claude
+
+# Internal-only documents.
+TRADE_SECRETS.md
+docs/NTV360_BUSINESS_CASE.md

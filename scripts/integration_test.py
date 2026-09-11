@@ -47,6 +47,16 @@ def fail(msg):
     print(f"  [FAIL] {msg}")
 
 
+def skip(msg):
+    """Report a step that could not run, without counting it either way.
+
+    A skipped step must not read as a pass — that is how an unrun credential
+    test quietly becomes a green suite — and must not read as a failure
+    either, or the suite fails on every machine that has no test account.
+    """
+    print(f"  [SKIP] {msg}")
+
+
 def main():
     global passed, failed
 
@@ -67,12 +77,22 @@ def main():
     # ── Step 1: Test sign_in ──────────────────────────────────────
     print()
     print("--- Step 1: Test authentication (sign_in) ---")
-    result = sign_in("creed@mctvofms.com", "MCTV2026!")
-    if result and result.get("user_id"):
-        ok(f"Sign in worked: {result.get('full_name')} ({result.get('role')})")
-        ok(f"Access token received: {result.get('access_token', '')[:20]}...")
+    # Credentials come from the environment, never from this file. The literal
+    # that used to sit here was a working password for a live portal admin
+    # account, readable by anyone with repo access and preserved in every
+    # historical commit. A test that cannot run without a credential should
+    # skip, not carry one.
+    test_email = os.environ.get("PORTAL_TEST_EMAIL", "").strip()
+    test_password = os.environ.get("PORTAL_TEST_PASSWORD", "")
+    if not test_email or not test_password:
+        skip("Sign in — set PORTAL_TEST_EMAIL and PORTAL_TEST_PASSWORD to run it")
     else:
-        fail("Sign in failed for creed@mctvofms.com")
+        result = sign_in(test_email, test_password)
+        if result and result.get("user_id"):
+            ok(f"Sign in worked: {result.get('full_name')} ({result.get('role')})")
+            ok("Access token received")
+        else:
+            fail(f"Sign in failed for {test_email}")
 
     # ── Step 2: Create test client ────────────────────────────────
     print()

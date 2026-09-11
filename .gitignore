@@ -1,14 +1,33 @@
 .env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
 output/
 !output/**/.gitkeep
-data/leads/*
-data/logos/*
-data/venue_events/*
-!data/leads/.gitkeep
-!data/logos/.gitkeep
-!data/venue_events/.gitkeep
+
+# Runtime data. Everything under data/ is local state written by the app —
+# the Supabase fallback stores for pipeline deals and SMS consent, scraped
+# logos, geocode and audience caches. It is customer data, not source, and
+# some of it (data/sms) is TCPA consent evidence.
+#
+# Ignored as a whole rather than dir-by-dir: the previous per-directory list
+# covered leads, logos and venue_events, while the code had since started
+# writing pipeline/, sms/, inventory/, network_dashboard/,
+# venue_audience_profiles/ and venue_geocodes/ — none of them ignored. A
+# blanket rule plus .gitkeep un-ignores means a new store is covered the day
+# it is added.
+data/*
+!data/**/.gitkeep
+
+# Checked-in reference data, not runtime state: the venue roster, the
+# hand-curated audience multipliers and the geocode cache are inputs the app
+# ships with. Named explicitly so the blanket rule above cannot quietly drop
+# an update to them.
+!data/network_dashboard.json
+!data/venue_audience_profiles.json
+!data/venue_geocodes.json
+
 config/qb_tokens.json
 .claude/
 TRADE_SECRETS.md

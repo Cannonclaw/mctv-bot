@@ -24,6 +24,46 @@ if not check_password():
 from services.team_ui import render_team_sidebar
 render_team_sidebar()
 
+
+def _save_env_var(name: str, value: str) -> None:
+    """Set one variable in .env, leaving every other line intact.
+
+    This used to be a bare ``write_text`` of the single key being saved, which
+    truncated the file: one click on "Save API Key" destroyed APP_PASSWORD,
+    SUPABASE_URL, SUPABASE_KEY, the Twilio credentials and the SMTP password
+    along with it, and the page still reported success. Losing APP_PASSWORD
+    locks the whole team out of the app.
+
+    Existing formatting is preserved — comments, blank lines and unrelated
+    ordering all survive — so the file stays readable after an edit here.
+    """
+    env_path = Path(__file__).parent.parent / ".env"
+    lines = []
+    if env_path.exists():
+        lines = env_path.read_text(encoding="utf-8").splitlines()
+
+    replaced = False
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if stripped.startswith("#") or "=" not in stripped:
+            continue
+        if stripped.split("=", 1)[0].strip() == name:
+            lines[i] = f"{name}={value}"
+            replaced = True
+            break
+
+    if not replaced:
+        lines.append(f"{name}={value}")
+
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    # The file now holds every credential this app has. Keep it owner-only;
+    # os.chmod is a no-op that raises on some Windows setups, hence the guard.
+    try:
+        env_path.chmod(0o600)
+    except OSError:
+        pass
+
 # ── QuickBooks OAuth Callback Handler ────────────────────────────────────────
 # When Intuit redirects back after authorization, the URL will contain
 # ?code=xxx&realmId=xxx&state=xxx  — we catch those here BEFORE rendering.
@@ -72,13 +112,21 @@ with tab_general:
                               help="Your Anthropic API key. This will be saved to the .env file.")
 
     if st.button("Save API Key", type="primary"):
-        if new_key:
-            env_path = Path(__file__).parent.parent / ".env"
-            env_path.write_text(f"ANTHROPIC_API_KEY={new_key}\n", encoding="utf-8")
+        if not new_key:
+            st.warning("Please enter a key.")
+        elif os.environ.get("RENDER"):
+            # Render's filesystem is ephemeral and the env group is the source
+            # of truth. Writing .env here would look like it worked, survive
+            # until the next deploy, and then silently revert.
+            st.error(
+                "This deployment reads its key from the Render environment "
+                "group. Update ANTHROPIC_API_KEY in the Render dashboard "
+                "instead — a key saved here would be lost on the next deploy."
+            )
+        else:
+            _save_env_var("ANTHROPIC_API_KEY", new_key)
             os.environ["ANTHROPIC_API_KEY"] = new_key
             st.success("API key saved! Reload the page to see the update.")
-        else:
-            st.warning("Please enter a key.")
 
     # Model selection
     st.markdown("#### AI Model")

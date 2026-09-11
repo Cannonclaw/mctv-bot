@@ -9,6 +9,7 @@ Falls back gracefully when Supabase is not configured.
 
 import os
 import json
+import re
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -16,6 +17,51 @@ from functools import lru_cache
 
 
 # ── Client factory ───────────────────────────────────────────────────────────
+
+# ── Log hygiene ──────────────────────────────────────────────────────────────
+
+# Capability tokens travel as ordinary query filters: contract_service looks a
+# contract up by renewal_token, nps_service by survey_token, simulator_service
+# by share_token. Each of those is a bearer credential — holding one is enough
+# to sign a renewal or open a shared simulator — and the REST error paths below
+# print the endpoint verbatim, which put them into the Render log stream on
+# every transient 4xx/5xx.
+_SENSITIVE_PARAMS = ("token", "secret", "password", "apikey", "api_key", "key")
+
+_MAX_LOGGED_BODY = 500
+
+
+def _redact(endpoint: str) -> str:
+    """Mask the value of any token-ish query parameter in a REST endpoint.
+
+    Matches on the parameter name rather than the value, so a new token column
+    is covered the day it is added as long as it is named like one.
+    """
+    def mask(m):
+        name, sep, value = m.group(1), m.group(2), m.group(3)
+        if not any(word in name.lower() for word in _SENSITIVE_PARAMS):
+            return m.group(0)
+        # Preserve the PostgREST operator prefix (eq., ilike.) so the shape of
+        # the failing query is still readable.
+        op, _, raw = value.partition(".")
+        if raw:
+            return f"{name}{sep}{op}.<redacted:{len(raw)}>"
+        return f"{name}{sep}<redacted:{len(value)}>"
+
+    return re.sub(r"([A-Za-z0-9_]+)(=)([^&]*)", mask, endpoint)
+
+
+def _truncate(body: str) -> str:
+    """Cap a PostgREST error body so a row dump cannot land in the logs.
+
+    PostgREST echoes offending row content in some constraint errors, which on
+    these tables means client PII.
+    """
+    body = body or ""
+    if len(body) <= _MAX_LOGGED_BODY:
+        return body
+    return body[:_MAX_LOGGED_BODY] + f"... [{len(body) - _MAX_LOGGED_BODY} more chars]"
+
 
 def _get_url_and_keys():
     """Return (url, anon_key, service_key) from environment."""
@@ -562,10 +608,14 @@ def _rest_request(method: str, endpoint: str, data: dict | None = None,
             error_body = e.read().decode("utf-8", errors="replace")
         except Exception:
             pass
-        print(f"[supabase_client] REST {method} {endpoint} HTTP {e.code}: {error_body}", flush=True)
+        print(
+            f"[supabase_client] REST {method} {_redact(endpoint)} "
+            f"HTTP {e.code}: {_truncate(error_body)}",
+            flush=True,
+        )
         return None
     except Exception as e:
-        print(f"[supabase_client] REST {method} {endpoint} failed: {e}", flush=True)
+        print(f"[supabase_client] REST {method} {_redact(endpoint)} failed: {e}", flush=True)
         return None
 
 

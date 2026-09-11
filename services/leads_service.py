@@ -11,6 +11,7 @@ import csv
 import io
 import json
 import smtplib
+import ssl
 import os
 import urllib.request
 import urllib.error
@@ -24,6 +25,19 @@ LEADS_DIR = Path(__file__).parent.parent / "data" / "leads"
 
 
 # ── Supabase REST helpers ────────────────────────────────────────────────────
+
+def _tls_context():
+    """Return an SMTP TLS context that actually verifies the server.
+
+    Python's smtplib does not verify on its own: with no context argument both
+    ``SMTP_SSL()`` and ``starttls()`` fall back to ``ssl._create_stdlib_context()``,
+    which sets ``check_hostname=False`` and ``verify_mode=CERT_NONE``. The
+    connection is encrypted but unauthenticated, so anyone able to answer in
+    place of the mail host is handed SMTP_PASS on login. ``create_default_context()``
+    verifies the chain and the hostname.
+    """
+    return ssl.create_default_context()
+
 
 def _sb_config():
     """Return (url, key) if Supabase is configured, else (None, None)."""
@@ -332,12 +346,12 @@ Log in to the MCTV Bot to view all leads and generate a proposal.
 
         # Port 465 = SSL, Port 587 = STARTTLS
         if smtp_port == 465:
-            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, context=_tls_context()) as server:
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_from, notify_emails.split(","), msg.as_string())
         else:
             with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
+                server.starttls(context=_tls_context())
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_from, notify_emails.split(","), msg.as_string())
 
