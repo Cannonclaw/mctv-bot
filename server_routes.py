@@ -3,7 +3,7 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Six routes, all public, all GET/HEAD:
+Seven routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
@@ -14,6 +14,8 @@ Six routes, all public, all GET/HEAD:
                         (static/mslive.html), same reason as /mdot
     /mslive/looks       five alternate looks for the co-branded weather board
                         (static/mslive-looks.html)
+    /hbarena-mockup     the Huntington Bank Arena pitch mockup
+                        (static/hbarena_mockup.html), same reason
 
 Streamlit exposes no routing API, so this reaches into the web server it
 boots and inserts the routes ahead of Streamlit's catch-all (which
@@ -63,6 +65,11 @@ MSLIVE_FILE = STATIC_DIR / "mslive.html"
 MSLIVE_LOOKS_PATH = "/mslive/looks"
 MSLIVE_LOOKS_FILE = STATIC_DIR / "mslive-looks.html"
 
+# Pitch mockup for Huntington Bank Arena — their own announced shows rendered
+# as MCTV screen creative. A link is easier to send than an attachment.
+HBARENA_PATH = "/hbarena-mockup"
+HBARENA_FILE = STATIC_DIR / "hbarena_mockup.html"
+
 # Plain HTML pages, path -> file. The JSON feed below is handled separately
 # because it is generated rather than read off disk.
 HTML_PAGES = {
@@ -71,9 +78,13 @@ HTML_PAGES = {
     MDOT_PATH: MDOT_FILE,
     MSLIVE_PATH: MSLIVE_FILE,
     MSLIVE_LOOKS_PATH: MSLIVE_LOOKS_FILE,
+    HBARENA_PATH: HBARENA_FILE,
 }
 
 HTML_CACHE_CONTROL = "public, max-age=300"
+# Per-page overrides. A one-off pitch link is edited and re-sent mid-conversation,
+# and carries a prospect's live offer terms, so it must not sit in a shared cache.
+PAGE_CACHE_CONTROL = {HBARENA_PATH: "no-cache"}
 # The board polls this every minute and re-derives now/next locally in between;
 # a cached copy in front of it would only ever show a stale room assignment.
 DATA_CACHE_CONTROL = "no-store"
@@ -134,7 +145,8 @@ def _resolve(path: str, query: str = "") -> tuple[str, bytes, str] | None:
         body = _page_bytes(HTML_PAGES[clean])
         if body is None:
             return None
-        return ("text/html; charset=utf-8", body, HTML_CACHE_CONTROL)
+        return ("text/html; charset=utf-8", body,
+                PAGE_CACHE_CONTROL.get(clean, HTML_CACHE_CONTROL))
 
     if clean == BOARD_DATA_PATH.rstrip("/"):
         try:
@@ -190,6 +202,7 @@ def _install_tornado() -> None:
             (r"/mdot/?", PublicPageHandler),
             (r"/mslive/looks/?", PublicPageHandler),
             (r"/mslive/?", PublicPageHandler),
+            (r"/hbarena-mockup/?", PublicPageHandler),
         ]
         router.add_rules(rules)
         # add_rules appends; Streamlit's catch-all is already in the list, so

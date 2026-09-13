@@ -1,0 +1,5 @@
+# The promoter's tour art is the promoter's, and it arrives via the arena.
+# Keep it out of the repo — scripts/embed_hbarena_art.py inlines it into the
+# page at build time from whatever is sitting here.
+*
+!.gitignore
