@@ -3,13 +3,17 @@
 # or modification of this file is strictly prohibited.
 """Serve the public pages that are not Streamlit apps.
 
-Five routes, all public, all GET/HEAD:
+Seven routes, all public, all GET/HEAD:
 
     /rates              the self-serve rate calculator (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
     /board/events.json  the schedule the board polls (venue_events_service)
     /mdot               the MDOT sponsorship mockup (static/mdot.html), so it
                         can be texted as a link instead of an HTML attachment
+    /mslive             the Mississippi LIVE Weather partnership one-pager
+                        (static/mslive.html), same reason as /mdot
+    /mslive/looks       five alternate looks for the co-branded weather board
+                        (static/mslive-looks.html)
     /hbarena-mockup     the Huntington Bank Arena pitch mockup
                         (static/hbarena_mockup.html), same reason
 
@@ -55,6 +59,12 @@ BOARD_DATA_PATH = "/board/events.json"
 MDOT_PATH = "/mdot"
 MDOT_FILE = STATIC_DIR / "mdot.html"
 
+MSLIVE_PATH = "/mslive"
+MSLIVE_FILE = STATIC_DIR / "mslive.html"
+
+MSLIVE_LOOKS_PATH = "/mslive/looks"
+MSLIVE_LOOKS_FILE = STATIC_DIR / "mslive-looks.html"
+
 # Pitch mockup for Huntington Bank Arena — their own announced shows rendered
 # as MCTV screen creative. A link is easier to send than an attachment.
 HBARENA_PATH = "/hbarena-mockup"
@@ -66,6 +76,8 @@ HTML_PAGES = {
     RATES_PATH: RATES_FILE,
     BOARD_PATH: BOARD_FILE,
     MDOT_PATH: MDOT_FILE,
+    MSLIVE_PATH: MSLIVE_FILE,
+    MSLIVE_LOOKS_PATH: MSLIVE_LOOKS_FILE,
     HBARENA_PATH: HBARENA_FILE,
 }
 
@@ -188,6 +200,8 @@ def _install_tornado() -> None:
             (r"/board/?", PublicPageHandler),
             (r"/rates/?", PublicPageHandler),
             (r"/mdot/?", PublicPageHandler),
+            (r"/mslive/looks/?", PublicPageHandler),
+            (r"/mslive/?", PublicPageHandler),
             (r"/hbarena-mockup/?", PublicPageHandler),
         ]
         router.add_rules(rules)

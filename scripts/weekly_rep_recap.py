@@ -113,10 +113,13 @@ def build_rep_digest(rep_full: str, rep_first: str) -> dict:
         hot_leads = []
     hot_leads = hot_leads[:8]
 
-    # Recent wins (closed-won in last 30 days)
+    # Recent wins (closed-won in last 30 days). Keyed off closed_date, the
+    # real win date — updated_at moves on any edit, so a 2025 deal touched
+    # this week used to get emailed to the rep as a fresh win.
     recent_wins = [d for d in my_deals
                     if d.get("stage") in ("won", "live")
-                    and (d.get("updated_at") or "")[:10] >= cutoff_30d_ago]
+                    and str(d.get("closed_date") or d.get("updated_at") or "")[:10]
+                        >= cutoff_30d_ago]
 
     return {
         "rep_full": rep_full,
@@ -200,6 +203,11 @@ def main() -> int:
     parser.add_argument("--rep", default="",
                         help="Send to a specific rep name (substring match).")
     args = parser.parse_args()
+
+    # Fail loudly on missing config: without this, a missing credential
+    # reads as an empty result set and the run exits 0 looking healthy.
+    from services.env_preflight import require_env, SUPABASE_ANY_KEY  # noqa: E402
+    require_env("SUPABASE_URL", SUPABASE_ANY_KEY, "SMTP_HOST", "SMTP_USER")
 
     from services.config_service import load_config, get_team_first_names
     from services.notification_service import _send_email

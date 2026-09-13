@@ -115,9 +115,18 @@ assets/
 static/                         # Public pages served outside Streamlit
   rates.html                    # Self-serve rate calculator (GET /rates)
   board.html                    # Venue lobby feed board (GET /board)
-  mdot.html                     # MDOT sponsorship mockup (GET /mdot)
+  mdot.html                     # MDOT traffic sponsorship mockup (GET /mdot)
+  mslive.html                   # Mississippi LIVE Weather partnership one-pager (GET /mslive)
+  mslive-looks.html             # Five alternate looks for the weather board (GET /mslive/looks)
   hbarena_mockup.html           # Huntington Bank Arena pitch mockup
                                 #   (GET /hbarena-mockup)
+
+handoffs/                       # Pitch packages and design handoffs (internal briefs
+                                #   sit next to the public page they support)
+  mdot-traffic-partnership/     # PITCH-BRIEF.md for the /mdot mockup
+  mslive-weather-partnership/   # PITCH-BRIEF.md for the /mslive one-pager, plus the
+                                #   deployable tower-cam board (hosted on mctvofms.com)
+  rafters-oxford/               # Photo packet handoff for design
 
 scripts/
   setup_portal_schema.sql       # Supabase schema (8 tables + RLS + indexes)
@@ -175,7 +184,62 @@ JSON fallback (`data/pipeline/`) when Supabase is unreachable.
   (same convention as Research page) and switches to the Proposals page.
 - **Perf rule**: the Pipeline page fetches `get_all_opportunities()` once per rerun
   and passes the list into every tab and analytics helper (`opps=` params) — don't
-  add per-tab fetches.
+  add per-tab fetches. All Deals pages 15 deals at a time (`deals_shown` in session
+  state) because each deal renders a full editor.
+
+#### Editing, deleting and true numbers
+A duplicate or a mis-parsed row is **not** a lost deal. Marking one Lost permanently
+poisons win rate and lost-revenue totals, so the pipeline deletes them instead.
+
+- **Delete + undo**: `delete_opportunity()` snapshots the deal *and its activity*
+  into `pipeline_deleted` before removing it, and **refuses to delete if the archive
+  fails**. `get_deleted()` / `restore_opportunity()` / `purge_deleted()` back the
+  "Recently deleted" list in the Cleanup tab. Restore reuses the original id.
+  `_cleanup_references()` also clears the two pointers no FK covers:
+  `tasks.source_id` (else a stalled-deal task haunts the 7am email forever) and
+  `contract_requests.opportunity_id` (nulled, the signed record itself is kept).
+  Only `pipeline_activity` has a real FK, and it is `ON DELETE CASCADE`.
+- **Deleted stays deleted**: `deleted_fingerprints()` feeds the Import Leads tab so a
+  cleaned-up deal is not immediately re-imported from its lead.
+- **Merge** (`merge_opportunities`): archives each loser **before** re-pointing its
+  activity at the survivor (archiving after would snapshot an empty history), fills
+  only genuinely blank fields, and never copies identity/outcome/pricing fields off a
+  duplicate. Blank test is explicit — `v in (None, "", 0, [], {})` is wrong because
+  `0 == False` in Python and would clobber a real $0 value or an `excluded_from_stats`
+  flag.
+- **Name validation**: `validate_business_name()` runs inside `create_opportunity()`,
+  so no call site can bypass it, and it returns a whitespace-collapsed name (which is
+  what killed the `"Enterprise tupelo "` duplicate class). It blocks emails, URLs,
+  phone numbers, `Marketing Director: …` contact lines, `Pitched to … July 22, 2026`
+  notes, and placeholders. Keep the bare-domain TLD list SHORT — a full one would
+  reject `Fuse.Cloud`. `normalize_name()` is the canonical duplicate key: it strips
+  accents, punctuation and *trailing* legal suffixes only, so `Enterprise Tupelo`
+  keeps `enterprise`, and it deliberately keeps city words so
+  `St. Jude Dream Home - Oxford` and `- Tupelo` stay distinct.
+- **`closed_date` is the real win/lost date.** Everything that reports "this month"
+  or "last 30 days" reads it — `get_pipeline_summary`, `get_rep_scoreboard`,
+  `scripts/weekly_rep_recap.py`, `scripts/win_back_lost_leads.py`. It replaced
+  `updated_at`, which moves on **every** edit: touching a phone number on an old won
+  deal used to re-date the win into the current month. Month windows are bounded on
+  both sides so a backdating typo can't count forever. Do **not** repoint the
+  `updated_at`/`stage_entered_at` reads that legitimately mean "last touched"
+  (stalled-deal alerts, `avg_days_since_touch`).
+- **Custom pricing**: `pricing_mode` is `'tier'` or `'custom'`. Custom deals put a
+  free-text package name in `tier_name` and hand-entered figures in `monthly_value`,
+  `one_time_value` (flat/project fees, never counted as MRR) and `term_months`.
+  `total_contract_value()` = monthly x term + one-time.
+- **`excluded_from_stats`**: keeps a deal on the board but out of every statistic —
+  for partnerships, barters and $0 placeholders. `counted()` applies it; use it in any
+  new analytic.
+- **Write failures are loud now.** `_sb_request(..., raise_on_error=True)` raises
+  `PipelineWriteError`, and create/update only fall back to local JSON when Supabase
+  is genuinely *unconfigured*. Previously any HTTP 400 (e.g. a column that hadn't been
+  migrated) fell through to ephemeral local JSON while the UI said "Saved!". **Always
+  ship the migration before code that writes a new column.**
+- **`pipeline_activity.action` is CHECK-constrained.** New verbs need an `ALTER`;
+  `merged`, `restored`, `deleted`, `pricing_changed`, `backdated` were added. So are
+  `source`, `stage`, `probability` and `deal_type` — a value outside those lists fails
+  the whole insert.
 
 ### Screen Inventory & Loop Tracking
 `pages/24_Loop_Inventory.py` covers two halves of the same question, in four tabs:
@@ -248,6 +312,39 @@ the lobby: what is happening now, what is next, which room.
   unknown slug still renders, titled off the slug.
 - `python scripts/seed_venue_events.py` fills the local file with a sample day;
   migration 025 seeds the same thing server-side (`created_by = 'sample'`).
+
+### Pitch Pages (public, texted as links)
+Concept pages for a specific prospect live in `static/` and are served by
+`server_routes.py` alongside `/rates` and `/board`, so a rep can text a link
+instead of an HTML attachment. Each one has an internal-only
+`handoffs/<slug>/PITCH-BRIEF.md` next to it (contact, what is agreed, what to
+say, what not to say). The page is safe to forward; the brief is not.
+
+- `GET /mdot` — MDOT road-conditions sponsorship mockup (`static/mdot.html`).
+- `GET /mslive` — Mississippi LIVE Weather (Matt Laubhan) partnership
+  one-pager (`static/mslive.html`): the plain-English version of the two-page
+  50/50 agreement — what each side gets, what a sponsor buys, how it goes live.
+  Facts on it must match the agreement; the brief carries the guardrails
+  (never "on the network" until Matt approves the board, never a Baron price,
+  reach is modeled and shown as ranges).
+- `GET /mslive/looks` — five looks for the same board (broadcast, tower cam,
+  radar, clean, gameday) in one 16:9 frame with a look picker
+  (`static/mslive-looks.html`). Sample readings; the tower-cam frame is drawn,
+  not airport footage.
+- The boards themselves (the pages the players load) are not served here. They
+  live on mctvofms.com beside `mslive-weather.html`; the Tupelo tower-cam board
+  is `handoffs/mslive-weather-partnership/mslive-towercam.html`, a deployable
+  file uploaded there by hand. The airport's camera share is whitelisted to
+  that domain, so the board refuses to load the camera from anywhere else.
+  `mslive-radar.html` in the same folder is the full-screen radar board,
+  deployed the same way; it reproduces the airport page's Baron recipe
+  (`allowfullscreen` plus a `#zoom/lat/lon` hash) to settle whether the radar
+  widget frames. Both boards keep a drawn stand-in behind the live frame and
+  only reveal the frame once a probe says the source is reachable, so an
+  outage shows a map or a sky rather than a broken frame.
+- Adding one: drop the HTML in `static/`, add a `<NAME>_PATH`/`_FILE` pair and
+  an `HTML_PAGES` entry plus a Tornado rule in `server_routes.py`, extend
+  `scripts/route_check.py`, and run it (`python scripts/route_check.py`).
 
 ### Contract System
 5 contract types, each with dedicated clause sets:

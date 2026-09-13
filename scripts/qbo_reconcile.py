@@ -53,6 +53,11 @@ def main() -> int:
                         help="Report findings; don't auto-mark or email.")
     args = parser.parse_args()
 
+    # Fail loudly on missing config: without this, a missing credential
+    # reads as an empty result set and the run exits 0 looking healthy.
+    from services.env_preflight import require_env, SUPABASE_ANY_KEY  # noqa: E402
+    require_env("SUPABASE_URL", SUPABASE_ANY_KEY, "SMTP_HOST", "SMTP_USER")
+
     from services.invoice_service import get_all_invoices, update_invoice
     from services.quickbooks_service import (
         is_connected, sync_unpaid_invoices, sync_invoice_to_qb, get_qb_invoice_url,

@@ -211,8 +211,15 @@ if st.button("Submit Application", type="primary", width='stretch'):
     phone_digits = _re.sub(r"\D", "", contact_phone) if contact_phone else ""
     phone_invalid = contact_phone and len(phone_digits) < 10
 
+    # This form is public and writes straight into pipeline_opportunities, so
+    # it gets the same name check as every other create path.
+    from services.pipeline_service import validate_business_name
+    name_ok, business_name_clean, name_why = validate_business_name(business_name)
+
     if missing:
         st.error(f"Please fill in: {', '.join(missing)}")
+    elif not name_ok:
+        st.error(f"Please check the venue name: {name_why.lower()}.")
     elif phone_invalid:
         st.error("Please enter a valid phone number (at least 10 digits).")
     elif not sms_consent:
@@ -239,7 +246,7 @@ if st.button("Submit Application", type="primary", width='stretch'):
 
         opp = insert_row("pipeline_opportunities", {
             "deal_type": "host",
-            "business_name": business_name,
+            "business_name": business_name_clean,
             "contact_name": contact_name,
             "contact_email": contact_email,
             "contact_phone": contact_phone,

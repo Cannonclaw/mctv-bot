@@ -532,10 +532,18 @@ def _rest_request(method: str, endpoint: str, data: dict | None = None,
     """Make a raw REST request to Supabase. Returns parsed JSON or None."""
     url, anon_key, service_key = _get_url_and_keys()
     if not url:
+        # Returning None silently here is how a whole cron fleet ran for weeks
+        # looking green: callers turn None into [] and conclude "nothing to do".
+        print(f"[supabase_client] REST {method} {endpoint} SKIPPED: "
+              f"SUPABASE_URL is not set", flush=True)
         return None
 
     key = (service_key if use_service_key and service_key else anon_key)
     if not key:
+        wanted = ("SUPABASE_SERVICE_KEY or SUPABASE_KEY" if use_service_key
+                  else "SUPABASE_KEY")
+        print(f"[supabase_client] REST {method} {endpoint} SKIPPED: "
+              f"no credential available ({wanted} not set)", flush=True)
         return None
 
     full_url = f"{url}/rest/v1/{endpoint}"
@@ -624,10 +632,16 @@ def upsert_row(table: str, data: dict, on_conflict: str = "id",
     """
     url, anon_key, service_key = _get_url_and_keys()
     if not url:
+        print(f"[supabase_client] UPSERT {table} SKIPPED: "
+              f"SUPABASE_URL is not set", flush=True)
         return None
 
     key = (service_key if use_service_key and service_key else anon_key)
     if not key:
+        wanted = ("SUPABASE_SERVICE_KEY or SUPABASE_KEY" if use_service_key
+                  else "SUPABASE_KEY")
+        print(f"[supabase_client] UPSERT {table} SKIPPED: "
+              f"no credential available ({wanted} not set)", flush=True)
         return None
 
     full_url = f"{url}/rest/v1/{table}?on_conflict={on_conflict}"
@@ -662,7 +676,14 @@ def update_row(table: str, row_id: str, data: dict,
 
 def delete_row(table: str, row_id: str, id_column: str = "id",
                use_service_key: bool = True) -> bool:
-    """Delete a row by ID. Returns True on success."""
+    """Delete a row by ID. Returns True only if a row was actually removed.
+
+    Every request here sends `Prefer: return=representation`, so a DELETE that
+    matched nothing comes back as `[]` — not None. The old `result is not None`
+    therefore reported success for a bogus id, an already-deleted row, or an
+    RLS block, and callers that branch on it (screen_inventory_service,
+    venue_events_service, the QA scripts) were told the delete happened.
+    """
     result = _rest_request("DELETE", f"{table}?{id_column}=eq.{urllib.parse.quote(str(row_id), safe='')}",
                            use_service_key=use_service_key)
-    return result is not None
+    return bool(result)

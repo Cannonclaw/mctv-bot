@@ -46,6 +46,11 @@ def main() -> int:
                         help="Print targets; don't insert or email.")
     args = parser.parse_args()
 
+    # Fail loudly on missing config: without this, a missing credential
+    # reads as an empty result set and the run exits 0 looking healthy.
+    from services.env_preflight import require_env, SUPABASE_ANY_KEY  # noqa: E402
+    require_env("SUPABASE_URL", SUPABASE_ANY_KEY, "SMTP_HOST", "SMTP_USER")
+
     from services.nps_service import find_due_surveys, create_survey
     from services.portal_service import get_client
     from services.notification_service import _send_email

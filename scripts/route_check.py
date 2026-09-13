@@ -3,7 +3,8 @@
 # or modification of this file is strictly prohibited.
 """Check that the public pages still route on the installed Streamlit.
 
-/rates, /board and /mdot are not Streamlit pages. server_routes.install()
+/rates, /board, /mdot, the /mslive pages and /hbarena-mockup are not
+Streamlit pages. server_routes.install()
 reaches into the private innards of whichever web server Streamlit is about to
 boot and inserts them ahead of its catch-all. requirements.txt pins only
 `streamlit>=1.40.0`, so any rebuild can resolve a newer Streamlit, and a
@@ -104,9 +105,21 @@ async def main() -> None:
     status, _, body = await fetch(app, "/rates/")
     check("/rates/ (trailing slash) routes too", status == 200 and APP_SHELL not in body)
 
-    for path, marker in (("/board", b"<!doctype html"), ("/mdot", b"<!DOCTYPE html")):
-        status, _, body = await fetch(app, path)
-        check(f"{path} routes", status == 200 and APP_SHELL not in body, f"bytes={len(body)}")
+    # Each marker is text that only that page carries; the doctypes differ in
+    # case between board.html and mdot.html, so the pair doubles as a swap check.
+    for path, marker in (("/board", b"<!DOCTYPE html"), ("/mdot", b"<!doctype html"),
+                         ("/mslive", b"mslive one-pager v1"),
+                         ("/mslive/looks", b"mslive looks v1"),
+                         ("/hbarena-mockup", b"Huntington Bank Arena, on 125+ screens")):
+        status, headers, body = await fetch(app, path)
+        check(f"{path} routes", status == 200 and APP_SHELL not in body and marker in body,
+              f"bytes={len(body)}")
+        if path == "/hbarena-mockup":
+            # A pitch link gets edited and re-sent mid-conversation, and this one
+            # carries a prospect's live offer terms — it must not sit in a cache.
+            check("/hbarena-mockup is not cached",
+                  headers.get(b"cache-control", b"") == b"no-cache",
+                  headers.get(b"cache-control", b"").decode() or "missing")
 
     for path in ("/", "/Proposals"):
         _, _, body = await fetch(app, path)

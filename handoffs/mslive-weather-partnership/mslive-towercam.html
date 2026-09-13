@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- mslive-towercam v1 -- deploy marker, grep for this to confirm what is live -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<meta name="hz:canvas-width" content="1920"><meta name="hz:canvas-height" content="1080">
+<title>Mississippi LIVE Weather × MCTV — Tupelo tower cam</title>
+<style>
+  /*
+    The tower-cam board. One 1920x1080 page for the player.
+
+    The picture is the Tupelo Regional Airport tower cam, a Verkada cloud camera,
+    framed through the share link the airport issued to MCTV on Sep 1, 2026
+    (Dylan Meador). It does not expire. It is WHITELISTED TO mctvofms.com on the
+    Verkada side: Verkada only serves it when the page framing it is on that
+    domain. So this board is hosted at mctvofms.com beside mslive-weather.html
+    and mslive-news.html, like every other MS Live board, and the player loads
+    https://mctvofms.com/mslive-towercam.html. Opened from a local file or any
+    other host, the board shows the drawn sky and a chip saying why; add
+    ?force=1 to try the camera anyway. A new domain needs Dylan first.
+
+    The drawn scene sits behind the camera frame at all times, so if the camera
+    page ever fails to load the wall shows sky, not black.
+
+    Optional: ?sponsor=Your%20Business  fills the sponsor slot.
+  */
+  html, body { margin: 0; height: 100%; background: #0A1C36; overflow: hidden; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  .board { position: relative; width: 1920px; height: 1080px; overflow: hidden; transform-origin: top left; background: #0A1C36; }
+  .scene, .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: absolute; inset: 0; width: 1920px; height: 1080px; border: 0; background: transparent; }
+  #cam[hidden] { display: none; }
+  .ui { position: absolute; inset: 0; pointer-events: none; }
+  .top { position: absolute; top: 0; left: 0; right: 0; height: 150px; display: flex; align-items: center; gap: 34px; padding: 0 44px; background: linear-gradient(180deg, rgba(5,12,28,.82), rgba(5,12,28,0)); }
+  .top .logo img { height: 92px; width: auto; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,.55)); }
+  .top .rule { width: 1px; height: 84px; background: rgba(255,255,255,.34); }
+  .top .place { line-height: 1.05; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  .top .city { font-size: 50px; font-weight: 800; letter-spacing: .02em; }
+  .top .sub { font-size: 17px; font-weight: 700; letter-spacing: .19em; text-transform: uppercase; color: rgba(255,255,255,.82); margin-top: 6px; }
+  .top .right { margin-left: auto; text-align: right; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  .top .camlbl { font-size: 17px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.85); line-height: 1.3; margin-bottom: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; background: #A61E2A; color: #fff; font-size: 21px; font-weight: 800; letter-spacing: .14em; padding: 7px 18px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .pill .dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+  .card { position: absolute; top: 172px; width: 470px; height: 700px; background: rgba(255,255,255,.96); border-radius: 13px; overflow: hidden; box-shadow: 0 12px 34px rgba(0,0,0,.45); display: flex; flex-direction: column; pointer-events: none; }
+  .card.left { left: 44px; }
+  .card.right { right: 44px; }
+  .card .cap { background: #0F2749; color: #fff; font-size: 19px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; padding: 12px 20px; border-bottom: 3px solid #EDB216; }
+  .card iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  .foot { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; display: flex; align-items: center; gap: 28px; padding: 0 44px; background: linear-gradient(0deg, rgba(5,12,28,.88), rgba(5,12,28,0)); }
+  .spon { display: flex; flex-direction: column; border: 2px dashed rgba(237,178,22,.62); background: rgba(7,16,34,.55); border-radius: 11px; padding: 14px 28px; }
+  .spon .k { font-size: 14px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #EDB216; }
+  .spon .v { font-size: 25px; font-weight: 800; letter-spacing: .02em; }
+  .credit { margin-left: auto; text-align: right; font-size: 16px; line-height: 1.4; color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .credit b { color: #EDB216; }
+  .clock { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .bug { display: flex; align-items: center; gap: 12px; background: rgba(7,16,34,.6); border: 1px solid rgba(255,255,255,.2); border-radius: 11px; padding: 8px 14px; }
+  .bug img { height: 42px; width: auto; display: block; }
+  .bug span { font-size: 18px; font-weight: 700; color: rgba(255,255,255,.85); }
+  .chip { position: absolute; left: 50%; bottom: 140px; transform: translateX(-50%); background: rgba(7,16,34,.75); border: 1px solid rgba(237,178,22,.6); color: #EDB216; font-size: 16px; font-weight: 700; letter-spacing: .08em; padding: 8px 16px; border-radius: 999px; }
+  .chip[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .pill .dot { animation: none; } }
+</style>
+</head>
+<body>
+<div class="board" id="board">
+
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F6FB5"/><stop offset=".55" stop-color="#8FBBE6"/><stop offset="1" stop-color="#DCE9F5"/></linearGradient>
+        <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E8A4E"/><stop offset="1" stop-color="#4E6A36"/></linearGradient>
+        <linearGradient id="rwy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A5F66"/><stop offset="1" stop-color="#3B3F45"/></linearGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <rect width="1920" height="1080" fill="url(#sky)"/>
+      <g opacity=".9" filter="url(#soft)"><ellipse cx="360" cy="190" rx="220" ry="62" fill="#fff"/><ellipse cx="450" cy="160" rx="130" ry="72" fill="#fff"/><ellipse cx="1340" cy="290" rx="260" ry="58" fill="#fff"/><ellipse cx="1440" cy="255" rx="150" ry="72" fill="#fff"/></g>
+      <rect y="630" width="1920" height="450" fill="url(#ground)"/>
+      <rect y="620" width="1920" height="14" fill="#8CA56A" opacity=".8"/>
+      <polygon points="790,640 1130,640 1830,1080 90,1080" fill="url(#rwy)"/>
+      <g fill="#fff" opacity=".85"><polygon points="940,645 980,645 990,690 930,690"/><polygon points="925,720 995,720 1010,790 910,790"/><polygon points="905,830 1015,830 1035,930 885,930"/><polygon points="880,980 1040,980 1065,1080 855,1080"/></g>
+      <g fill="#2B3440"><rect x="170" y="470" width="62" height="168"/><rect x="140" y="420" width="122" height="62" rx="6"/><rect x="150" y="434" width="102" height="30" fill="#9FC3E6"/></g>
+    </svg>
+  </div>
+
+  <iframe id="cam" title="Tupelo Regional Airport tower cam" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
+
+  <div class="ui">
+    <div class="top">
+      <div class="logo"><img alt="Mississippi LIVE Weather" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxNTcuOTIgNzkuNDIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4zLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNTEpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogI2ZmZjsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGc+CiAgICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNzguODUsMzkuMjJsLTE3Ljg2LDMxLjE0LDguODItMjMuNjNjLS45Mi0uMDMtMS44Ni4wMy0yLjc4LDAtMi4zLS4wNy00LjY2LS4xOS02Ljk2LS4yMy0xLjc5LS4wMy0zLjgxLjE1LTUuNTYsMC0uMTYtLjAxLS43NC0uMDMtLjctLjI3bDkuOTItMjYuNTYsMTAuNjEtNi45My05LjA5LDI2LjQ2aDEzLjYxWiIvPgogICAgPGc+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTQ5LjczIDIwLjgyIDE0Ny42NSAyNy4yMyAxMzQuNzcgMjcuMjQgMTMzLjYyIDMwLjUxIDE0NS41OSAzMC41MSAxNDMuNjQgMzUuOCAxMzEuNzMgMzUuODYgMTMwLjAyIDQwLjMxIDE0My4yIDQwLjMxIDE0MS4xMyA0Ni43MyAxMTkuNjggNDYuNzMgMTI3Ljk2IDI0LjE3IDEzMi42OSAyMC44MiAxNDkuNzMgMjAuODIiLz4KICAgICAgPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxMDcuODEgMjAuODIgMTA3LjgxIDM3LjM3IDExOC43IDIwLjgyIDEyNi43NiAyMC44MiAxMDkuNzIgNDYuNzMgOTkuNzUgNDYuNzMgOTkuNzUgMjAuODIgMTA3LjgxIDIwLjgyIi8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iOTYuNiAyMC44MiA4Ny4wNyA0Ni43MyA3OS42MSA0Ni43MyA4OS4wOCAyMC44MiA5Ni42IDIwLjgyIi8+CiAgICA8L2c+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01LjE5LDYyLjMxYy0uMTEtLjAzLTEuMTUtMS44My0xLjItMS45Ny0uMDQtLjEyLS4wOC0uMi0uMDEtLjMybDYuNy0xMC43Myw3LjQ5LTcuNjRjLjIyLTIuNzgtLjIyLTUuODQuMDItOC41OC4yLTIuMjIsMS4xOS00LjgzLDEuNTItNy4wOSw1LjI2LTcuMjIsMTAuNjMtMTQuNCwxNi44My0yMC44NS4xNi0uMTcuMzItLjMzLjQ5LS40OWwyNC4zMy0uMDVjMS40OSwxLDEuNjYsMi44NCwyLDQuNDlsLTE1LjU4LDQwLjgzLTQuNDMsMjAuNjZjLTEuMzMtLjA3LTIuNzYuMS00LjA4LDAtLjk3LS4wOC0yLjA2LS40OC0zLjA1LS40NC0xLjQ1LjA1LTMuMjcuNzgtNC43Ni45bC00LjM4LDMuNzgtMS42NC0xLjk1LTEuNDQtOC4yNiwxLjA2LTIuMzFINS4xOVpNNi4zMyw2MC4yNGgyMi4yMWwtMi4zOSw0LjY0LDEuMiw2LjljLjA5LjA3LjY5LS40NS44MS0uNTUuNjItLjUxLDEuNTgtMS41OSwyLjE4LTEuOTYuMzUtLjIyLDUuMjctMS4xOCw1Ljg4LTEuMi45LS4wMyw1LjA0Ljk5LDUuNDUuNDRsNC4yMi0xOS40MSwxNS4zNy00MC4xNC0uNjEtMi4yOC0yMi4zNi0uMDMtLjQ5LjE2Yy0yLjUyLDMuMDgtNS40Miw1Ljg3LTcuOTQsOC45NC0yLjg4LDMuNTEtNS4zNyw3LjUtOC4yMSwxMS4wNi0uMzgsMi4xOS0xLjI5LDQuNzItMS40OCw2LjkxLS4yNSwyLjg1LjIzLDUuOTktLjA2LDguODdsLTgsOC4yMy01Ljc3LDkuNDJaIi8+CiAgPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSI3Ny44NyA1NS40NSA4MC4yNiA2Mi41MiA4Mi42IDU1LjU1IDg0LjgzIDU1LjQ2IDg3LjIzIDYyLjYzIDg5LjUyIDU1LjQ1IDkxLjcgNTUuNDUgODguNDkgNjUuNDYgODYuMDggNjUuNTggODMuNjkgNTguNzEgODEuMzQgNjUuNTYgNzguNzUgNjUuNTYgNzUuNDcgNTUuNDUgNzcuODcgNTUuNDUiLz4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTUwLjU1LDU1LjQ1YzMuNzEuNDIsNC43MSw1LjE4LDEuMzUsNi44MmwyLjA4LDMuMzFoLTIuMzRsLTEuOTEtMi44M2gtMi4yOXYyLjgzaC0yLjI5di0xMC4xM2MxLjcxLjE0LDMuNzEtLjE5LDUuMzksMFpNMTQ3LjQ1LDYwLjU2aDIuMzRjLjIzLDAsMS4wNy0uMjEsMS4yOS0uMzQuODUtLjQ5LjktMS44LjA0LTIuMjktLjEyLS4wNy0uNy0uMy0uNzktLjNoLTIuODl2Mi45NFoiLz4KICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjEyNi4zNyA1NS41IDEyNi4zNyA1OS4zNyAxMjYuNTMgNTkuNTMgMTMxLjE2IDU5LjUzIDEzMS4xNiA1NS41IDEzMy40NSA1NS41IDEzMy40NSA2NS42MyAxMzEuMTYgNjUuNjMgMTMxLjE2IDYxLjM4IDEyNi41MyA2MS4zOCAxMjYuMzcgNjEuNTQgMTI2LjM3IDY1LjYzIDEyNC4wOCA2NS42MyAxMjQuMDggNTUuNSAxMjYuMzcgNTUuNSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTQzLjIgNTUuNDUgMTQzLjIgNTcuMTkgMTM3Ljc1IDU3LjE5IDEzNy43NSA1OS40MiAxMzcuOTIgNTkuNTggMTQyLjU1IDU5LjU4IDE0Mi41NSA2MS4zMyAxMzcuNzUgNjEuMzMgMTM3Ljc1IDYzLjcyIDE0My4zMSA2My43MiAxNDMuMzEgNjUuNTcgMTM1LjQ3IDY1LjU3IDEzNS40NyA1NS40NSAxNDMuMiA1NS40NSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTAwLjk1IDU1LjQ1IDEwMC45NSA1Ny4xOSA5NS42MiA1Ny4xOSA5NS42MiA1OS41OCAxMDAuMyA1OS41OCAxMDAuMyA2MS4zMyA5NS42MiA2MS4zMyA5NS42MiA2My43MiAxMDEuMTcgNjMuNzIgMTAxLjE3IDY1LjU3IDkzLjMzIDY1LjU3IDkzLjMzIDU1LjQ1IDEwMC45NSA1NS40NSIvPgogIDxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMTIyLjI5IDU1LjQ1IDEyMi4yOSA1Ny4zIDExOS4wMyA1Ny4zIDExOS4wMyA2NS41NyAxMTYuNzQgNjUuNTcgMTE2Ljc0IDU3LjMgMTEzLjQ3IDU3LjMgMTEzLjQ3IDU1LjQ1IDEyMi4yOSA1NS40NSIvPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMDIuODEsNjUuNTdsNC42Mi0xMC4xMywyLjIyLjAzLDQuNDgsMTAuMTFoLTIuNGwtLjk0LTIuMTZjLTEuNC4wOS0zLjA5LS4xOC00LjQ1LS4wMi0uMi4wMi0uMjMuMDEtLjM2LjE4LS4zMS40LS41NSwxLjUtLjc3LDJoLTIuNFpNMTA2Ljg0LDYxLjY1aDMuMjdsLTEuNjktMy45Mi0xLjU4LDMuOTJaIi8+Cjwvc3ZnPg=="></div>
+      <div class="rule"></div>
+      <div class="place"><div class="city">TUPELO · LIVE FROM THE TOWER</div><div class="sub">Matt Laubhan · Chief Meteorologist</div></div>
+      <div class="right"><div class="camlbl">Tupelo Regional Airport<br>tower cam · KTUP</div><span class="pill"><span class="dot"></span>LIVE</span></div>
+    </div>
+
+    <div class="card left">
+      <div class="cap">Right Now</div>
+      <iframe data-wx="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/current/index.html?initjson=/digitial_wx/widgets/dcms/81a01136-aa85-45f3-bc4b-d17dbe58e5c1/live/init.json" src="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/current/index.html?initjson=/digitial_wx/widgets/dcms/81a01136-aa85-45f3-bc4b-d17dbe58e5c1/live/init.json" title="Current conditions - Tupelo - Mississippi LIVE Weather" scrolling="no"></iframe>
+    </div>
+    <div class="card right">
+      <div class="cap">7-Day Forecast</div>
+      <iframe data-wx="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/dayshourlylist/index.html?initjson=/digitial_wx/widgets/dcms/b6466a06-a06c-4827-a5b3-17e81164fc38/live/init.json" src="https://staticbaronwebapps.velocityweather.com/digitial_wx/widgets/dayshourlylist/index.html?initjson=/digitial_wx/widgets/dcms/b6466a06-a06c-4827-a5b3-17e81164fc38/live/init.json" title="7-day forecast - Tupelo - Mississippi LIVE Weather" scrolling="no"></iframe>
+    </div>
+
+    <div class="chip" id="chip" hidden>CAMERA LINK NOT SET · drawn sky standing in</div>
+
+    <div class="foot">
+      <div class="spon"><span class="k">Presented by</span><span class="v" id="sponsor">YOUR BUSINESS HERE</span></div>
+      <div class="credit">Live camera · <b>Tupelo Regional Airport</b> · flytupelo.com/towercam<br>Weather content provided by <b>Mississippi LIVE Weather</b> · data by Baron</div>
+      <div class="clock" id="clock"></div>
+      <div class="bug"><img alt="MCTV" src="data:image/png;base64,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"><span>mctvofms.com</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── 1. The camera link: the airport's Verkada share for MCTV (issued Sep 1, 2026,
+  //       whitelisted to mctvofms.com, no expiry). ?cam=<link> overrides it.
+  var CAM_URL = "https://vauth.command.verkada.com/__v/tupeloair/embed/html/4c12eb18-fde6-49a4-912d-e675e9bacdc3/";
+  var WHITELISTED_HOSTS = ["mctvofms.com", "www.mctvofms.com"];
+
+  var q = new URLSearchParams(location.search);
+  var cam = (q.get("cam") || CAM_URL || "").trim();
+  var camEl = document.getElementById("cam");
+  var chip = document.getElementById("chip");
+  var ok = /^https:\/\/[a-z0-9.-]*verkada\.com\//i.test(cam);
+  var hostOk = WHITELISTED_HOSTS.indexOf(location.hostname) > -1 || q.get("force") === "1";
+  if (ok && hostOk) { camEl.src = cam; camEl.hidden = false; }
+  else {
+    chip.textContent = !ok ? "CAMERA LINK NOT SET \u00b7 drawn sky standing in"
+      : "CAMERA IS WHITELISTED TO mctvofms.com \u00b7 open this board from there (or add ?force=1)";
+    chip.hidden = false;
+  }
+
+  var sponsor = (q.get("sponsor") || "").trim();
+  if (sponsor) document.getElementById("sponsor").textContent = sponsor.slice(0, 40);
+
+  // ── 2. Fit 1920x1080 to whatever the player gives us. Never scale above 1.
+  function fit() {
+    var s = Math.min(innerWidth / 1920, innerHeight / 1080, 1);
+    document.getElementById("board").style.transform = "scale(" + s + ")";
+  }
+  fit(); addEventListener("resize", fit);
+
+  // ── 3. Baron widgets: poke once at 14 s (they sometimes stall on first paint),
+  //       then refresh every 6 minutes with a cache-buster.
+  function refresh() {
+    Array.prototype.forEach.call(document.querySelectorAll("iframe[data-wx]"), function (f) {
+      var base = f.getAttribute("data-wx");
+      f.src = base + (base.indexOf("?") > -1 ? "&" : "?") + "_r=" + Date.now();
+    });
+  }
+  setTimeout(refresh, 14000); setInterval(refresh, 6 * 60000);
+
+  // ── 4. Camera frame: reload every 20 minutes so a stalled player recovers on its own.
+  if (ok) setInterval(function () { camEl.src = cam + (cam.indexOf("?") > -1 ? "&" : "?") + "_r=" + Date.now(); }, 20 * 60000);
+
+  // ── 5. Whole page reloads every 6 hours to bound browser drift on an unattended player.
+  setTimeout(function () { location.reload(); }, 6 * 60 * 60000);
+
+  // ── 6. Clock in the venue's time zone. A player on UTC must not show the wrong hour.
+  var fmt; try { fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" }); } catch (e) { fmt = null; }
+  function tick() { var d = new Date(); document.getElementById("clock").textContent = fmt ? fmt.format(d) : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
