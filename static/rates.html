@@ -186,6 +186,14 @@
   .info-box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px;font-size:13px;line-height:1.55}
   .info-box h4{margin-bottom:6px;color:var(--navy)}
 
+  /* A buyer who wants a person before signing needs something to tap. 44px targets,
+     full width on a phone. */
+  .askrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--mut)}
+  .askrow .asklabel{font-weight:600;margin-right:4px}
+  .askrow a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--navy);font-weight:700;text-decoration:none;white-space:nowrap}
+  .askrow a:hover{border-color:var(--navy)}
+  @media(max-width:640px){.askrow .asklabel{flex:1 1 100%}.askrow a{flex:1 1 auto;justify-content:center}}
+
   /* MOBILE (quote links get texted — phones are the primary surface) */
   .mobilebar{display:none}
   @media(max-width:640px){
@@ -385,6 +393,11 @@
       <button class="btn decline" id="btnDecline" onclick="sendDecision('decline')" disabled>✗ Decline</button>
     </div>
     <div class="hint noprint">Accepting opens a short plain-English agreement — pick a start date, sign with your typed name, done. We countersign and start your free ad design, typically within 1 business day.</div>
+    <div class="askrow noprint" id="askRow">
+      <span class="asklabel">Rather talk it through first?</span>
+      <a id="askCall" href="tel:+16012018202" onclick="trackContact('call','summary')">📞 Call 601-201-8202</a>
+      <a id="askEmail" href="mailto:creed%40mctvofms.com" onclick="trackContact('email','summary')">✉ Email a question</a>
+    </div>
   </div>
 </section>
 
@@ -410,7 +423,7 @@
        Render deploys this page from main, so the footer is the only way to tell
        from a phone whether the build you are looking at is the one you shipped. -->
   <div><b>MCTV Elite Advertising</b> — indoor digital billboard network <span style="opacity:.55;font-size:11px">· rate tool v2.8</span></div>
-  <div><b>Creed Cannon</b> · 601-201-8202 · creed@mctvofms.com · mctvofms.com</div>
+  <div><b>Creed Cannon</b> · <a href="tel:+16012018202" onclick="trackContact('call','footer')">601-201-8202</a> · <a href="mailto:creed%40mctvofms.com" onclick="trackContact('email','footer')">creed@mctvofms.com</a> · mctvofms.com</div>
 </footer>
 
 <div class="mobilebar noprint" id="mobileBar">
@@ -773,6 +786,7 @@ function currentQuote(){
 
 function recalc(){
   const q = currentQuote();
+  refreshAsk(q);
   const area = $('breakdownArea');
   
   if(!q.ok){
@@ -839,6 +853,11 @@ function recalc(){
   $('btnAccept').disabled = submitted;
   $('btnDecline').disabled = submitted;
 
+  if(!trackedBuild){
+    trackedBuild = true;
+    track('quote_built', { mode: mode, screens: q.screens, monthly: q.monthly, term_months: termMonths });
+  }
+
   $('printHead').innerHTML = `<b>Prepared for:</b> ${esc($('bizName').value)||'—'} — ${esc($('contactName').value)||'—'} (${esc($('contactEmail').value)||'—'}${$('contactPhone').value ? ', ' + esc($('contactPhone').value) : ''})`;
 }
 
@@ -850,6 +869,7 @@ function closeComparison(){
 }
 
 function showComparison(){
+  track('compare_opened', { mode: mode });
   const container = document.createElement('div');
   // Both close buttons used to walk up from themselves to the white card and
   // remove THAT — leaving this full-screen z-index:9999 backdrop behind. The
@@ -924,7 +944,7 @@ function showComparison(){
   }
 }
 
-function doPrint(){ recalc(); window.print(); }
+function doPrint(){ recalc(); track('print_quote', { mode: mode }); window.print(); }
 
 function quoteText(q, decision){
   const b = [];
@@ -969,6 +989,78 @@ function quoteText(q, decision){
   return b.join('\n');
 }
 
+// ===== Funnel instrumentation =====
+// GA4 has been loaded in the head since 2026-08-30 but only ever recorded page_view,
+// so nothing here could say whether a texted quote card gets opened, where a client
+// stops, or which QR brought them. Every call below is fire-and-forget and guarded:
+// analytics must never be able to break a quote or a signature.
+// No PII is ever sent - business name, contact name, email and phone stay out of events.
+function srcFromSearch(search, referrer){
+  const P = new URLSearchParams(search || '');
+  const raw = (P.get('src') || P.get('utm_source') || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, 40);
+  if(raw) return raw;
+  if(referrer){
+    try{
+      const h = new URL(referrer).hostname;
+      if(h && h !== location.hostname) return ('ref-' + h).slice(0, 40);
+    }catch(e){}
+  }
+  return 'direct';
+}
+const TRACK_SRC = srcFromSearch(location.search, document.referrer);
+let trackedBuild = false;
+function track(name, params){
+  try{
+    if(typeof gtag !== 'function') return;
+    gtag('event', name, Object.assign({ quote_source: TRACK_SRC }, params || {}));
+  }catch(e){ /* never let analytics break the page */ }
+}
+// Contact path. A buyer who wants a person before signing had nothing to tap: the
+// number was plain text in the footer. The email arrives with the quote attached so
+// it can be answered without a back-and-forth. The event carries the channel and
+// where it was tapped, never who tapped it.
+function telHref(){
+  const d = CFG.repPhone.split('').filter(c => c >= '0' && c <= '9').join('');
+  return 'tel:+' + (d.length === 10 ? '1' + d : d);
+}
+function trackContact(channel, where){
+  track('contact_clicked', { channel: channel, where: where, mode: mode, card_mode: document.body.classList.contains('quotecard') ? 1 : 0 });
+}
+function refreshAsk(q){
+  const call = document.getElementById('askCall'), mail = document.getElementById('askEmail');
+  if(!call || !mail) return;
+  call.href = telHref();
+  let subject = 'Question about MCTV quote ' + qref;
+  let body = 'Hi,\n\nMy question:\n\n\n';
+  let linkLine = '';
+  if(q && q.ok){
+    const what = (mode === 'pkg' && selPkg)
+      ? PACKAGES.find(p => p.key === selPkg).name + ' Network Package'
+      : selVenues.size + ' hand-picked location' + (selVenues.size === 1 ? '' : 's');
+    subject += ' (' + fmt$(q.monthly) + '/mo)';
+    body += '---\nQuote ' + qref + '\n' + what + ': ' + q.screens + ' screen' + (q.screens === 1 ? '' : 's') + ', '
+      + fmt$(q.monthly) + '/mo, ' + termMonths + '-month term'
+      + (q.bonusMonths ? ' + ' + q.bonusMonths + ' free month' + (q.bonusMonths === 1 ? '' : 's') + ' for prepay' : '') + '\n';
+    const link = withSource(buildQuoteLink(), location.search);
+    if(link) linkLine = 'Open this quote: ' + link + '\n';
+  }
+  // Some mail apps cut a mailto link off around 2,000 characters, so the quote link rides
+  // along only when the whole thing still fits. The quote summary above is always included.
+  const href = b => 'mailto:' + encodeURIComponent(CFG.repEmail) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(b);
+  const withLink = linkLine ? href(body + linkLine) : '';
+  mail.href = (withLink && withLink.length <= 1800) ? withLink : href(body);
+}
+// The stored quote_link is the CRM's only record of where a signature came from, and
+// contract-initiate takes it verbatim (text, capped at 2000) - so a TV-label scan can be
+// told apart from a rep's text with no edge-function change. Rep-copied links stay clean:
+// only the signed payload carries the source through.
+function withSource(link, search){
+  if(!link) return link;
+  const P = new URLSearchParams(search || '');
+  const s = (P.get('src') || P.get('utm_source') || '').slice(0, 40);
+  return s ? link + '&src=' + encodeURIComponent(s) : link;
+}
+
 function basePayload(q, decision){
   return {
     quote_ref: qref,
@@ -985,7 +1077,7 @@ function basePayload(q, decision){
     screens: q.screens,
     est_impressions: Math.round(q.impr),
     selection: q.lines.map(l => ({item:l.name, detail:l.detail, screens:l.screens, rate:l.amt})),
-    quote_link: buildQuoteLink(),
+    quote_link: withSource(buildQuoteLink(), location.search),
     timestamp: new Date().toISOString()
   };
 }
@@ -1004,7 +1096,11 @@ async function sendDecision(decision){
   // Accept collects contact details inside the agreement modal, so a client who
   // opened a shared quote-card link can sign in one flow — no bounce back to Step 1,
   // which would blow away card mode. Just open the agreement.
-  if(decision === 'accept'){ openAgreement(q); return; }
+  if(decision === 'accept'){
+    track('accept_clicked', { mode: mode, screens: q.screens, monthly: q.monthly, card_mode: document.body.classList.contains('quotecard') ? 1 : 0 });
+    openAgreement(q);
+    return;
+  }
 
   // Decline still needs contact basics for the follow-up email.
   const biz = $('bizName').value.trim(), name = $('contactName').value.trim(), email = $('contactEmail').value.trim();
@@ -1020,6 +1116,7 @@ async function sendDecision(decision){
   $('btnDecline').disabled = true;
   hideMobileBar();
   let logged = false;
+  track('quote_declined', { mode: mode, screens: q.screens, monthly: q.monthly });
   if(CFG.submitUrl){
     try{
       const r = await fetch(CFG.submitUrl, {
@@ -1073,6 +1170,9 @@ function bindAgreementViewport(){
   window.visualViewport.addEventListener('scroll', syncAgreementViewport);
 }
 function closeAgreement(){
+  // Only an unsigned close is an abandonment. The success screen closes through here
+  // too (it has to, so the viewport listeners come off) and must not be counted as one.
+  if(!submitted) track('agreement_abandoned', { mode: mode });
   if(window.visualViewport){
     window.visualViewport.removeEventListener('resize', syncAgreementViewport);
     window.visualViewport.removeEventListener('scroll', syncAgreementViewport);
@@ -1161,6 +1261,7 @@ async function submitAgreement(q){
   // display:block, not '' — .ag-err defaults to display:none, so clearing the
   // inline style would hide the message instead of showing it.
   const showErr = (m, focusId) => {
+    track('agreement_error', { field: focusId || 'authorize' });
     err.style.display = 'block'; err.textContent = m;
     const f = focusId && document.getElementById(focusId);
     if(f){ f.scrollIntoView({block:'center'}); f.focus(); }
@@ -1187,6 +1288,7 @@ async function submitAgreement(q){
   const btn = document.getElementById('agSubmit');
   if(btn.disabled) return;                 // already in flight
   btn.disabled = true; btn.textContent = 'Submitting…';
+  track('agreement_submitted', { mode: mode, screens: q.screens, monthly: q.monthly, term_months: termMonths, prepay: $('prepay').checked ? 1 : 0 });
   // Nothing else in the modal is safe to touch while a signature is on the wire.
   const others = [...document.querySelectorAll('#agOverlay button')].filter(b => b !== btn);
   others.forEach(b => { b.disabled = true; });
@@ -1226,6 +1328,7 @@ async function submitAgreement(q){
   }finally{ clearTimeout(bail); }
 
   if(ok){
+    track('agreement_signed', { value: q.termTotal, currency: 'USD', mode: mode, screens: q.screens, monthly: q.monthly, term_months: termMonths });
     submitted = true;                      // latch: recalc() must not re-arm Accept
     $('btnAccept').disabled = true;
     $('btnDecline').disabled = true;
@@ -1252,6 +1355,7 @@ async function submitAgreement(q){
       </div>`;
   } else {
     btn.disabled = false; btn.textContent = '✒ Sign & Submit Agreement Request';
+    track('agreement_failed', { mode: mode, monthly: q.monthly });
     others.forEach(b => { b.disabled = false; });
     err.style.display = 'block';
     err.innerHTML = `${esc(reason)} Your signature was NOT recorded. Please try again, or <a href="mailto:${encodeURIComponent(CFG.repEmail)}?subject=${encodeURIComponent('ACCEPTED — MCTV Quote ' + qref)}&body=${encodeURIComponent(quoteText(q,'accept') + '\n\nSigned: ' + sig + '\nStart date: ' + start)}" style="color:#b91c1c">email us your acceptance</a> and we'll take it from there.`;
@@ -1274,9 +1378,11 @@ function applyParams(){
       const box = document.createElement('div');
       box.className = 'card';
       box.style.cssText = 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:13.5px;font-weight:600';
-      box.textContent = selVenues.size
-        ? 'Heads up: part of this quote link is out of date — some locations could not be preselected. Double-check the list below or call ' + CFG.repPhone + '.'
-        : 'This quote link looks out of date — please call ' + CFG.repPhone + ' or build a fresh quote below.';
+      // CFG.repPhone is a constant, so innerHTML is safe here; the number is now tappable
+      const tel = '<a href="' + telHref() + '" onclick="trackContact(\'call\',\'stale_link\')" style="color:inherit">' + CFG.repPhone + '</a>';
+      box.innerHTML = selVenues.size
+        ? 'Heads up: part of this quote link is out of date — some locations could not be preselected. Double-check the list below or call ' + tel + '.'
+        : 'This quote link looks out of date — please call ' + tel + ' or build a fresh quote below.';
       const wrap = document.querySelector('.wrap');
       wrap.insertBefore(box, wrap.children[1]);
     }
@@ -1304,6 +1410,7 @@ function applyParams(){
     $('pkgPane').style.display = mode==='pkg' ? '' : 'none';
     $('customPane').style.display = mode==='custom' ? '' : 'none';
     document.querySelectorAll('.termopt').forEach(el => el.classList.toggle('sel', +el.dataset.months === termMonths));
+    track('quote_link_opened', { link_type: mode, card_mode: P.get('print') === '1' ? 1 : 0, term_months: termMonths });
     if(P.get('print') === '1') enterCardMode();
     else setTimeout(() => $('summary').scrollIntoView({behavior:'smooth', block:'start'}), 400);
   }
@@ -1329,6 +1436,7 @@ function enterCardMode(){
   window.scrollTo(0, 0);
 }
 function exitCardMode(){
+  track('card_customize', { mode: mode });
   document.body.classList.remove('quotecard');
   document.querySelector('.pagesub').textContent = DEFAULT_PAGESUB;
   const b = document.getElementById('cardModeBar'); if(b) b.remove();
@@ -1358,6 +1466,7 @@ async function copyQuoteLink(card){
   const orig = card ? '📇 Copy Client Quote Card' : '🔗 Copy Quote Link';
   if(!link){ btn.textContent = 'Select a package or venues first'; setTimeout(()=>btn.textContent=orig, 1800); return; }
   if(card) link += '&print=1';
+  track(card ? 'copy_quote_card' : 'copy_quote_link', { mode: mode });
   try{ await navigator.clipboard.writeText(link); btn.textContent = card ? '✓ Card link copied — send it' : '✓ Link copied — text or email it'; }
   catch(e){ window.prompt('Copy this quote link:', link); btn.textContent = orig; return; }
   setTimeout(()=>btn.textContent=orig, 2200);
