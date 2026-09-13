@@ -123,6 +123,9 @@ static/                         # Public pages served outside Streamlit
 
 handoffs/                       # Pitch packages and design handoffs (internal briefs
                                 #   sit next to the public page they support)
+  hbarena-arena/                # PITCH-BRIEF.md for the /hbarena-mockup pitch,
+                                #   plus art/ (gitignored) for the promoter's
+                                #   tour art — see scripts/embed_hbarena_art.py
   mdot-traffic-partnership/     # PITCH-BRIEF.md for the /mdot mockup
   mslive-weather-partnership/   # PITCH-BRIEF.md for the /mslive one-pager, plus the
                                 #   deployable tower-cam board (hosted on mctvofms.com)
@@ -321,6 +324,16 @@ instead of an HTML attachment. Each one has an internal-only
 say, what not to say). The page is safe to forward; the brief is not.
 
 - `GET /mdot` — MDOT road-conditions sponsorship mockup (`static/mdot.html`).
+- `GET /hbarena-mockup` — Huntington Bank Arena pitch (`static/hbarena_mockup.html`):
+  the arena's own announced shows rendered as MCTV screen creative, plus the
+  announcement emails they came from. Every claim traces to one of those emails —
+  the brief lists the ones that must never be overstated (the Disney promo is
+  "up to 25%", the Blackberry Smoke sale's terms are image-only and unknown, the
+  standing slide is updated by hand and not wired to their calendar). Slides
+  carry gradients where the promoter's tour art goes; drop files into
+  `handoffs/hbarena-arena/art/` and run `python scripts/embed_hbarena_art.py`
+  to inline them as data URIs. Served `noindex` + `no-cache`: it carries a
+  prospect's promo code and our rate card.
 - `GET /mslive` — Mississippi LIVE Weather (Matt Laubhan) partnership
   one-pager (`static/mslive.html`): the plain-English version of the two-page
   50/50 agreement — what each side gets, what a sponsor buys, how it goes live.
