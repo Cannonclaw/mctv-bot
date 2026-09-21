@@ -113,7 +113,7 @@ assets/
   screens/                      # Community screen photos by city (Oxford, Starkville, etc.)
 
 static/                         # Public pages served outside Streamlit
-  rates.html                    # Self-serve rate calculator (GET /rates)
+  rates.html                    # Redirect to mctvofms.com/rate-quote/ (GET /rates)
   board.html                    # Venue lobby feed board (GET /board)
   mdot.html                     # MDOT traffic sponsorship mockup (GET /mdot)
   mslive.html                   # Mississippi LIVE Weather partnership one-pager (GET /mslive)

@@ -8,8 +8,8 @@ reaches into the private innards of whichever web server Streamlit is about to
 boot and inserts them ahead of its catch-all. requirements.txt pins only
 `streamlit>=1.40.0`, so any rebuild can resolve a newer Streamlit, and a
 Streamlit that reorganises its server internals silently costs us those routes:
-/rates would answer with the app shell (a login screen) instead of the rate
-calculator, and the first anyone would know is a client saying the QR code
+/rates would answer with the app shell (a login screen) instead of the redirect
+to the rate page, and the first anyone would know is a client saying the QR code
 does not work.
 
 Run this after any Streamlit bump, and after any change to server_routes.py:
@@ -92,14 +92,18 @@ async def main() -> None:
     check("uvicorn.Config.app is wrapped", cfg.app is not streamlit_stub)
     app = cfg.app
 
+    # The calculator itself was removed on 2026-09-20 — mctvofms.com/rate-quote/ is
+    # the one rate page now, and /rates redirects there. What still matters is that
+    # the route answers with our page rather than the Streamlit login shell, and that
+    # the venue roster this file used to carry has not come back.
     status, headers, body = await fetch(app, "/rates")
-    check("/rates serves the rate calculator, not the app shell",
-          status == 200 and b"MCTV RATE CALCULATOR" in body and APP_SHELL not in body,
+    check("/rates serves the redirect page, not the app shell",
+          status == 200 and b"mctvofms.com/rate-quote/" in body and APP_SHELL not in body,
           f"status={status} bytes={len(body)}")
     check("/rates content-type is html",
           headers.get(b"content-type", b"").startswith(b"text/html"))
-    check("/rates carries the agreement modal",
-          b"ag-overlay" in body and b"syncAgreementViewport" in body)
+    check("/rates does not ship the venue roster",
+          b"const VENUES" not in body and b"Chicken On A Stick" not in body)
 
     status, _, body = await fetch(app, "/rates/")
     check("/rates/ (trailing slash) routes too", status == 200 and APP_SHELL not in body)

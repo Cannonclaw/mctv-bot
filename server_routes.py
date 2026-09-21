@@ -5,7 +5,7 @@
 
 Six routes, all public, all GET/HEAD:
 
-    /rates              the self-serve rate calculator (static/rates.html)
+    /rates              redirect to mctvofms.com/rate-quote/ (static/rates.html)
     /board              the venue lobby feed board  (static/board.html)
     /board/events.json  the schedule the board polls (venue_events_service)
     /mdot               the MDOT sponsorship mockup (static/mdot.html), so it
